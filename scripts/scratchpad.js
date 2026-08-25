@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const scratchpadCopyBtn = document.getElementById("scratchpadCopyBtn");
     const scratchpadToTaskBtn = document.getElementById("scratchpadToTaskBtn");
     const scratchpadClearBtn = document.getElementById("scratchpadClearBtn");
+    const scratchpadDownloadBtn = document.getElementById("scratchpadDownloadBtn");
     const scratchpadCharCount = document.getElementById("scratchpadCharCount");
     const scratchpadCheckbox = document.getElementById("scratchpadCheckbox");
 
@@ -29,7 +30,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const charCount = text.length;
         const words = text.trim() ? text.trim().split(/\s+/).length : 0;
         if (scratchpadCharCount) {
-            scratchpadCharCount.textContent = `${words} w · ${charCount} c`;
+            const readTime = Math.max(1, Math.ceil(words / 200));
+        scratchpadCharCount.textContent = `${words} w · ${charCount} c · ~${readTime}m`;
         }
     }
 
@@ -91,6 +93,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    
+    // Download content as Markdown
+    if (scratchpadDownloadBtn) {
+        scratchpadDownloadBtn.addEventListener("click", function () {
+            const text = scratchpadInput.value;
+            if (!text.trim()) return;
+            const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `scratchpad-${new Date().toISOString().slice(0, 10)}.md`;
+            a.click();
+            URL.revokeObjectURL(a);
+        });
+    }
+
     // Clear content
     if (scratchpadClearBtn) {
         scratchpadClearBtn.addEventListener("click", function () {
@@ -128,7 +146,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Smart list continuation and tab indentation
     scratchpadInput.addEventListener("keydown", function (e) {
-        if (e.key === "Tab") {
+        if (e.ctrlKey && e.key === "Enter") {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const text = this.value;
+            const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+            const lineEnd = text.indexOf("\n", start);
+            const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
+
+            if (currentLine.includes("- [ ]")) {
+                const newLine = currentLine.replace("- [ ]", "- [x]");
+                this.value = text.substring(0, lineStart) + newLine + (lineEnd === -1 ? "" : text.substring(lineEnd));
+                this.selectionStart = this.selectionEnd = start + 1;
+            } else if (currentLine.includes("- [x]") || currentLine.includes("- [X]")) {
+                const newLine = currentLine.replace(/- [[xX]]/, "- [ ]");
+                this.value = text.substring(0, lineStart) + newLine + (lineEnd === -1 ? "" : text.substring(lineEnd));
+                this.selectionStart = this.selectionEnd = Math.max(lineStart, start - 1);
+            }
+            localStorage.setItem(STORAGE_KEY, this.value);
+            updateCounts();
+            return;
+        } else if (e.key === "Tab") {
             e.preventDefault();
             const start = this.selectionStart;
             const end = this.selectionEnd;

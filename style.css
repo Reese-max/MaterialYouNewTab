@@ -8359,3 +8359,102 @@ html.myntHighContrast button {
 	background: #a8c7fa;
 	color: #121316;
 }
+
+/* ------------ Today Work Progress Bar ------------ */
+.todayProgressWrapper {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.todayProgressCont {
+	width: 64px;
+	height: 6px;
+	background: color-mix(in srgb, var(--containerColor, rgba(0, 0, 0, 0.1)) 40%, transparent);
+	border-radius: 999px;
+	overflow: hidden;
+	position: relative;
+}
+
+.todayProgressBar {
+	height: 100%;
+	background: var(--accentColor, #0b57d0);
+	border-radius: 999px;
+	transition: width 0.4s cubic-bezier(0.2, 0, 0, 1), background-color 0.4s ease;
+}
+
+.todayProgressBar.allCompleted {
+	background: linear-gradient(90deg, #10b981, #059669);
+	box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* ------------ Keyboard Shortcuts Dialog ------------ */
+.shortcutsHelpDialog {
+	width: min(100% - 32px, 520px);
+	padding: 24px;
+	border-radius: 28px;
+}
+
+.shortcutsHelpGrid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	margin-top: 18px;
+}
+
+.shortcutItem {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	background: color-mix(in srgb, var(--containerColor, rgba(255, 255, 255, 0.6)) 75%, transparent);
+	border: 1px solid rgba(128, 128, 128, 0.15);
+	border-radius: 16px;
+	font-size: 13px;
+	color: var(--fontColor, #1f1f1f);
+}
+
+.shortcutItem kbd {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	padding: 3px 6px;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--fontColor, #1f1f1f);
+	background: color-mix(in srgb, var(--containerColor, #ffffff) 90%, transparent);
+	border: 1px solid rgba(128, 128, 128, 0.25);
+	border-radius: 6px;
+	box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.shortcutItem span {
+	font-weight: 500;
+}
+
+.black-theme .shortcutsHelpDialog {
+	background: rgba(28, 29, 34, 0.94);
+	border-color: rgba(255, 255, 255, 0.12);
+}
+
+.black-theme .shortcutItem {
+	background: rgba(36, 38, 44, 0.7);
+	border-color: rgba(255, 255, 255, 0.08);
+	color: #e3e3e3;
+}
+
+.black-theme .shortcutItem kbd {
+	background: rgba(20, 21, 25, 0.9);
+	border-color: rgba(255, 255, 255, 0.18);
+	color: #ffffff;
+	box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+@media screen and (max-width: 540px) {
+	.shortcutsHelpGrid {
+		grid-template-columns: 1fr;
+	}
+}

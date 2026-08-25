@@ -549,7 +549,14 @@ if (typeof document !== "undefined") {
             });
 
             const selectedCount = todayPlan.priorityIds.filter(Boolean).length;
-            document.getElementById("todayPriorityCount").textContent = `${selectedCount} / 3`;
+            const completedCount = todayPlan.priorityIds.filter(id => id && todoState[id]?.status === "completed").length;
+            document.getElementById("todayPriorityCount").textContent = `${completedCount > 0 ? `${completedCount} done · ` : ""}${selectedCount} / 3`;
+            const progressBar = document.getElementById("todayProgressBar");
+            if (progressBar) {
+                const percent = Math.round((completedCount / 3) * 100);
+                progressBar.style.width = `${percent}%`;
+                progressBar.classList.toggle("allCompleted", completedCount === 3);
+            }
             const task = nextTask();
             document.getElementById("todayNextTask").textContent = task?.title || t("todayNextEmpty", "Choose one important task below");
             const overallToday = focusHistory[myntDateKey()]?.minutes || 0;
@@ -1197,6 +1204,21 @@ if (typeof document !== "undefined") {
         }
 
         document.getElementById("openControlCenterBtn").addEventListener("click", () => openControlCenter());
+        
+        const shortcutsHelpDialog = document.getElementById("shortcutsHelpDialog");
+        function openShortcutsHelp() {
+            if (shortcutsHelpDialog && !shortcutsHelpDialog.open) shortcutsHelpDialog.showModal();
+        }
+        document.getElementById("closeShortcutsHelpBtn")?.addEventListener("click", () => shortcutsHelpDialog?.close());
+        shortcutsHelpDialog?.addEventListener("click", event => {
+            if (event.target === shortcutsHelpDialog) shortcutsHelpDialog.close();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "?" && !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) {
+                event.preventDefault();
+                openShortcutsHelp();
+            }
+        });
         document.getElementById("closeControlCenterBtn").addEventListener("click", () => controlDialog.close());
         document.getElementById("pomodoroStatsBtn").addEventListener("click", event => {
             event.stopPropagation();
@@ -1217,6 +1239,7 @@ if (typeof document !== "undefined") {
 
         const commandDefinitions = [
             { id: "today", label: "commandToday", info: "commandTodayInfo", run: () => document.getElementById("todayWorkPanel").scrollIntoView({ block: "center" }) },
+            { id: "shortcutsHelp", label: "commandShortcutsHelp", info: "commandShortcutsHelpInfo", run: () => openShortcutsHelp() },
             { id: "control", label: "commandOpenControl", info: "commandOpenControlInfo", run: () => openControlCenter() },
             { id: "focus", label: "commandFocusStats", info: "commandFocusStatsInfo", run: () => openControlCenter("focusStatsSection") },
             { id: "workspaces", label: "commandWorkspaces", info: "commandWorkspacesInfo", run: () => openControlCenter("workspaceSection") },

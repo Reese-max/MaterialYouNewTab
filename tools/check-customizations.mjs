@@ -58,7 +58,8 @@ for (const id of [
     "commandPaletteDialog", "controlCenterDialog", "habitList", "serviceStatusList", "focusWeekChart",
     "todayWorkPanel", "todayGoalInput", "todayPriorityList", "todayStartFocusBtn",
     "workspacePresetGrid", "workspaceEditorForm", "focusTaskResults",
-    "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow"
+    "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow",
+    "todayProgressBar", "shortcutsHelpDialog", "scratchpadDownloadBtn"
 ]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `Missing custom UI: ${id}`);
 }
