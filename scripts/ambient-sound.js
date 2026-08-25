@@ -145,7 +145,7 @@
         activeNodes.push(source, filter);
     }
 
-    function stop() {
+    function cleanupNodes() {
         if (activeNodes.length) {
             activeNodes.forEach(node => {
                 try {
@@ -155,17 +155,46 @@
             });
             activeNodes = [];
         }
-        isPlaying = false;
-        document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
+    }
+
+    function stop(immediate = false) {
+        if (!isPlaying && activeNodes.length === 0) return;
+        const ctx = getAudioContext();
+        if (!ctx || immediate) {
+            cleanupNodes();
+            isPlaying = false;
+            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
+            return;
+        }
+
+        if (masterGain) {
+            masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+            setTimeout(() => {
+                cleanupNodes();
+                isPlaying = false;
+                document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
+            }, 520);
+        } else {
+            cleanupNodes();
+            isPlaying = false;
+            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
+        }
     }
 
     function play(type = currentType) {
-        stop();
+        cleanupNodes();
         const ctx = getAudioContext();
         if (!ctx) return;
 
         currentType = type;
         localStorage.setItem("myntAmbientType", type);
+
+        const targetVol = parseFloat(localStorage.getItem("myntAmbientVolume") || "0.5");
+        if (masterGain) {
+            masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            masterGain.gain.linearRampToValueAtTime(targetVol, ctx.currentTime + 0.8);
+        }
 
         if (type === "rain") startRain(ctx);
         else if (type === "ocean") startOcean(ctx);

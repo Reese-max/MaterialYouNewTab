@@ -126,6 +126,67 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Smart list continuation and tab indentation
+    scratchpadInput.addEventListener("keydown", function (e) {
+        if (e.key === "Tab") {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 2;
+            localStorage.setItem(STORAGE_KEY, this.value);
+            updateCounts();
+        } else if (e.key === "Enter") {
+            const start = this.selectionStart;
+            const text = this.value;
+            const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+            const currentLine = text.substring(lineStart, start);
+
+            const match = currentLine.match(/^(\s*)(- \[[ xX]\]|-|\*|\d+\.)\s+/);
+            if (match) {
+                const fullPrefix = match[0];
+                const indent = match[1];
+                const marker = match[2];
+                const contentAfterPrefix = currentLine.substring(fullPrefix.length);
+
+                if (!contentAfterPrefix.trim()) {
+                    e.preventDefault();
+                    this.value = text.substring(0, lineStart) + text.substring(start);
+                    this.selectionStart = this.selectionEnd = lineStart;
+                    localStorage.setItem(STORAGE_KEY, this.value);
+                    updateCounts();
+                    return;
+                }
+
+                let nextPrefix = fullPrefix;
+                if (/^\d+\./.test(marker)) {
+                    const num = parseInt(marker, 10);
+                    nextPrefix = `${indent}${num + 1}. `;
+                } else if (marker.startsWith("- [")) {
+                    nextPrefix = `${indent}- [ ] `;
+                }
+
+                e.preventDefault();
+                const insertText = "\n" + nextPrefix;
+                this.value = text.substring(0, start) + insertText + text.substring(start);
+                this.selectionStart = this.selectionEnd = start + insertText.length;
+                localStorage.setItem(STORAGE_KEY, this.value);
+                updateCounts();
+            }
+        }
+    });
+
+    // Global shortcut (Alt + S) to toggle scratchpad
+    document.addEventListener("keydown", function (e) {
+        if (e.altKey && (e.key.toLowerCase() === "s" || e.key.toLowerCase() === "n")) {
+            const isEditing = ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName);
+            if (!isEditing || document.activeElement === scratchpadInput) {
+                e.preventDefault();
+                scratchpadCont?.click();
+            }
+        }
+    });
+
     // Toggle in settings
     if (scratchpadCheckbox && scratchpadCont) {
         scratchpadCheckbox.addEventListener("change", function () {
