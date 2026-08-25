@@ -39,6 +39,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const pomodoroClockSecond = document.getElementById("pomodoroClockSecond");
     const pomodoroIconSizeInput = document.getElementById("pomodoroIconSizeInput");
     const pomodoroPanelScaleInput = document.getElementById("pomodoroPanelScaleInput");
+    const pomodoroAmbientToggleBtn = document.getElementById("pomodoroAmbientToggleBtn");
+    const pomodoroAmbientSelect = document.getElementById("pomodoroAmbientSelect");
+    const pomodoroAmbientVol = document.getElementById("pomodoroAmbientVol");
+    const pomodoroAmbientAutoCheckbox = document.getElementById("pomodoroAmbientAutoCheckbox");
 
     // --- Settings rows ---
     const settingsRows = [
@@ -52,6 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("pomodoroAutoStartRow"),
         document.getElementById("pomodoroSoundRow"),
         document.getElementById("pomodoroNotifRow"),
+        document.getElementById("pomodoroAmbientAutoRow"),
     ];
 
     // --- Constants ---
@@ -76,6 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
         autoStart: "pomodoroAutoStart",
         sound: "pomodoroSoundEnabled",
         notif: "pomodoroNotifEnabled",
+        ambientAuto: "pomodoroAmbientAuto",
         state: "pomodoroState",
         sessionsToday: "pomodoroSessionsToday",
         sessionsDate: "pomodoroSessionsDate",
@@ -262,6 +268,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function pausePomodoro() {
+        if (globalThis.myntAmbientAudio && globalThis.myntAmbientAudio.isPlaying()) {
+            globalThis.myntAmbientAudio.stop();
+        }
         pomodoroState.isRunning = false;
         pomodoroRingFg.classList.remove("running");
         pomodoroState.lastTick = null;
@@ -272,6 +281,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function resetPomodoro() {
+        if (globalThis.myntAmbientAudio && globalThis.myntAmbientAudio.isPlaying()) {
+            globalThis.myntAmbientAudio.stop();
+        }
         clearInterval(timerInterval);
         timerInterval = null;
         const workSec = getWorkMinutes() * 60;
@@ -291,6 +303,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // --- Phase completion ---
     function onPhaseComplete() {
+        if (globalThis.myntAmbientAudio && globalThis.myntAmbientAudio.isPlaying()) {
+            globalThis.myntAmbientAudio.stop();
+        }
         clearInterval(timerInterval);
         timerInterval = null;
         pomodoroState.isRunning = false;
@@ -974,5 +989,41 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    initPomodoro();
+    if (pomodoroAmbientAutoCheckbox) {
+            pomodoroAmbientAutoCheckbox.checked = getPomodoroBool(KEYS.ambientAuto, true);
+            pomodoroAmbientAutoCheckbox.addEventListener("change", function () {
+                localStorage.setItem(KEYS.ambientAuto, String(pomodoroAmbientAutoCheckbox.checked));
+            });
+        }
+        if (pomodoroAmbientSelect) {
+            pomodoroAmbientSelect.value = localStorage.getItem("myntAmbientType") || "rain";
+            pomodoroAmbientSelect.addEventListener("change", function (e) {
+                if (globalThis.myntAmbientAudio) {
+                    if (globalThis.myntAmbientAudio.isPlaying()) globalThis.myntAmbientAudio.play(e.target.value);
+                    else localStorage.setItem("myntAmbientType", e.target.value);
+                }
+            });
+        }
+        if (pomodoroAmbientVol) {
+            pomodoroAmbientVol.value = localStorage.getItem("myntAmbientVolume") || "0.5";
+            pomodoroAmbientVol.addEventListener("input", function (e) {
+                if (globalThis.myntAmbientAudio) {
+                    globalThis.myntAmbientAudio.setVolume(e.target.value);
+                }
+            });
+        }
+        if (pomodoroAmbientToggleBtn) {
+            pomodoroAmbientToggleBtn.addEventListener("click", function () {
+                if (globalThis.myntAmbientAudio) {
+                    globalThis.myntAmbientAudio.toggle(pomodoroAmbientSelect?.value || "rain");
+                }
+            });
+        }
+        document.addEventListener("mynt:ambient-state", function (e) {
+            if (pomodoroAmbientToggleBtn) {
+                pomodoroAmbientToggleBtn.classList.toggle("active", e.detail?.isPlaying === true);
+            }
+        });
+
+        initPomodoro();
 });

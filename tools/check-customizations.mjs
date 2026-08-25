@@ -50,14 +50,15 @@ for (const ref of new Set(localRefs)) {
     assert.ok(existsSync(resolve(root, ref.replace(/^\.\//, ""))), `Missing local asset: ${ref}`);
 }
 
-for (const script of ["scripts/pomodoro.js", "scripts/bongocat.js", "scripts/dashboard-tools.js"]) {
+for (const script of ["scripts/pomodoro.js", "scripts/bongocat.js", "scripts/dashboard-tools.js", "scripts/scratchpad.js", "scripts/ambient-sound.js"]) {
     assert.ok(html.includes(`src="${script}"`), `Custom script is not loaded: ${script}`);
 }
 
 for (const id of [
     "commandPaletteDialog", "controlCenterDialog", "habitList", "serviceStatusList", "focusWeekChart",
     "todayWorkPanel", "todayGoalInput", "todayPriorityList", "todayStartFocusBtn",
-    "workspacePresetGrid", "workspaceEditorForm", "focusTaskResults"
+    "workspacePresetGrid", "workspaceEditorForm", "focusTaskResults",
+    "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow"
 ]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `Missing custom UI: ${id}`);
 }

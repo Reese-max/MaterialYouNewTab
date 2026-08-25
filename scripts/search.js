@@ -30,9 +30,42 @@ document.querySelector(".dropdown-btn")?.addEventListener("click", function (eve
     searchInput.focus();
 });
 
+const SEARCH_BANGS = {
+    "!yt": { name: "YouTube", url: "https://www.youtube.com/results?search_query=", home: "https://www.youtube.com" },
+    "!youtube": { name: "YouTube", url: "https://www.youtube.com/results?search_query=", home: "https://www.youtube.com" },
+    "!gh": { name: "GitHub", url: "https://github.com/search?q=", home: "https://github.com" },
+    "!github": { name: "GitHub", url: "https://github.com/search?q=", home: "https://github.com" },
+    "!gpt": { name: "ChatGPT", url: "https://chatgpt.com/?q=", home: "https://chatgpt.com" },
+    "!chat": { name: "ChatGPT", url: "https://chatgpt.com/?q=", home: "https://chatgpt.com" },
+    "!claude": { name: "Claude", url: "https://claude.ai/new?q=", home: "https://claude.ai" },
+    "!maps": { name: "Google Maps", url: "https://www.google.com/maps/search/", home: "https://maps.google.com" },
+    "!npm": { name: "npm", url: "https://www.npmjs.com/search?q=", home: "https://www.npmjs.com" },
+    "!b": { name: "Bing", url: "https://www.bing.com/search?q=", home: "https://www.bing.com" },
+    "!trans": { name: "Google Translate", url: "https://translate.google.com/?text=", home: "https://translate.google.com" },
+    "!mail": { name: "Gmail", url: "https://mail.google.com/mail/u/0/#search/", home: "https://mail.google.com" },
+    "!drive": { name: "Google Drive", url: "https://drive.google.com/drive/search?q=", home: "https://drive.google.com" }
+};
+
+function parseSearchBang(rawQuery) {
+    const text = (rawQuery || "").trim();
+    if (!text.startsWith("!")) return null;
+    const spaceIndex = text.indexOf(" ");
+    const bang = spaceIndex === -1 ? text.toLowerCase() : text.slice(0, spaceIndex).toLowerCase();
+    const query = spaceIndex === -1 ? "" : text.slice(spaceIndex + 1).trim();
+    const target = SEARCH_BANGS[bang];
+    if (!target) return null;
+    return query ? target.url + encodeURIComponent(query) : target.home;
+}
+
 function performSearch(query) {
     const searchTerm = (query || searchInput.value).trim();
     if (!searchTerm) return;
+
+    const bangUrl = parseSearchBang(searchTerm);
+    if (bangUrl) {
+        window.location.href = bangUrl;
+        return;
+    }
 
     const language = localStorage.getItem("selectedLanguage") === "zh_TW" ? "zh-TW" : "en";
     const searchURL = new URL("https://www.google.com/search");

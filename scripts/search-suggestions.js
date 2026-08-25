@@ -70,6 +70,26 @@ function hideResultBox() {
 
 hideResultBox();
 
+function getBangSuggestions(query) {
+    if (typeof SEARCH_BANGS === "undefined") return [];
+    const raw = query.toLowerCase().trim();
+    const matches = Object.entries(SEARCH_BANGS)
+        .filter(([key, bang]) => key.startsWith(raw) || bang.name.toLowerCase().includes(raw.slice(1)))
+        .map(([key, bang]) => ({
+            query: `${key} `,
+            display: `${key} · ${bang.name}`
+        }));
+    const unique = [];
+    const seen = new Set();
+    for (const item of matches) {
+        if (!seen.has(item.display)) {
+            seen.add(item.display);
+            unique.push(item);
+        }
+    }
+    return unique.slice(0, 7);
+}
+
 searchInput.addEventListener("input", async function () {
     const searchsuggestionscheckbox = document.getElementById("searchsuggestionscheckbox");
     if (searchsuggestionscheckbox.checked) {
@@ -77,6 +97,37 @@ searchInput.addEventListener("input", async function () {
 
         // Store original text when user starts typing
         originalSearchText = query;
+
+        if (query.startsWith("!")) {
+            const bangSuggestions = getBangSuggestions(query);
+            resultBox.replaceChildren();
+            if (bangSuggestions.length === 0) {
+                hideResultBox();
+                return;
+            }
+            bangSuggestions.forEach((item, index) => {
+                const resultItem = document.createElement("div");
+                resultItem.classList.add("resultItem");
+                resultItem.textContent = item.display;
+                resultItem.setAttribute("data-index", index);
+                resultItem.setAttribute("data-query", item.query);
+
+                resultItem.onclick = () => {
+                    searchInput.value = item.query;
+                    searchInput.focus();
+                    hideResultBox();
+                };
+                resultItem.addEventListener("mouseenter", () => {
+                    const currentlyActive = resultBox.querySelector(".active");
+                    if (currentlyActive) currentlyActive.classList.remove("active");
+                    resultItem.classList.add("active");
+                    lastInteractionBy = "mouse";
+                });
+                resultBox.appendChild(resultItem);
+            });
+            showResultBox();
+            return;
+        }
 
         if (query.length > 0) {
             const suggestions = await getAutocompleteSuggestions(query);
@@ -138,7 +189,7 @@ searchInput.addEventListener("keydown", function (e) {
             activeElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
             // Auto-complete the search input with selected suggestion
-            const suggestionText = activeElement.textContent;
+            const suggestionText = activeElement.getAttribute("data-query") || activeElement.textContent;
             this.value = suggestionText;
 
         } else if ((e.key === "ArrowRight" || e.key === "Tab") && activeItem && lastInteractionBy === "mouse") {

@@ -48,7 +48,7 @@ function myntSevenDayStats(history, now = new Date()) {
 
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
-    "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox"
+    "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox", "scratchpadCheckbox"
 ];
 
 function myntNormalizeTodayPlan(raw, todos, now = new Date()) {
@@ -116,7 +116,10 @@ function myntNormalizeWorkspaces(raw, defaults = []) {
         const widgets = Object.fromEntries(MYNT_WORKSPACE_WIDGETS.map(key => [key, item.widgets?.[key] === true]));
         const background = ["video", "wallpaper", "color"].includes(item.background) ? item.background : "video";
         const focusMinutes = Math.max(1, Math.min(120, Math.floor(Number(item.focusMinutes) || 25)));
-        clean.push({ id, name, widgets, background, focusMinutes });
+        const urls = Array.isArray(item.urls)
+            ? item.urls.map(u => String(u || "").trim()).filter(u => /^https?:\/\//i.test(u)).slice(0, 10)
+            : [];
+        clean.push({ id, name, widgets, background, focusMinutes, urls });
         seen.add(id);
     }
     return clean;
@@ -875,7 +878,7 @@ if (typeof document !== "undefined") {
         // Existing widget toggles remain the source of truth for editable work modes.
         const workspaceDefaults = [
             {
-                id: "work", name: t("workspaceWork", "Work"), background: "video", focusMinutes: 25,
+                id: "work", name: t("workspaceWork", "Work"), background: "video", focusMinutes: 25, urls: ["https://github.com", "https://mail.google.com"],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: true,
                     pomodoroCheckbox: true, motivationalQuotesCheckbox: false, bongoCatCheckbox: false,
@@ -883,7 +886,7 @@ if (typeof document !== "undefined") {
                 }
             },
             {
-                id: "study", name: t("workspaceStudy", "Study"), background: "wallpaper", focusMinutes: 45,
+                id: "study", name: t("workspaceStudy", "Study"), background: "wallpaper", focusMinutes: 45, urls: ["https://scholar.google.com"],
                 widgets: {
                     shortcutsCheckbox: false, bookmarksCheckbox: false, todoListCheckbox: true,
                     pomodoroCheckbox: true, motivationalQuotesCheckbox: true, bongoCatCheckbox: false,
@@ -891,7 +894,7 @@ if (typeof document !== "undefined") {
                 }
             },
             {
-                id: "relax", name: t("workspaceRelax", "Relax"), background: "color", focusMinutes: 15,
+                id: "relax", name: t("workspaceRelax", "Relax"), background: "color", focusMinutes: 15, urls: [],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: false,
                     pomodoroCheckbox: false, motivationalQuotesCheckbox: true, bongoCatCheckbox: true,
@@ -943,6 +946,19 @@ if (typeof document !== "undefined") {
                 edit.setAttribute("aria-label", format("workspaceEditAria", "Edit {name}", { name: preset.name }));
                 edit.addEventListener("click", () => openWorkspaceEditor(preset));
                 card.append(apply, edit);
+                if (preset.urls && preset.urls.length > 0) {
+                    const launch = document.createElement("button");
+                    launch.type = "button";
+                    launch.className = "workspaceLaunchBtn";
+                    launch.textContent = `🚀 ${preset.urls.length}`;
+                    launch.setAttribute("aria-label", format("workspaceLaunchTitle", "Open {count} sites in new tabs", { count: preset.urls.length }));
+                    launch.title = format("workspaceLaunchTitle", "Open {count} sites in new tabs", { count: preset.urls.length });
+                    launch.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        preset.urls.forEach(url => window.open(url, "_blank"));
+                    });
+                    card.appendChild(launch);
+                }
                 grid.appendChild(card);
             });
             const activePreset = workspaces.find(preset => preset.id === active);
@@ -990,6 +1006,8 @@ if (typeof document !== "undefined") {
             });
             document.getElementById("workspaceBackgroundSelect").value = current.background;
             document.getElementById("workspaceFocusMinutesInput").value = current.focusMinutes;
+            const urlsInput = document.getElementById("workspaceUrlsInput");
+            if (urlsInput) urlsInput.value = Array.isArray(current.urls) ? current.urls.join("\n") : "";
             document.getElementById("workspaceDeleteBtn").hidden = !current.id;
             editor.hidden = false;
             requestAnimationFrame(() => {
@@ -1022,7 +1040,8 @@ if (typeof document !== "undefined") {
                 widgets: Object.fromEntries([...document.querySelectorAll("[data-workspace-widget]")]
                     .map(input => [input.dataset.workspaceWidget, input.checked])),
                 background: document.getElementById("workspaceBackgroundSelect").value,
-                focusMinutes: Number(document.getElementById("workspaceFocusMinutesInput").value)
+                focusMinutes: Number(document.getElementById("workspaceFocusMinutesInput").value),
+                urls: (document.getElementById("workspaceUrlsInput")?.value || "").split("\n").map(u => u.trim()).filter(u => /^https?:\/\//i.test(u))
             };
             const preset = myntNormalizeWorkspaces([draft])[0];
             if (!preset) return nameInput.reportValidity();
@@ -1217,6 +1236,8 @@ if (typeof document !== "undefined") {
                 if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event("change")); }
             } },
             { id: "aiTools", label: "commandAiTools", info: "commandAiToolsInfo", run: () => ensureWidget("aiToolsCheckbox", "aiToolsIcon", "#toolsCont") },
+            { id: "scratchpad", label: "commandScratchpad", info: "commandScratchpadInfo", run: () => ensureWidget("scratchpadCheckbox", "scratchpadCont", "#scratchpadContainer") },
+            { id: "ambientAudio", label: "commandAmbientAudio", info: "commandAmbientAudioInfo", run: () => globalThis.myntAmbientAudio?.toggle() },
             { id: "toggleTheme", label: "commandToggleTheme", info: "commandToggleThemeInfo", run: () => {
                 const darkRadio = document.getElementById("darkTheme");
                 const defaultRadio = document.getElementById("dfChecked");
@@ -1305,6 +1326,13 @@ if (typeof document !== "undefined") {
                 group: "commandGroupTask",
                 run: () => chooseTodayTask(task.id)
             })).filter(command => matchesCommand(command, normalized)).slice(0, 6);
+            const workspaceLaunchCommands = workspaces.filter(p => p.urls && p.urls.length > 0).map(preset => ({
+                id: `launch-workspace-${preset.id}`,
+                labelText: format("commandLaunchWorkspace", "Launch {name} sites ({count})", { name: preset.name, count: preset.urls.length }),
+                infoText: preset.urls.join(", "),
+                group: "commandGroupWorkspace",
+                run: () => preset.urls.forEach(u => window.open(u, "_blank"))
+            })).filter(command => matchesCommand(command, normalized));
             const workspaceCommands = workspaces.map(preset => ({
                 id: `workspace-${preset.id}`,
                 labelText: format("commandApplyWorkspace", "Apply {name} mode", { name: preset.name }),
@@ -1330,6 +1358,7 @@ if (typeof document !== "undefined") {
                 ...taskCommands,
                 ...createCommand,
                 ...workspaceCommands,
+                ...workspaceLaunchCommands,
                 ...collectLinkCommands("#toolsCont a", "commandGroupAi", normalized),
                 ...collectLinkCommands("#iconContainer a", "commandGroupGoogle", normalized)
             ];

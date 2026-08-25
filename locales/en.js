@@ -434,5 +434,22 @@ const en = {
     "invalidBackup": "Invalid backup file selected.",
     "deleteBookmark": "Are you sure you want to delete the bookmark \"{title}\"?",  // Do not translate {title}
     "UnsupportedBrowser": "Bookmarks are not supported in your browser.",
-    "resetShortcutsPrompt": "All saved shortcuts will be deleted and reset to default. Do you want to continue?"
+    "resetShortcutsPrompt": "All saved shortcuts will be deleted and reset to default. Do you want to continue?",
+    "scratchpadHover": "Scratchpad",
+    "scratchpadHeading": "Scratchpad",
+    "scratchpadText": "Scratchpad",
+    "scratchpadInfo": "Quick notes and task drafting",
+    "scratchpadCopyBtn": "Copy",
+    "scratchpadToTaskBtn": "➔ Task",
+    "scratchpadClearBtn": "Clear",
+    "workspaceWidgetScratchpad": "Scratchpad",
+    "workspaceUrlsLabel": "Mode launcher sites (one URL per line)",
+    "workspaceLaunchTitle": "Open {count} sites in new tabs",
+    "commandLaunchWorkspace": "Launch {name} sites ({count})",
+    "commandScratchpad": "Open Scratchpad",
+    "commandScratchpadInfo": "Quick notes and drafts",
+    "commandAmbientAudio": "Toggle Ambient Sound",
+    "commandAmbientAudioInfo": "Rain, ocean, noise, campfire",
+    "pomodoroAmbientAutoText": "Ambient Sound Auto-play",
+    "pomodoroAmbientAutoInfo": "Play ambient audio during focus session",
 };

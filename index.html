@@ -44,6 +44,8 @@
     <script defer src="scripts/google-apps.js"></script>
     <script defer src="scripts/voice-search.js"></script>
     <script defer src="scripts/backup-restore.js"></script>
+    <script defer src="scripts/scratchpad.js"></script>
+    <script defer src="scripts/ambient-sound.js"></script>
 
     <!-- LANGUAGES SCRIPTS -->
     <script src="locales/en.js"></script>
@@ -84,6 +86,30 @@
         </div>
         <ul class="todolist" id="todoullist">
         </ul>
+    </div>
+
+
+    <!-- Scratchpad Widget -->
+    <button class="scratchpadCont" id="scratchpadCont" type="button" aria-controls="scratchpadContainer" aria-expanded="false" style="display: none;">
+        <svg id="scratchpadIcon" xmlns="http://www.w3.org/2000/svg" class="dot-icon" width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+        </svg>
+        <span class="tooltip-text" id="scratchpadHover">Scratchpad</span>
+    </button>
+
+    <div id="scratchpadContainer" class="scratchpad-container" style="display: none;">
+        <div class="scratchpadHeader">
+            <h2 id="scratchpadHeading">Scratchpad</h2>
+            <div class="scratchpadHeaderActions">
+                <button id="scratchpadToTaskBtn" class="scratchpadActionBtn" type="button" title="Convert to Task">➔ Task</button>
+                <button id="scratchpadCopyBtn" class="scratchpadActionBtn" type="button" title="Copy all">Copy</button>
+                <button id="scratchpadClearBtn" class="scratchpadActionBtn scratchpadClearBtn" type="button" title="Clear">×</button>
+            </div>
+        </div>
+        <textarea id="scratchpadInput" placeholder="Quick notes, ideas, drafts..." rows="8"></textarea>
+        <div class="scratchpadFooter">
+            <span id="scratchpadCharCount">0 w · 0 c</span>
+        </div>
     </div>
 
     <!-- Pomodoro Timer Widget -->
@@ -127,6 +153,16 @@
             <button class="pomodoroBtn pomodoroResetBtn" id="pomodoroResetBtn" title="Reset">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
             </button>
+        </div>
+        <div class="pomodoroAmbientRow" id="pomodoroAmbientRow">
+            <button class="pomodoroAmbientToggleBtn" id="pomodoroAmbientToggleBtn" type="button" title="Ambient Sound">🎧</button>
+            <select id="pomodoroAmbientSelect" class="pomodoroAmbientSelect" aria-label="Ambient Sound Type">
+                <option value="rain">🌧️ Rain</option>
+                <option value="ocean">🌊 Ocean</option>
+                <option value="whitenoise">☕ Noise</option>
+                <option value="campfire">🪵 Fire</option>
+            </select>
+            <input type="range" id="pomodoroAmbientVol" class="pomodoroAmbientVol" min="0" max="1" step="0.05" value="0.5" aria-label="Ambient Sound Volume">
         </div>
         <div class="pomodoroSessionsToday">
             <span id="pomodoroSessionsLabel">Today</span>: <span id="pomodoroSessionsCount">0</span>
@@ -1273,6 +1309,16 @@
                                         </label>
                                     </div>
 
+                                                                        <div class="ttcont pomodoroSettingsHidden" id="pomodoroAmbientAutoRow">
+                                        <div class="texts">
+                                            <div class="bigText" id="pomodoroAmbientAutoText">Ambient Sound Auto-play</div>
+                                            <div class="infoText" id="pomodoroAmbientAutoInfo">Play ambient audio during focus session</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="pomodoroAmbientAutoCheckbox" type="checkbox">
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div>
                                     <div class="ttcont pomodoroSettingsHidden" id="pomodoroNotifRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroNotifText">Notification</div>
@@ -1313,6 +1359,16 @@
                                         </div>
                                     </div>
 
+                                                                        <div class="ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="scratchpadText">Scratchpad</div>
+                                            <div class="infoText" id="scratchpadInfo">Quick notes and task drafting</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="scratchpadCheckbox" type="checkbox">
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div>
                                     <div class="ttcont bongoCostumeHidden" id="bongoCatPositionRow">
                                         <div class="texts">
                                             <div class="bigText" id="bongoCatResetPositionText">Reset Position</div>
@@ -1965,6 +2021,7 @@
                         <label><input type="checkbox" data-workspace-widget="googleAppsCheckbox"><span id="workspaceWidgetGoogle">Google Apps</span></label>
                         <label><input type="checkbox" data-workspace-widget="motivationalQuotesCheckbox"><span id="workspaceWidgetQuotes">Quotes</span></label>
                         <label><input type="checkbox" data-workspace-widget="bongoCatCheckbox"><span id="workspaceWidgetBongo">Bongo Cat</span></label>
+                        <label><input type="checkbox" data-workspace-widget="scratchpadCheckbox"><span id="workspaceWidgetScratchpad">Scratchpad</span></label>
                     </fieldset>
                     <div class="workspaceEditorFields">
                         <label class="workspaceEditorField" for="workspaceBackgroundSelect">
@@ -1980,6 +2037,10 @@
                             <input id="workspaceFocusMinutesInput" type="number" min="1" max="120" required>
                         </label>
                     </div>
+                    <label class="workspaceEditorField" for="workspaceUrlsInput">
+                        <span id="workspaceUrlsLabel">Mode launcher sites (one URL per line)</span>
+                        <textarea id="workspaceUrlsInput" rows="3" placeholder="https://github.com&#10;https://mail.google.com"></textarea>
+                    </label>
                     <div class="workspaceEditorActions">
                         <button id="workspaceDeleteBtn" class="workspaceDangerBtn" type="button">Delete</button>
                         <span></span>

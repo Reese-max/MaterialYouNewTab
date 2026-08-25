@@ -8060,3 +8060,302 @@ html.myntHighContrast button {
 	}
 }
 /* ------------ End Command & Control Center ------------ */
+
+/* ------------ Quick Scratchpad Widget ------------ */
+.scratchpadCont {
+	position: fixed;
+	top: 75px;
+	left: 20px;
+	z-index: 10;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	background: color-mix(in srgb, var(--containerColor, rgba(255, 255, 255, 0.65)) 88%, transparent);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.scratchpadCont:hover {
+	transform: scale(1.08);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.scratchpadCont:active {
+	transform: scale(0.96);
+}
+
+.scratchpadCont .dot-icon {
+	width: 22px;
+	height: 22px;
+	fill: var(--accentColor, #0b57d0);
+}
+
+.scratchpadCont .tooltip-text {
+	position: absolute;
+	left: 54px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: var(--containerColor, #303030);
+	color: var(--fontColor, #ffffff);
+	padding: 4px 10px;
+	border-radius: 8px;
+	font-size: 12px;
+	font-weight: 500;
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.2s ease, transform 0.2s ease;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.scratchpadCont:hover .tooltip-text {
+	opacity: 1;
+	transform: translateY(-50%) translateX(4px);
+}
+
+.scratchpad-container {
+	position: fixed;
+	top: 130px;
+	left: 20px;
+	width: 320px;
+	max-width: calc(100vw - 40px);
+	z-index: 100;
+	background: color-mix(in srgb, var(--containerColor, rgba(255, 255, 255, 0.85)) 92%, transparent);
+	backdrop-filter: blur(24px) saturate(1.2);
+	-webkit-backdrop-filter: blur(24px) saturate(1.2);
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 20px;
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
+	padding: 16px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	animation: panelScaleIn 180ms cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+.scratchpadHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.scratchpadHeader h2 {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--fontColor, #1f1f1f);
+}
+
+.scratchpadHeaderActions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.scratchpadActionBtn {
+	appearance: none;
+	border: 1px solid rgba(128, 128, 128, 0.2);
+	background: color-mix(in srgb, var(--accentColor, #0b57d0) 12%, transparent);
+	color: var(--accentColor, #0b57d0);
+	font-size: 11px;
+	font-weight: 600;
+	padding: 3px 8px;
+	border-radius: 999px;
+	cursor: pointer;
+	transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.scratchpadActionBtn:hover {
+	background: color-mix(in srgb, var(--accentColor, #0b57d0) 22%, transparent);
+	transform: scale(1.04);
+}
+
+.scratchpadActionBtn:active {
+	transform: scale(0.96);
+}
+
+.scratchpadClearBtn {
+	background: transparent;
+	border-color: transparent;
+	font-size: 16px;
+	padding: 0 4px;
+	line-height: 1;
+	color: #888;
+}
+
+.scratchpadClearBtn:hover {
+	background: rgba(255, 0, 0, 0.1);
+	color: #d32f2f;
+}
+
+#scratchpadInput {
+	width: 100%;
+	box-sizing: border-box;
+	min-height: 140px;
+	max-height: 360px;
+	resize: vertical;
+	border: 1px solid rgba(128, 128, 128, 0.18);
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--containerColor, #ffffff) 60%, transparent);
+	color: var(--fontColor, #1f1f1f);
+	font-family: inherit;
+	font-size: 13px;
+	line-height: 1.5;
+	padding: 10px;
+	outline: none;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#scratchpadInput:focus {
+	border-color: var(--accentColor, #0b57d0);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--accentColor, #0b57d0) 25%, transparent);
+}
+
+.scratchpadFooter {
+	display: flex;
+	justify-content: flex-end;
+	font-size: 11px;
+	color: color-mix(in srgb, var(--fontColor, #666) 65%, transparent);
+}
+
+/* ------------ Workspace Launch Button ------------ */
+.workspaceLaunchBtn {
+	appearance: none;
+	border: 1px solid color-mix(in srgb, var(--accentColor, #0b57d0) 35%, transparent);
+	background: color-mix(in srgb, var(--accentColor, #0b57d0) 14%, transparent);
+	color: var(--accentColor, #0b57d0);
+	font-weight: 700;
+	font-size: 11px;
+	border-radius: 999px;
+	padding: 4px 10px;
+	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+	margin-left: auto;
+}
+
+.workspaceLaunchBtn:hover {
+	background: var(--accentColor, #0b57d0);
+	color: #ffffff;
+	transform: translateY(-2px) scale(1.05);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--accentColor, #0b57d0) 35%, transparent);
+}
+
+.workspaceLaunchBtn:active {
+	transform: scale(0.96);
+}
+
+/* ------------ Pomodoro Ambient Sound Controller ------------ */
+.pomodoroAmbientRow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 8px;
+	padding: 6px 12px;
+	background: rgba(0, 0, 0, 0.15);
+	border-radius: 999px;
+	backdrop-filter: blur(10px);
+}
+
+.pomodoroAmbientToggleBtn {
+	appearance: none;
+	border: none;
+	background: transparent;
+	font-size: 15px;
+	cursor: pointer;
+	padding: 2px 4px;
+	border-radius: 50%;
+	transition: transform 0.15s ease, filter 0.15s ease;
+	line-height: 1;
+}
+
+.pomodoroAmbientToggleBtn:hover {
+	transform: scale(1.15);
+}
+
+.pomodoroAmbientToggleBtn.active {
+	filter: drop-shadow(0 0 6px var(--accentColor, #a8c7fa));
+	transform: scale(1.1);
+}
+
+.pomodoroAmbientSelect {
+	appearance: none;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background: rgba(0, 0, 0, 0.25);
+	color: #ffffff;
+	font-size: 11px;
+	font-weight: 600;
+	padding: 3px 8px;
+	border-radius: 8px;
+	cursor: pointer;
+	outline: none;
+}
+
+.pomodoroAmbientVol {
+	width: 55px;
+	height: 4px;
+	cursor: pointer;
+	accent-color: var(--accentColor, #a8c7fa);
+}
+
+/* ------------ Dark Mode (.black-theme) Overrides ------------ */
+.black-theme .scratchpadCont {
+	background: rgba(30, 31, 35, 0.75);
+	border-color: rgba(255, 255, 255, 0.1);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.black-theme .scratchpadCont .dot-icon {
+	fill: #a8c7fa;
+}
+
+.black-theme .scratchpad-container {
+	background: rgba(28, 29, 34, 0.92);
+	border-color: rgba(255, 255, 255, 0.12);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.black-theme .scratchpadHeader h2 {
+	color: #e3e3e3;
+}
+
+.black-theme #scratchpadInput {
+	background: rgba(18, 19, 23, 0.85);
+	color: #e3e3e3;
+	border-color: rgba(255, 255, 255, 0.1);
+}
+
+.black-theme #scratchpadInput:focus {
+	border-color: #a8c7fa;
+	box-shadow: 0 0 0 2px rgba(168, 199, 250, 0.25);
+}
+
+.black-theme .scratchpadActionBtn {
+	background: rgba(168, 199, 250, 0.16);
+	color: #a8c7fa;
+	border-color: rgba(168, 199, 250, 0.3);
+}
+
+.black-theme .scratchpadFooter {
+	color: #999;
+}
+
+.black-theme .workspaceLaunchBtn {
+	border-color: rgba(168, 199, 250, 0.35);
+	background: rgba(168, 199, 250, 0.14);
+	color: #a8c7fa;
+}
+
+.black-theme .workspaceLaunchBtn:hover {
+	background: #a8c7fa;
+	color: #121316;
+}
