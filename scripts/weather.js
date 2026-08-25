@@ -6,6 +6,27 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+let weatherInitializationPromise = null;
+
+function isWeatherWidgetRendered() {
+    const weatherWidget = document.getElementById("hideWeather");
+    if (!weatherWidget) return false;
+
+    const style = window.getComputedStyle(weatherWidget);
+    return style.display !== "none"
+        && style.visibility !== "hidden"
+        && weatherWidget.getClientRects().length > 0;
+}
+
+function initializeWeather({ allowNetwork }) {
+    if (!weatherInitializationPromise) {
+        weatherInitializationPromise = getWeatherData({ allowNetwork }).catch((error) => {
+            console.error("Unable to initialize weather:", error);
+        });
+    }
+    return weatherInitializationPromise;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const hideWeather = document.getElementById("hideWeather");
     const hideWeatherCheckbox = document.getElementById("hideWeatherCheckbox");
@@ -31,10 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Apply initial state
     applyWeatherState(isHidden);
 
-    // Show weather widgets only if toggle is unchecked
-    if (!isHidden) {
-        getWeatherData();
-    }
+    // Initialize controls once, but contact weather services only when the widget is actually visible.
+    initializeWeather({ allowNetwork: !isHidden && isWeatherWidgetRendered() });
 
     hideWeatherCheckbox.addEventListener("change", () => {
         const hidden = hideWeatherCheckbox.checked;
@@ -42,13 +61,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         applyWeatherState(hidden);
 
-        if (!hidden) {
-            getWeatherData();
-        }
+        // Reloading gives a newly enabled widget a clean, single initialization path.
+        if (!hidden) location.reload();
     });
 });
 
-async function getWeatherData() {
+async function getWeatherData({ allowNetwork = true } = {}) {
     // Display texts 
     document.getElementById("conditionText").textContent = translations[currentLanguage]?.conditionText || translations["en"].conditionText;
     document.getElementById("humidityLevel").textContent = translations[currentLanguage]?.humidityLevel || translations["en"].humidityLevel;
@@ -123,7 +141,6 @@ async function getWeatherData() {
         localStorage.setItem("weatherLocation", userLocation);
         localStorage.setItem("useGPS", false);
         userLocInput.value = "";
-        fetchWeather();
         location.reload();
     });
 
@@ -164,7 +181,7 @@ async function getWeatherData() {
 
     // Fetch location suggestions from weatherAPI
     async function fetchLocationSuggestions(query) {
-        if (!savedApiKey || query.length < 3) {
+        if (!allowNetwork || !savedApiKey || query.length < 3) {
             suggestions = [];
             locationSuggestions.style.display = "none";
             toggleAutocomplete();
@@ -173,7 +190,10 @@ async function getWeatherData() {
 
         try {
             const response = await fetch(`https://api.weatherapi.com/v1/search.json?key=${savedApiKey}&q=${query}`);
+            if (!response.ok) throw new Error(`Weather location search failed (${response.status}).`);
             suggestions = await response.json();
+
+            if (!Array.isArray(suggestions)) throw new Error("Weather location search returned invalid data.");
 
             if (suggestions.length > 0) {
                 displaySuggestions(suggestions);
@@ -305,6 +325,9 @@ async function getWeatherData() {
     gpsToggle.checked = useGPS;
     if (useGPS) locationCont.classList.add("inactive");
 
+    // The video-dashboard layout does not render weather. Keep its settings usable without
+    // exposing the user's IP address or spending network/data resources on invisible content.
+    if (!allowNetwork) return;
 
     // Function to fetch GPS-based location
     async function fetchGPSLocation() {
@@ -340,7 +363,11 @@ async function getWeatherData() {
                 // Fallback to IP-based location if no manual input
                 const ipInfo = "https://ipinfo.io/json/";
                 const locationData = await fetch(ipInfo);
+                if (!locationData.ok) throw new Error(`IP location lookup failed (${locationData.status}).`);
                 const ipLocation = await locationData.json();
+                if (typeof ipLocation.loc !== "string" || !ipLocation.loc) {
+                    throw new Error("IP location lookup returned invalid data.");
+                }
                 currentUserLocation = ipLocation.loc;
             }
 
@@ -375,6 +402,7 @@ async function getWeatherData() {
                 let weatherApi = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${currentUserLocation}&days=1&aqi=no&alerts=no&lang=${lang}`;
 
                 let data = await fetch(weatherApi);
+                if (!data.ok) throw new Error(`Weather lookup failed (${data.status}).`);
                 parsedData = await data.json();
                 if (!parsedData.error) {
                     // Extract only the necessary fields before saving
@@ -514,6 +542,7 @@ async function getWeatherData() {
                 const newWIcon = parsedData.current.condition.icon;
                 const weatherIcon = newWIcon.replace("//cdn.weatherapi.com/weather/64x64/", "https://cdn.weatherapi.com/weather/128x128/");
                 const wIcon = document.getElementById("wIcon");
+                wIcon.draggable = false;
                 wIcon.onerror = () => {
                     wIcon.src = './svgs/defaultWeather.svg';
                 };
@@ -542,6 +571,7 @@ async function getWeatherData() {
 
                 const locationTile = document.querySelector(".tiles.location");
                 const locationIcon = locationTile.querySelector(".location-icon");
+                locationIcon.draggable = false;
                 const locationText = document.getElementById("location");
 
                 // Apply initial content
@@ -598,6 +628,7 @@ async function getWeatherData() {
 // Save and load toggle state
 const hideWeatherCard = document.getElementById("hideWeatherCard");
 const fahrenheitCheckbox = document.getElementById("fahrenheitCheckbox");
+const minMaxTempToggle = document.getElementById("minMaxTempCheckbox");
 
 hideWeatherCard.addEventListener("change", function () {
     saveCheckboxState("hideWeatherCardState", hideWeatherCard);
@@ -611,8 +642,8 @@ loadCheckboxState("hideWeatherCardState", hideWeatherCard);
 loadCheckboxState("fahrenheitCheckboxState", fahrenheitCheckbox);
 
 // Handle min-max temp checkbox state change
-minMaxTempCheckbox.addEventListener("change", () => {
-    const isChecked = minMaxTempCheckbox.checked;
+minMaxTempToggle.addEventListener("change", () => {
+    const isChecked = minMaxTempToggle.checked;
     localStorage.setItem("minMaxTempEnabled", isChecked);
     location.reload();
 });

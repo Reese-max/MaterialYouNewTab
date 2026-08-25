@@ -8,10 +8,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Constants
     const MAX_SHORTCUTS = 50;
     const PLACEHOLDER = {
-        name: "New shortcut",
+        name: "新捷徑",
         url: "https://github.com/prem-k-r/MaterialYouNewTab",
-        inputName: "Shortcut Name",
-        inputUrl: "Shortcut URL"
+        inputName: "捷徑名稱",
+        inputUrl: "捷徑網址"
     };
 
     // DOM Elements
@@ -201,19 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Renders a shortcut in the main view
     function renderShortcut(name, url, index) {
-        const normalizedUrl = normalizeUrl(url);
-        const shortcut = document.createElement("div");
-        shortcut.className = "shortcuts";
-        shortcut._index = index;
-
-        shortcut.innerHTML = `
-            <a href="${normalizedUrl}">
-                <div class="shortcutLogoContainer">
-                    ${getLogoHtml(normalizedUrl)}
-                </div>
-                <span class="shortcut-name">${escapeHtml(name)}</span>
-            </a>
-        `;
+        const shortcut = createRenderedShortcut(name, url, index);
 
         if (index < dom.shortcutsContainer.children.length) {
             dom.shortcutsContainer.replaceChild(shortcut, dom.shortcutsContainer.children[index]);
@@ -235,29 +223,62 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Normalizes URLs to ensure they're valid
     function normalizeUrl(url) {
-        url = url.trim();
-        return encodeURI(
-            url.startsWith("https://") || url.startsWith("http://") ? url : `https://${url}`
-        );
+        const trimmed = String(url || "").trim();
+        const candidate = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+        try {
+            const parsed = new URL(candidate);
+            if (parsed.protocol !== "https:" && parsed.protocol !== "http:") throw new Error("Unsupported protocol");
+            return parsed.href;
+        } catch {
+            return PLACEHOLDER.url;
+        }
     }
 
-    // Gets the appropriate logo HTML for a given URL
-    function getLogoHtml(url) {
-        const hostname = new URL(normalizeUrl(url)).hostname.replace("www.", "");
+    function appendShortcutLogo(container, url) {
+        const hostname = new URL(normalizeUrl(url)).hostname.replace(/^www\./iu, "");
 
         if (hostname === "github.com") {
-            return `<img src="./svgs/github-shortcut.svg" alt="">`;
+            const image = document.createElement("img");
+            image.src = "./svgs/github-shortcut.svg";
+            image.alt = "";
+            image.draggable = false;
+            container.appendChild(image);
+            return;
         }
 
-        // Check presets for matching domain
         const preset = presets.find(p => p.domains.includes(hostname));
         if (preset) {
-            return preset.svg;
+            container.innerHTML = preset.svg;
+            return;
         }
 
-        // Fetch favicon from Google 
-        return `<img src="https://s2.googleusercontent.com/s2/favicons?domain_url=https://${hostname}&sz=256" 
-                onerror="this.src='./svgs/offline.svg'" alt="">`;
+        const image = document.createElement("img");
+        image.src = `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${encodeURIComponent(hostname)}&sz=256`;
+        image.alt = "";
+        image.draggable = false;
+        image.addEventListener("error", () => {
+            if (!image.src.endsWith("/svgs/offline.svg")) image.src = "./svgs/offline.svg";
+        }, { once: true });
+        container.appendChild(image);
+    }
+
+    function createRenderedShortcut(name, url, index) {
+        const shortcut = document.createElement("div");
+        shortcut.className = "shortcuts";
+        shortcut._index = index;
+
+        const link = document.createElement("a");
+        link.href = normalizeUrl(url);
+        const logo = document.createElement("div");
+        logo.className = "shortcutLogoContainer";
+        appendShortcutLogo(logo, url);
+        const label = document.createElement("span");
+        label.className = "shortcut-name";
+        label.textContent = name;
+        link.append(logo, label);
+        shortcut.appendChild(link);
+        return shortcut;
     }
 
     // Attaches event listeners to shortcut input fields
@@ -566,18 +587,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const fragment = document.createDocumentFragment();
 
         order.forEach((item, index) => {
-            const shortcut = document.createElement("div");
-            shortcut.className = "shortcuts";
-            shortcut._index = index;
-            shortcut.innerHTML = `
-            <a href="${normalizeUrl(item.url)}">
-                <div class="shortcutLogoContainer">
-                    ${getLogoHtml(item.url)}
-                </div>
-                <span class="shortcut-name">${escapeHtml(item.name)}</span>
-            </a>
-        `;
-            fragment.appendChild(shortcut);
+            fragment.appendChild(createRenderedShortcut(item.name, item.url, index));
         });
 
         dom.shortcutsContainer.innerHTML = "";

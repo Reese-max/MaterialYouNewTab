@@ -74,61 +74,83 @@ document.addEventListener("click", function (event) {
 });
 
 // Search Functionality
-bookmarkSearch.addEventListener("input", function () {
-    const searchTerm = bookmarkSearch.value.toLowerCase();
-    const bookmarks = bookmarkList.querySelectorAll("li[data-url], li.folder"); // Include both bookmarks and folders
 
-    Array.from(bookmarks).forEach(function (bookmark) {
-        const text = bookmark.textContent.toLowerCase();
-        const url = bookmark.dataset.url ? bookmark.dataset.url.toLowerCase() : "";
-        const isFolder = bookmark.classList.contains("folder");
+// Search index: built once after bookmarks load, avoids repeated DOM queries & .toLowerCase()
+let bookmarkSearchIndex = [];
 
-        // Show bookmarks if the search term matches either the name or the URL
-        if (!isFolder && (text.includes(searchTerm) || url.includes(searchTerm))) {
-            bookmark.style.display = ""; // Show matching bookmarks
-        } else if (isFolder) {
-            // For folders, check if any child bookmarks match the search
-            const childBookmarks = bookmark.querySelectorAll("li[data-url]");
-            let hasVisibleChild = false;
-            Array.from(childBookmarks).forEach(function (childBookmark) {
-                const childText = childBookmark.textContent.toLowerCase();
-                const childUrl = childBookmark.dataset.url ? childBookmark.dataset.url.toLowerCase() : "";
-                if (childText.includes(searchTerm) || childUrl.includes(searchTerm)) {
-                    hasVisibleChild = true;
-                    childBookmark.style.display = ""; // Show matching child bookmarks
-                } else {
-                    childBookmark.style.display = "none"; // Hide non-matching child bookmarks
-                }
-            });
-
-            if (hasVisibleChild) {
-                bookmark.style.display = ""; // Show folder if it has matching child bookmarks
-                bookmark.classList.add("open"); // Open folder to show matching child bookmarks
-            } else {
-                bookmark.style.display = "none"; // Hide folder if no child matches
-                bookmark.classList.remove("open");
-            }
-        } else {
-            bookmark.style.display = "none"; // Hide non-matching bookmarks
-        }
-    });
-
-    if (searchTerm === "") {
-        // Reset display for all bookmarks and folders
-        Array.from(bookmarks).forEach(function (bookmark) {
-            bookmark.style.display = "";
-            if (bookmark.classList.contains("folder")) {
-                bookmark.classList.remove("open");
-                const childList = bookmark.querySelector("ul");
-                if (childList) {
-                    childList.classList.add("hidden");
-                }
-            }
+function buildSearchIndex() {
+    bookmarkSearchIndex = [];
+    const items = bookmarkList.querySelectorAll("li[data-url]");
+    for (let i = 0; i < items.length; i++) {
+        const el = items[i];
+        bookmarkSearchIndex.push({
+            el,
+            text: (el.textContent || "").toLowerCase(),
+            url: (el.dataset.url || "").toLowerCase(),
+            folder: el.closest("li.folder"),
         });
     }
+}
 
-    // Show or hide the clear button based on the search term
+// Debounce helper: delays execution until user stops typing
+let searchTimer = null;
+
+function filterBookmarks() {
+    const searchTerm = bookmarkSearch.value.toLowerCase();
+
+    // Show or hide the clear button
     bookmarkSearchClearButton.style.display = searchTerm ? "inline" : "none";
+
+    // Fast path: empty search — reset everything via class toggle
+    if (!searchTerm) {
+        bookmarkList.classList.remove("searching");
+        // Reset all inline styles and folder states set by previous search
+        for (let i = 0; i < bookmarkSearchIndex.length; i++) {
+            bookmarkSearchIndex[i].el.style.display = "";
+        }
+        const folders = bookmarkList.querySelectorAll("li.folder");
+        for (let i = 0; i < folders.length; i++) {
+            folders[i].style.display = "";
+            folders[i].classList.remove("open");
+            const sub = folders[i].querySelector("ul");
+            if (sub) sub.classList.add("hidden");
+        }
+        return;
+    }
+
+    bookmarkList.classList.add("searching");
+
+    // Single O(n) pass over the flat index
+    const visibleFolders = new Set();
+
+    for (let i = 0; i < bookmarkSearchIndex.length; i++) {
+        const entry = bookmarkSearchIndex[i];
+        const match = entry.text.includes(searchTerm) || entry.url.includes(searchTerm);
+        entry.el.style.display = match ? "" : "none";
+        if (match && entry.folder) {
+            visibleFolders.add(entry.folder);
+        }
+    }
+
+    // Update folder visibility in one pass
+    const allFolders = bookmarkList.querySelectorAll("li.folder");
+    for (let i = 0; i < allFolders.length; i++) {
+        const folder = allFolders[i];
+        if (visibleFolders.has(folder)) {
+            folder.style.display = "";
+            folder.classList.add("open");
+            const sub = folder.querySelector("ul");
+            if (sub) sub.classList.remove("hidden");
+        } else {
+            folder.style.display = "none";
+            folder.classList.remove("open");
+        }
+    }
+}
+
+bookmarkSearch.addEventListener("input", function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(filterBookmarks, 150);
 });
 
 // Sorting functionality
@@ -181,28 +203,22 @@ async function verifyBookmarkPermission() {
         return false;
     }
 
-    // Firefox always has permission
-    if (isFirefox) {
-        updateBookmarkUI(true);
-        return true;
-    }
-
-    // Chromium-based browsers
-    // Opera doesn't have favicon permission yet
-    const requiredPermissions = isOpera ? ["bookmarks"] : ["bookmarks", "favicon"];
-
-    const hasPermission = await new Promise(resolve =>
-        chrome.permissions.contains({ permissions: requiredPermissions }, resolve));
+    // Firefox and Opera don't expose Chromium's favicon permission.
+    const requiredPermissions = (isFirefox || isOpera) ? ["bookmarks"] : ["bookmarks", "favicon"];
+    const hasPermission = isFirefox
+        ? await browser.permissions.contains({ permissions: requiredPermissions })
+        : await new Promise(resolve => chrome.permissions.contains({ permissions: requiredPermissions }, resolve));
 
     if (!hasPermission) {
-        const granted = await new Promise(resolve =>
-            chrome.permissions.request({ permissions: requiredPermissions }, resolve));
+        const granted = isFirefox
+            ? await browser.permissions.request({ permissions: requiredPermissions })
+            : await new Promise(resolve => chrome.permissions.request({ permissions: requiredPermissions }, resolve));
 
         if (!granted) {
             updateBookmarkUI(false);
             return false;
         }
-        bookmarksAPI = chrome.bookmarks; // Initialize if just granted
+        bookmarksAPI = isFirefox ? browser.bookmarks : chrome.bookmarks;
     }
 
     // Success case
@@ -213,12 +229,16 @@ async function verifyBookmarkPermission() {
 async function toggleBookmarkSidebar() {
     const hasPermission = await verifyBookmarkPermission();
     if (hasPermission) {
-        bookmarkSidebar.classList.toggle("open");
-        bookmarkButton.classList.toggle("rotate");
+        const isOpen = bookmarkSidebar.classList.toggle("open");
+        bookmarkButton.classList.toggle("rotate", isOpen);
+        bookmarkButton.setAttribute("aria-expanded", String(isOpen));
 
-        if (bookmarkSidebar.classList.contains("open")) {
+        if (isOpen) {
             loadBookmarks();
+            requestAnimationFrame(() => bookmarkSearch.focus());
         }
+    } else {
+        bookmarkButton.setAttribute("aria-expanded", "false");
     }
 }
 
@@ -229,21 +249,24 @@ function loadBookmarks() {
         return;
     }
 
-    bookmarksAPI.getTree().then(bookmarkTreeNodes => {
+    bookmarksAPI.getTree().then(async (bookmarkTreeNodes) => {
         // Clear the current list
-        bookmarkList.innerHTML = "";
+        while (bookmarkList.firstChild) bookmarkList.removeChild(bookmarkList.firstChild);
 
         // Display the "Recently Added" folder
         if (bookmarksAPI.getRecent) {
-            bookmarksAPI.getRecent(8).then(recentBookmarks => {
+            try {
+                const recentBookmarks = await bookmarksAPI.getRecent(8);
                 if (recentBookmarks.length > 0) {
                     const recentAddedFolder = {
-                        title: "Recently Added",
+                        title: "最近新增",
                         children: recentBookmarks
                     };
                     bookmarkList.appendChild(displayBookmarks([recentAddedFolder]));
                 }
-            });
+            } catch (e) {
+                console.error("Error loading recent bookmarks:", e);
+            }
         }
 
         // For Firefox: "Bookmarks Menu" and "Other Bookmarks" are distinct nodes
@@ -282,6 +305,9 @@ function loadBookmarks() {
                 }
             });
         }
+
+        // Build search index after all bookmarks are in the DOM
+        buildSearchIndex();
     }).catch(err => {
         console.error("Error loading bookmarks:", err);
     });
@@ -299,7 +325,7 @@ function setBookmarkFavicon(faviconElement, pageUrl) {
     };
 
     // Try browser-specific favicon first (Chromium only)
-    if (!isFirefox || !isOpera) {
+    if (!isFirefox && !isOpera) {
         faviconElement.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=32`;
         faviconElement.onerror = googleFallback;
     } else {

@@ -25,31 +25,28 @@ todoInput.addEventListener("keypress", (event) => {
     }
 });
 
-// Utility function to sanitize input
-function sanitizeInput(input) {
-    const div = document.createElement("div");
-    div.textContent = input;
-    return div.innerHTML;
-}
-
 // Function to add items to the TODO list
 function addtodoItem() {
     const inputText = todoInput.value.trim();
     if (inputText === "") return;
-
-    const t = "t" + Date.now(); // Generate a Unique ID
-    const rawText = inputText;
-
-    todoList[t] = { title: rawText, status: "pending", pinned: false }; // Add data to the JSON variable
-    const li = createTodoItemDOM(t, rawText, "pending", false); // Create List item
-    todoulList.appendChild(li); // Append the new item to the DOM immediately
+    createTodo(inputText);
     todoInput.value = ""; // Clear Input
-    SaveToDoData(); // Save changes
+}
+
+function createTodo(title) {
+    const rawText = String(title || "").trim().slice(0, 120);
+    if (!rawText) return null;
+    let id = "t" + Date.now();
+    while (todoList[id]) id += "x";
+    todoList[id] = { title: rawText, status: "pending", pinned: false };
+    todoulList.appendChild(createTodoItemDOM(id, rawText, "pending", false));
+    SaveToDoData({ createdId: id });
+    return id;
 }
 
 function createTodoItemDOM(id, title, status, pinned) {
     let li = document.createElement("li");
-    li.innerHTML = sanitizeInput(title); // Sanitize before rendering in DOM
+    li.textContent = title;
 
     // Create and append edit button
     const editbtn = document.createElement("span");
@@ -134,7 +131,7 @@ todoulList.addEventListener("click", (event) => {
             // Save on blur or Enter
             function saveEdit() {
                 const newTitle = input.value.trim();
-                todo.title = (newTitle !== "") ? sanitizeInput(newTitle) : previousTitle;  //Check for empty title 
+                todo.title = (newTitle !== "") ? newTitle : previousTitle; // Check for empty title
                 const textNode = document.createTextNode(todo.title);
                 li.insertBefore(textNode, input);
                 li.removeChild(input);
@@ -180,9 +177,28 @@ todoulList.addEventListener("click", (event) => {
 });
 
 // Save JSON to local Storage
-function SaveToDoData() {
+function SaveToDoData(extra = {}) {
     localStorage.setItem("todoList", JSON.stringify(todoList));
+    const items = Object.entries(todoList).map(([id, todo]) => ({ id, ...todo }));
+    document.dispatchEvent(new CustomEvent("mynt:todo-updated", {
+        detail: {
+            completed: items.filter(todo => todo.status === "completed").length,
+            total: items.length,
+            items,
+            ...extra
+        }
+    }));
 }
+
+document.addEventListener("mynt:todo-create", event => createTodo(event.detail?.title));
+document.addEventListener("mynt:todo-complete", event => {
+    const id = String(event.detail?.id || "");
+    if (!todoList[id] || todoList[id].status === "completed") return;
+    todoList[id].status = "completed";
+    [...todoulList.querySelectorAll("[data-todoitem]")]
+        .find(item => item.dataset.todoitem === id)?.classList.add("checked");
+    SaveToDoData();
+});
 
 // Fetch saved JSON and create list items using it
 function ShowToDoList() {
@@ -234,6 +250,7 @@ todoListCont.addEventListener("click", function (event) {
 
     // Toggle menu visibility
     todoContainer.style.display = isMenuVisible ? "none" : "grid";
+    todoListCont.setAttribute("aria-expanded", String(!isMenuVisible));
 
     // Add or remove the class to hide the tooltip
     if (!isMenuVisible) {
@@ -254,6 +271,7 @@ document.addEventListener("click", function (event) {
     if (!isClickInside && todoContainer.style.display === "grid") {
         todoContainer.style.display = "none"; // Hide menu
         todoListCont.classList.remove("menu-open"); // Restore tooltip
+        todoListCont.setAttribute("aria-expanded", "false");
     }
 
     event.stopPropagation();
@@ -269,6 +287,8 @@ document.addEventListener("DOMContentLoaded", function () {
             todoListCont.style.display = "flex";
             saveDisplayStatus("todoListDisplayStatus", "flex");
         } else {
+            todoContainer.style.display = "none";
+            todoListCont.setAttribute("aria-expanded", "false");
             todoListCont.style.display = "none";
             saveDisplayStatus("todoListDisplayStatus", "none");
         }

@@ -68,21 +68,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const progressBar = document.getElementById('toastProgressBar');
     const closeBtn = document.getElementById('toastClose');
 
-    let progressInterval;
-    let elapsedTime = 0;
-    let lastTick = 0;
-    let isPaused = false;
+    if (!toast || !progressBar || !closeBtn || getComputedStyle(toast).display === 'none') return;
+    if (document.documentElement.classList.contains('myntReducedMotion')) return;
+
+    let progressAnimation;
 
     function showToast() {
         // Check if toast has been shown before
         const hasShown = localStorage.getItem(STORAGE_KEY);
         if (hasShown) return;
 
-        // Mark as shown
-        localStorage.setItem(STORAGE_KEY, 'true');
-
         // Show toast after brief delay
         setTimeout(() => {
+            if (getComputedStyle(toast).display === 'none') return;
+            localStorage.setItem(STORAGE_KEY, 'true');
             toast.classList.add('show');
             startProgress();
         }, 1500);
@@ -90,37 +89,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function hideToast() {
         toast.classList.remove('show');
-        clearInterval(progressInterval);
+        progressAnimation?.cancel();
+        progressAnimation = null;
     }
 
     function startProgress() {
-        lastTick = Date.now();
-
-        progressInterval = setInterval(() => {
-            if (isPaused) return;
-
-            const now = Date.now();
-            elapsedTime += now - lastTick;
-            lastTick = now;
-
-            const remaining = Math.max(0, 100 - (elapsedTime / TOAST_DURATION) * 100);
-
-            progressBar.style.width = remaining + '%';
-
-            if (elapsedTime >= TOAST_DURATION) {
-                hideToast();
-            }
-        }, 50);
+        progressBar.style.transformOrigin = getComputedStyle(toast).direction === 'rtl' ? 'right' : 'left';
+        progressAnimation = progressBar.animate(
+            [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }],
+            { duration: TOAST_DURATION, easing: 'linear', fill: 'forwards' }
+        );
+        progressAnimation.finished.then(hideToast).catch(() => {});
     }
 
     // Hover pause
     toast.addEventListener('mouseenter', () => {
-        isPaused = true;
+        progressAnimation?.pause();
     });
 
     toast.addEventListener('mouseleave', () => {
-        isPaused = false;
-        lastTick = Date.now();
+        progressAnimation?.play();
     });
 
     closeBtn.addEventListener('click', hideToast);

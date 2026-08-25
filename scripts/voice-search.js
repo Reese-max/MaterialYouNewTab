@@ -14,6 +14,7 @@ function isSupportedBrowser() {
 // Set the initial state of the mic icon and checkbox based on saved state or supported browser
 const micIcon = document.getElementById("micIcon");
 const micIconCheckbox = document.getElementById("micIconCheckbox");
+let speechRecognitionInitialized = false;
 
 // Check if there's a saved state in localStorage
 const savedState = localStorage.getItem("micIconVisible");
@@ -56,6 +57,9 @@ micIconCheckbox.addEventListener("change", () => {
 
 // Function to initialize Web Speech API if supported
 function initializeSpeechRecognition() {
+    if (speechRecognitionInitialized) return;
+    speechRecognitionInitialized = true;
+
     const searchInput = document.getElementById("searchQ");
     const resultBox = document.getElementById("resultBox");
     const currentLanguage = getLanguageStatus("selectedLanguage") || "en";
@@ -68,13 +72,14 @@ function initializeSpeechRecognition() {
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.continuous = false;  // Stop recognition after first result
         recognition.interimResults = true; // Enable interim results for live transcription
-        recognition.lang = currentLanguage; // Set the language dynamically based on selected language
+        recognition.lang = currentLanguage.replace("_", "-"); // Use a valid BCP 47 language tag
 
         let isRecognizing = false; // Flag to check if recognition is active
 
         // When speech recognition starts
         recognition.onstart = () => {
             isRecognizing = true; // Set the flag to indicate recognition is active
+            micIcon.setAttribute("aria-pressed", "true");
             const selectedRadio = document.querySelector(".colorPlate:checked");
             if (selectedRadio.value !== "dark") {
                 micIcon.style.color = "var(--darkerColor-blue)";
@@ -105,11 +110,13 @@ function initializeSpeechRecognition() {
         recognition.onerror = (event) => {
             console.error("Speech recognition error: ", event.error);
             isRecognizing = false; // Reset flag on error
+            micIcon.setAttribute("aria-pressed", "false");
         };
 
         // When speech recognition ends (either by user or automatically)
         recognition.onend = () => {
             isRecognizing = false; // Reset the flag to indicate recognition has stopped
+            micIcon.setAttribute("aria-pressed", "false");
             micIcon.style.color = "var(--darkColor-blue)"; // Reset mic color
             // micIcon.style.transform = "scale(1)"; // Reset scaling
             micIcon.classList.remove("micActive");

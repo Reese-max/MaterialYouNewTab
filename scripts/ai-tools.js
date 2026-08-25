@@ -9,21 +9,54 @@
 // Define the list of available AI tools and their default visibility
 const aiToolsRaw = [
     { id: "chatGPT", visible: true, order: 0 },
-    { id: "gemini", visible: true, order: 1 },
-    { id: "copilot", visible: true, order: 2 },
-    { id: "claude", visible: true, order: 3 },
-    { id: "deepseek", visible: true, order: 4 },
-    { id: "perplexity", visible: false, order: 5 },
-    { id: "grok", visible: false, order: 6 },
-    { id: "metaAI", visible: false, order: 7 },
-    { id: "qwen", visible: false, order: 8 },
-    { id: "firefly", visible: false, order: 9 }
+    { id: "claude", visible: true, order: 1 },
+    { id: "youtube", visible: true, order: 2 },
 ];
 // Translations for AI tools
 const aiTools = aiToolsRaw.map(tool => ({
     ...tool,
     label: translations[currentLanguage]?.[tool.id] || translations["en"][tool.id]
 }));
+
+function getDefaultAIToolsSettings() {
+    return aiTools.map(tool => tool.visible ? tool.id : { [tool.id]: false });
+}
+
+function getAIToolId(setting) {
+    if (typeof setting === "string") return setting;
+    if (!setting || typeof setting !== "object") return null;
+    return Object.keys(setting)[0] || null;
+}
+
+function loadAIToolsSettings() {
+    let savedSettings;
+    try {
+        savedSettings = JSON.parse(localStorage.getItem("aiToolsSettings") || "null");
+    } catch {
+        savedSettings = null;
+    }
+
+    const validIds = new Set(aiTools.map(tool => tool.id));
+    const seen = new Set();
+    const settings = [];
+
+    if (Array.isArray(savedSettings)) {
+        savedSettings.forEach(setting => {
+            const toolId = getAIToolId(setting);
+            if (!validIds.has(toolId) || seen.has(toolId)) return;
+            seen.add(toolId);
+            settings.push(typeof setting === "string" ? toolId : { [toolId]: false });
+        });
+    }
+
+    getDefaultAIToolsSettings().forEach(setting => {
+        const toolId = getAIToolId(setting);
+        if (!seen.has(toolId)) settings.push(setting);
+    });
+
+    localStorage.setItem("aiToolsSettings", JSON.stringify(settings));
+    return settings;
+}
 
 // DOM Elements
 const aiToolName = document.getElementById("toolsCont");
@@ -100,44 +133,9 @@ function animateReorder(element1, element2, direction) {
     });
 }
 
-// Function to save AI tools settings
-function saveAIToolsSettings() {
-    const aiToolsSettings = [];
-    const toolOptions = document.querySelectorAll(".ai-tool-option");
-
-    // Save each tool's visibility based on current order
-    toolOptions.forEach((option) => {
-        const toolId = option.dataset.toolId;
-        const isVisible = document.getElementById(`setting_${toolId}`).checked;
-
-        // Add to array based on visibility
-        if (isVisible) {
-            // For visible tools, just add the ID string
-            aiToolsSettings.push(toolId);
-        } else {
-            // For hidden tools, add an object with the ID as key and false as value
-            const hiddenTool = {};
-            hiddenTool[toolId] = false;
-            aiToolsSettings.push(hiddenTool);
-        }
-    });
-
-    // Save settings to localStorage
-    localStorage.setItem("aiToolsSettings", JSON.stringify(aiToolsSettings));
-}
-
 // Function to apply saved settings (visibility and order)
 function applyAIToolsSettings() {
-    const savedSettings = JSON.parse(localStorage.getItem("aiToolsSettings") || "null");
-    let settingsToApply;
-
-    if (!savedSettings || !Array.isArray(savedSettings)) {
-        // Initialize with default values if no settings exist
-        settingsToApply = aiTools.map(tool => tool.visible ? tool.id : { [tool.id]: false });
-        localStorage.setItem("aiToolsSettings", JSON.stringify(settingsToApply));
-    } else {
-        settingsToApply = savedSettings;
-    }
+    const settingsToApply = loadAIToolsSettings();
 
     // Create a map of current tool elements for quick lookup
     const toolElements = new Map();
@@ -152,15 +150,8 @@ function applyAIToolsSettings() {
 
     // Append tools in order based on settings
     settingsToApply.forEach(item => {
-        let toolId, isVisible;
-
-        if (typeof item === "string") {
-            toolId = item;
-            isVisible = true;
-        } else {
-            toolId = Object.keys(item)[0];
-            isVisible = false;
-        }
+        const toolId = getAIToolId(item);
+        const isVisible = typeof item === "string";
 
         const toolElement = toolElements.get(toolId);
         if (toolElement) {
@@ -176,15 +167,8 @@ function generateAIToolsForm(settings) {
 
     // Create form elements
     settings.forEach((settingItem, index) => {
-        let toolId, isVisible;
-
-        if (typeof settingItem === "string") {
-            toolId = settingItem;
-            isVisible = true;
-        } else {
-            toolId = Object.keys(settingItem)[0];
-            isVisible = false;
-        }
+        const toolId = getAIToolId(settingItem);
+        const isVisible = typeof settingItem === "string";
 
         const originalTool = aiTools.find(t => t.id === toolId);
         const toolLabel = originalTool?.label || toolId;
@@ -205,58 +189,39 @@ function generateAIToolsForm(settings) {
         aiToolsForm.appendChild(toolOption);
     });
 
-    // Single event listener for all reorder buttons
-    aiToolsForm.addEventListener("click", async (event) => {
-        const upButton = event.target.closest(".reorder-up");
-        const downButton = event.target.closest(".reorder-down");
-
-        if (!upButton && !downButton) return;
-
-        const toolOption = event.target.closest(".ai-tool-option");
-        if (!toolOption) return;
-
-        // Skip if button is disabled or animation in progress
-        if (event.target.disabled || event.target.dataset.animating === "true") return;
-        event.target.dataset.animating = "true";
-
-        if (upButton) {
-            const prevToolOption = toolOption.previousElementSibling;
-            if (prevToolOption) {
-                await animateReorder(toolOption, prevToolOption, "up");
-            }
-        } else if (downButton) {
-            const nextToolOption = toolOption.nextElementSibling;
-            if (nextToolOption) {
-                await animateReorder(toolOption, nextToolOption, "down");
-            }
-        }
-
-        event.target.dataset.animating = "false";
-    });
-
     updateReorderButtonStates();
 }
+
+// One delegated listener survives form re-renders without being duplicated.
+aiToolsForm.addEventListener("click", async (event) => {
+    const upButton = event.target.closest(".reorder-up");
+    const downButton = event.target.closest(".reorder-down");
+
+    if (!upButton && !downButton) return;
+
+    const toolOption = event.target.closest(".ai-tool-option");
+    if (!toolOption) return;
+
+    if (event.target.disabled || event.target.dataset.animating === "true") return;
+    event.target.dataset.animating = "true";
+
+    if (upButton) {
+        const prevToolOption = toolOption.previousElementSibling;
+        if (prevToolOption) await animateReorder(toolOption, prevToolOption, "up");
+    } else {
+        const nextToolOption = toolOption.nextElementSibling;
+        if (nextToolOption) await animateReorder(toolOption, nextToolOption, "down");
+    }
+
+    event.target.dataset.animating = "false";
+});
 
 // Function to show AI Tools settings modal
 function showAIToolsSettings() {
     // Clear previous form content
     aiToolsForm.innerHTML = "";
 
-    // Load saved tool order and visibility or initialize from defaults
-    let savedSettings = JSON.parse(localStorage.getItem("aiToolsSettings") || "null");
-
-    // If no settings exist, create from aiTools
-    if (!savedSettings || !Array.isArray(savedSettings)) {
-        savedSettings = aiTools.map(tool => {
-            if (tool.visible) {
-                return tool.id;
-            } else {
-                const hiddenTool = {};
-                hiddenTool[tool.id] = false;
-                return hiddenTool;
-            }
-        });
-    }
+    const savedSettings = loadAIToolsSettings();
 
     // Generate the form with the saved settings
     generateAIToolsForm(savedSettings);
@@ -307,6 +272,7 @@ function toggleAITools(event) {
 
     if (isAIToolVisible) {
         // Hide AI Tool panel
+        aiToolsIcon.setAttribute("aria-expanded", "false");
         if (shortcutsCheckbox.checked) {
             shortcuts.style.display = "flex";
         } else {
@@ -323,6 +289,7 @@ function toggleAITools(event) {
         }, 500);
     } else {
         // Show AI Tool panel
+        aiToolsIcon.setAttribute("aria-expanded", "true");
         shortcuts.style.display = "none";
         aiToolName.style.display = "flex";
 
@@ -371,15 +338,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Reset button in settings modal
     resetAISettingsBtn.addEventListener("click", function () {
         // Create default settings
-        const defaultSettings = aiTools.map(tool => {
-            if (tool.visible) {
-                return tool.id;
-            } else {
-                const hiddenTool = {};
-                hiddenTool[tool.id] = false;
-                return hiddenTool;
-            }
-        });
+        const defaultSettings = getDefaultAIToolsSettings();
 
         // Generate the form with default settings
         generateAIToolsForm(defaultSettings);
@@ -467,6 +426,8 @@ document.addEventListener("DOMContentLoaded", function () {
             saveDisplayStatus("aiToolsDisplayStatus", "flex");
             aiToolsEditField.classList.remove("inactive");
         } else {
+            aiToolName.style.display = "none";
+            aiToolsIcon.setAttribute("aria-expanded", "false");
             aiToolsCont.style.display = "none";
             saveDisplayStatus("aiToolsDisplayStatus", "none");
             aiToolsEditField.classList.add("inactive");

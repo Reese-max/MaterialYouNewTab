@@ -8,7 +8,7 @@ MYNT: Material You New Tab
 </h1>
 <div align="center">
 
-MYNT: Material You New Tab is a versatile browser extension that personalizes your New Tab page with customizable themes, a welcoming message, and various handy tools, all while integrating seamlessly with your preferred search engine.
+MYNT: Material You New Tab is a customizable browser extension that turns the New Tab page into a Traditional Chinese-first dashboard with Google search, focus tools, bookmarks, weather, and playful widgets.
 
 </div>
 
@@ -28,7 +28,7 @@ MYNT: Material You New Tab is a versatile browser extension that personalizes yo
   <a href="#-features">Features</a> •
   <a href="#-installation-guide">Installation Guide</a> •
   <a href="#download">Download</a> •
-  <a href="#-currently-supported-languages-31">Currently Supported Languages</a>
+  <a href="#-currently-supported-languages-2">Currently Supported Languages</a>
 <br>
   <a href="#-contributing">Contributing</a> •
   <a href="#-star-history">Star History</a> •
@@ -43,26 +43,32 @@ MYNT: Material You New Tab is a versatile browser extension that personalizes yo
 
 ## ✨ Features
 
-- **Integrated Search**: Search directly from the New Tab using your preferred search engine — Google, DuckDuckGo, Bing, Brave Search, YouTube, Wikipedia, and more, with integrated voice typing.
+- **Google Search**: Search Google directly from the New Tab, with optional Google autocomplete suggestions and integrated voice typing.
 - **Customizable Themes**: Choose from a selection of themes or use the built-in color picker to match your style.
 - **Wallpaper**: Upload your own wallpapers or enable daily random images sourced from [Lorem Picsum](https://picsum.photos).
 - **Personalized Greeting**: Add a custom message or your name, so you're greeted each time you open a new tab.
 - **Clock & Time Display**: Choose between a modern analog or digital clock.
 - **Live Weather Updates**: View real-time temperature, conditions, humidity, feels like, and max-min temperature values. Supports °C and °F with location customization.
 - **Quick Shortcuts**: Access common platforms (YouTube, Email, WhatsApp, etc.) or add your own shortcuts for instant navigation.
-- **AI Tools**: Open ChatGPT, Gemini, Copilot, Perplexity, Claude, DeepSeek, and more with one click.
+- **AI Tools**: Open ChatGPT, Claude, and YouTube with one click, then reorder or hide them in settings.
 - **To-Do List**: Manage daily tasks, pin important ones, and enjoy automatic cleanup at the start of each day (pinned tasks reset to pending).
+- **Pomodoro Timer & Focus Stats**: Run configurable focus and break sessions with sound, desktop notifications, a seven-day chart, and a local streak counter.
+- **Daily Habits**: Track custom habits; completed Pomodoro sessions and To-Do items update two built-in habits automatically.
+- **Command Palette**: Press `Ctrl+K` (`⌘K` on macOS) to search actions, open widgets, and apply Work, Study, or Relax presets.
+- **Control Center**: Review optional permissions, third-party service health, and local privacy disclosures in one place.
+- **Accessibility**: Reduce motion, pause decorative video, increase contrast, or scale interface text without browser zoom.
+- **Bongo Cat**: Add a keyboard-reactive cat with selectable outfits, styles, and a draggable position.
 - **Sidebar Bookmarks**: View, delete, and organize bookmarks in either list or grid layout.
 - **Google Apps**: Quickly launch Gmail, Drive, Docs, and other Google services.
-- **Backup & Reset**: Save or restore your setup anytime, or reset everything to default with one click.
-- **Language Support**: Use the extension in your preferred language for better accessibility.
+- **Backup & Reset**: Save or restore your setup anytime, or reset local settings and wallpaper data with one click. Personal WeatherAPI keys are excluded from backup files and must be re-entered after restoring on a new profile.
+- **Language Support**: Includes English and Traditional Chinese, with Traditional Chinese as the default.
 - **Browser Compatibility**: Supports all Chromium-based browsers, including **Chrome**, **Edge**, **Brave**, and **Opera**, as well as Firefox-based browsers like **Firefox** and **Zen**.
 
 ## 📥 Installation Guide
 
 ### Download
 
-1. **Development Version** (v3.2.*)
+1. **Development Version** (local manifest v3.3.6)
 
     - **Clone the Repository**:
       Use the following command to clone the repository:
@@ -77,7 +83,7 @@ MYNT: Material You New Tab is a versatile browser extension that personalizes yo
 
     - You can also download the ZIP file by clicking on the Code button. On the repository page, look for a green button labeled **Code**. Click on the **Code** button, and in the dropdown menu, select **Download ZIP**.
 
-2. **Stable Release** (v3.2)
+2. **Stable Release**
 
 <p align="center">
     <a href="https://github.com/prem-k-r/MaterialYouNewTab/releases/latest"><img src="https://github.com/user-attachments/assets/51048d6d-0b35-4f62-8351-4a3ea52d2213" alt="Download from GitHub" height="48" /></a>
@@ -215,45 +221,26 @@ For a step-by-step walkthrough, watch this [installation guide video](https://yo
 
 [![Watch the video](https://img.youtube.com/vi/P4ryQPixfw8/0.jpg)](https://youtu.be/P4ryQPixfw8) -->
 
-## 🌐 Currently Supported Languages (31)
+## 🌐 Currently Supported Languages (2)
 
 | Language                                                                                     | Code  | Translator(s)                                                                         |
 | -------------------------------------------------------------------------------------------- | :---: | ------------------------------------------------------------------------------------- |
 | <img src='https://flagcdn.com/us.svg' width=20> &nbsp; **English**                           |  en   | [XengShi](https://github.com/XengShi/), [Prem](https://github.com/prem-k-r/)          |
-| <img src='https://flagcdn.com/sa.svg' width=20> &nbsp; **Arabic** - العربية                     | ar-SA | [Mazen](https://github.com/Mazen3Alharbi)                                             |
-| <img src='https://flagcdn.com/az.svg' width=20> &nbsp; **Azerbaijani** - Azərbaycanca        |  az   | [Hasan Bakhtiar](https://github.com/hasanbakhtiar/)                                   |
-| <img src='https://flagcdn.com/bd.svg' width=20> &nbsp; **Bangla** - বাংলা                     |  bn   | [It'z RJ](https://github.com/itz-rj-here/), [Prem](https://github.com/prem-k-r/)      |
-| <img src='https://flagcdn.com/cn.svg' width=20> &nbsp; **Chinese** (Simplified) - 简体中文    | zh-CN | [Guy Berryman](https://github.com/Guy-Berryman), [Tianli](https://github.com/TIANLI0), [Konsento](http://github.com/kons10) |
 | <img src='https://flagcdn.com/tw.svg' width=20> &nbsp; **Chinese** (Traditional) - 繁體中文   | zh-TW | [C. Y. Tseng](https://github.com/Eddie40802)                                          |
-| <img src='https://flagcdn.com/cz.svg' width=20> &nbsp; **Czech** - Čeština                   |  cz   | [Michal Šmahel](https://github.com/ceskyDJ/)                                          |
-| <img src='https://flagcdn.com/fr.svg' width=20> &nbsp; **French** - Français                 |  fr   | [422.io](https://github.com/iamwinner422)                                             |
-| <img src='https://flagcdn.com/de.svg' width=20> &nbsp; **German** - Deutsch                  |  de   | [Prem](https://github.com/prem-k-r/)                                                  |
-| <img src='https://flagcdn.com/gr.svg' width=20> &nbsp; **Greek** - Ελληνικά                  |  el   | [Lefteris T.](https://github.com/trlef19)                                             |
-| <img src='https://flagcdn.com/in.svg' width=20> &nbsp; **Hindi** - हिंदी                       |  hi   | [XengShi](https://github.com/XengShi/), [Prem](https://github.com/prem-k-r/)          |
-| <img src='https://flagcdn.com/hu.svg' width=20> &nbsp; **Hungarian** - Magyar                |  hu   | [Zan1456](https://github.com/Zan1456/)                                                |
-| <img src='https://flagcdn.com/id.svg' width=20> &nbsp; **Indonesian** - Bahasa Indonesia     |  idn  | [Ayyas-RF](https://github.com/Ayyas-RF/)                                              |
-| <img src='https://flagcdn.com/it.svg' width=20> &nbsp; **Italian** - Italiano                |  it   | [Claudio Di Maio](https://github.com/ZiClaud/)                                        |
-| <img src='https://flagcdn.com/jp.svg' width=20> &nbsp; **Japanese** - 日本語                 |  ja   | [XengShi](https://github.com/XengShi/), [S-H-Y-A](https://github.com/S-H-Y-A/), [Konsento](http://github.com/kons10) |
-| <img src='https://flagcdn.com/kr.svg' width=20> &nbsp; **Korean** - 한국어                   |  ko   | [XengShi](https://github.com/XengShi/), [eunsunglee0524](https://github.com/eunsunglee0524/) |
-| <img src='https://flagcdn.com/in.svg' width=20> &nbsp; **Marathi** - मराठी                   |  mr   | [Prem](https://github.com/prem-k-r/), [Pratik Lokhande](https://github.com/konprtk)   |
-| <img src='https://flagcdn.com/np.svg' width=20> &nbsp; **Nepali** - नेपाली                    |  np   | [Bikash Shresha](https://github.com/sthaB-kash/)                                      |
-| <img src='https://flagcdn.com/ir.svg' width=20> &nbsp; **Persian** - فارسی                    |  fa   | [AMIRHOSSEIN](https://github.com/AMIRHOSSEIN-AHMADI-IR)                               |
-| <img src='https://flagcdn.com/pl.svg' width=20> &nbsp; **Polish** - Polski                  | pl | [Dawid Warkowski](https://github.com/dawid9707/)                                         |
-| <img src='https://flagcdn.com/br.svg' width=20> &nbsp; **Portuguese** - Português            | pt-BR | [Maycon Vitor Correa](https://github.com/MestreWalla/)                                |
-| <img src='https://flagcdn.com/ru.svg' width=20> &nbsp; **Russian** - Русский                 |  ru   | [giwi](https://github.com/giwih/), [CodWiz](https://github.com/C0dwiz/)               |
-| <img src='https://flagcdn.com/si.svg' width=20> &nbsp; **Slovenian** - Slovenščina           | sl-SI | [Linux-Alex](https://github.com/Linux-Alex/)                                          |
-| <img src='https://flagcdn.com/es.svg' width=20> &nbsp; **Spanish** - Español                 | es-ES | [XengShi](https://github.com/XengShi/), [Isaac Vergara](https://github.com/zRaidev), [Saúl Palacios](https://github.com/palacios22c)  |
-| <img src='https://flagcdn.com/in.svg' width=20> &nbsp; **Tamil** - தமிழ்                 | ta | [தமிழ்நேரம்](https://TamilNeram.github.io/)                                                |
-| <img src='https://flagcdn.com/th.svg' width=20> &nbsp; **Thai** - ภาษาไทย                 | th | [Prin](https://github.com/prinsasina)                                                |
-| <img src='https://flagcdn.com/tr.svg' width=20> &nbsp; **Turkish** - Türkçe                  |  tr   | [Nobody](https://github.com/Nobody9512), [Kerim Ölçer](https://github.com/kerimlcr)   |
-| <img src='https://flagcdn.com/ua.svg' width=20> &nbsp; **Ukrainian** - Українська | uk | [Serhii Lozytskyi](https://github.com/lozik4) |
-| <img src='https://flagcdn.com/pk.svg' width=20> &nbsp; **Urdu** - اردو                        |  ur   | [Asfandiyar Khan](https://github.com/asfand-dev)                                      |
-| <img src='https://flagcdn.com/uz.svg' width=20> &nbsp; **Uzbek** - O'zbek                    |  uz   | [Firdavs](https://github.com/Firdavs9512/), [S0ME2](https://github.com/S0ME2/)                                            |
-| <img src='https://flagcdn.com/vn.svg' width=20> &nbsp; **Vietnamese** - Tiếng Việt           |  vn   | [Diep](https://github.com/diepdo1810/), [Tuan](https://github.com/Tuan1-2-3)          |
 
 Check the [Translation Status Page](https://prem-k-r.github.io/MaterialYouNewTab/tools/languagesAnalysis.html) for an overview of completed languages and missing strings analysis.
 
 If you'd like to contribute quotes in any of the languages used in MYNT, check out [Multilingual Quotes](https://github.com/prem-k-r/multilingual-quotes-api).
+
+## ✅ Development Check
+
+Run the zero-dependency customization check before packaging:
+
+```bash
+node tools/check-customizations.mjs
+```
+
+It validates both manifests, local asset references, the Google-only search configuration, locale key parity, and video usage.
 
 ## 🤝 Contributing
 
@@ -288,11 +275,12 @@ Here is the star history chart for the **MYNT: Material You New Tab** repository
 MYNT: Material You New Tab prioritizes your privacy and is focused solely on providing a better browsing experience.
 We make the following commitments:
 
-- **No commercialization** — absolutely no ads, paid features, or premium tiers
-- **No trackers** — no data collection, analytics, or background reporting of any kind
-- **No access to personal information** — all settings, cache, and preferences are stored locally in your browser
+- **No commercialization** — no ads, paid features, or premium tiers
+- **No first-party tracking** — no analytics, telemetry, or background reporting operated by MYNT
+- **Local settings** — preferences, cached weather, quotes, tasks, and customizations stay in browser storage
+- **Explicit third-party use** — optional features such as search suggestions, weather, random wallpapers, quotes, speech recognition, and favicon fallback contact the services documented in the Privacy Policy
 
-For more details, read our [Privacy Policy](https://prem-k-r.github.io/MaterialYouNewTab/privacy-policy.html).
+For more details, read the bundled [Privacy Policy](./privacy-policy.html).
 
 ## 📜 License
 

@@ -16,6 +16,7 @@ googleAppsCont.addEventListener("click", function (event) {
 
     // Toggle menu visibility
     iconContainer.style.display = isMenuVisible ? "none" : "grid";
+    googleAppsCont.setAttribute("aria-expanded", String(!isMenuVisible));
 
     // Add or remove the class to hide the tooltip
     if (!isMenuVisible) {
@@ -36,6 +37,7 @@ document.addEventListener("click", function (event) {
     if (!isClickInside && iconContainer.style.display === "grid") {
         iconContainer.style.display = "none"; // Hide menu
         googleAppsCont.classList.remove("menu-open"); // Restore tooltip
+        googleAppsCont.setAttribute("aria-expanded", "false");
     }
 });
 // ------------------------End of Google App Menu Setup-----------------------------------
@@ -51,6 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
             googleAppsCont.style.display = "flex";
             saveDisplayStatus("googleAppsDisplayStatus", "flex");
         } else {
+            iconContainer.style.display = "none";
+            googleAppsCont.setAttribute("aria-expanded", "false");
             googleAppsCont.style.display = "none";
             saveDisplayStatus("googleAppsDisplayStatus", "none");
         }

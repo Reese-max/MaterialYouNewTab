@@ -8,6 +8,7 @@
 
 // --------------------------------- Proxy ---------------------------------
 let proxyurl;
+const GOOGLE_SUGGESTION_ORIGIN = "https://www.google.com/*";
 document.addEventListener("DOMContentLoaded", () => {
     const userProxyInput = document.getElementById("userproxy");
     const saveProxyButton = document.getElementById("saveproxy");
@@ -67,7 +68,6 @@ function hideResultBox() {
     //resultBox.style.display = "none";
 }
 
-showResultBox();
 hideResultBox();
 
 searchInput.addEventListener("input", async function () {
@@ -79,51 +79,32 @@ searchInput.addEventListener("input", async function () {
         originalSearchText = query;
 
         if (query.length > 0) {
-            try {
-                // Fetch autocomplete suggestions
-                const suggestions = await getAutocompleteSuggestions(query);
+            const suggestions = await getAutocompleteSuggestions(query);
+            resultBox.replaceChildren();
 
-                if (suggestions === "") {
-                    hideResultBox();
-                } else {
-                    // Clear the result box
-                    resultBox.innerHTML = "";
-
-                    // Add suggestions to the result box
-                    suggestions.forEach((suggestion, index) => {
-                        const resultItem = document.createElement("div");
-                        resultItem.classList.add("resultItem");
-                        resultItem.textContent = suggestion;
-                        resultItem.setAttribute("data-index", index);
-
-                        resultItem.onclick = () => {
-                            performSearch(suggestion);
-                        };
-
-                        resultItem.addEventListener("mouseenter", () => {
-                            // Remove existing highlight
-                            const currentlyActive = resultBox.querySelector(".active");
-                            if (currentlyActive) currentlyActive.classList.remove("active");
-
-                            // Mark this as active
-                            resultItem.classList.add("active");
-                            lastInteractionBy = "mouse";
-                        });
-
-                        resultBox.appendChild(resultItem);
-                    });
-
-                    // Check if the dropdown of search shortcut is open
-                    const dropdown = document.querySelector(".dropdown-content");
-
-                    if (dropdown.style.display === "block") {
-                        dropdown.style.display = "none";
-                    }
-                    showResultBox();
-                }
-            } catch (error) {
-                // Handle the error (if needed)
+            if (suggestions.length === 0) {
+                hideResultBox();
+                return;
             }
+
+            suggestions.forEach((suggestion, index) => {
+                const resultItem = document.createElement("div");
+                resultItem.classList.add("resultItem");
+                resultItem.textContent = suggestion;
+                resultItem.setAttribute("data-index", index);
+
+                resultItem.onclick = () => performSearch(suggestion);
+                resultItem.addEventListener("mouseenter", () => {
+                    const currentlyActive = resultBox.querySelector(".active");
+                    if (currentlyActive) currentlyActive.classList.remove("active");
+                    resultItem.classList.add("active");
+                    lastInteractionBy = "mouse";
+                });
+
+                resultBox.appendChild(resultItem);
+            });
+
+            showResultBox();
         } else {
             hideResultBox();
         }
@@ -206,66 +187,18 @@ function getClientParam() {
     return "firefox"; // Default to Firefox if the browser is not recognized
 }
 
-let lastRedditRequestTime = 0;
-
 async function getAutocompleteSuggestions(query) {
-    const clientParam = getClientParam(); // Get the browser client parameter dynamically
-    var selectedOption = document.querySelector('input[name="search-engine"]:checked').value;
-
-    // 🔒 Throttle Reddit API calls
-    const now = Date.now();
-    if (selectedOption === "engine7") {
-        if (now - lastRedditRequestTime < 1000) {
-            return []; // skip call if within 1 second
-        }
-        lastRedditRequestTime = now;
-    }
-
-    const searchSuggestionsAPI = {
-        engine0: `https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`,
-        engine1: `https://www.google.com/complete/search?client=${clientParam}&q=${encodeURIComponent(query)}`,
-        engine2: `https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`,
-        engine4: `https://search.brave.com/api/suggest?q=${encodeURIComponent(query)}&rich=true&source=web`,
-        engine5: `https://www.google.com/complete/search?client=${clientParam}&ds=yt&q=${encodeURIComponent(query)}`,
-        engine7: `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=relevance&limit=15`,
-        engine8: `https://${languageCode}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&format=json`
-    };
-
     const useproxyCheckbox = document.getElementById("useproxyCheckbox");
-    let apiUrl = searchSuggestionsAPI[selectedOption] || searchSuggestionsAPI["engine1"];
-    if (useproxyCheckbox.checked && selectedOption !== "engine7") {
+    let apiUrl = `https://www.google.com/complete/search?client=${getClientParam()}&q=${encodeURIComponent(query)}`;
+    if (useproxyCheckbox.checked) {
         apiUrl = proxyurl + encodeURIComponent(apiUrl);
     }
 
     try {
         const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error(`Suggestion request failed: ${response.status}`);
         const data = await response.json();
-
-        if (selectedOption === "engine4") {
-            const suggestions = data[1].map(item => {
-                if (item.is_entity) {
-                    return `${item.q} - ${item.name} (${item.category ? item.category : "No category"})`;
-                } else {
-                    return item.q;
-                }
-            });
-            return suggestions;
-
-        } else if (selectedOption === "engine7") {
-            const suggestions = [];
-            if (data && data.data && data.data.children) {
-                data.data.children.forEach(post => {
-                    if (post.data && post.data.title) {
-                        const subreddit = post.data.subreddit_name_prefixed;
-                        suggestions.push(`${post.data.title} (${subreddit})`);
-                    }
-                });
-            }
-            return suggestions;
-
-        } else {
-            return data[1];
-        }
+        return Array.isArray(data?.[1]) ? data[1] : [];
     } catch (error) {
         console.error("Error fetching autocomplete suggestions:", error);
         return [];
@@ -280,7 +213,7 @@ document.addEventListener("click", function (event) {
 });
 
 // ------------------------- Toggles --------------------------
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     const searchsuggestionscheckbox = document.getElementById("searchsuggestionscheckbox");
     const proxybypassField = document.getElementById("proxybypassField");
     const proxyinputField = document.getElementById("proxyField");
@@ -301,15 +234,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         return new Promise((resolve) => {
             chrome.permissions.request({
-                origins: [
-                    "https://www.google.com/complete/search?client=*",
-                    "https://duckduckgo.com/ac/?q=*",
-                    "https://search.brave.com/api/suggest?q=*",
-                    "https://*.wikipedia.org/w/api.php?action=opensearch&search=*"
-                ]
+                origins: [GOOGLE_SUGGESTION_ORIGIN]
             }, (granted) => {
                 resolve(granted);
             });
+        });
+    }
+
+    async function hasHostPermissions() {
+        if (!chrome?.permissions?.contains) return false;
+        return new Promise(resolve => {
+            chrome.permissions.contains({ origins: [GOOGLE_SUGGESTION_ORIGIN] }, resolve);
         });
     }
 
@@ -329,14 +264,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Add change event listeners for the checkboxes
     searchsuggestionscheckbox.addEventListener("change", async function () {
-        saveCheckboxState("searchsuggestionscheckboxState", searchsuggestionscheckbox);
-
-        const enabled = searchsuggestionscheckbox.checked;
-        applySearchSuggestionsState(enabled);
-
-        if (enabled && !isFirefoxAll) {
-            await requestHostPermissions();
+        if (searchsuggestionscheckbox.checked && !isFirefoxAll) {
+            const granted = await requestHostPermissions();
+            if (!granted) searchsuggestionscheckbox.checked = false;
         }
+
+        saveCheckboxState("searchsuggestionscheckboxState", searchsuggestionscheckbox);
+        applySearchSuggestionsState(searchsuggestionscheckbox.checked);
     });
 
     useproxyCheckbox.addEventListener("change", async function () {
@@ -365,5 +299,9 @@ document.addEventListener("DOMContentLoaded", function () {
     loadCheckboxState("useproxyCheckboxState", useproxyCheckbox);
     loadActiveStatus("proxyinputField", proxyinputField);
     loadActiveStatus("proxybypassField", proxybypassField);
+    if (searchsuggestionscheckbox.checked && !isFirefoxAll && !(await hasHostPermissions())) {
+        searchsuggestionscheckbox.checked = false;
+        saveCheckboxState("searchsuggestionscheckboxState", searchsuggestionscheckbox);
+    }
     applySearchSuggestionsState(searchsuggestionscheckbox.checked);
 });

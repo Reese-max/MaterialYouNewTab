@@ -6,11 +6,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
-
 @font-face {
 	font-family: "poppins";
 	src: url("./fonts/Poppins-Regular.ttf") format("truetype");
+	font-display: swap;
 }
 
 * {
@@ -33,6 +32,7 @@
 	--darkColor-blue: #4382ec;
 	--textColorDark-blue: #1b3041;
 	--whitishColor-blue: #ffffff;
+	--onActionColor-blue: #ffffff;
 
 	/* 🔴🔴🔴 */
 	--bg-color-red: #fdbdbd;
@@ -219,6 +219,130 @@ body {
 	background-attachment: fixed;
 	height: 100%; /* Ensure the image fits the viewport height */
 	margin: 0;
+}
+
+.todoListCont,
+.pomodoroCont,
+.googleAppsCont,
+.aiToolsCont .hangno {
+	appearance: none;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+}
+
+.bookmark-button,
+.micIcon,
+#menuButton {
+	appearance: none;
+	color: inherit;
+	font: inherit;
+}
+
+.bookmark-button {
+	border: 0;
+	background: transparent;
+}
+
+/* === Video background layout === */
+body[data-workspace-background="video"] {
+	background-color: transparent;
+	background-image: none;
+	overflow: hidden;
+}
+
+html:has(body[data-workspace-background="video"]) {
+	overflow: hidden;
+}
+
+/* Search + AI tools: fixed left-center group */
+body[data-workspace-background="video"] .centerDiv {
+	position: fixed;
+	top: 50%;
+	left: 3vw;
+	transform: translateY(-50%);
+	grid-template-columns: auto;
+	padding: 0;
+	gap: 0;
+	z-index: 1;
+}
+
+body[data-workspace-background="video"] .leftDiv { display: none; }
+body[data-workspace-background="video"] #hideWeather { display: none; }
+body[data-workspace-background="video"] .searchWithCont { display: none !important; }
+body[data-workspace-background="video"] .bookmark-button { display: flex !important; }
+
+body[data-workspace-background="video"] .rightDiv {
+	transform: none;
+	width: min(600px, 38vw);
+}
+
+body[data-workspace-background="video"] .searchbar {
+	margin-top: 0;
+	height: 72px;
+	border-radius: 36px;
+	font-size: 1.1rem;
+}
+
+body[data-workspace-background="video"] .searchbar #searchQ { font-size: 1.1rem; }
+
+body[data-workspace-background="video"] .searchbar .searchIcon {
+	width: 34px;
+	height: 34px;
+	margin-top: 19px;
+}
+
+body[data-workspace-background="video"] #enterBtn {
+	font-size: 1.05rem;
+	padding: 10px 24px;
+}
+
+/* AI tools: positioned relative to centerDiv via fixed */
+body[data-workspace-background="video"] .aiToolsCont {
+	display: flex !important;
+	position: fixed;
+	top: calc(50% + 52px);
+	left: 3vw;
+	margin: 0;
+	height: auto;
+	max-width: none;
+	overflow: visible;
+	border-radius: 0;
+	z-index: 1;
+}
+
+body[data-workspace-background="video"] .aiToolsCont .hangno { display: none; }
+
+body[data-workspace-background="video"] .aiToolsCont .toolsCont {
+	display: flex !important;
+	opacity: 1 !important;
+	transform: none !important;
+	gap: 12px;
+	margin-inline-start: 0;
+}
+
+body[data-workspace-background="video"] .aiToolsCont .toolsCont::before { display: none; }
+
+body[data-workspace-background="video"] .aiToolsCont .toolsCont a {
+	height: 44px;
+	padding-inline: 16px 20px;
+	border-radius: 22px;
+}
+
+body[data-workspace-background="video"] .liquidGlass-toast { display: none !important; }
+
+/* Video element: no transform, pure object-position for stability */
+#videoBg {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 70% 62%;
+	z-index: -1;
 }
 
 /* Apply dark mode when: Dark Mode is selected manually, OR System Theme is selected */
@@ -1141,6 +1265,402 @@ body #bookmarkButton.bookmark-button.rotate {
 }
 /* ----------------- End of Bookmark System ----------------- */
 
+/* ------------------- Pomodoro Timer ----------------------- */
+.pomodoroCont {
+	position: fixed;
+	display: inline-flex;
+	align-items: center;
+	margin: 10px;
+	top: var(--gap);
+	inset-inline-start: calc(var(--gap) + 50px);
+	font-size: 25px;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	touch-action: none;
+	z-index: 2;
+}
+
+.pomodoroCont.pomodoro-icon-dragged {
+	top: auto;
+	inset-inline-start: auto;
+	margin: 0;
+	cursor: grab;
+}
+.pomodoroCont.pomodoro-icon-dragged:active {
+	cursor: grabbing;
+}
+
+.pomodoroCont:hover .tooltip-text {
+	visibility: visible;
+	opacity: 1;
+}
+
+.pomodoroCont .dot-icon {
+	fill: var(--darkColor-blue);
+	transition: transform 0.2s ease;
+	filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+}
+
+.pomodoroCont:hover .dot-icon {
+	transform: scale(1.15);
+}
+
+.pomodoro-clock-face {
+	fill: none;
+	stroke: var(--darkColor-blue);
+	stroke-width: 1.5;
+}
+.pomodoro-clock-hand {
+	stroke: var(--darkColor-blue);
+	transform-origin: 12px 12px;
+	transition: transform 0.3s var(--md-motion-decelerate);
+}
+.pomodoro-clock-second {
+	opacity: 0.6;
+	transition: transform 0.15s linear;
+}
+
+.pomodoro-panel {
+	position: fixed;
+	top: 85px;
+	left: 15px;
+	padding: 20px;
+	background: transparent;
+	border-radius: 30px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+	border: 4px solid rgba(255, 255, 255, 0.15);
+	z-index: 4;
+	text-align: center;
+	min-width: 240px;
+	max-width: 280px;
+	animation: pomodoroSlideIn 0.3s var(--md-motion-decelerate);
+	transform-origin: top left;
+	overflow: hidden;
+}
+
+.pomodoro-bg-video {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	z-index: -2;
+	border-radius: 26px;
+	pointer-events: none;
+}
+
+.pomodoro-bg-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.35);
+	backdrop-filter: blur(2px);
+	-webkit-backdrop-filter: blur(2px);
+	z-index: -1;
+	border-radius: 26px;
+}
+
+.pomodoroPhaseLabel {
+	font-size: 16px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.95);
+	margin-bottom: 10px;
+	letter-spacing: 1.5px;
+	text-transform: uppercase;
+	text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.pomodoroPhaseLabel.break-phase {
+	color: #81d884;
+}
+
+.pomodoroCircleWrap {
+	position: relative;
+	width: 160px;
+	height: 160px;
+	margin: 0 auto 12px;
+}
+
+.pomodoroProgressRing {
+	transform: rotate(-90deg);
+}
+
+.pomodoroRingBg {
+	fill: none;
+	stroke: rgba(255, 255, 255, 0.2);
+	stroke-width: 8;
+}
+
+.pomodoroRingFg {
+	fill: none;
+	stroke: rgba(255, 255, 255, 0.9);
+	stroke-width: 10;
+	stroke-linecap: round;
+	stroke-dasharray: 439.82;
+	stroke-dashoffset: 0;
+	transition: stroke-dashoffset 0.3s ease;
+	filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+}
+
+.pomodoroRingFg.break-ring {
+	stroke: #81d884;
+	filter: drop-shadow(0 0 6px rgba(129, 216, 132, 0.5));
+}
+
+.pomodoroTimeDisplay {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 36px;
+	font-weight: 800;
+	color: rgba(255, 255, 255, 0.95);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 1px;
+	text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.pomodoroRoundDisplay {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.7);
+	margin-bottom: 12px;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.pomodoroControls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.pomodoroBtn {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	border: none;
+	background: rgba(255, 255, 255, 0.2);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s ease, transform 0.15s ease;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pomodoroBtn svg {
+	fill: white;
+}
+
+.pomodoroBtn:hover {
+	background: rgba(255, 255, 255, 0.35);
+	transform: scale(1.08);
+}
+
+.pomodoroBtn.pomodoroResetBtn {
+	width: 36px;
+	height: 36px;
+	background: rgba(255, 255, 255, 0.12);
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	transition: all 0.2s ease;
+}
+
+.pomodoroBtn.pomodoroResetBtn svg {
+	fill: rgba(255, 255, 255, 0.8);
+}
+
+.pomodoroBtn.pomodoroResetBtn:hover {
+	background: rgba(255, 255, 255, 0.3);
+}
+
+.pomodoroBtn.pomodoroResetBtn:hover svg {
+	fill: white;
+}
+
+.pomodoroSessionsToday {
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.6);
+	border-top: 1px solid rgba(255, 255, 255, 0.15);
+	padding-top: 10px;
+	margin-top: 4px;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.pomodoroFocusTask {
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.6);
+	margin-top: 6px;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 200px;
+	margin-inline: auto;
+	font-style: italic;
+}
+
+@keyframes pomodoroPulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.7; }
+}
+
+.pomodoroRingFg.running {
+	animation: pomodoroPulse 2s ease-in-out infinite;
+}
+
+.pomodoro-drag-handle {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.15);
+	cursor: grab;
+	touch-action: none;
+	pointer-events: auto;
+	opacity: 0;
+	transition: opacity 0.25s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+}
+.pomodoro-drag-handle::before {
+	content: "\2807";
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.7);
+	line-height: 1;
+}
+.pomodoro-drag-handle.pomodoro-drag-near { opacity: 1; }
+.pomodoro-drag-handle:active { cursor: grabbing; background: rgba(255, 255, 255, 0.3); }
+.pomodoro-panel.pomodoro-dragged { animation: none; }
+
+.pomodoro-panel:hover {
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Pomodoro settings number input */
+.pomodoroNumberInput {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pomodoroNumberInput input[type="number"] {
+	width: 48px;
+	text-align: center;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--darkColor-blue);
+	background: transparent;
+	border: none;
+	border-bottom: 2px solid color-mix(in srgb, var(--darkColor-blue) 40%, transparent);
+	outline: none;
+	padding: 2px 0;
+	font-family: inherit;
+	-moz-appearance: textfield;
+	transition: border-color 0.2s ease;
+}
+
+.pomodoroNumberInput input[type="number"]:focus {
+	border-bottom-color: var(--darkColor-blue);
+}
+
+.pomodoroNumberInput input[type="number"]::-webkit-outer-spin-button,
+.pomodoroNumberInput input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.pomodoroNumBtn {
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	border: 2px solid var(--darkColor-blue);
+	background: transparent;
+	color: var(--darkColor-blue);
+	font-size: 18px;
+	font-weight: 700;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s ease, color 0.2s ease;
+	line-height: 1;
+}
+
+.pomodoroNumBtn:hover {
+	background: var(--darkColor-blue);
+	color: white;
+}
+
+.pomodoroSettingsHidden {
+	display: none !important;
+}
+
+@keyframes pomodoroSlideIn {
+	from {
+		transform: scale(0.85) translateY(-8px);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1) translateY(0);
+		opacity: 1;
+	}
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+	.pomodoro-panel {
+		transform: scale(0.85);
+		transform-origin: top left;
+	}
+}
+
+/* 深色主題覆蓋樣式 */
+.black-theme .pomodoroCont .dot-icon {
+	fill: var(--darkColor-blue);
+}
+.black-theme .pomodoro-clock-face { stroke: var(--darkColor-blue); }
+.black-theme .pomodoro-clock-hand { stroke: var(--darkColor-blue); }
+
+.black-theme .pomodoro-bg-overlay {
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.black-theme .pomodoro-panel {
+	border-color: rgba(255, 255, 255, 0.1);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.black-theme .pomodoroNumberInput input[type="number"] {
+	color: rgba(255, 255, 255, 0.85);
+	border-bottom-color: rgba(255, 255, 255, 0.2);
+}
+
+.black-theme .pomodoroNumberInput input[type="number"]:focus {
+	border-bottom-color: rgba(255, 255, 255, 0.6);
+}
+
+.black-theme .pomodoroNumBtn {
+	border-color: color-mix(in srgb, var(--darkColor-blue) 70%, #aaa);
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.black-theme .pomodoroNumBtn:hover {
+	background: var(--darkColor-blue);
+	color: white;
+}
+/* --------------- End of Pomodoro Timer -------------------- */
+
 /* ------------------ To Do List Section -------------------- */
 .todoListCont {
 	position: fixed;
@@ -1308,7 +1828,7 @@ body #bookmarkButton.bookmark-button.rotate {
 
 /* Default placeholder color */
 #todoInput::placeholder {
-	color: #757575;
+	color: color-mix(in srgb, var(--textColorDark-blue) 82%, var(--accentLightTint-blue));
 }
 
 .todolist {
@@ -2028,11 +2548,11 @@ body[data-bg="wallpaper"] .searchbar {
 
 /* Default placeholder color */
 #searchQ::placeholder {
-	color: #757575;
+	color: color-mix(in srgb, var(--textColorDark-blue) 82%, var(--accentLightTint-blue));
 }
 
 body[data-bg="wallpaper"] #searchQ::placeholder {
-	color: color-mix(in srgb, #757575 calc(var(--transparency) + 10%), #000);
+	color: color-mix(in srgb, var(--textColorDark-blue) 88%, var(--accentLightTint-blue));
 }
 
 .searchControls {
@@ -2118,13 +2638,13 @@ body[data-bg="wallpaper"] .micIcon {
 	padding: 0 23px;
 	border: none;
 	font-size: 1.1rem;
-	background-color: var(--darkColor-blue);
-	color: white;
+	background-color: var(--darkerColor-blue);
+	color: var(--onActionColor-blue);
 	/* transition: all 0.3s; */
 }
 
 #enterBtn:hover {
-	background-color: var(--darkerColor-blue);
+	background-color: color-mix(in srgb, var(--darkerColor-blue) 84%, black);
 	cursor: pointer;
 }
 
@@ -3285,7 +3805,13 @@ input:checked + .toggle:before {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	width: 100%;
 	padding: 6px 19px;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
 	cursor: pointer;
 }
 
@@ -4999,7 +5525,7 @@ body[data-bg="wallpaper"] .dropdown-content {
 }
 
 .black-theme #searchQ::placeholder {
-	color: #909090 !important;
+	color: #b8b8b8 !important;
 }
 
 .black-theme .floating-label-field input:focus + label,
@@ -5292,7 +5818,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	height: 100%;
 	width: 100%;
 	background: var(--darkerColor-blue);
-	transition: width 0.1s linear;
 }
 
 .black-theme .toast-timer-bar {
@@ -5414,3 +5939,2124 @@ body[data-bg="wallpaper"] .dropdown-content {
 	color: var(--darkColor-dark);
 }
 /* ------------ End of Toast---------- */
+
+/* ------------ BongoCat Widget ------------ */
+#bongoCatWidget {
+	position: fixed;
+	bottom: 10px;
+	left: 10px;
+	z-index: 2;
+	pointer-events: none;
+	display: none;
+}
+
+#bongoCatContainer {
+	position: relative;
+	width: 200px;
+	height: 101px;
+}
+
+#bongoCatContainer > div {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: 0 0;
+}
+
+#bongoCatHead {
+	background-image: url(./images/bongocat/base.png);
+	z-index: 10;
+}
+
+#bongoCatPawLeft {
+	background-image: url(./images/bongocat/left-up.png);
+	z-index: 20;
+}
+
+#bongoCatPawRight {
+	background-image: url(./images/bongocat/right-up.png);
+	z-index: 20;
+}
+
+/* Costume color filters */
+#bongoCatContainer.bongo-outfit-dark {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+#bongoCatContainer.bongo-outfit-sakura {
+	filter: sepia(0.3) saturate(1.8) hue-rotate(300deg) brightness(1.05);
+}
+
+#bongoCatContainer.bongo-outfit-ocean {
+	filter: sepia(0.2) saturate(2) hue-rotate(190deg);
+}
+
+#bongoCatContainer.bongo-outfit-sunset {
+	filter: sepia(0.4) saturate(2.5) hue-rotate(340deg) brightness(1.05);
+}
+
+#bongoCatContainer.bongo-outfit-forest {
+	filter: sepia(0.2) saturate(1.8) hue-rotate(90deg) brightness(1.05);
+}
+
+#bongoCatContainer.bongo-outfit-lavender {
+	filter: sepia(0.3) saturate(2) hue-rotate(250deg) brightness(1.05);
+}
+
+/* Costume grid */
+.bongoCostumeGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+	gap: 8px;
+	width: 100%;
+	padding: 4px 0;
+}
+
+.bongoCostumeThumb {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 6px;
+	border: 2px solid transparent;
+	border-radius: 12px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	transition: border-color 0.2s, background-color 0.2s;
+}
+
+.bongoCostumeThumb:hover {
+	background-color: rgba(255, 255, 255, 0.08);
+}
+
+.bongoCostumeThumb.active {
+	border-color: var(--darkColor-blue);
+}
+
+.bongoCostumePreview {
+	width: 60px;
+	height: 31px;
+	background-image: url(./images/bongocat/base.png);
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	border-radius: 6px;
+}
+
+/* Preview filter variants */
+.bongoCostumePreview.preview-dark {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+.bongoCostumePreview.preview-sakura {
+	filter: sepia(0.3) saturate(1.8) hue-rotate(300deg) brightness(1.05);
+}
+
+.bongoCostumePreview.preview-ocean {
+	filter: sepia(0.2) saturate(2) hue-rotate(190deg);
+}
+
+.bongoCostumePreview.preview-sunset {
+	filter: sepia(0.4) saturate(2.5) hue-rotate(340deg) brightness(1.05);
+}
+
+.bongoCostumePreview.preview-forest {
+	filter: sepia(0.2) saturate(1.8) hue-rotate(90deg) brightness(1.05);
+}
+
+.bongoCostumePreview.preview-lavender {
+	filter: sepia(0.3) saturate(2) hue-rotate(250deg) brightness(1.05);
+}
+
+.bongoCostumeLabel {
+	font-size: 0.72rem;
+	opacity: 0.8;
+	white-space: nowrap;
+}
+
+.bongoCostumeHidden {
+	display: none !important;
+}
+
+/* Cute style — use cat.png (800x900) for head, hide paw divs, bounce on keypress */
+/* cat.png content at x=440..679, y=12..208 of 800x900; 200% + 90% centers the cat */
+#bongoCatContainer.bongo-style-cute {
+	background: rgba(255, 255, 255, 0.35);
+	border-radius: 12px;
+}
+
+#bongoCatContainer.bongo-style-cute > #bongoCatHead {
+	background-image: url(./images/bongocat/cat.png);
+	background-size: 200% auto;
+	background-position: 90% 0%;
+}
+
+#bongoCatContainer.bongo-style-cute > #bongoCatPawLeft,
+#bongoCatContainer.bongo-style-cute > #bongoCatPawRight {
+	background-image: none !important;
+}
+
+/* Bounce animation for cute style */
+@keyframes bongoBounceLeft {
+	0%   { transform: rotate(0deg) translateY(0); }
+	30%  { transform: rotate(-6deg) translateY(-5px); }
+	100% { transform: rotate(0deg) translateY(0); }
+}
+
+@keyframes bongoBounceRight {
+	0%   { transform: rotate(0deg) translateY(0); }
+	30%  { transform: rotate(6deg) translateY(-5px); }
+	100% { transform: rotate(0deg) translateY(0); }
+}
+
+#bongoCatHead.bongo-bounce-left {
+	animation: bongoBounceLeft 0.2s ease-out;
+}
+
+#bongoCatHead.bongo-bounce-right {
+	animation: bongoBounceRight 0.2s ease-out;
+}
+
+/* Style preview — cute */
+.bongoCostumePreview.preview-style-cute {
+	background-image: url(./images/bongocat/cat.png);
+	background-size: 200% auto;
+	background-position: 90% 0%;
+}
+
+/* Drag handle */
+#bongoCatDragHandle {
+	position: absolute;
+	top: -6px;
+	right: -6px;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: rgba(128, 128, 128, 0.3);
+	cursor: grab;
+	touch-action: none;
+	pointer-events: auto;
+	opacity: 0.15;
+	transition: opacity 0.2s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 30;
+}
+
+#bongoCatDragHandle::before {
+	content: "⠿";
+	font-size: 14px;
+	color: rgba(0, 0, 0, 0.5);
+	line-height: 1;
+}
+
+#bongoCatDragHandle.bongo-drag-near {
+	opacity: 1;
+}
+
+#bongoCatDragHandle:active {
+	cursor: grabbing;
+	background: rgba(128, 128, 128, 0.5);
+}
+
+/* ------------ End of BongoCat ------------ */
+
+/* ------------ Command & Control Center ------------ */
+:root {
+	--mynt-font-scale: 1;
+}
+
+html {
+	font-size: calc(16px * var(--mynt-font-scale));
+}
+
+:focus-visible {
+	outline: 3px solid var(--textColorDark-blue);
+	outline-offset: 3px;
+}
+
+.srOnly {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+}
+
+.controlCenterLaunch {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.settingsActionBtn,
+.permissionControls button,
+.habitForm button {
+	border: 0;
+	border-radius: 999px;
+	padding: 8px 16px;
+	background: var(--darkerColor-blue);
+	color: var(--onActionColor-blue);
+	cursor: pointer;
+	font: inherit;
+	white-space: nowrap;
+}
+
+.settingsActionBtn:hover,
+.permissionControls button:hover,
+.habitForm button:hover {
+	background: color-mix(in srgb, var(--darkerColor-blue) 84%, black);
+}
+
+.habitForm input::placeholder {
+	color: color-mix(in srgb, var(--textColorDark-blue) 82%, var(--whitishColor-blue));
+}
+
+.pomodoroFocusSummary {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	margin-top: 5px;
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.pomodoroFocusSummary button {
+	border: 0;
+	border-radius: 999px;
+	padding: 2px 7px;
+	background: rgba(255, 255, 255, 0.18);
+	color: white;
+	cursor: pointer;
+	font: inherit;
+}
+
+#serviceStatusPill {
+	position: fixed;
+	inset-inline-end: 100px;
+	bottom: var(--gap);
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 42px;
+	padding: 0 16px;
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 35%, transparent);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--accentLightTint-blue) 90%, transparent);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+	backdrop-filter: blur(14px);
+	color: var(--textColorDark-blue);
+	cursor: pointer;
+}
+
+#serviceStatusPill[hidden] {
+	display: none;
+}
+
+.serviceStatusDot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #d63c3c;
+	box-shadow: 0 0 0 4px rgba(214, 60, 60, 0.14);
+}
+
+#serviceStatusPill.serviceWarning .serviceStatusDot {
+	background: #b56b00;
+	box-shadow: 0 0 0 4px rgba(181, 107, 0, 0.14);
+}
+
+/* ==========================================================================
+   Material You (M3) Dialogs, Command Palette & Control Center
+   ========================================================================== */
+
+.myntDialog {
+	width: min(720px, calc(100vw - 32px));
+	max-height: min(84vh, 860px);
+	margin: auto;
+	padding: 0;
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 22%, transparent);
+	border-radius: 28px;
+	background: color-mix(in srgb, var(--accentLightTint-blue) 94%, var(--whitishColor-blue));
+	color: var(--textColorDark-blue);
+	box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32), 0 2px 10px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+	transition: transform 0.2s var(--md-motion-decelerate), opacity 0.2s ease;
+}
+
+.myntDialog::backdrop {
+	background: rgba(0, 0, 0, 0.52);
+	backdrop-filter: blur(12px) saturate(1.2);
+}
+
+.myntDialog[open] {
+	animation: myntDialogIn 220ms var(--md-motion-decelerate);
+}
+
+@keyframes myntDialogIn {
+	from { opacity: 0; transform: translateY(16px) scale(0.96); }
+	to { opacity: 1; transform: none; }
+}
+
+.commandPaletteDialog {
+	width: min(580px, calc(100vw - 32px));
+	border-radius: 24px;
+	background: color-mix(in srgb, var(--accentLightTint-blue) 96%, var(--whitishColor-blue));
+}
+
+.commandPaletteHeader {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 16px;
+	border-bottom: 1px solid color-mix(in srgb, var(--textColorDark-blue) 10%, transparent);
+}
+
+#commandPaletteInput {
+	flex: 1;
+	height: 48px;
+	padding: 0 16px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 14%, transparent);
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 86%, transparent);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-size: 1rem;
+	user-select: text;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+#commandPaletteInput:focus {
+	outline: none;
+	border-color: var(--darkColor-blue);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
+	background: var(--whitishColor-blue);
+}
+
+.commandPaletteHeader kbd {
+	padding: 5px 8px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 20%, transparent);
+	border-radius: 8px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 50%, transparent);
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--textColorDark-blue);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.commandPaletteList {
+	max-height: min(58vh, 440px);
+	padding: 10px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.commandPaletteItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 12px 16px;
+	border: 0;
+	border-radius: 14px;
+	background: transparent;
+	color: var(--textColorDark-blue);
+	text-align: start;
+	cursor: pointer;
+	transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.commandPaletteItem:hover,
+.commandPaletteItem[aria-selected="true"] {
+	background: color-mix(in srgb, var(--bg-color-blue) 85%, var(--whitishColor-blue));
+	transform: translateX(2px);
+}
+
+.commandPaletteItem small {
+	opacity: 0.72;
+}
+
+.commandPaletteCopy {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.commandPaletteCopy strong,
+.commandPaletteCopy small {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.commandPaletteGroup {
+	flex: 0 0 auto;
+	margin-inline-start: 14px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 75%, transparent);
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 8%, transparent);
+	font-size: 0.65rem;
+	font-weight: 600;
+	opacity: 0.85;
+}
+
+.dialogEmptyState {
+	padding: 36px 20px;
+	text-align: center;
+	opacity: 0.7;
+	font-size: 0.9rem;
+}
+
+.controlCenterHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 24px 26px 20px;
+	background: color-mix(in srgb, var(--bg-color-blue) 80%, var(--whitishColor-blue));
+	border-bottom: 1px solid color-mix(in srgb, var(--textColorDark-blue) 8%, transparent);
+}
+
+.controlCenterHeader h2 {
+	font-size: 1.6rem;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+
+.controlCenterEyebrow {
+	display: block;
+	margin-bottom: 3px;
+	color: var(--darkColor-blue);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.dialogIconBtn {
+	width: 40px;
+	height: 40px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--whitishColor-blue) 80%, transparent);
+	color: var(--textColorDark-blue);
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.2s var(--md-motion-ease);
+}
+
+.dialogIconBtn:hover {
+	background: var(--whitishColor-blue);
+	transform: scale(1.06);
+}
+
+.dialogIconBtn:active {
+	transform: scale(0.95);
+}
+
+.controlCenterContent {
+	max-height: calc(min(84vh, 860px) - 88px);
+	padding: 20px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.controlSection {
+	padding: 20px;
+	border-radius: 24px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 80%, transparent);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 12%, transparent);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+	transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.controlSection + .controlSection {
+	margin-top: 16px;
+}
+
+.controlSection:hover {
+	border-color: color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.controlSectionHeading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.controlSectionHeading h3 {
+	font-size: 1.1rem;
+	font-weight: 700;
+}
+
+.controlSectionHeading p,
+.controlSettingRow small,
+.permissionRow small {
+	display: block;
+	margin-top: 4px;
+	font-size: 0.78rem;
+	opacity: 0.75;
+	line-height: 1.4;
+}
+
+.controlSectionHeading a {
+	color: var(--darkColor-blue);
+	font-size: 0.82rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition: opacity 0.2s ease;
+}
+
+.controlSectionHeading a:hover {
+	text-decoration: underline;
+}
+
+.sectionStatus {
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: var(--darkColor-blue);
+}
+
+.focusStatGrid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+}
+
+.focusStatCard {
+	display: flex;
+	flex-direction: column;
+	padding: 16px;
+	border-radius: 18px;
+	background: color-mix(in srgb, var(--bg-color-blue) 80%, var(--whitishColor-blue));
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 14%, transparent);
+	transition: transform 0.2s var(--md-motion-ease), box-shadow 0.2s ease;
+}
+
+.focusStatCard:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.focusStatCard strong {
+	font-size: 1.75rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+}
+
+.focusStatCard span {
+	margin-top: 4px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	opacity: 0.75;
+}
+
+.focusWeekChart {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	align-items: end;
+	gap: 8px;
+	height: 136px;
+	margin-top: 16px;
+	padding: 14px 12px 6px;
+	border-radius: 18px;
+	background: color-mix(in srgb, var(--bg-color-blue) 48%, transparent);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 12%, transparent);
+}
+
+.focusDay {
+	display: grid;
+	grid-template-rows: 1fr auto;
+	align-items: end;
+	justify-items: center;
+	height: 100%;
+	gap: 6px;
+}
+
+.focusDayBar {
+	width: min(28px, 72%);
+	min-height: 5px;
+	border-radius: 8px 8px 3px 3px;
+	background: var(--darkColor-blue);
+	transition: height 0.4s var(--md-motion-ease), transform 0.2s ease, opacity 0.2s ease;
+}
+
+.focusDay:hover .focusDayBar {
+	transform: scaleY(1.05);
+	opacity: 0.9;
+}
+
+.focusDay span {
+	font-size: 0.68rem;
+	font-weight: 600;
+	opacity: 0.75;
+}
+
+.workspacePresetGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 12px;
+}
+
+.workspacePresetCard {
+	position: relative;
+	min-width: 0;
+	border: 2px solid transparent;
+	border-radius: 18px;
+	background: color-mix(in srgb, var(--bg-color-blue) 75%, var(--whitishColor-blue));
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	overflow: hidden;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.workspacePresetCard:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.workspacePresetCard.active {
+	border-color: var(--darkColor-blue);
+	box-shadow: 0 4px 14px color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
+}
+
+.workspacePresetCard .workspaceApplyBtn {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+	min-height: 82px;
+	padding: 16px 58px 16px 16px;
+	border: 0;
+	background: transparent;
+	color: var(--textColorDark-blue);
+	text-align: start;
+	cursor: pointer;
+}
+
+.workspacePresetCard .workspaceApplyBtn strong {
+	font-size: 0.92rem;
+	font-weight: 700;
+}
+
+.workspacePresetCard .workspaceEditBtn {
+	position: absolute;
+	top: 12px;
+	inset-inline-end: 12px;
+	padding: 6px 10px;
+	border: 0;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 75%, transparent);
+	color: inherit;
+	font-size: 0.68rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.workspacePresetCard .workspaceEditBtn:hover {
+	background: var(--whitishColor-blue);
+	transform: scale(1.05);
+}
+
+.workspacePresetCard span {
+	font-size: 0.72rem;
+	opacity: 0.75;
+}
+
+.workspaceHeadingActions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.workspaceHeadingActions .settingsActionBtn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.workspaceEditor {
+	display: grid;
+	gap: 16px;
+	margin-top: 18px;
+	padding-top: 18px;
+	border-top: 1px solid color-mix(in srgb, var(--textColorDark-blue) 12%, transparent);
+}
+
+.workspaceEditor[hidden] {
+	display: none;
+}
+
+.workspaceEditorField {
+	display: grid;
+	gap: 6px;
+	font-size: 0.78rem;
+	font-weight: 600;
+}
+
+.workspaceEditorField input,
+.workspaceEditorField select {
+	width: 100%;
+	height: 44px;
+	padding: 0 14px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 18%, transparent);
+	border-radius: 14px;
+	background: var(--whitishColor-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	user-select: text;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.workspaceEditorField input:focus,
+.workspaceEditorField select:focus {
+	outline: none;
+	border-color: var(--darkColor-blue);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
+}
+
+.workspaceWidgetChoices {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+	padding: 14px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 14%, transparent);
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 45%, transparent);
+}
+
+.workspaceWidgetChoices legend {
+	padding: 0 6px;
+	font-size: 0.78rem;
+	font-weight: 600;
+}
+
+.workspaceWidgetChoices label {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 34px;
+	font-size: 0.76rem;
+	cursor: pointer;
+}
+
+.workspaceWidgetChoices input {
+	width: 18px;
+	height: 18px;
+	accent-color: var(--darkColor-blue);
+}
+
+.workspaceEditorFields {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+}
+
+.workspaceEditorActions {
+	display: grid;
+	grid-template-columns: auto 1fr auto auto;
+	align-items: center;
+	gap: 10px;
+}
+
+.workspaceEditorActions button {
+	min-height: 40px;
+	padding: 8px 16px;
+	border: 0;
+	border-radius: 999px;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.workspaceEditorActions button:hover {
+	transform: translateY(-1px);
+}
+
+.workspaceEditorActions .settingsActionBtn {
+	background: var(--darkerColor-blue);
+	color: var(--onActionColor-blue);
+}
+
+.workspaceEditorActions .workspaceDangerBtn {
+	color: #a82d2d;
+	background: transparent;
+	border: 1px solid color-mix(in srgb, #a82d2d 30%, transparent);
+}
+
+.workspaceEditorActions .workspaceDangerBtn:hover {
+	background: color-mix(in srgb, #a82d2d 12%, transparent);
+}
+
+.habitForm {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.habitForm input {
+	flex: 1;
+	min-width: 0;
+	height: 44px;
+	padding: 0 14px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 18%, transparent);
+	border-radius: 14px;
+	background: var(--whitishColor-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	user-select: text;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habitForm input:focus {
+	outline: none;
+	border-color: var(--darkColor-blue);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
+}
+
+.habitForm button {
+	padding: 0 18px;
+	border: 0;
+	border-radius: 14px;
+	background: var(--darkColor-blue);
+	color: var(--onActionColor-blue);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.habitForm button:hover {
+	opacity: 0.9;
+	transform: translateY(-1px);
+}
+
+.habitList {
+	list-style: none;
+}
+
+.habitRow {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 46px;
+	padding: 8px 6px;
+	border-bottom: 1px solid color-mix(in srgb, var(--textColorDark-blue) 10%, transparent);
+	transition: background-color 0.15s ease;
+}
+
+.habitRow:last-child {
+	border-bottom: 0;
+}
+
+.habitRow input {
+	width: 20px;
+	height: 20px;
+	accent-color: var(--darkColor-blue);
+}
+
+.habitRow label {
+	flex: 1;
+	cursor: pointer;
+	font-size: 0.86rem;
+}
+
+.habitRow.done label {
+	text-decoration: line-through;
+	opacity: 0.6;
+}
+
+.habitAutoBadge {
+	padding: 3px 8px;
+	border-radius: 999px;
+	background: var(--bg-color-blue);
+	font-size: 0.66rem;
+	font-weight: 600;
+}
+
+.habitDeleteBtn {
+	width: 32px;
+	height: 32px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: inherit;
+	font-size: 1.2rem;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.habitDeleteBtn:hover {
+	background: color-mix(in srgb, var(--bg-color-blue) 75%, transparent);
+}
+
+.controlSettingRow,
+.permissionRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	min-height: 60px;
+	padding: 12px 4px;
+	border-bottom: 1px solid color-mix(in srgb, var(--textColorDark-blue) 10%, transparent);
+}
+
+.controlSettingRow:last-child,
+.permissionRow:last-child {
+	border-bottom: 0;
+}
+
+.controlSettingRow > span,
+.permissionRow > span:first-child {
+	flex: 1;
+}
+
+.controlSettingRow input[type="checkbox"] {
+	width: 22px;
+	height: 22px;
+	accent-color: var(--darkColor-blue);
+}
+
+.controlSettingRow select {
+	min-width: 96px;
+	height: 40px;
+	padding: 0 10px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 18%, transparent);
+	border-radius: 12px;
+	background: var(--whitishColor-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	transition: border-color 0.2s ease;
+}
+
+.controlSettingRow select:focus {
+	outline: none;
+	border-color: var(--darkColor-blue);
+}
+
+.permissionControls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.permissionControls em {
+	font-size: 0.72rem;
+	font-style: normal;
+	font-weight: 600;
+}
+
+.permissionControls em.granted,
+.serviceState.ok {
+	color: #18733c;
+}
+
+.permissionControls em.denied,
+.serviceState.error,
+.serviceState.offline {
+	color: #a82d2d;
+}
+
+.permissionControls button {
+	padding: 6px 12px;
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 30%, transparent);
+	border-radius: 999px;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-size: 0.72rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.permissionControls button:hover:not(:disabled) {
+	background: var(--darkColor-blue);
+	color: var(--onActionColor-blue);
+	transform: translateY(-1px);
+}
+
+.permissionControls button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.privacyDisclosureList {
+	margin: 14px 0 0 18px;
+	font-size: 0.76rem;
+	line-height: 1.6;
+	opacity: 0.82;
+}
+
+.serviceStatusList {
+	display: grid;
+	gap: 10px;
+}
+
+.serviceRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 12px 14px;
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--bg-color-blue) 55%, transparent);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 10%, transparent);
+}
+
+.serviceRow span:first-child {
+	font-size: 0.84rem;
+	font-weight: 600;
+}
+
+.serviceState {
+	font-size: 0.72rem;
+	text-align: end;
+}
+
+.focusTaskResultsHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 18px;
+}
+
+.focusTaskResultsHeader h4 {
+	font-size: 0.88rem;
+	font-weight: 700;
+}
+
+.focusTaskResultsHeader span,
+.focusTaskResultsEmpty {
+	font-size: 0.72rem;
+	opacity: 0.72;
+}
+
+.focusTaskResults {
+	display: grid;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.focusTaskResultRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--bg-color-blue) 48%, transparent);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 10%, transparent);
+	font-size: 0.76rem;
+}
+
+.focusTaskResultRow strong {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.focusTaskResultRow span {
+	flex: 0 0 auto;
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+}
+
+body:not([data-workspace-background="video"]) #videoBg {
+	display: none;
+}
+
+body[data-workspace-background="color"] {
+	background-image: none;
+}
+
+body[data-workspace-background="wallpaper"] {
+	background-image: var(--bg-image, none);
+}
+
+body:not([data-workspace-background="video"]) .centerDiv {
+	margin-inline-end: min(430px, 34vw);
+}
+
+/* ==========================================================================
+   Today Work Panel (M3 Floating Surface)
+   ========================================================================== */
+
+.todayWorkPanel {
+	position: fixed;
+	top: 50%;
+	inset-inline-end: clamp(16px, 3vw, 52px);
+	z-index: 2;
+	width: min(440px, 38vw);
+	max-height: calc(100dvh - 48px);
+	padding: 24px;
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 26%, transparent);
+	border-radius: 28px;
+	background: color-mix(in srgb, var(--accentLightTint-blue) 90%, transparent);
+	box-shadow: 0 24px 75px rgba(0, 0, 0, 0.26), 0 2px 10px rgba(0, 0, 0, 0.06);
+	backdrop-filter: blur(20px) saturate(1.2);
+	color: var(--textColorDark-blue);
+	transform: translateY(-50%);
+	overflow-y: auto;
+	scrollbar-width: thin;
+	transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.todayWorkHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.todayWorkHeader h1 {
+	font-size: clamp(1.32rem, 2vw, 1.72rem);
+	line-height: 1.15;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+
+#todayWorkEyebrow {
+	display: block;
+	margin-bottom: 4px;
+	color: var(--darkColor-blue);
+	font-size: 0.68rem;
+	font-weight: 700;
+	letter-spacing: 0.13em;
+	text-transform: uppercase;
+}
+
+#todayWorkDate {
+	margin-top: 4px;
+	font-size: 0.75rem;
+	opacity: 0.72;
+}
+
+#todayCommandButton {
+	flex: 0 0 auto;
+	min-height: 36px;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 8px 0 12px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 18%, transparent);
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 75%, transparent);
+	color: inherit;
+	font-size: 0.7rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+#todayCommandButton:hover {
+	background: var(--whitishColor-blue);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+#todayCommandButton:active {
+	transform: translateY(0);
+}
+
+#todayCommandButton kbd {
+	padding: 4px 7px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 16%, transparent);
+	border-radius: 7px;
+	background: color-mix(in srgb, var(--accentLightTint-blue) 82%, transparent);
+	font: inherit;
+	font-size: 0.62rem;
+	font-weight: 600;
+}
+
+.todayGoalField {
+	display: grid;
+	gap: 6px;
+	margin-top: 19px;
+	font-size: 0.72rem;
+	font-weight: 700;
+}
+
+#todayGoalInput,
+.todayQuickAddForm input,
+.todayPriorityRow select {
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 16%, transparent);
+	background: color-mix(in srgb, var(--whitishColor-blue) 85%, transparent);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	user-select: text;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#todayGoalInput:focus,
+.todayQuickAddForm input:focus,
+.todayPriorityRow select:focus {
+	outline: none;
+	border-color: var(--darkColor-blue);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
+}
+
+#todayGoalInput {
+	height: 46px;
+	padding: 0 14px;
+	border-radius: 14px;
+}
+
+.todayPriorityHeading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 20px;
+}
+
+.todayPriorityHeading h2 {
+	font-size: 0.94rem;
+	font-weight: 700;
+}
+
+.todayPriorityHeading p {
+	margin-top: 3px;
+	font-size: 0.68rem;
+	line-height: 1.4;
+	opacity: 0.72;
+}
+
+#todayPriorityCount {
+	flex: 0 0 auto;
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: var(--bg-color-blue);
+	font-size: 0.68rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.todayPriorityList {
+	display: grid;
+	gap: 8px;
+	margin-top: 12px;
+	list-style: none;
+}
+
+.todayPriorityRow {
+	display: grid;
+	grid-template-columns: 28px minmax(0, 1fr) auto 34px;
+	grid-template-areas: "number task next complete";
+	align-items: center;
+	gap: 8px;
+	min-height: 48px;
+	padding: 6px;
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 12%, transparent);
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 55%, transparent);
+	transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todayPriorityRow.active {
+	border-color: var(--darkColor-blue);
+	background: color-mix(in srgb, var(--bg-color-blue) 75%, var(--whitishColor-blue));
+	box-shadow: inset 4px 0 0 var(--darkColor-blue), 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.todayPriorityNumber {
+	grid-area: number;
+	font-size: 0.7rem;
+	font-weight: 700;
+	opacity: 0.68;
+	text-align: center;
+}
+
+.todayPriorityRow select {
+	grid-area: task;
+	min-width: 0;
+	height: 36px;
+	padding: 0 10px;
+	border-radius: 12px;
+}
+
+.todayNextChoice {
+	grid-area: next;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	min-height: 32px;
+	padding: 0 9px;
+	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 16%, transparent);
+	border-radius: 999px;
+	font-size: 0.68rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.todayNextChoice:has(input:checked) {
+	border-color: var(--darkerColor-blue);
+	background: var(--darkerColor-blue);
+	color: var(--onActionColor-blue);
+}
+
+.todayNextChoice:has(input:disabled) {
+	opacity: 0.46;
+	cursor: not-allowed;
+}
+
+.todayNextChoice input {
+	width: 16px;
+	height: 16px;
+	accent-color: var(--darkColor-blue);
+}
+
+.todayCompleteTask {
+	grid-area: complete;
+	width: 34px;
+	height: 34px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 50%;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	font-size: 1.05rem;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.todayCompleteTask:hover:not(:disabled) {
+	transform: scale(1.08);
+	background: var(--darkColor-blue);
+	color: var(--onActionColor-blue);
+}
+
+.todayCompleteTask:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+.todayQuickAddForm {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.todayQuickAddForm input {
+	min-width: 0;
+	flex: 1;
+	height: 42px;
+	padding: 0 12px;
+	border-radius: 14px;
+}
+
+.todayQuickAddForm button {
+	padding: 0 16px;
+	border: 0;
+	border-radius: 14px;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.todayQuickAddForm button:hover {
+	background: var(--darkColor-blue);
+	color: var(--onActionColor-blue);
+	transform: translateY(-1px);
+}
+
+.todayNextAction {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 18px;
+	padding: 16px 18px;
+	border-radius: 20px;
+	background: linear-gradient(135deg, var(--darkerColor-blue), color-mix(in srgb, var(--darkerColor-blue) 85%, black));
+	color: var(--onActionColor-blue);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.todayNextCopy {
+	display: grid;
+	min-width: 0;
+	gap: 3px;
+}
+
+.todayNextCopy > span,
+.todayNextCopy small {
+	font-size: 0.68rem;
+	opacity: 0.82;
+}
+
+.todayNextCopy strong {
+	overflow: hidden;
+	font-size: 0.92rem;
+	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#todayStartFocusBtn {
+	flex: 0 0 auto;
+	min-height: 42px;
+	padding: 0 18px;
+	border: 0;
+	border-radius: 999px;
+	background: var(--whitishColor-blue);
+	color: var(--darkerColor-blue);
+	font: inherit;
+	font-size: 0.78rem;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+	transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+}
+
+#todayStartFocusBtn:hover:not(:disabled) {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+#todayStartFocusBtn:active:not(:disabled) {
+	transform: translateY(0);
+}
+
+#todayStartFocusBtn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.todayPanelStatus {
+	min-height: 1.2em;
+	margin: 8px 2px 0;
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--darkerColor-blue);
+}
+
+.todayWorkPanel.needsTask {
+	animation: todayNeedsTask 300ms var(--md-motion-ease);
+}
+
+@keyframes todayNeedsTask {
+	50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--darkColor-blue) 45%, transparent), 0 24px 75px rgba(0, 0, 0, 0.35); }
+}
+
+/* ==========================================================================
+   Dark Theme (.black-theme) Overrides for Custom Dialogs & Panels
+   ========================================================================== */
+
+.black-theme .myntDialog {
+	background: #1e1e1e;
+	color: #e3e3e3;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	box-shadow: 0 28px 90px rgba(0, 0, 0, 0.7);
+}
+
+.black-theme .commandPaletteDialog {
+	background: #1e1e1e;
+}
+
+.black-theme .commandPaletteHeader {
+	border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.black-theme #commandPaletteInput {
+	background: rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.black-theme #commandPaletteInput:focus {
+	border-color: #a8c7fa;
+	box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.25);
+	background: rgba(255, 255, 255, 0.12);
+}
+
+.black-theme .commandPaletteHeader kbd {
+	border-color: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.1);
+	color: #d6d6d6;
+}
+
+.black-theme .commandPaletteItem {
+	color: #e3e3e3;
+}
+
+.black-theme .commandPaletteItem:hover,
+.black-theme .commandPaletteItem[aria-selected="true"] {
+	background: rgba(255, 255, 255, 0.12);
+}
+
+.black-theme .commandPaletteGroup {
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.15);
+	color: #d0bcff;
+}
+
+.black-theme .controlCenterHeader {
+	background: #252423;
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+}
+
+.black-theme .controlCenterEyebrow {
+	color: #a8c7fa;
+}
+
+.black-theme .dialogIconBtn {
+	background: rgba(255, 255, 255, 0.1);
+	color: #e3e3e3;
+}
+
+.black-theme .dialogIconBtn:hover {
+	background: rgba(255, 255, 255, 0.2);
+	color: #ffffff;
+}
+
+.black-theme .controlSection {
+	background: #282726;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.black-theme .controlSectionHeading a,
+.black-theme .sectionStatus {
+	color: #a8c7fa;
+}
+
+.black-theme .focusStatCard {
+	background: #1f1e1d;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+}
+
+.black-theme .focusWeekChart {
+	background: #1f1e1d;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.black-theme .focusDayBar {
+	background: #a8c7fa;
+}
+
+.black-theme .workspacePresetCard {
+	background: #1f1e1d;
+	border-color: rgba(255, 255, 255, 0.1);
+}
+
+.black-theme .workspacePresetCard.active {
+	border-color: #a8c7fa;
+	box-shadow: 0 4px 14px rgba(168, 199, 250, 0.25);
+}
+
+.black-theme .workspacePresetCard .workspaceApplyBtn {
+	color: #ffffff;
+}
+
+.black-theme .workspacePresetCard .workspaceEditBtn {
+	background: rgba(255, 255, 255, 0.12);
+	color: #e3e3e3;
+}
+
+.black-theme .workspaceEditorField input,
+.black-theme .workspaceEditorField select,
+.black-theme .habitForm input {
+	background: rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+	border-color: rgba(255, 255, 255, 0.15);
+}
+
+.black-theme .workspaceEditorField input:focus,
+.black-theme .workspaceEditorField select:focus,
+.black-theme .habitForm input:focus {
+	border-color: #a8c7fa;
+	box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.25);
+}
+
+.black-theme .workspaceWidgetChoices {
+	background: rgba(255, 255, 255, 0.04);
+	border-color: rgba(255, 255, 255, 0.1);
+}
+
+.black-theme .workspaceEditorActions button {
+	background: rgba(255, 255, 255, 0.12);
+	color: #ffffff;
+}
+
+.black-theme .workspaceEditorActions .settingsActionBtn {
+	background: #a8c7fa;
+	color: #171615;
+}
+
+.black-theme .habitForm button {
+	background: #a8c7fa;
+	color: #171615;
+}
+
+.black-theme .habitRow {
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.black-theme .habitAutoBadge {
+	background: rgba(255, 255, 255, 0.12);
+	color: #e3e3e3;
+}
+
+.black-theme .habitDeleteBtn:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+.black-theme .controlSettingRow,
+.black-theme .permissionRow {
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.black-theme .controlSettingRow select {
+	background: rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+	border-color: rgba(255, 255, 255, 0.15);
+}
+
+.black-theme .permissionControls button {
+	background: rgba(255, 255, 255, 0.12);
+	color: #ffffff;
+	border-color: rgba(255, 255, 255, 0.15);
+}
+
+.black-theme .permissionControls button:hover:not(:disabled) {
+	background: #a8c7fa;
+	color: #171615;
+}
+
+.black-theme .serviceRow,
+.black-theme .focusTaskResultRow {
+	background: #1f1e1d;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.black-theme .todayWorkPanel {
+	background: rgba(26, 26, 26, 0.92);
+	color: #f0f0f0;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	box-shadow: 0 24px 75px rgba(0, 0, 0, 0.65);
+}
+
+.black-theme #todayWorkEyebrow {
+	color: #a8c7fa;
+}
+
+.black-theme #todayCommandButton {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.15);
+	color: #e3e3e3;
+}
+
+.black-theme #todayCommandButton:hover {
+	background: rgba(255, 255, 255, 0.14);
+}
+
+.black-theme #todayCommandButton kbd {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: rgba(255, 255, 255, 0.2);
+	color: #ffffff;
+}
+
+.black-theme #todayGoalInput,
+.black-theme .todayQuickAddForm input,
+.black-theme .todayPriorityRow select {
+	background: rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.black-theme #todayGoalInput:focus,
+.black-theme .todayQuickAddForm input:focus,
+.black-theme .todayPriorityRow select:focus {
+	border-color: #a8c7fa;
+	box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.25);
+}
+
+.black-theme #todayPriorityCount {
+	background: rgba(255, 255, 255, 0.12);
+	color: #ffffff;
+}
+
+.black-theme .todayPriorityRow {
+	background: rgba(255, 255, 255, 0.05);
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.black-theme .todayPriorityRow.active {
+	border-color: #a8c7fa;
+	background: rgba(168, 199, 250, 0.12);
+	box-shadow: inset 4px 0 0 #a8c7fa, 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.black-theme .todayNextChoice {
+	border-color: rgba(255, 255, 255, 0.18);
+	color: #e3e3e3;
+}
+
+.black-theme .todayNextChoice:has(input:checked) {
+	border-color: #a8c7fa;
+	background: #a8c7fa;
+	color: #171615;
+}
+
+.black-theme .todayCompleteTask {
+	background: rgba(255, 255, 255, 0.12);
+	color: #ffffff;
+}
+
+.black-theme .todayCompleteTask:hover:not(:disabled) {
+	background: #a8c7fa;
+	color: #171615;
+}
+
+.black-theme .todayQuickAddForm button {
+	background: rgba(255, 255, 255, 0.12);
+	color: #ffffff;
+}
+
+.black-theme .todayQuickAddForm button:hover {
+	background: #a8c7fa;
+	color: #171615;
+}
+
+.black-theme .todayNextAction {
+	background: linear-gradient(135deg, #3569b2, #1b3860);
+	color: #ffffff;
+}
+
+.black-theme #todayStartFocusBtn {
+	background: #ffffff;
+	color: #171615;
+}
+
+.black-theme #todayStartFocusBtn:hover:not(:disabled) {
+	background: #e2eeff;
+	color: #0b1d33;
+}
+
+.black-theme .todayPanelStatus {
+	color: #a8c7fa;
+}
+
+html.myntReducedMotion *,
+html.myntReducedMotion *::before,
+html.myntReducedMotion *::after {
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.01ms !important;
+	scroll-behavior: auto !important;
+}
+
+html.myntHighContrast {
+	--bg-color-blue: Canvas !important;
+	--accentLightTint-blue: Canvas !important;
+	--darkColor-blue: LinkText !important;
+	--darkerColor-blue: CanvasText !important;
+	--textColorDark-blue: CanvasText !important;
+	--whitishColor-blue: Canvas !important;
+}
+
+html.myntHighContrast #videoBg {
+	display: none !important;
+}
+
+html.myntHighContrast body,
+html.myntHighContrast .todayWorkPanel,
+html.myntHighContrast .controlSection,
+html.myntHighContrast .sectionOuter,
+html.myntHighContrast .sectionInner,
+html.myntHighContrast .myntDialog {
+	background: Canvas !important;
+	color: CanvasText !important;
+}
+
+html.myntHighContrast button,
+html.myntHighContrast input,
+html.myntHighContrast select,
+html.myntHighContrast .controlSection,
+html.myntHighContrast .sectionOuter {
+	border: 2px solid CanvasText !important;
+}
+
+html.myntHighContrast button {
+	background: ButtonFace !important;
+	color: ButtonText !important;
+}
+
+@media (pointer: coarse) {
+	.todoListCont,
+	.pomodoroCont,
+	.bookmark-button,
+	.googleAppsCont,
+	.micIcon,
+	#aiToolsIcon,
+	#menuButton {
+		min-width: 44px;
+		min-height: 44px;
+	}
+
+	.todoListCont,
+	.pomodoroCont,
+	.bookmark-button,
+	.googleAppsCont,
+	#menuButton {
+		scale: 1;
+	}
+}
+
+@media screen and (max-width: 620px) {
+	#serviceStatusPill {
+		inset-inline: 16px auto;
+		bottom: 16px;
+		max-width: calc(100vw - 98px);
+	}
+
+	.controlCenterDialog {
+		width: calc(100vw - 16px);
+		max-height: calc(100dvh - 16px);
+		border-radius: 22px;
+	}
+
+	.controlCenterContent {
+		max-height: calc(100dvh - 104px);
+		padding: 10px;
+	}
+
+	.controlCenterHeader {
+		padding: 18px;
+	}
+
+	.controlSection {
+		padding: 15px;
+	}
+
+	.focusStatGrid,
+	.workspacePresetGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.focusStatGrid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	.focusStatCard {
+		padding: 10px;
+	}
+
+	.focusStatCard strong {
+		font-size: 1.3rem;
+	}
+
+	.controlSettingRow,
+	.permissionRow {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.permissionControls {
+		width: 100%;
+		justify-content: space-between;
+	}
+}
+
+@media screen and (max-width: 500px) {
+	body[data-workspace-background="video"] {
+		min-height: 100dvh;
+		padding-top: 0;
+	}
+
+	body[data-workspace-background="video"] .centerDiv {
+		position: fixed;
+		top: 50%;
+		left: 16px;
+		right: 16px;
+		width: auto;
+		margin: 0;
+		padding: 0;
+		transform: translateY(-50%);
+		align-items: stretch;
+	}
+
+	body[data-workspace-background="video"] .rightDiv {
+		width: 100%;
+		scale: 1;
+	}
+
+	body[data-workspace-background="video"] .searchbar {
+		width: 100%;
+		max-width: none;
+		margin: 0;
+		scale: 1;
+		transform: none;
+		transform-origin: center;
+	}
+
+	body[data-workspace-background="video"] .aiToolsCont {
+		top: calc(50% + 52px);
+		bottom: auto;
+		left: 16px;
+		right: 16px;
+		width: auto;
+		height: 44px;
+		max-width: calc(100vw - 32px);
+		scale: 1;
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.myntDialog[open] {
+		animation: none;
+	}
+}
+
+@media screen and (max-width: 900px) {
+	body[data-workspace-background="video"] {
+		display: block;
+		height: auto;
+		min-height: 100dvh;
+		padding: 34px 16px 120px;
+		overflow: auto;
+	}
+
+	html:has(body[data-workspace-background="video"]) {
+		overflow: auto;
+	}
+
+	body[data-workspace-background="video"] .centerDiv {
+		position: relative;
+		top: auto;
+		left: auto;
+		right: auto;
+		width: min(100%, 600px);
+		margin: 0 auto;
+		padding: 0;
+		transform: none;
+	}
+
+	body[data-workspace-background="video"] .rightDiv,
+	body[data-workspace-background="video"] .searchbar {
+		width: 100%;
+		max-width: none;
+		margin: 0;
+		scale: 1;
+		transform: none;
+	}
+
+	body[data-workspace-background="video"] .aiToolsCont {
+		position: relative;
+		top: auto;
+		left: auto;
+		right: auto;
+		width: min(100%, 600px);
+		height: auto;
+		max-width: none;
+		margin: 16px auto 0;
+		overflow-x: auto;
+	}
+
+	.todayWorkPanel {
+		position: relative;
+		top: auto;
+		right: auto;
+		left: auto;
+		width: min(100%, 600px);
+		max-height: none;
+		margin: 22px auto 0;
+		transform: none;
+	}
+
+	body:not([data-workspace-background="video"]) {
+		height: auto;
+		min-height: 100dvh;
+		flex-direction: column;
+		justify-content: flex-start;
+		gap: 22px;
+		padding: 28px 16px 120px;
+	}
+
+	body:not([data-workspace-background="video"]) .centerDiv {
+		margin-inline-end: 0;
+	}
+}
+
+@media screen and (max-width: 540px) {
+	.todayWorkPanel {
+		box-sizing: border-box;
+		max-width: 100%;
+		padding: 18px;
+		border-radius: 22px;
+	}
+
+	.todayPriorityRow {
+		grid-template-columns: 24px minmax(0, 1fr) 32px;
+		grid-template-areas:
+			"number task complete"
+			". next next";
+	}
+
+	.todayNextChoice {
+		justify-self: start;
+		padding-inline: 8px;
+	}
+
+	.todayNextAction {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	#todayStartFocusBtn {
+		width: 100%;
+	}
+
+	.workspaceWidgetChoices,
+	.workspaceEditorFields {
+		grid-template-columns: 1fr;
+	}
+
+	.workspaceEditorActions {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.workspaceEditorActions span {
+		display: none;
+	}
+}
+/* ------------ End Command & Control Center ------------ */

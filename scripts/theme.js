@@ -170,6 +170,8 @@ const applySelectedTheme = (colorValue) => {
 
         if (!isDarkMode) {
             document.documentElement.style.setProperty("--whitishColor-blue", `var(--whitishColor-${colorValue})`);
+        } else {
+            document.documentElement.style.setProperty("--whitishColor-blue", `var(--whitishColor-dark)`);
         }
     }
 
@@ -181,6 +183,7 @@ const applySelectedTheme = (colorValue) => {
         });
     }
 
+    updateAccessibleActionColor();
     changeFaviconColor();
     ApplyLoadingColor();
 };
@@ -202,6 +205,7 @@ function changeFaviconColor() {
     favicon.href = encodedSvg;
     favicon.setAttribute('type', 'image/svg+xml');
 }
+updateAccessibleActionColor();
 changeFaviconColor();
 
 // --------------------- Color Picker ---------------------
@@ -233,6 +237,63 @@ function isNearWhite(hex, threshold = 240) {
     return r > threshold && g > threshold && b > threshold;
 }
 
+function parseCssColor(value) {
+    const hexMatch = /^#([\da-f]{6})$/iu.exec(value.trim());
+    if (hexMatch) {
+        return [0, 2, 4].map(offset => parseInt(hexMatch[1].slice(offset, offset + 2), 16));
+    }
+
+    const rgbMatch = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)/iu.exec(value.trim());
+    return rgbMatch ? rgbMatch.slice(1, 4).map(Number) : null;
+}
+
+function relativeLuminance(rgb) {
+    const channels = rgb.map(channel => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045
+            ? normalized / 12.92
+            : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function contrastRatio(first, second) {
+    const firstLuminance = relativeLuminance(first);
+    const secondLuminance = relativeLuminance(second);
+    return (Math.max(firstLuminance, secondLuminance) + 0.05)
+        / (Math.min(firstLuminance, secondLuminance) + 0.05);
+}
+
+function resolveCssColor(value) {
+    const probe = document.createElement("span");
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return parseCssColor(resolved);
+}
+
+function updateAccessibleActionColor() {
+    if (!document.body) return;
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const background = resolveCssColor(rootStyles.getPropertyValue("--darkerColor-blue"));
+    if (!background) return;
+
+    const candidates = [
+        { value: "var(--textColorDark-blue)", rgb: resolveCssColor("var(--textColorDark-blue)") },
+        { value: "#ffffff", rgb: [255, 255, 255] },
+        { value: "#000000", rgb: [0, 0, 0] }
+    ].filter(candidate => candidate.rgb);
+    const best = candidates.reduce((winner, candidate) => (
+        contrastRatio(background, candidate.rgb) > contrastRatio(background, winner.rgb)
+            ? candidate
+            : winner
+    ));
+
+    document.documentElement.style.setProperty("--onActionColor-blue", best.value);
+}
+
 const applyCustomTheme = (color) => {
     let adjustedColor = isNearWhite(color) ? "#696969" : color;
 
@@ -250,6 +311,7 @@ const applyCustomTheme = (color) => {
     colorPickerLabel.style.borderColor = color;
     document.getElementById("dfChecked").checked = false;
 
+    updateAccessibleActionColor();
     changeFaviconColor();
     ApplyLoadingColor();
 };

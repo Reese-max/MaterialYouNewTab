@@ -18,6 +18,7 @@ We welcome all developers to contribute to our extension! Your efforts are truly
 - Before adding any library or dependency, explain its purpose and confirm that it's essential for the functionality you're implementing.
 
 ## 5. Test Thoroughly
+- Run `node tools/check-customizations.mjs` before submitting changes.
 - Ensure that your changes are fully functional and do not introduce any bugs or performance issues.  
 - Test your code on various screen sizes and scenarios if applicable.
 
@@ -29,5 +30,6 @@ We welcome all developers to contribute to our extension! Your efforts are truly
 
 ## 8. Document Changes
 - If your changes introduce new functionality, update any relevant documentation or provide notes for other contributors.
+- See [scripts/README.md](./scripts/README.md) for script additions and [locales/README.md](./locales/README.md) for translations.
 
 By following these guidelines, we can maintain a clean and efficient codebase while making the review process faster and easier for everyone. Thank you for your contributions and for helping improve this project!

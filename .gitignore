@@ -3,3 +3,8 @@
 
 # Ignore VSCode workspace settings
 .vscode/
+
+# Ignore audit / tooling logs
+.gstack/
+
+.github/

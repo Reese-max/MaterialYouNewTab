@@ -32,6 +32,7 @@ function pageReset() {
 }
 
 const closeMenuBar = () => {
+    menuButton.setAttribute("aria-expanded", "false");
     requestAnimationFrame(() => {
         optCont.style.opacity = "0"
         optCont.style.transform = "translateX(100%)"
@@ -57,6 +58,7 @@ const closeMenuBar = () => {
 }
 
 const openMenuBar = () => {
+    menuButton.setAttribute("aria-expanded", "true");
     setTimeout(() => {
         menuBar.style.display = "block";
         pageReset();
@@ -98,8 +100,19 @@ document.getElementById("menuCloseButton").onclick = () => {
 
 // Toggle expand/collapse sections
 document.querySelectorAll(".sectionHeader").forEach(header => {
+    const section = header.closest(".section");
+    const content = section.querySelector(".sectionInner");
+
+    function setExpanded(expanded) {
+        section.classList.toggle("expanded", expanded);
+        header.setAttribute("aria-expanded", String(expanded));
+        content.toggleAttribute("inert", !expanded);
+        content.setAttribute("aria-hidden", String(!expanded));
+    }
+
+    setExpanded(section.classList.contains("expanded"));
     header.addEventListener("click", () => {
-        header.closest(".section").classList.toggle("expanded");
+        setExpanded(!section.classList.contains("expanded"));
     });
 });
 

@@ -12,6 +12,29 @@ const dbName = "ImageDB";
 const storeName = "backgroundImages";
 const timestampKey = "lastUpdateTime"; // Key to store last update time
 const imageTypeKey = "imageType"; // Key to store the type of image ("random" or "upload")
+let activeBackgroundObjectUrl = null;
+
+function activateBackgroundObjectUrl(objectUrl) {
+    const previousObjectUrl = activeBackgroundObjectUrl;
+    activeBackgroundObjectUrl = objectUrl;
+    document.body.style.setProperty("--bg-image", `url(${objectUrl})`);
+
+    if (previousObjectUrl && previousObjectUrl !== objectUrl) {
+        requestAnimationFrame(() => URL.revokeObjectURL(previousObjectUrl));
+    }
+}
+
+function applyBlobBackground(blob) {
+    const objectUrl = URL.createObjectURL(blob);
+    activateBackgroundObjectUrl(objectUrl);
+    return objectUrl;
+}
+
+function releaseBackgroundObjectUrl() {
+    if (!activeBackgroundObjectUrl) return;
+    URL.revokeObjectURL(activeBackgroundObjectUrl);
+    activeBackgroundObjectUrl = null;
+}
 
 // Open IndexedDB database
 function openDatabase() {
@@ -86,13 +109,16 @@ document.getElementById("imageUpload").addEventListener("change", function (even
         const image = new Image();
 
         image.onload = function () {
-            document.body.style.setProperty("--bg-image", `url(${imageUrl})`);
+            activateBackgroundObjectUrl(imageUrl);
             saveImageToIndexedDB(file, false)
                 .then(() => {
                     toggleBackgroundType(true);
-                    URL.revokeObjectURL(imageUrl); // Clean up memory
                 })
                 .catch(error => console.error(error));
+        };
+        image.onerror = function () {
+            URL.revokeObjectURL(imageUrl);
+            console.error("The selected wallpaper could not be decoded.");
         };
 
         image.src = imageUrl;
@@ -110,13 +136,12 @@ async function applyRandomImage(showConfirmation = true) {
     }
     try {
         const response = await fetch(RANDOM_IMAGE_URL);
+        if (!response.ok) throw new Error(`Wallpaper request failed (${response.status}).`);
         const blob = await response.blob(); // Get Blob from response
-        const imageUrl = URL.createObjectURL(blob);
 
-        document.body.style.setProperty("--bg-image", `url(${imageUrl})`);
+        applyBlobBackground(blob);
         await saveImageToIndexedDB(blob, true);
         toggleBackgroundType(true);
-        setTimeout(() => URL.revokeObjectURL(imageUrl), 2000); // Delay URL revocation
     } catch (error) {
         console.error("Error fetching random image:", error);
     }
@@ -140,11 +165,8 @@ function checkAndUpdateImage() {
                 return;
             }
 
-            // Create a new Blob URL dynamically
-            const imageUrl = URL.createObjectURL(blob);
-
             if (imageType === "upload") {
-                document.body.style.setProperty("--bg-image", `url(${imageUrl})`);
+                applyBlobBackground(blob);
                 toggleBackgroundType(true);
                 return;
             }
@@ -154,12 +176,9 @@ function checkAndUpdateImage() {
                 applyRandomImage(false);
             } else {
                 // Reapply the saved random image
-                document.body.style.setProperty("--bg-image", `url(${imageUrl})`);
+                applyBlobBackground(blob);
                 toggleBackgroundType(true);
             }
-
-            // Clean up the Blob URL after setting the background
-            setTimeout(() => URL.revokeObjectURL(imageUrl), 1500);
         })
         .catch((error) => {
             console.error("Error loading image details:", error);
@@ -185,6 +204,7 @@ document.getElementById("clearImage").addEventListener("click", async function (
             try {
                 await clearImageFromIndexedDB();
                 document.body.style.removeProperty("--bg-image");
+                releaseBackgroundObjectUrl();
                 toggleBackgroundType(false);
             } catch (error) {
                 console.error(error);
@@ -198,4 +218,5 @@ document.getElementById("randomImageTrigger").addEventListener("click", applyRan
 
 // Start image check on page load
 checkAndUpdateImage();
+window.addEventListener("pagehide", releaseBackgroundObjectUrl, { once: true });
 // ------------------------ End of BG Image --------------------------

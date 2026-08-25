@@ -2,18 +2,11 @@
 	"manifest_version": 2,
 	"name": "MYNT: Material You New Tab",
 	"version": "3.3.6",
-	"description": "A Simple New Tab (browser's home page) inspired by Google's 'Material You' design.",
-	"permissions": [
-		"search",
+	"description": "一款受 Google「Material You」設計啟發的簡潔新分頁（瀏覽器首頁）。",
+	"optional_permissions": [
 		"bookmarks",
-		"https://www.google.com/complete/search?client=*",
-		"https://duckduckgo.com/ac/?q=*",
-		"https://search.brave.com/api/suggest?q=*",
-		"https://*.wikipedia.org/w/api.php?action=opensearch&search=*"
+		"https://www.google.com/*"
 	],
-	"background": {
-		"scripts": ["scripts/background.js"]
-	},
 	"icons": {
 		"16": "favicon/icon16.png",
 		"48": "favicon/icon48.png",
