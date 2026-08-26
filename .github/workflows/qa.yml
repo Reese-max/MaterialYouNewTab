@@ -7,10 +7,11 @@ on:
   push:
     branches:
       - main
+      - feature/upstream-full-integration
   workflow_dispatch:
 
 concurrency:
-  group: qa-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: qa-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
