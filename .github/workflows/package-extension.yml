@@ -1,0 +1,162 @@
+name: Build extension packages
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Package Chromium and Firefox
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Build clean browser directories
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(node -p "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')).version")"
+          mkdir -p dist/chromium dist/firefox
+
+          common_excludes=(
+            --exclude '.git/'
+            --exclude '.github/'
+            --exclude 'dist/'
+            --exclude 'tools/'
+            --exclude '.gitignore'
+            --exclude 'README.md'
+            --exclude 'CHANGELOG.md'
+            --exclude 'CODE_OF_CONDUCT.md'
+            --exclude 'CONTRIBUTING.md'
+          )
+
+          rsync -a "${common_excludes[@]}" \
+            --exclude 'manifest(firefox).json' \
+            ./ dist/chromium/
+
+          rsync -a "${common_excludes[@]}" \
+            --exclude 'manifest.json' \
+            --exclude 'manifest(firefox).json' \
+            ./ dist/firefox/
+          cp 'manifest(firefox).json' dist/firefox/manifest.json
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const sourceVersion = JSON.parse(fs.readFileSync('manifest.json', 'utf8')).version;
+          const targets = [
+            { name: 'chromium', expectedManifestVersion: 3 },
+            { name: 'firefox', expectedManifestVersion: 2 },
+          ];
+          const requiredPaths = [
+            'index.html',
+            'style.css',
+            'scripts',
+            'locales',
+            'docs/whats-new.html',
+            'privacy-policy.html',
+            'LICENSE',
+          ];
+          const forbiddenPaths = [
+            '.git',
+            '.github',
+            'dist',
+            'tools',
+            '.gitignore',
+            'README.md',
+            'CHANGELOG.md',
+            'CODE_OF_CONDUCT.md',
+            'CONTRIBUTING.md',
+            'manifest(firefox).json',
+          ];
+
+          for (const target of targets) {
+            const root = path.join('dist', target.name);
+            const manifestPath = path.join(root, 'manifest.json');
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+            if (manifest.version !== sourceVersion) {
+              throw new Error(`${target.name}: manifest version ${manifest.version} does not match ${sourceVersion}`);
+            }
+            if (manifest.manifest_version !== target.expectedManifestVersion) {
+              throw new Error(`${target.name}: expected manifest_version ${target.expectedManifestVersion}`);
+            }
+            for (const relativePath of requiredPaths) {
+              if (!fs.existsSync(path.join(root, relativePath))) {
+                throw new Error(`${target.name}: missing ${relativePath}`);
+              }
+            }
+            for (const relativePath of forbiddenPaths) {
+              if (fs.existsSync(path.join(root, relativePath))) {
+                throw new Error(`${target.name}: development-only path leaked into package: ${relativePath}`);
+              }
+            }
+          }
+
+          const chromiumManifest = JSON.parse(fs.readFileSync('dist/chromium/manifest.json', 'utf8'));
+          if (!chromiumManifest.background?.service_worker) {
+            throw new Error('chromium: background service worker is missing');
+          }
+          if (!fs.existsSync(path.join('dist/chromium', chromiumManifest.background.service_worker))) {
+            throw new Error('chromium: background service worker file is missing');
+          }
+
+          const firefoxManifest = JSON.parse(fs.readFileSync('dist/firefox/manifest.json', 'utf8'));
+          if (!firefoxManifest.browser_specific_settings?.gecko?.id) {
+            throw new Error('firefox: Gecko extension ID is missing');
+          }
+
+          console.log(`PACKAGE_LAYOUT_OK version=${sourceVersion}`);
+          NODE
+
+          (
+            cd dist/chromium
+            zip -qr "../MYNT-${version}-chromium.zip" .
+          )
+          (
+            cd dist/firefox
+            zip -qr "../MYNT-${version}-firefox.zip" .
+          )
+
+          unzip -t "dist/MYNT-${version}-chromium.zip"
+          unzip -t "dist/MYNT-${version}-firefox.zip"
+
+          {
+            echo "### Installable extension packages"
+            echo
+            echo "- \`MYNT-${version}-chromium.zip\`"
+            echo "- \`MYNT-${version}-firefox.zip\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload browser packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: mynt-extension-packages-${{ github.sha }}
+          path: dist/*.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
