@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>MYNT 自我驗證中心</title>
+    <link rel="stylesheet" href="preview/preview.css">
+    <script defer src="preview/verify.js"></script>
+</head>
+<body class="mynt-verify-page">
+    <main class="mynt-verify-shell">
+        <section class="mynt-verify-hero">
+            <p class="mynt-verify-eyebrow">Reese-max customized edition</p>
+            <h1>MYNT 自我驗證中心</h1>
+            <p>這裡同時顯示網頁預覽的自動檢查、你可以親手操作的功能清單，以及必須安裝瀏覽器擴充套件後才能確認的項目。網頁看起來正常，不等於新分頁覆寫與權限流程已完整通過。</p>
+            <div class="mynt-verify-actions">
+                <a class="mynt-verify-button primary" href="./" target="_blank" rel="noopener">開啟實際網頁預覽</a>
+                <a class="mynt-verify-button" href="https://github.com/Reese-max/MaterialYouNewTab/pull/3" target="_blank" rel="noopener">查看 PR #3</a>
+                <a class="mynt-verify-button" href="https://github.com/Reese-max/MaterialYouNewTab/actions/workflows/package-extension.yml" target="_blank" rel="noopener">下載擴充套件產物</a>
+                <a class="mynt-verify-button" href="docs/SELF-VERIFICATION.md" target="_blank" rel="noopener">完整驗證說明</a>
+            </div>
+        </section>
+
+        <div class="mynt-verify-grid">
+            <section class="mynt-verify-card">
+                <h2>目前預覽版本</h2>
+                <p>每次整合分支或 main 更新時，這些資料會跟著重新產生。</p>
+                <ul class="mynt-meta-list">
+                    <li class="mynt-meta-row"><span>版本</span><code id="meta-version">讀取中…</code></li>
+                    <li class="mynt-meta-row"><span>分支</span><code id="meta-branch">讀取中…</code></li>
+                    <li class="mynt-meta-row"><span>提交</span><a id="commit-link" href="#"><code id="meta-commit">讀取中…</code></a></li>
+                    <li class="mynt-meta-row"><span>建置時間</span><code id="meta-built-at">讀取中…</code></li>
+                    <li class="mynt-meta-row"><span>Workflow</span><a id="run-link" href="#"><code id="meta-run">讀取中…</code></a></li>
+                </ul>
+            </section>
+
+            <section class="mynt-verify-card">
+                <h2>自動結構檢查</h2>
+                <p>先點「開啟實際網頁預覽」，等待約兩秒，再回到這頁重新整理。</p>
+                <ul id="auto-checks" class="mynt-check-list"></ul>
+            </section>
+
+            <section class="mynt-verify-card full">
+                <h2>網頁版手動檢查 <span class="mynt-check-state pending" data-check-progress="web">0 / 0</span></h2>
+                <p>勾選結果只保存在目前瀏覽器，不會上傳到 GitHub 或任何伺服器。</p>
+                <div class="mynt-check-list" data-check-group="web"></div>
+            </section>
+
+            <section class="mynt-verify-card full">
+                <h2>擴充套件真實檢查 <span class="mynt-check-state pending" data-check-progress="extension">0 / 0</span></h2>
+                <p>這些項目無法由一般網頁代替，必須下載 Chromium ZIP 並在 Chrome、Edge 或 Brave 載入。</p>
+                <div class="mynt-check-list" data-check-group="extension"></div>
+                <div class="mynt-verify-note">網頁預覽不具備瀏覽器擴充權限，因此書籤、權限、真正新分頁替換、背景 service worker 與無痕模式只能用安裝包驗證。</div>
+            </section>
+
+            <section id="runtime-errors-section" class="mynt-verify-card full" hidden>
+                <h2>預覽頁捕捉到的錯誤</h2>
+                <p>資源載入錯誤可能由網路阻擋造成；ReferenceError、TypeError、SyntaxError 與 Uncaught 應優先處理。</p>
+                <ol id="runtime-errors" class="mynt-error-list"></ol>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,347 @@
+:root {
+    color-scheme: light dark;
+}
+
+#mynt-web-preview-badge {
+    position: fixed;
+    z-index: 2147483647;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: min(520px, calc(100vw - 24px));
+    padding: 9px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 18px;
+    background: rgba(24, 24, 27, 0.92);
+    color: #fff;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28);
+    font: 600 12px/1.35 Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    backdrop-filter: blur(16px);
+}
+
+#mynt-web-preview-badge[data-status="warning"] {
+    border-color: rgba(255, 190, 92, 0.78);
+}
+
+#mynt-web-preview-badge[data-status="error"] {
+    border-color: rgba(255, 110, 110, 0.9);
+}
+
+#mynt-web-preview-badge .mynt-preview-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #73e2a7;
+}
+
+#mynt-web-preview-badge[data-status="warning"] .mynt-preview-dot {
+    background: #ffbe5c;
+}
+
+#mynt-web-preview-badge[data-status="error"] .mynt-preview-dot {
+    background: #ff6e6e;
+}
+
+#mynt-web-preview-badge .mynt-preview-copy {
+    min-width: 0;
+}
+
+#mynt-web-preview-badge strong,
+#mynt-web-preview-badge small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#mynt-web-preview-badge small {
+    margin-top: 1px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+#mynt-web-preview-badge a,
+#mynt-web-preview-badge button {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.13);
+    color: inherit;
+    padding: 6px 9px;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#mynt-web-preview-badge a:hover,
+#mynt-web-preview-badge button:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+#mynt-web-preview-badge.is-collapsed .mynt-preview-copy,
+#mynt-web-preview-badge.is-collapsed a {
+    display: none;
+}
+
+.mynt-verify-page {
+    min-height: 100vh;
+    margin: 0;
+    background: #f4f5f7;
+    color: #17181b;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.mynt-verify-shell {
+    width: min(1040px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 36px 0 72px;
+}
+
+.mynt-verify-hero,
+.mynt-verify-card {
+    border: 1px solid #dfe2e8;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 16px 50px rgba(31, 35, 44, 0.07);
+}
+
+.mynt-verify-hero {
+    padding: clamp(24px, 4vw, 42px);
+}
+
+.mynt-verify-eyebrow {
+    margin: 0 0 8px;
+    color: #5f636d;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.mynt-verify-hero h1 {
+    margin: 0;
+    font-size: clamp(30px, 6vw, 56px);
+    line-height: 1.02;
+}
+
+.mynt-verify-hero p {
+    max-width: 760px;
+    margin: 16px 0 0;
+    color: #5c606a;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.mynt-verify-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.mynt-verify-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid #cfd3da;
+    border-radius: 14px;
+    background: #fff;
+    color: #18191d;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.mynt-verify-button.primary {
+    border-color: #1f232b;
+    background: #1f232b;
+    color: #fff;
+}
+
+.mynt-verify-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.mynt-verify-card {
+    padding: 24px;
+}
+
+.mynt-verify-card.full {
+    grid-column: 1 / -1;
+}
+
+.mynt-verify-card h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+}
+
+.mynt-verify-card > p {
+    margin: 0 0 18px;
+    color: #666a73;
+    line-height: 1.6;
+}
+
+.mynt-meta-list,
+.mynt-check-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mynt-meta-row,
+.mynt-auto-check,
+.mynt-manual-check {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #e3e5ea;
+    border-radius: 14px;
+    background: #fafbfc;
+}
+
+.mynt-meta-row code {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: #3b3e46;
+}
+
+.mynt-check-state {
+    display: inline-flex;
+    align-items: center;
+    min-width: 74px;
+    justify-content: center;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #e8eaee;
+    color: #545861;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.mynt-check-state.pass {
+    background: #dff7e8;
+    color: #17663a;
+}
+
+.mynt-check-state.fail {
+    background: #ffe2e2;
+    color: #982b2b;
+}
+
+.mynt-check-state.pending {
+    background: #fff0cf;
+    color: #775012;
+}
+
+.mynt-manual-check {
+    grid-template-columns: auto minmax(0, 1fr);
+    cursor: pointer;
+}
+
+.mynt-manual-check input {
+    width: 19px;
+    height: 19px;
+    margin: 0;
+}
+
+.mynt-manual-check span {
+    line-height: 1.5;
+}
+
+.mynt-verify-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-left: 4px solid #a36a10;
+    border-radius: 10px;
+    background: #fff5de;
+    color: #644716;
+    line-height: 1.65;
+}
+
+.mynt-error-list {
+    max-height: 260px;
+    overflow: auto;
+    margin: 0;
+    padding-left: 20px;
+    color: #8c2d2d;
+    line-height: 1.55;
+}
+
+@media (prefers-color-scheme: dark) {
+    .mynt-verify-page {
+        background: #111216;
+        color: #f0f1f3;
+    }
+
+    .mynt-verify-hero,
+    .mynt-verify-card {
+        border-color: #343740;
+        background: #1b1d22;
+        box-shadow: none;
+    }
+
+    .mynt-verify-hero p,
+    .mynt-verify-card > p,
+    .mynt-verify-eyebrow {
+        color: #afb3bd;
+    }
+
+    .mynt-verify-button {
+        border-color: #484c56;
+        background: #25282e;
+        color: #f3f4f6;
+    }
+
+    .mynt-verify-button.primary {
+        border-color: #eef0f4;
+        background: #eef0f4;
+        color: #16171a;
+    }
+
+    .mynt-meta-row,
+    .mynt-auto-check,
+    .mynt-manual-check {
+        border-color: #373a43;
+        background: #23262c;
+    }
+
+    .mynt-meta-row code {
+        color: #d8dbe1;
+    }
+
+    .mynt-verify-note {
+        border-left-color: #d9a247;
+        background: #342817;
+        color: #f2d8a8;
+    }
+}
+
+@media (max-width: 760px) {
+    #mynt-web-preview-badge {
+        top: auto;
+        right: 8px;
+        bottom: 8px;
+        max-width: calc(100vw - 16px);
+    }
+
+    .mynt-verify-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mynt-verify-card.full {
+        grid-column: auto;
+    }
+}
