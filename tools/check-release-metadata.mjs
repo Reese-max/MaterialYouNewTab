@@ -12,13 +12,13 @@ const readme = read("README.md");
 
 const repo = "Reese-max/MaterialYouNewTab";
 const productName = "MYNT: Material You New Tab";
+const version = chromeManifest.version;
 
 assert.equal(
     chromeManifest.version,
     firefoxManifest.version,
     "Chrome and Firefox manifest versions must match"
 );
-
 assert.equal(chromeManifest.name, productName, "Unexpected Chrome product name");
 assert.equal(firefoxManifest.name, productName, "Unexpected Firefox product name");
 assert.equal(
@@ -27,25 +27,20 @@ assert.equal(
     "Chrome and Firefox descriptions must match"
 );
 
-assert.match(
-    readme,
-    new RegExp(`version-${chromeManifest.version.replaceAll(".", "\\.")}`),
+assert.ok(
+    readme.includes(`version-${version}`),
     "README version badge must match manifest version"
 );
-assert.match(
-    readme,
-    new RegExp(`\\| \\`${chromeManifest.version.replaceAll(".", "\\.")}\\` \\|`),
+assert.ok(
+    readme.includes(`| \`${version}\` |`),
     "README version table must include the manifest version"
 );
-
-assert.match(
-    readme,
-    new RegExp(`git clone https://github\\.com/${repo.replace("/", "\\/")}\\.git`),
+assert.ok(
+    readme.includes(`git clone https://github.com/${repo}.git`),
     "README clone command must point to the Reese-max fork"
 );
-assert.match(
-    readme,
-    new RegExp(`https://github\\.com/${repo.replace("/", "\\/")}\\/archive\\/refs\\/heads\\/main\\.zip`),
+assert.ok(
+    readme.includes(`https://github.com/${repo}/archive/refs/heads/main.zip`),
     "README ZIP download must point to the Reese-max fork"
 );
 
@@ -59,7 +54,6 @@ assert.doesNotMatch(
     /prem-k-r\.github\.io\/MaterialYouNewTab[^\n]*Test live/i,
     "README must not present the upstream Pages site as this fork's live demo"
 );
-
 assert.match(
     readme,
     /customized fork of \[prem-k-r\/MaterialYouNewTab\]/,
@@ -82,5 +76,5 @@ assert.match(
 );
 
 console.log(
-    `RELEASE_METADATA_OK version=${chromeManifest.version} name=${JSON.stringify(productName)} repo=${repo}`
+    `RELEASE_METADATA_OK version=${version} name=${JSON.stringify(productName)} repo=${repo}`
 );
