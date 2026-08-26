@@ -24,10 +24,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
 
@@ -65,8 +67,20 @@ jobs:
           with ZipFile(archive) as package:
               package.extractall(install_root)
 
-          chrome = install_root / "chrome-linux64" / "chrome"
-          chrome.chmod(chrome.stat().st_mode | 0o111)
+          browser_root = install_root / "chrome-linux64"
+          executable_names = (
+              "chrome",
+              "chrome_crashpad_handler",
+              "chrome_sandbox",
+              "xdg-mime",
+              "xdg-settings",
+          )
+          for name in executable_names:
+              executable = browser_root / name
+              if executable.exists():
+                  executable.chmod(executable.stat().st_mode | 0o111)
+
+          chrome = browser_root / "chrome"
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
               environment.write(f"CHROME_BIN={chrome}\n")
               environment.write(f"CHROME_FOR_TESTING_VERSION={stable['version']}\n")
