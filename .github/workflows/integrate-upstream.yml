@@ -1,0 +1,78 @@
+name: Integrate upstream snapshot
+
+on:
+  push:
+    branches:
+      - feature/upstream-full-integration
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  merge-upstream:
+    name: Merge upstream while preserving custom conflict regions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@v7
+        with:
+          ref: feature/upstream-full-integration
+          fetch-depth: 0
+
+      - name: Merge upstream main
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote add upstream https://github.com/prem-k-r/MaterialYouNewTab.git 2>/dev/null || true
+          git fetch upstream main
+
+          upstream_sha="$(git rev-parse upstream/main)"
+          if git merge-base --is-ancestor "$upstream_sha" HEAD; then
+            echo "Upstream $upstream_sha is already integrated."
+            exit 0
+          fi
+
+          set +e
+          git merge --no-commit --no-ff -X ours upstream/main
+          merge_status=$?
+          set -e
+
+          mkdir -p .integration
+          {
+            echo "Upstream integration report"
+            echo "==========================="
+            echo "Upstream: $upstream_sha"
+            echo "Base before merge: ${{ github.sha }}"
+            echo "Merge exit code: $merge_status"
+            echo
+            echo "Conflict paths resolved in favor of the customized branch:"
+          } > .integration/upstream-merge-report.txt
+
+          mapfile -d '' conflicts < <(git diff --name-only --diff-filter=U -z)
+          if (( ${#conflicts[@]} > 0 )); then
+            for file in "${conflicts[@]}"; do
+              printf '%s\n' "$file" >> .integration/upstream-merge-report.txt
+              if git checkout --ours -- "$file" 2>/dev/null; then
+                git add -- "$file"
+              else
+                git rm -f --ignore-unmatch -- "$file"
+              fi
+            done
+          else
+            echo "(none)" >> .integration/upstream-merge-report.txt
+          fi
+
+          echo >> .integration/upstream-merge-report.txt
+          echo "All changed paths in the resulting merge:" >> .integration/upstream-merge-report.txt
+          git diff --name-status HEAD >> .integration/upstream-merge-report.txt || true
+
+          git add -A
+          git commit -m "merge: integrate upstream main through ${upstream_sha:0:7}"
+          git push origin HEAD:feature/upstream-full-integration
