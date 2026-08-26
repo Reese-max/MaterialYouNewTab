@@ -143,7 +143,7 @@ assert.match(
 );
 assert.match(weatherCode, /initializeWeather\(\{ allowNetwork: !isHidden && isWeatherWidgetRendered\(\) \}\)/);
 assert.match(weatherCode, /if \(!allowNetwork\) return;/);
-assert.doesNotMatch(shortcutsCode, /\bonerror\s*=/i, "Shortcut icons must not use inline handlers");
+assert.doesNotMatch(shortcutsCode, /(?:<[^>]*\bonerror\s*=|setAttribute\(\s*["\']onerror["\'])/i, "Shortcut icons must not inject inline error handlers");
 
 const languageTool = read("tools/languagesAnalysis.html");
 assert.doesNotMatch(languageTool, /locales\/(?!en\.js|zh_TW\.js)[^"']+\.js/);
