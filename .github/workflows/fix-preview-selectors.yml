@@ -1,0 +1,63 @@
+name: Fix verification selectors
+
+on:
+  push:
+    branches:
+      - feature/upstream-full-integration
+    paths:
+      - .github/workflows/fix-preview-selectors.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feature/upstream-full-integration
+          fetch-depth: 0
+
+      - name: Correct DOM selectors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              "tools/smoke-chromium.mjs": {
+                  '#controlCenterModal': '#controlCenterDialog',
+                  '#scratchpadModal': '#scratchpadContainer',
+              },
+              "web-preview/preview-banner.js": {
+                  '#controlCenterModal': '#controlCenterDialog',
+                  '#scratchpadModal': '#scratchpadContainer',
+              },
+          }
+
+          for filename, mapping in replacements.items():
+              path = Path(filename)
+              text = path.read_text(encoding="utf-8")
+              for old, new in mapping.items():
+                  count = text.count(old)
+                  if count != 1:
+                      raise SystemExit(f"{filename}: expected exactly one {old!r}, found {count}")
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
+              print(f"UPDATED {filename}")
+          PY
+
+      - name: Commit correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/smoke-chromium.mjs web-preview/preview-banner.js
+          git commit -m "test: align verification selectors with the actual dialogs"
+          git push origin HEAD:feature/upstream-full-integration
