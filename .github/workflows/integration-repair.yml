@@ -28,6 +28,12 @@ jobs:
         with:
           node-version: 22
 
+      - name: Fetch upstream source
+        shell: bash
+        run: |
+          git remote add upstream https://github.com/prem-k-r/MaterialYouNewTab.git 2>/dev/null || true
+          git fetch upstream main
+
       - name: Apply deterministic repairs
         run: node tools/integration-repair.mjs
 
@@ -50,3 +56,6 @@ jobs:
 
       - name: Run release metadata checks
         run: node tools/check-release-metadata.mjs
+
+      - name: Run upstream integration checks
+        run: node tools/check-upstream-integration.mjs
