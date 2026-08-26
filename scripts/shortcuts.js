@@ -7,6 +7,18 @@
 document.addEventListener("DOMContentLoaded", function () {
     // Constants
     const MAX_SHORTCUTS = 50;
+    const MAX_ICON_BYTES = 100 * 1024;
+    const SUPPORTED_ICON_MIME_TYPES = new Set([
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+        "image/bmp",
+        "image/x-icon",
+        "image/vnd.microsoft.icon",
+        "image/svg+xml",
+    ]);
     const PLACEHOLDER = {
         name: "新捷徑",
         url: "https://github.com/Reese-max/MaterialYouNewTab",
@@ -196,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <path d="M12 3.5a.89.89 0 0 0-.641.27l-3.57 3.571a.895.895 0 0 0 1.265 1.265l2.051-2.051v8.577a.895.895 0 1 0 1.79 0V6.555l2.051 2.051a.895.895 0 0 0 1.266-1.265l-3.57-3.57A.91.91 0 0 0 12 3.5m-6.263 9.842c-.494 0-.895.4-.895.895v3.579A2.7 2.7 0 0 0 7.526 20.5h8.948a2.7 2.7 0 0 0 2.684-2.684v-3.58a.895.895 0 1 0-1.79 0v3.58c0 .505-.39.895-.894.895H7.526a.88.88 0 0 1-.894-.895v-3.58c0-.493-.401-.894-.895-.894"/>
                     </svg>
                 </button>
-                <input type="file" class="iconFileInput" accept="image/*" hidden>
+                <input type="file" class="iconFileInput" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp,image/x-icon,image/vnd.microsoft.icon,image/svg+xml" hidden>
                 <div class="shortcutDelete">
                     <button class="${deleteInactive ? 'inactive' : ''}">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
@@ -219,18 +231,18 @@ document.addEventListener("DOMContentLoaded", function () {
         fileInput.addEventListener("change", async e => {
             const selectedFile = e.target.files?.[0];
             if (!selectedFile) return;
-            if (!selectedFile.type.startsWith("image/")) {
+            const selectedMimeType = String(selectedFile.type || "").toLowerCase();
+            if (!SUPPORTED_ICON_MIME_TYPES.has(selectedMimeType)) {
                 const invalidFileTypeMessage = translations[currentLanguage]?.invalidFileTypeMessage || translations["en"]?.invalidFileTypeMessage;
                 alertPrompt(invalidFileTypeMessage);
                 fileInput.value = "";
                 return;
             }
 
-            const maxIconBytes = 100 * 1024;
-            if (selectedFile.size > maxIconBytes) {
+            if (selectedFile.size > MAX_ICON_BYTES) {
                 const iconFileTooLargeMessage = translations[currentLanguage]?.iconFileTooLargeMessage || translations["en"].iconFileTooLargeMessage;
                 const fileSizeKB = localizeNumbers((selectedFile.size / 1024).toFixed(1), currentLanguage);
-                const maxSizeKB = localizeNumbers((maxIconBytes / 1024).toFixed(0), currentLanguage);
+                const maxSizeKB = localizeNumbers((MAX_ICON_BYTES / 1024).toFixed(0), currentLanguage);
 
                 const message = iconFileTooLargeMessage
                     .replace("{size}", fileSizeKB)
@@ -375,7 +387,9 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const payload = dataUrl.slice(separatorIndex + 1);
             const rawSvg = metadata.includes(";base64")
-                ? atob(payload)
+                ? new TextDecoder("utf-8", { fatal: true }).decode(
+                    Uint8Array.from(atob(payload), character => character.charCodeAt(0))
+                )
                 : decodeURIComponent(payload);
             return sanitizeSvg(rawSvg);
         } catch {
@@ -585,6 +599,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let isReordering = false;
         let pendingReorder = false;
         let isDragging = false;
+        let originalOrder = null;
 
         // Cache element positions for smooth gliding animation
         function cachePositions() {
@@ -763,7 +778,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Only update if we actually made changes
             if (pendingReorder) {
                 updateShortcutIndices();
-                saveShortcutOrder();
+                saveShortcutOrder(originalOrder);
                 pendingReorder = false;
             }
 
@@ -772,6 +787,7 @@ document.addEventListener("DOMContentLoaded", function () {
             isReordering = false;
             isDragging = false;
             draggedElement = null;
+            originalOrder = null;
         }
 
         // ==== MOUSE EVENTS ====
@@ -780,6 +796,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (item) {
                 isReordering = true;
                 draggedElement = item;
+                originalOrder = readShortcutOrder();
 
                 // Calculate drag offset
                 const rect = item.getBoundingClientRect();
@@ -829,41 +846,107 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Saves the new shortcut order to localStorage
-    function saveShortcutOrder() {
-        const entries = dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry");
-        const newOrder = Array.from(entries).map(entry => ({
+    function readShortcutOrder(entries = dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")) {
+        return Array.from(entries).map(entry => ({
             name: entry.querySelector(".shortcutName").value,
             url: entry.querySelector(".URL").value,
             icon: entry.querySelector(".iconURL").value
         }));
+    }
 
-        // Only save if order has changed
-        if (hasOrderChanged(newOrder)) {
-            localStorage.setItem("shortcutAmount", newOrder.length.toString());
-            newOrder.forEach((item, index) => {
-                localStorage.setItem(`shortcutName${index}`, item.name);
-                localStorage.setItem(`shortcutURL${index}`, item.url);
+    function isQuotaExceededError(error) {
+        return error?.name === "QuotaExceededError" || error?.code === 22;
+    }
 
-                // Try to save icon, skip/clear if quota exceeded
-                try {
-                    localStorage.setItem(`shortcutIcon${index}`, item.icon || "");
-                } catch (iconError) {
-                    if (iconError.name === "QuotaExceededError" || iconError.code === 22) {
-                        // Remove icon due to quota
-                        localStorage.removeItem(`shortcutIcon${index}`);
-                        const entry = entries[index];
-                        if (entry) entry.querySelector(".iconURL").value = "";
-                        item.icon = "";
-                    } else {
-                        throw iconError;
-                    }
-                }
-            });
+    function snapshotShortcutStorage() {
+        const snapshot = new Map();
+        const amount = localStorage.getItem("shortcutAmount");
+        if (amount !== null) snapshot.set("shortcutAmount", amount);
 
-            shortcutsCache = newOrder;
-            renderAllShortcuts(newOrder);
+        for (let index = 0; index < MAX_SHORTCUTS; index++) {
+            for (const prefix of ["shortcutName", "shortcutURL", "shortcutIcon"]) {
+                const key = `${prefix}${index}`;
+                const value = localStorage.getItem(key);
+                if (value !== null) snapshot.set(key, value);
+            }
         }
+        return snapshot;
+    }
+
+    function clearShortcutStorage() {
+        localStorage.removeItem("shortcutAmount");
+        for (let index = 0; index < MAX_SHORTCUTS; index++) {
+            localStorage.removeItem(`shortcutName${index}`);
+            localStorage.removeItem(`shortcutURL${index}`);
+            localStorage.removeItem(`shortcutIcon${index}`);
+        }
+    }
+
+    function writeShortcutStorage(order) {
+        // Clearing first prevents a quota-neutral move from temporarily
+        // duplicating a large icon under both its old and new keys.
+        clearShortcutStorage();
+        localStorage.setItem("shortcutAmount", order.length.toString());
+        order.forEach((item, index) => {
+            localStorage.setItem(`shortcutName${index}`, item.name);
+            localStorage.setItem(`shortcutURL${index}`, item.url);
+            localStorage.setItem(`shortcutIcon${index}`, item.icon || "");
+        });
+    }
+
+    function restoreShortcutStorage(snapshot) {
+        clearShortcutStorage();
+        snapshot.forEach((value, key) => localStorage.setItem(key, value));
+    }
+
+    function rebuildShortcutEditor(order) {
+        dom.shortcutSettingsContainer.innerHTML = "";
+        dom.shortcutsContainer.innerHTML = "";
+        const deleteInactive = order.length <= 1;
+
+        order.forEach((item, index) => {
+            dom.shortcutSettingsContainer.appendChild(
+                createShortcutEntry(item.name, item.url, item.icon || "", deleteInactive, index)
+            );
+            renderShortcut(item.name, item.url, item.icon || "", index);
+        });
+
+        dom.newShortcutButton.classList.toggle("inactive", order.length >= MAX_SHORTCUTS);
+        updateShortcutIndices();
+    }
+
+    // Saves the new shortcut order without temporarily duplicating icon data.
+    function saveShortcutOrder(originalOrder) {
+        const newOrder = readShortcutOrder();
+        if (!hasOrderChanged(newOrder)) return;
+
+        const rollbackOrder = Array.isArray(originalOrder)
+            ? originalOrder.map(item => ({ ...item }))
+            : shortcutsCache.map(item => ({ ...item }));
+        const previousStorage = snapshotShortcutStorage();
+
+        try {
+            writeShortcutStorage(newOrder);
+        } catch (storageError) {
+            try {
+                restoreShortcutStorage(previousStorage);
+            } catch (rollbackError) {
+                console.error("Shortcut reorder rollback failed:", rollbackError);
+            }
+
+            shortcutsCache = rollbackOrder;
+            rebuildShortcutEditor(rollbackOrder);
+
+            if (isQuotaExceededError(storageError)) {
+                const iconStorageQuotaMessage = translations[currentLanguage]?.iconStorageQuotaMessage || translations["en"].iconStorageQuotaMessage;
+                alertPrompt(iconStorageQuotaMessage);
+                return;
+            }
+            throw storageError;
+        }
+
+        shortcutsCache = newOrder;
+        renderAllShortcuts(newOrder);
     }
 
     // Checks if the shortcut order has changed
@@ -957,6 +1040,7 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem(`shortcutName${currentAmount - 1}`);
         localStorage.removeItem(`shortcutURL${currentAmount - 1}`);
         localStorage.removeItem(`shortcutIcon${currentAmount - 1}`);
+        shortcutsCache.length = currentAmount - 1;
 
         if (currentAmount - 1 === 1) {
             document.querySelectorAll(".shortcutDelete button").forEach(b => {
@@ -1016,7 +1100,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             localStorage.setItem(`shortcutIcon${index}`, icon);
         } catch (iconError) {
-            if (iconError.name === "QuotaExceededError" || iconError.code === 22) {
+            if (isQuotaExceededError(iconError)) {
                 // Icon is too large, clear it from input and localStorage
                 iconInput.value = "";
                 localStorage.removeItem(`shortcutIcon${index}`);
@@ -1027,6 +1111,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 throw iconError;
             }
         }
+
+        shortcutsCache[index] = { name, url, icon: iconInput.value || "" };
     }
 
     // Keyboard shortcuts: Alt + 1-9 to open corresponding shortcut

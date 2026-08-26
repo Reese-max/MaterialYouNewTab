@@ -184,8 +184,6 @@ const fr = {
     "adjustOpacityDesc": "Ajuster la transparence de l'interface",
 
     // Tips
-    "switchSearchModes": "Changer de mode de recherche",
-    "switchSearchModesInfo": "Cliquer sur ‘Rechercher avec’ pour changer de mode.",
     "adjustZoom": "Ajuster le zoom",
     "adjustZoomInfo": "Appuyez Ctrl + \"+\" ou Ctrl + \"-\" pour ajuster le zoom.",
     "changeBrowserTheme": "Changer le thème du navigateur",

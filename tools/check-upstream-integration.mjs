@@ -42,6 +42,38 @@ const shortcutRuntimePatterns = [
 ];
 for (const pattern of shortcutRuntimePatterns) assert.match(shortcuts, pattern);
 assert.doesNotMatch(shortcuts, /^\s*hostname\s*=/m);
+const shortcutHardeningPatterns = [
+    /SUPPORTED_ICON_MIME_TYPES/,
+    /SUPPORTED_ICON_MIME_TYPES\.has\(selectedMimeType\)/,
+    /new TextDecoder\("utf-8", \{ fatal: true \}\)/,
+    /originalOrder = readShortcutOrder\(\)/,
+    /saveShortcutOrder\(originalOrder\)/,
+    /function snapshotShortcutStorage\(\)/,
+    /function clearShortcutStorage\(\)/,
+    /function writeShortcutStorage\(order\)/,
+    /function restoreShortcutStorage\(snapshot\)/,
+    /function rebuildShortcutEditor\(order\)/,
+    /shortcutsCache\[index\] = \{ name, url, icon:/,
+];
+for (const pattern of shortcutHardeningPatterns) assert.match(shortcuts, pattern);
+
+const saveShortcutOrderBlock = shortcuts.match(
+    /function saveShortcutOrder\(originalOrder\)[\s\S]+?\/\/ Checks if the shortcut order has changed/
+)?.[0];
+assert.ok(saveShortcutOrderBlock, "Unable to inspect saveShortcutOrder implementation");
+assert.doesNotMatch(
+    saveShortcutOrderBlock,
+    /removeItem\(`shortcutIcon\$\{index\}`\)/,
+    "Reordering must not permanently remove an icon when storage is temporarily constrained"
+);
+
+const utf8SvgSample = '<svg xmlns="http://www.w3.org/2000/svg"><text>繁體中文</text></svg>';
+const utf8SvgBase64 = Buffer.from(utf8SvgSample, "utf8").toString("base64");
+const utf8SvgDecoded = new TextDecoder("utf-8", { fatal: true }).decode(
+    Uint8Array.from(atob(utf8SvgBase64), character => character.charCodeAt(0))
+);
+assert.equal(utf8SvgDecoded, utf8SvgSample, "Base64 SVG text must round-trip as UTF-8");
+
 for (const key of ["invalidIconMessage", "invalidSvgMessage", "invalidFileTypeMessage", "iconFileTooLargeMessage", "iconStorageQuotaMessage"]) {
     assert.match(read("locales/en.js"), new RegExp(key));
     assert.match(read("locales/zh_TW.js"), new RegExp(key));
@@ -58,7 +90,14 @@ for (const code of localeCodes) {
     assert.ok(existsSync(resolve(root, path)), "Missing locale file: " + path);
     assert.match(html, new RegExp("src=[\"']locales/" + code + "\\.js[\"']"));
     assert.match(html, new RegExp("<option value=[\"']" + code + "[\"']"));
-    const value = vm.runInNewContext(read(path) + "\n;" + code, {});
+    const localeSource = read(path);
+    const declaredLocaleKeys = [...localeSource.matchAll(/^\s*"([^"]+)"\s*:/gm)].map(match => match[1]);
+    const duplicateLocaleKeys = [...new Set(
+        declaredLocaleKeys.filter((key, index) => declaredLocaleKeys.indexOf(key) !== index)
+    )];
+    assert.deepEqual(duplicateLocaleKeys, [], "Duplicate locale keys in " + path + ": " + duplicateLocaleKeys.join(", "));
+
+    const value = vm.runInNewContext(localeSource + "\n;" + code, {});
     assert.equal(typeof value, "object", "Locale did not evaluate: " + code);
 }
 assert.match(languages, /const DEFAULT_LANGUAGE = "zh_TW"/);
