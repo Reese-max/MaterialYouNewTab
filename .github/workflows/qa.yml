@@ -32,3 +32,6 @@ jobs:
 
       - name: Run release metadata checks
         run: node tools/check-release-metadata.mjs
+
+      - name: Run upstream integration checks
+        run: node tools/check-upstream-integration.mjs
