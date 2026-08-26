@@ -127,67 +127,31 @@ async function fetchTargets(port) {
     return response.json();
 }
 
-function extensionPageTarget(targets, preferredTargetId = "") {
-    const preferred = targets.find((item) => item.id === preferredTargetId);
-    if (preferred?.type === "page" && preferred.url.startsWith("chrome-extension://") && preferred.webSocketDebuggerUrl) {
-        return preferred;
-    }
-    return targets.find((item) => item.type === "page"
-        && item.url.startsWith("chrome-extension://")
-        && item.webSocketDebuggerUrl);
-}
-
 function summarizeTargets(targets) {
     return targets
-        .slice(0, 20)
+        .slice(0, 24)
         .map((target) => `${target.type || "unknown"}: ${target.url || "(empty URL)"}`)
         .join("\n");
 }
 
-async function waitForExtensionNewTab(port, timeoutMs = 25_000) {
+async function waitForMyntServiceWorker(port, timeoutMs = 20_000) {
     const deadline = Date.now() + timeoutMs;
-    let attempt = 0;
     let recentTargets = [];
-
     while (Date.now() < deadline) {
-        attempt += 1;
         recentTargets = await fetchTargets(port);
-        const existing = extensionPageTarget(recentTargets);
-        if (existing) return existing;
-
-        // Unpacked extensions are installed asynchronously during browser startup.
-        // A target created too early can remain on Chrome's built-in NTP, so create
-        // a fresh new tab on each attempt instead of weakening the assertion.
-        const { targetId } = await browserClient.send("Target.createTarget", { url: "chrome://newtab/" });
-        const attemptDeadline = Math.min(deadline, Date.now() + 2_500);
-
-        while (Date.now() < attemptDeadline) {
-            recentTargets = await fetchTargets(port);
-            const target = extensionPageTarget(recentTargets, targetId);
-            if (target) return target;
-            await delay(150);
+        const worker = recentTargets.find((target) => target.type === "service_worker"
+            && /\/scripts\/background\.js(?:$|[?#])/u.test(target.url || ""));
+        if (worker) {
+            const match = /^chrome-extension:\/\/([^/]+)/u.exec(worker.url);
+            if (match) return { extensionId: match[1], worker, recentTargets };
         }
-
-        try {
-            await browserClient.send("Target.closeTarget", { targetId });
-        } catch {
-            // The target may have closed itself while Chrome was initializing.
-        }
-        await delay(Math.min(1_000, 200 + attempt * 100));
+        await delay(150);
     }
-
-    const extensionRuntimeTargets = recentTargets.filter((target) => target.url?.startsWith("chrome-extension://"));
-    const runtimeSummary = extensionRuntimeTargets.length > 0
-        ? `\nExtension runtime targets were present:\n${summarizeTargets(extensionRuntimeTargets)}`
-        : "\nNo chrome-extension:// runtime target was observed; the unpacked extension may not have loaded.";
-    throw new Error(
-        `The Chromium New Tab override did not resolve to the extension page after ${attempt} attempts.`
-        + `${runtimeSummary}\nRecent targets:\n${summarizeTargets(recentTargets)}`,
-    );
+    throw new Error(`MYNT background service worker was not observed.\nRecent targets:\n${summarizeTargets(recentTargets)}`);
 }
 
-async function evaluate(expression) {
-    const result = await pageClient.send("Runtime.evaluate", {
+async function evaluateWith(client, expression) {
+    const result = await client.send("Runtime.evaluate", {
         expression,
         awaitPromise: true,
         returnByValue: true,
@@ -200,6 +164,101 @@ async function evaluate(expression) {
     return result.result?.value;
 }
 
+async function waitForPageTarget(port, targetId, timeoutMs = 5_000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        const targets = await fetchTargets(port);
+        const target = targets.find((item) => item.id === targetId && item.type === "page" && item.webSocketDebuggerUrl);
+        if (target) return target;
+        await delay(100);
+    }
+    return null;
+}
+
+async function inspectNewTabCandidate(port, targetId, extensionId, timeoutMs = 4_000) {
+    const target = await waitForPageTarget(port, targetId);
+    if (!target) return { matched: false, target: null, client: null, state: null, runtimeExceptions: [], consoleErrors: [] };
+
+    const client = new CdpClient(target.webSocketDebuggerUrl);
+    const runtimeExceptions = [];
+    const consoleErrors = [];
+    client.on("Runtime.exceptionThrown", ({ exceptionDetails }) => {
+        runtimeExceptions.push(exceptionDetails.exception?.description || exceptionDetails.text || "Unknown runtime exception");
+    });
+    client.on("Runtime.consoleAPICalled", ({ type, args = [] }) => {
+        if (type === "error") consoleErrors.push(args.map((arg) => arg.value || arg.description || "").join(" "));
+    });
+
+    await Promise.all([
+        client.send("Page.enable"),
+        client.send("Runtime.enable"),
+        client.send("Log.enable"),
+    ]);
+
+    const deadline = Date.now() + timeoutMs;
+    let state = null;
+    while (Date.now() < deadline) {
+        try {
+            state = await evaluateWith(client, `(() => ({
+                href: location.href,
+                protocol: location.protocol,
+                readyState: document.readyState,
+                extensionId: globalThis.chrome?.runtime?.id || "",
+                hasRoot: Boolean(document.querySelector("#shortcutsContainer")),
+                title: document.title,
+            }))()`);
+            if (state.extensionId === extensionId && state.hasRoot) {
+                return { matched: true, target, client, state, runtimeExceptions, consoleErrors };
+            }
+        } catch {
+            // The execution context may be replaced while the virtual NTP redirects.
+        }
+        await delay(120);
+    }
+
+    client.close();
+    return { matched: false, target, client: null, state, runtimeExceptions, consoleErrors };
+}
+
+async function waitForExtensionNewTab(port, extensionId, timeoutMs = 30_000) {
+    const deadline = Date.now() + timeoutMs;
+    const diagnostics = [];
+    let attempt = 0;
+    let recentTargets = [];
+
+    while (Date.now() < deadline) {
+        attempt += 1;
+        const { targetId } = await browserClient.send("Target.createTarget", { url: "chrome://newtab/" });
+        const inspected = await inspectNewTabCandidate(port, targetId, extensionId, Math.min(4_000, deadline - Date.now()));
+        if (inspected.matched) return { ...inspected, attempt };
+
+        diagnostics.push({
+            attempt,
+            targetListUrl: inspected.target?.url || "target unavailable",
+            document: inspected.state,
+            runtimeExceptions: inspected.runtimeExceptions,
+        });
+        try {
+            await browserClient.send("Target.closeTarget", { targetId });
+        } catch {
+            // The target may have closed itself while Chrome was initializing.
+        }
+        await delay(Math.min(800, 150 + attempt * 75));
+    }
+
+    recentTargets = await fetchTargets(port);
+    throw new Error(
+        `The Chromium New Tab page did not expose the MYNT extension document after ${attempt} attempts.\n`
+        + `Expected extension id: ${extensionId}\n`
+        + `Candidate diagnostics:\n${JSON.stringify(diagnostics.slice(-4), null, 2)}\n`
+        + `Recent targets:\n${summarizeTargets(recentTargets)}`,
+    );
+}
+
+async function evaluate(expression) {
+    return evaluateWith(pageClient, expression);
+}
+
 async function reloadAndWait() {
     const loaded = pageClient.waitForEvent("Page.loadEventFired", 20_000);
     await pageClient.send("Page.reload", { ignoreCache: true });
@@ -208,7 +267,9 @@ async function reloadAndWait() {
     const deadline = Date.now() + 15_000;
     while (Date.now() < deadline) {
         try {
-            const ready = await evaluate(`document.readyState === "complete" && Boolean(document.querySelector("#shortcutsContainer"))`);
+            const ready = await evaluate(`document.readyState === "complete"
+                && Boolean(globalThis.chrome?.runtime?.id)
+                && Boolean(document.querySelector("#shortcutsContainer"))`);
             if (ready) return;
         } catch {
             // Execution contexts are briefly unavailable during reload.
@@ -236,7 +297,7 @@ async function main() {
         `--disable-extensions-except=${root}`,
         `--load-extension=${root}`,
         "--remote-debugging-port=0",
-        "chrome://newtab/",
+        "about:blank",
     ], { stdio: ["ignore", "pipe", "pipe"] });
 
     for (const stream of [chrome.stdout, chrome.stderr]) {
@@ -249,52 +310,52 @@ async function main() {
 
     const { port, browserPath } = await waitForDevToolsPort();
     browserClient = new CdpClient(`ws://127.0.0.1:${port}${browserPath}`);
-    const pageTarget = await waitForExtensionNewTab(port);
-    pageClient = new CdpClient(pageTarget.webSocketDebuggerUrl);
+    const { extensionId } = await waitForMyntServiceWorker(port);
+    const newTab = await waitForExtensionNewTab(port, extensionId);
+    pageClient = newTab.client;
+    const runtimeExceptions = newTab.runtimeExceptions;
+    const consoleErrors = newTab.consoleErrors;
 
-    const runtimeExceptions = [];
-    const consoleErrors = [];
-    pageClient.on("Runtime.exceptionThrown", ({ exceptionDetails }) => {
-        runtimeExceptions.push(exceptionDetails.exception?.description || exceptionDetails.text || "Unknown runtime exception");
-    });
-    pageClient.on("Runtime.consoleAPICalled", ({ type, args = [] }) => {
-        if (type === "error") consoleErrors.push(args.map((arg) => arg.value || arg.description || "").join(" "));
-    });
-
-    await Promise.all([
-        pageClient.send("Page.enable"),
-        pageClient.send("Runtime.enable"),
-        pageClient.send("Log.enable"),
-    ]);
     await reloadAndWait();
 
     const initial = await evaluate(`(() => ({
         url: location.href,
+        extensionId: globalThis.chrome?.runtime?.id || "",
         title: document.title,
         lang: document.documentElement.lang,
         shortcutCount: document.querySelectorAll("#shortcutsContainer .shortcuts").length,
         settingsEntryCount: document.querySelectorAll("#shortcutList .shortcutSettingsEntry").length,
         hasControlCenter: Boolean(document.querySelector("#controlCenterModal")),
         hasTodo: Boolean(document.querySelector("#todoListCont")),
+        hasScratchpad: Boolean(document.querySelector("#scratchpadModal")),
     }))()`);
 
-    assert.match(initial.url, /^chrome-extension:\/\//u, "New Tab did not load from the extension origin");
+    assert.equal(initial.extensionId, extensionId, "New Tab loaded a different extension document");
+    assert.match(initial.url, /^chrome-extension:\/\//u, "New Tab document did not use the extension origin");
     assert.ok(initial.title, "Localized New Tab title is empty");
     assert.equal(initial.lang, "zh-TW", "Traditional Chinese should remain the default document language");
     assert.ok(initial.shortcutCount > 0, "Default shortcuts did not render");
     assert.equal(initial.shortcutCount, initial.settingsEntryCount, "Shortcut view and settings entry counts diverged");
+    assert.equal(initial.hasControlCenter, true, "Control Center is missing");
     assert.equal(initial.hasTodo, true, "To-do widget trigger is missing");
+    assert.equal(initial.hasScratchpad, true, "Scratchpad trigger is missing");
 
-    const customSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>`;
-    const customIcon = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(customSvg)}`;
     await evaluate(`(() => {
         localStorage.setItem("shortcutAmount", "1");
         localStorage.setItem("shortcutName0", "Smoke Test");
         localStorage.setItem("shortcutURL0", "https://example.com/");
-        localStorage.setItem("shortcutIcon0", ${JSON.stringify(customIcon)});
+        localStorage.setItem("shortcutIcon0", "");
     })()`);
-    runtimeExceptions.length = 0;
     await reloadAndWait();
+
+    const safeSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>`;
+    await evaluate(`(() => {
+        const input = document.querySelector("#shortcutList .iconURL");
+        if (!input) throw new Error("Custom icon input was not rendered");
+        input.value = ${JSON.stringify(safeSvg)};
+        input.dispatchEvent(new Event("blur"));
+    })()`);
+    await delay(300);
 
     const customIconState = await evaluate(`(() => {
         const icon = document.querySelector("#shortcutsContainer .shortcutLogoContainer img[data-icon-type='custom']");
@@ -303,13 +364,15 @@ async function main() {
             iconFound: Boolean(icon),
             iconSource: icon?.getAttribute("src") || "",
             storedIcon: localStorage.getItem("shortcutIcon0") || "",
+            inputValue: document.querySelector("#shortcutList .iconURL")?.value || "",
             label: document.querySelector("#shortcutsContainer .shortcut-name")?.textContent || "",
         };
     })()`);
     assert.equal(customIconState.shortcutCount, 1, "Custom shortcut count is incorrect");
-    assert.equal(customIconState.iconFound, true, "Valid custom SVG icon was not appended to its container");
+    assert.equal(customIconState.iconFound, true, "Valid raw SVG icon was not appended to its container");
     assert.match(customIconState.iconSource, /^data:image\/svg\+xml/u, "Custom SVG icon source was lost");
-    assert.equal(customIconState.storedIcon, customIcon, "Custom icon state was not preserved");
+    assert.equal(customIconState.storedIcon, customIconState.iconSource, "Custom icon state was not preserved");
+    assert.equal(customIconState.inputValue, customIconState.storedIcon, "Validated icon input and storage diverged");
     assert.equal(customIconState.label, "Smoke Test", "Custom shortcut label did not render");
 
     await evaluate(`(() => {
@@ -318,7 +381,7 @@ async function main() {
         input.value = '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><circle r="4"/></svg>';
         input.dispatchEvent(new Event("blur"));
     })()`);
-    await delay(250);
+    await delay(300);
     const invalidIconState = await evaluate(`(() => ({
         inputValue: document.querySelector("#shortcutList .iconURL")?.value ?? null,
         storedIcon: localStorage.getItem("shortcutIcon0"),
@@ -328,16 +391,21 @@ async function main() {
     assert.equal(invalidIconState.storedIcon, "", "Unsafe SVG input was persisted");
     assert.equal(invalidIconState.renderedCustomIcon, false, "Unsafe SVG remained rendered as a custom icon");
 
+    const fatalConsoleErrors = consoleErrors.filter((message) => /\b(?:ReferenceError|TypeError|SyntaxError|Uncaught)\b/iu.test(message));
     assert.deepEqual(runtimeExceptions, [], `Runtime exceptions were observed:\n${runtimeExceptions.join("\n\n")}`);
+    assert.deepEqual(fatalConsoleErrors, [], `Fatal console errors were observed:\n${fatalConsoleErrors.join("\n\n")}`);
 
     console.log(JSON.stringify({
         status: "CHROMIUM_SMOKE_OK",
         browser: chromeBinary,
         browserVersion: process.env.CHROME_FOR_TESTING_VERSION || "unknown",
-        page: initial.url,
+        extensionId,
+        newTabAttempt: newTab.attempt,
+        targetListUrl: newTab.target.url,
+        documentUrl: initial.url,
         title: initial.title,
         defaultShortcuts: initial.shortcutCount,
-        customSvg: true,
+        safeRawSvgAccepted: true,
         unsafeSvgRejected: true,
         consoleErrors: consoleErrors.filter(Boolean).slice(0, 5),
     }));
