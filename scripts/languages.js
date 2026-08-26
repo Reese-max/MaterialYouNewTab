@@ -9,53 +9,111 @@
 // Translation data
 const DEFAULT_LANGUAGE = "zh_TW";
 
-if (!localStorage.getItem("selectedLanguage")) {
+const localeSources = {
+    en: en,
+    pt: pt,
+    ne: ne,
+    es: es,
+    hi: hi,
+    hu: hu,
+    zh: zh,
+    zh_TW: zh_TW,
+    cs: cs,
+    it: it,
+    tr: tr,
+    bn: bn,
+    vi: vi,
+    ru: ru,
+    uz: uz,
+    ja: ja,
+    ko: ko,
+    idn: idn,
+    mr: mr,
+    fr: fr,
+    az: az,
+    sl: sl,
+    ur: ur,
+    de: de,
+    fa: fa,
+    ar_SA: ar_SA,
+    el: el,
+    ta: ta,
+    th: th,
+    pl: pl,
+    uk: uk,
+    sv: sv,
+};
+
+const translations = Object.fromEntries(
+    Object.entries(localeSources).map(([code, strings]) => [
+        code,
+        code === "en" ? strings : { ...en, ...strings }
+    ])
+);
+
+const savedLanguage = localStorage.getItem("selectedLanguage");
+if (!savedLanguage || !translations[savedLanguage]) {
     localStorage.setItem("selectedLanguage", DEFAULT_LANGUAGE);
 }
 
-const translations = {
-    en: en, // English
-    zh_TW: zh_TW, // Chinese (Traditional)
-};
-
 // Define the width of the menu container for each language
 const menuWidths = {
-    en: "443px",
-    zh_TW: "443px",
+    "en": "443px",
+    "pt": "512px",
+    "ne": "472px",
+    "es": "488px",
+    "hi": "450px",
+    "hu": "487px",
+    "zh": "443px",
+    "zh_TW": "443px",
+    "cs": "494px",
+    "it": "479px",
+    "tr": "472px",
+    "bn": "458px",
+    "vi": "487px",
+    "ru": "442px",
+    "uz": "497px",
+    "ja": "486px",
+    "ko": "443px",
+    "idn": "477px",
+    "mr": "460px",
+    "fr": "517px",
+    "az": "460px",
+    "sl": "512px",
+    "ur": "482px",
+    "de": "502px",
+    "fa": "502px",
+    "ar_SA": "482px",
+    "el": "497px",
+    "ta": "522px",
+    "th": "497px",
+    "pl": "497px",
+    "uk": "497px",
+    "sv": "472px",
 };
 
 const numberMappings = {
-    // en and zh_TW use standard Arabic numerals, no mapping needed
+    "bn": { "0": "০", "1": "১", "2": "২", "3": "৩", "4": "৪", "5": "৫", "6": "৬", "7": "৭", "8": "৮", "9": "৯" },
+    "ta": { "0": "௦", "1": "௧", "2": "௨", "3": "௩", "4": "௪", "5": "௫", "6": "௬", "7": "௭", "8": "௮", "9": "௯" },
+    "mr": { "0": "०", "1": "१", "2": "२", "3": "३", "4": "४", "5": "५", "6": "६", "7": "७", "8": "८", "9": "९" },
+    "ne": { "0": "०", "1": "१", "2": "२", "3": "३", "4": "४", "5": "५", "6": "६", "7": "७", "8": "८", "9": "९" },
+    "fa": { "0": "۰", "1": "۱", "2": "۲", "3": "۳", "4": "۴", "5": "۵", "6": "۶", "7": "۷", "8": "۸", "9": "۹" },
+    "ar_SA": { "0": "۰", "1": "۱", "2": "۲", "3": "۳", "4": "٤", "5": "٥", "6": "٦", "7": "۷", "8": "۸", "9": "۹" }
 };
 
-const LRM = "\u200E"; // Left-to-Right Mark
+const LRM = "\u200E";
 
 function localizeNumbers(text, language) {
-    const map = numberMappings[language]; // Get the numeral map for the current language
-
-    // Define languages that use a comma as the decimal separator instead of a dot
-    const specialDecimalLanguages = []; // en and zh_TW both use dot decimal separator
-
-    if (specialDecimalLanguages.includes(language)) {
-        // Replace decimal point with a comma for specific languages
-        text = text.replace(".", ",");
-    }
-    // Apply digit localization if the numeral map exists
-    if (map) {
-        text = text.replace(/\d/g, (digit) => map[digit] || digit);
-    }
-
-    // LRM marks, for RTL languages to ensure correct display
-    const rtlFlipLanguages = ["ar_SA"];
-    if (rtlFlipLanguages.includes(language)) {
-        text = `${LRM}${text}${LRM}`;
-    }
-
-    return text; // Return the localized text
+    const map = numberMappings[language];
+    const specialDecimalLanguages = ["cs", "it", "pt", "ru", "tr", "vi", "uz", "es", "ko", "idn", "fr", "az", "sl", "hu", "de", "fa", "el", "uk", "sv"];
+    if (specialDecimalLanguages.includes(language)) text = text.replace(".", ",");
+    if (map) text = text.replace(/\d/g, (digit) => map[digit] || digit);
+    if (language === "ar_SA") text = LRM + text + LRM;
+    return text;
 }
 
 // Right-to-left languages
-const rtlLanguages = [];
+const rtlLanguages = ["ur", "fa", "ar_SA"];
 
 // Function to apply the language to the page
 function applyLanguage(lang) {

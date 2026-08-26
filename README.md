@@ -25,14 +25,14 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 
 ### Reese-max edition highlights
 
-- **Traditional Chinese first** — `zh-TW` is the default interface language, with English also included.
+- **Traditional Chinese first** — `zh-TW` remains the default while all 32 upstream locales are restored; missing custom strings fall back to English.
 - **Google search + search bangs** — use shortcuts such as `!yt`, `!gh`, and `!gpt` to jump directly to common services.
 - **Scratchpad** — quick notes, smart list continuation, Markdown task toggling, copy, convert-to-task, and `.md` export.
 - **Today dashboard** — choose three priorities, track completion progress, and surface the next action.
 - **Workspaces** — create Study, Work, Coding, Relax, or custom modes with preferred widgets, focus duration, background, and launch URLs.
 - **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
 - **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
-- **Keyboard help** — press `?` outside text fields to open the shortcut guide.
+- **Keyboard help** — press `?` outside text fields to open the shortcut guide; use `Alt+1`–`Alt+9` to launch the first nine shortcuts.
 - **Local-first state** — tasks, settings, habits, focus history, workspaces, and scratchpad content are stored in browser storage.
 
 ## Core features
@@ -40,14 +40,15 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - Google Search with optional Google autocomplete suggestions and voice typing
 - Material You themes, dark/light/system mode, custom colors, wallpaper, and video background
 - Clock and live weather
-- Quick shortcuts and configurable AI tool launchers
+- Quick shortcuts with uploaded/URL/SVG custom icons and `Alt+1`–`Alt+9` launching
+- Configurable AI tool launchers with right-click settings access
 - To-Do List and daily habits
 - Pomodoro timer, seven-day focus stats, streaks, and task-linked focus history
 - Scratchpad and Markdown export
 - Today Top 3 planning and progress
 - Workspace presets and multi-tab launchers
 - Sidebar bookmarks and Google Apps launcher
-- Command Palette and keyboard shortcuts
+- Command Palette, keyboard shortcuts, Daily Quote mode, and an in-extension What's New page
 - Accessibility controls including reduced motion, contrast, and text scaling
 - Bongo Cat widget
 - Backup, restore, and local reset controls
@@ -176,7 +177,8 @@ The check validates, among other things:
 - backup rollback behavior
 - Google-only autocomplete configuration
 - locale key parity
-- Traditional Chinese default language
+- Traditional Chinese default language and 32-locale fallback wiring
+- upstream/custom fused feature invariants
 - referenced background videos
 
 Release/branding metadata is additionally checked with:
@@ -185,7 +187,13 @@ Release/branding metadata is additionally checked with:
 node tools/check-release-metadata.mjs
 ```
 
-For changes intended for `main`, both checks should pass before merge.
+Upstream/custom fusion is additionally checked with:
+
+```bash
+node tools/check-upstream-integration.mjs
+```
+
+For changes intended for `main`, all three checks should pass before merge.
 
 ## Repository workflow
 
@@ -200,6 +208,16 @@ git push -u origin feature/your-change
 ```
 
 Then open a Pull Request against `Reese-max/MaterialYouNewTab:main`.
+
+## Integrated upstream baseline
+
+This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through commit `e279bb9` (2026-08-24), plus conflict reconciliation that preserves the Reese-max productivity layer. Upstream custom shortcut icons, Daily Quote, `Alt+1`–`Alt+9`, AI Tools context-menu settings, update notes, UI fixes, and all 32 locales are included.
+
+## Feedback
+
+- [Fork repository](https://github.com/Reese-max/MaterialYouNewTab)
+- [Integration and repair Pull Requests](https://github.com/Reese-max/MaterialYouNewTab/pulls)
+- [In-project feedback page](./docs/feedback.html)
 
 ## Upstream attribution
 

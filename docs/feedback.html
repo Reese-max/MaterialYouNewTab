@@ -1,202 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>意見回饋｜MaterialYouNewTab</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
+    <title>MYNT Reese-max 客製版回饋</title>
+    <link rel="icon" href="../favicon/icon128.png">
     <style>
-        :root {
-            --background: #bbd6fd;
-            --card: #e2eeff;
-            --primary: #3569b2;
-            --secondary: #4382ec;
-            --text: #1b3041;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --background: #101827;
-                --card: #1c2a3d;
-                --primary: #6da0ff;
-                --secondary: #8db6ff;
-                --text: #e5edf9;
-            }
-        }
-
-        body,
-        h1,
-        .feedback-message {
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: var(--background);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: var(--text);
-        }
-
-        .container {
-            background-color: var(--card);
-            padding: 36px 24px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(27, 48, 65, 0.15);
-            text-align: center;
-            max-width: 703px;
-            width: min(703px, calc(100% - 24px));
-            margin: 12px;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            font-size: 28px;
-            margin-bottom: 20px;
-            color: var(--text);
-        }
-
-        .feedback-message {
-            font-size: 18px;
-            color: var(--text);
-            opacity: 0.8;
-            margin-bottom: 30px;
-        }
-
-        .contact-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-            gap: 18px;
-            justify-items: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .contact-info a {
-            color: #fff;
-            text-decoration: none;
-            width: 64px;
-            height: 64px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            font-size: 32px;
-            transition: transform 0.3s ease;
-        }
-
-        .contact-info a:hover {
-            transform: scale(1.1);
-        }
-
-        .github {
-            background-color: #333;
-        }
-
-        .telegram {
-            background-color: #0088cc;
-        }
-
-        .email {
-            background-color: #d14836;
-        }
-
-        .chrome {
-            background-color: #25d669;
-        }
-
-        .firefox {
-            background-color: #f9c431;
-        }
-
-        .edge {
-            background-color: #0078d7;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                height: auto;
-                min-height: 100vh;
-                padding: 16px 0;
-            }
-
-            .container {
-                padding: 28px 18px;
-                border-radius: 14px;
-            }
-
-            h1 {
-                font-size: 24px;
-                line-height: 1.25;
-            }
-
-            .feedback-message {
-                font-size: 16px;
-                line-height: 1.4;
-                margin-bottom: 22px;
-            }
-
-            .contact-info {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 16px;
-            }
-
-            .contact-info a {
-                width: 58px;
-                height: 58px;
-                font-size: 28px;
-            }
-        }
-
-        @media (max-width: 380px) {
-            .contact-info {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .contact-info a {
-                width: 56px;
-                height: 56px;
-                font-size: 26px;
-            }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .container {
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
-            }
-
-            .github {
-                background-color: #0f0f0f;
-            }
-        }
+        :root { color-scheme: light dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: Canvas; color: CanvasText; }
+        main { width: min(620px, calc(100% - 32px)); border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius: 28px; padding: 30px; box-sizing: border-box; }
+        h1 { margin-top: 0; }
+        p { line-height: 1.65; }
+        nav { display: grid; gap: 12px; margin-top: 22px; }
+        a { display: block; border-radius: 16px; padding: 14px 16px; background: color-mix(in srgb, LinkText 12%, transparent); color: LinkText; text-decoration: none; font-weight: 650; }
+        small { opacity: .72; }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <h1>我們重視您的意見回饋</h1>
-        <div class="feedback-message">
-            <p>如果您有任何建議或問題，歡迎透過以下方式與我們聯繫：</p>
-        </div>
-
-        <div class="contact-info">
-            <a href="https://github.com/prem-k-r/MaterialYouNewTab/discussions" target="_blank" rel="noopener noreferrer" class="github"><i
-                    class="fab fa-github"></i></a>
-            <a href="https://t.me/Material_You_NewTab" target="_blank" rel="noopener noreferrer" class="telegram"><i
-                    class="fab fa-telegram-plane"></i></a>
-            <a href="mailto:prem12321kumar@outlook.com" target="_blank" rel="noopener noreferrer" class="email"><i
-                    class="fas fa-envelope"></i></a>
-            <a href="https://chromewebstore.google.com/detail/mynt-material-you-new-tab/jjpokbgpiljgndebfoljdeihhkpcpfgl/reviews"
-                target="_blank" rel="noopener noreferrer" class="chrome"><i class="fab fa-chrome"></i></a>
-            <a href="https://addons.mozilla.org/en-US/firefox/addon/mynt/reviews/" target="_blank" rel="noopener noreferrer" class="firefox"><i
-                    class="fab fa-firefox"></i></a>
-        </div>
-    </div>
+<main>
+    <h1>MYNT Reese-max 客製版回饋</h1>
+    <p>此版本融合原版 MYNT 與 Reese-max 生產力功能。若問題只出現在本客製版，請先查看本 Fork 的程式碼與 Pull Requests；原版功能的一般問題則可參考上游專案。</p>
+    <nav>
+        <a href="https://github.com/Reese-max/MaterialYouNewTab" target="_blank" rel="noopener noreferrer">查看 Reese-max 客製版專案</a>
+        <a href="https://github.com/Reese-max/MaterialYouNewTab/pulls" target="_blank" rel="noopener noreferrer">查看整合與修正紀錄</a>
+        <a href="https://github.com/prem-k-r/MaterialYouNewTab" target="_blank" rel="noopener noreferrer">查看 MYNT 上游專案</a>
+    </nav>
+    <p><small>解除安裝時只會開啟本 Fork 的公開 GitHub 頁面；擴充功能不會自動傳送設定、搜尋內容或其他本機資料。</small></p>
+</main>
 </body>
-
 </html>
