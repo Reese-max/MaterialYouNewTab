@@ -9,24 +9,22 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 concurrency:
   group: qa-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   validate:
     name: Validate extension
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-        with:
-          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -41,3 +39,43 @@ jobs:
 
       - name: Run upstream integration checks
         run: node tools/check-upstream-integration.mjs
+
+      - name: Install Chrome for Testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from urllib.request import urlopen, urlretrieve
+          from zipfile import ZipFile
+
+          metadata_url = "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json"
+          with urlopen(metadata_url, timeout=30) as response:
+              metadata = json.load(response)
+
+          stable = metadata["channels"]["Stable"]
+          download = next(item for item in stable["downloads"]["chrome"] if item["platform"] == "linux64")
+          install_root = Path(os.environ["RUNNER_TEMP"]) / "chrome-for-testing"
+          archive = install_root / "chrome-linux64.zip"
+          install_root.mkdir(parents=True, exist_ok=True)
+          urlretrieve(download["url"], archive)
+
+          with ZipFile(archive) as package:
+              package.extractall(install_root)
+
+          chrome = install_root / "chrome-linux64" / "chrome"
+          chrome.chmod(chrome.stat().st_mode | 0o111)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
+              environment.write(f"CHROME_BIN={chrome}\n")
+              environment.write(f"CHROME_FOR_TESTING_VERSION={stable['version']}\n")
+          print(f"Installed Chrome for Testing {stable['version']} at {chrome}")
+          PY
+
+      - name: Run Chromium new-tab smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v xvfb-run
+          xvfb-run -a node tools/smoke-chromium.mjs
