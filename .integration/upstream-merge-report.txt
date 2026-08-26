@@ -1,0 +1,46 @@
+Upstream integration report
+===========================
+Upstream: e279bb90e7a7d4f5c1738d8b221752be33d210a5
+Base before merge: 70ba0e8b713d74399e2e58b4e18204dce27966e1
+Merge exit code: 1
+
+Conflict paths resolved in favor of the customized branch:
+.github/pull_request_template.md
+locales/bn.js
+locales/cs.js
+locales/es.js
+locales/fr.js
+locales/hi.js
+locales/hu.js
+locales/idn.js
+locales/ja.js
+locales/mr.js
+locales/ne.js
+locales/ru.js
+locales/uk.js
+locales/zh.js
+scripts/background.js
+
+All changed paths in the resulting merge:
+M	CHANGELOG.md
+M	docs/feedback.html
+A	docs/whats-new.html
+M	index.html
+M	locales/en.js
+A	locales/sv.js
+M	locales/zh_TW.js
+M	manifest.json
+M	scripts/ai-tools.js
+M	scripts/bookmarks.js
+M	scripts/clock.js
+M	scripts/languages.js
+M	scripts/preload.js
+M	scripts/quotes.js
+M	scripts/script.js
+M	scripts/shortcuts.js
+M	scripts/theme.js
+M	scripts/wallpaper.js
+M	scripts/weather.js
+M	scripts/widgets-transparency.js
+M	style.css
+M	tools/languagesAnalysis.html

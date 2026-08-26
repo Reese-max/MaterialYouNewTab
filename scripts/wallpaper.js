@@ -1,6 +1,6 @@
 /*
- * Material You NewTab
- * Copyright (c) 2023-2025 XengShi
+ * Material You New Tab
+ * Copyright (c) 2024-2026 Prem, 2023-2025 XengShi
  * Licensed under the GNU General Public License v3.0 (GPL-3.0)
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
@@ -36,6 +36,20 @@ function releaseBackgroundObjectUrl() {
     activeBackgroundObjectUrl = null;
 }
 
+let currentBgUrl = null;
+
+// To set background image using a Blob
+function setBackground(blob) {
+    const previousUrl = currentBgUrl;
+    const newUrl = URL.createObjectURL(blob);
+    currentBgUrl = newUrl;
+    document.body.style.setProperty("--bg-image", `url(${newUrl})`);
+    toggleBackgroundType(true);
+    if (previousUrl) {
+        URL.revokeObjectURL(previousUrl);
+    }
+}
+
 // Open IndexedDB database
 function openDatabase() {
     return new Promise((resolve, reject) => {
@@ -56,7 +70,7 @@ async function saveImageToIndexedDB(imageBlob, isRandom) {
         const transaction = db.transaction(storeName, "readwrite");
         const store = transaction.objectStore(storeName);
 
-        store.put(imageBlob, "backgroundImage"); // Save Blob
+        store.put(imageBlob, "backgroundImage");
         store.put(new Date().toISOString(), timestampKey);
         store.put(isRandom ? "random" : "upload", imageTypeKey);
 
@@ -159,7 +173,6 @@ function checkAndUpdateImage() {
             const now = new Date();
             const lastUpdate = new Date(savedTimestamp);
 
-            // No image or invalid data
             if (!blob || !savedTimestamp || isNaN(lastUpdate)) {
                 toggleBackgroundType(false);
                 return;
@@ -172,7 +185,6 @@ function checkAndUpdateImage() {
             }
 
             if (lastUpdate.toDateString() !== now.toDateString()) {
-                // Refresh random image if a new day
                 applyRandomImage(false);
             } else {
                 // Reapply the saved random image
@@ -203,6 +215,10 @@ document.getElementById("clearImage").addEventListener("click", async function (
         if (await confirmPrompt(confirmationMessage)) {
             try {
                 await clearImageFromIndexedDB();
+                if (currentBgUrl) {
+                    URL.revokeObjectURL(currentBgUrl);
+                    currentBgUrl = null;
+                }
                 document.body.style.removeProperty("--bg-image");
                 releaseBackgroundObjectUrl();
                 toggleBackgroundType(false);
@@ -214,6 +230,7 @@ document.getElementById("clearImage").addEventListener("click", async function (
         console.error(error);
     }
 });
+
 document.getElementById("randomImageTrigger").addEventListener("click", applyRandomImage);
 
 // Start image check on page load

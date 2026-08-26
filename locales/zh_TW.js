@@ -1,5 +1,6 @@
 // Chinese (Traditional)
 const zh_TW = {
+    "newTabTitle": "新分頁",
     // Menu Items
     "github": "GitHub",
     "feedback": "意見回饋",
@@ -217,6 +218,12 @@ const zh_TW = {
     "googleAppsMenuInfo": "顯示 Google 應用程式的捷徑",
     "googleAppsHover": "Google 應用程式",
 
+    "shortcutDefaultName": "新捷徑",
+    "shortcutInputName": "捷徑名稱",
+    "shortcutInputUrl": "捷徑網址",
+    "shortcutInputIcon": "自訂圖示：網址或 SVG（選填）",
+    "recentlyAddedBookmarks": "最近新增",
+
     // To-do List
     "todoListText": "待辦清單",
     "todoListInfo": "顯示每日待辦清單",
@@ -300,6 +307,8 @@ const zh_TW = {
     "hideSearchWithInfo": "隱藏搜尋列下方的 Google 服務列",
     "motivationalQuotesText": "勵志語錄",
     "motivationalQuotesInfo": "在搜尋列下方顯示語錄",
+    "newQuoteOnRefreshText": "每日語錄",
+    "newQuoteOnRefreshInfo": "每天顯示一則語錄，而非每次重新整理時更換",
     "search_suggestions_button": "搜尋建議",
     "search_suggestions_text": "啟用搜尋建議",
 

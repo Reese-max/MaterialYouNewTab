@@ -1,6 +1,6 @@
 /*
- * Material You NewTab
- * Copyright (c) 2023-2025 XengShi
+ * Material You New Tab
+ * Copyright (c) 2024-2026 Prem, 2023-2025 XengShi
  * Licensed under the GNU General Public License v3.0 (GPL-3.0)
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
@@ -59,6 +59,8 @@ const rtlLanguages = [];
 
 // Function to apply the language to the page
 function applyLanguage(lang) {
+    document.title = translations[lang]?.newTabTitle || translations["en"].newTabTitle;
+
     // Mapping of text elements and their translation keys
     const translationMap = [
         "feedback",
@@ -153,6 +155,8 @@ function applyLanguage(lang) {
         "searchWithHint",
         "motivationalQuotesText",
         "motivationalQuotesInfo",
+        "newQuoteOnRefreshText",
+        "newQuoteOnRefreshInfo",
         "search_suggestions_button",
         "search_suggestions_text",
         "hideClockBox",
@@ -229,7 +233,9 @@ function applyLanguage(lang) {
         "searchSectionTitle",
         "weatherSectionTitle",
         "appearanceSectionTitle",
-        "settingsSectionTitle"
+        "settingsSectionTitle",
+        "iconFileTooLargeMessage",
+        "iconStorageQuotaMessage"
     ];
 
     // Specific mapping for placeholders
@@ -311,6 +317,14 @@ function applyLanguage(lang) {
             userTextDiv.innerText = placeholder;
         }
     }
+
+    // Update placeholders on already-rendered shortcut inputs
+    document.querySelectorAll(".shortcutSettingsEntry .shortcutName")
+        .forEach(el => el.placeholder = translations[lang]?.shortcutInputName  || translations["en"].shortcutInputName);
+    document.querySelectorAll(".shortcutSettingsEntry .URL")
+        .forEach(el => el.placeholder = translations[lang]?.shortcutInputUrl   || translations["en"].shortcutInputUrl);
+    document.querySelectorAll(".shortcutSettingsEntry .iconURL")
+        .forEach(el => el.placeholder = translations[lang]?.shortcutInputIcon  || translations["en"].shortcutInputIcon);
 
     // Update hover text for #menuCloseButton
     const menuCloseButton = document.getElementById("menuCloseButton");
