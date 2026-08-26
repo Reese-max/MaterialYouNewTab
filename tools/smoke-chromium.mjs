@@ -127,16 +127,63 @@ async function fetchTargets(port) {
     return response.json();
 }
 
-async function waitForExtensionPage(port, targetId, timeoutMs = 20_000) {
-    const deadline = Date.now() + timeoutMs;
-    while (Date.now() < deadline) {
-        const targets = await fetchTargets(port);
-        const target = targets.find((item) => item.id === targetId)
-            || targets.find((item) => item.type === "page" && item.url.startsWith("chrome-extension://"));
-        if (target?.url.startsWith("chrome-extension://") && target.webSocketDebuggerUrl) return target;
-        await delay(150);
+function extensionPageTarget(targets, preferredTargetId = "") {
+    const preferred = targets.find((item) => item.id === preferredTargetId);
+    if (preferred?.type === "page" && preferred.url.startsWith("chrome-extension://") && preferred.webSocketDebuggerUrl) {
+        return preferred;
     }
-    throw new Error("The Chromium New Tab override did not resolve to the extension page.");
+    return targets.find((item) => item.type === "page"
+        && item.url.startsWith("chrome-extension://")
+        && item.webSocketDebuggerUrl);
+}
+
+function summarizeTargets(targets) {
+    return targets
+        .slice(0, 20)
+        .map((target) => `${target.type || "unknown"}: ${target.url || "(empty URL)"}`)
+        .join("\n");
+}
+
+async function waitForExtensionNewTab(port, timeoutMs = 25_000) {
+    const deadline = Date.now() + timeoutMs;
+    let attempt = 0;
+    let recentTargets = [];
+
+    while (Date.now() < deadline) {
+        attempt += 1;
+        recentTargets = await fetchTargets(port);
+        const existing = extensionPageTarget(recentTargets);
+        if (existing) return existing;
+
+        // Unpacked extensions are installed asynchronously during browser startup.
+        // A target created too early can remain on Chrome's built-in NTP, so create
+        // a fresh new tab on each attempt instead of weakening the assertion.
+        const { targetId } = await browserClient.send("Target.createTarget", { url: "chrome://newtab/" });
+        const attemptDeadline = Math.min(deadline, Date.now() + 2_500);
+
+        while (Date.now() < attemptDeadline) {
+            recentTargets = await fetchTargets(port);
+            const target = extensionPageTarget(recentTargets, targetId);
+            if (target) return target;
+            await delay(150);
+        }
+
+        try {
+            await browserClient.send("Target.closeTarget", { targetId });
+        } catch {
+            // The target may have closed itself while Chrome was initializing.
+        }
+        await delay(Math.min(1_000, 200 + attempt * 100));
+    }
+
+    const extensionRuntimeTargets = recentTargets.filter((target) => target.url?.startsWith("chrome-extension://"));
+    const runtimeSummary = extensionRuntimeTargets.length > 0
+        ? `\nExtension runtime targets were present:\n${summarizeTargets(extensionRuntimeTargets)}`
+        : "\nNo chrome-extension:// runtime target was observed; the unpacked extension may not have loaded.";
+    throw new Error(
+        `The Chromium New Tab override did not resolve to the extension page after ${attempt} attempts.`
+        + `${runtimeSummary}\nRecent targets:\n${summarizeTargets(recentTargets)}`,
+    );
 }
 
 async function evaluate(expression) {
@@ -189,7 +236,7 @@ async function main() {
         `--disable-extensions-except=${root}`,
         `--load-extension=${root}`,
         "--remote-debugging-port=0",
-        "about:blank",
+        "chrome://newtab/",
     ], { stdio: ["ignore", "pipe", "pipe"] });
 
     for (const stream of [chrome.stdout, chrome.stderr]) {
@@ -202,8 +249,7 @@ async function main() {
 
     const { port, browserPath } = await waitForDevToolsPort();
     browserClient = new CdpClient(`ws://127.0.0.1:${port}${browserPath}`);
-    const { targetId } = await browserClient.send("Target.createTarget", { url: "chrome://newtab/" });
-    const pageTarget = await waitForExtensionPage(port, targetId);
+    const pageTarget = await waitForExtensionNewTab(port);
     pageClient = new CdpClient(pageTarget.webSocketDebuggerUrl);
 
     const runtimeExceptions = [];
@@ -287,6 +333,7 @@ async function main() {
     console.log(JSON.stringify({
         status: "CHROMIUM_SMOKE_OK",
         browser: chromeBinary,
+        browserVersion: process.env.CHROME_FOR_TESTING_VERSION || "unknown",
         page: initial.url,
         title: initial.title,
         defaultShortcuts: initial.shortcutCount,
