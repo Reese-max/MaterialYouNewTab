@@ -222,6 +222,11 @@ const en = {
     "shortcutInputName": "Shortcut Name",
     "shortcutInputUrl": "Shortcut URL",
     "shortcutInputIcon": "Custom Icon: URL or SVG (optional)",
+    "invalidIconMessage": "Use an HTTPS/HTTP image URL, an image data URL, or valid SVG markup.",
+    "invalidSvgMessage": "The SVG is invalid or contains unsafe content.",
+    "invalidFileTypeMessage": "Choose a supported image file.",
+    "iconFileTooLargeMessage": "Icon file is {size} KB. Maximum is {max} KB.",
+    "iconStorageQuotaMessage": "The icon could not be saved because browser storage is full.",
     "recentlyAddedBookmarks": "Recently Added",
 
     // To-do List

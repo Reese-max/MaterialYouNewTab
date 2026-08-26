@@ -29,6 +29,23 @@ for (const pattern of [/shortcutIcon/, /uploadCustomIconButton/, /sanitizeSvg/, 
     assert.match(shortcuts, pattern);
 }
 assert.doesNotMatch(shortcuts, /<[^>]*\bonerror\s*=/i);
+const shortcutRuntimePatterns = [
+    /function renderShortcut\(name, url, customIcon, index\)/,
+    /function createRenderedShortcut\(name, url, customIcon, index\)/,
+    /function appendShortcutLogo\(container, name, url, customIcon\)/,
+    /appendShortcutLogo\(logo, name, url, customIcon\)/,
+    /createRenderedShortcut\(item\.name, item\.url, item\.icon \|\| "", index\)/,
+    /container\.appendChild\(customIconImg\)/,
+    /function validateIconInput\(input\)/,
+    /function sanitizeSvgDataUrl\(dataUrl\)/,
+    /inputIcon:/,
+];
+for (const pattern of shortcutRuntimePatterns) assert.match(shortcuts, pattern);
+assert.doesNotMatch(shortcuts, /^\s*hostname\s*=/m);
+for (const key of ["invalidIconMessage", "invalidSvgMessage", "invalidFileTypeMessage", "iconFileTooLargeMessage", "iconStorageQuotaMessage"]) {
+    assert.match(read("locales/en.js"), new RegExp(key));
+    assert.match(read("locales/zh_TW.js"), new RegExp(key));
+}
 for (const pattern of [/dailyQuoteEnabled/, /getDailyQuote/, /clearOldDailyQuotes/]) {
     assert.match(quotes, pattern);
 }

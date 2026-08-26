@@ -9,9 +9,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const MAX_SHORTCUTS = 50;
     const PLACEHOLDER = {
         name: "新捷徑",
-        url: "https://github.com/prem-k-r/MaterialYouNewTab",
+        url: "https://github.com/Reese-max/MaterialYouNewTab",
         inputName: "捷徑名稱",
-        inputUrl: "捷徑網址"
+        inputUrl: "捷徑網址",
+        inputIcon: "自訂圖示：網址或 SVG（選填）"
     };
 
     // DOM Elements
@@ -292,8 +293,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Renders a shortcut in the main view
-    function renderShortcut(name, url, index) {
-        const shortcut = createRenderedShortcut(name, url, index);
+    function renderShortcut(name, url, customIcon, index) {
+        const shortcut = createRenderedShortcut(name, url, customIcon, index);
 
         if (index < dom.shortcutsContainer.children.length) {
             dom.shortcutsContainer.replaceChild(shortcut, dom.shortcutsContainer.children[index]);
@@ -317,13 +318,18 @@ document.addEventListener("DOMContentLoaded", function () {
     function isValidCustomIconUrl(url) {
         if (typeof url !== "string") return false;
         const trimmedUrl = url.trim();
-        if (trimmedUrl.includes(" ")) return false;
-        const lowercaseUrl = trimmedUrl.toLowerCase();
-        return (
-            lowercaseUrl.startsWith("data:image/") ||
-            lowercaseUrl.startsWith("https://") ||
-            lowercaseUrl.startsWith("http://")
-        );
+        if (!trimmedUrl || /\s/.test(trimmedUrl)) return false;
+
+        if (/^https?:\/\//i.test(trimmedUrl)) {
+            try {
+                const parsed = new URL(trimmedUrl);
+                return parsed.protocol === "https:" || parsed.protocol === "http:";
+            } catch {
+                return false;
+            }
+        }
+
+        return /^data:image\/(?:png|jpe?g|gif|webp|avif|bmp|x-icon|vnd\.microsoft\.icon|svg\+xml)(?:[;,])/i.test(trimmedUrl);
     }
 
     function applyCustomSvgAccentColor(svg) {
@@ -359,17 +365,65 @@ document.addEventListener("DOMContentLoaded", function () {
         return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(applyCustomSvgAccentColor(normalized));
     }
 
-    // Normalizes icon input: converts raw SVG code → data URL, passes URLs through
+    function sanitizeSvgDataUrl(dataUrl) {
+        const separatorIndex = dataUrl.indexOf(",");
+        if (separatorIndex < 0) return null;
+
+        const metadata = dataUrl.slice(0, separatorIndex).toLowerCase();
+        if (!metadata.startsWith("data:image/svg+xml")) return null;
+
+        try {
+            const payload = dataUrl.slice(separatorIndex + 1);
+            const rawSvg = metadata.includes(";base64")
+                ? atob(payload)
+                : decodeURIComponent(payload);
+            return sanitizeSvg(rawSvg);
+        } catch {
+            return null;
+        }
+    }
+
+    // Normalizes icon input and rejects unsupported or unsafe values.
     function processIconInput(raw) {
-        const trimmed = raw.trim();
+        const trimmed = String(raw || "").trim();
         if (!trimmed) return { value: "", error: null };
 
         if (/<svg[\s>]/i.test(trimmed)) {
             const dataUrl = sanitizeSvg(trimmed);
-            return { value: dataUrl ?? "", error: null };
+            return dataUrl
+                ? { value: dataUrl, error: null }
+                : { value: "", error: "invalidSvg" };
+        }
+
+        if (/^data:image\/svg\+xml/i.test(trimmed)) {
+            const dataUrl = sanitizeSvgDataUrl(trimmed);
+            return dataUrl
+                ? { value: dataUrl, error: null }
+                : { value: "", error: "invalidSvg" };
+        }
+
+        if (!isValidCustomIconUrl(trimmed)) {
+            return { value: "", error: "invalidIcon" };
         }
 
         return { value: trimmed, error: null };
+    }
+
+    function validateIconInput(input) {
+        const result = processIconInput(input.value);
+        input.value = result.value;
+        if (!result.error) return true;
+
+        const isSvgError = result.error === "invalidSvg";
+        const messageKey = isSvgError ? "invalidSvgMessage" : "invalidIconMessage";
+        const fallbackMessage = isSvgError
+            ? "The SVG is invalid or contains unsafe content."
+            : "Use an HTTPS/HTTP image URL, an image data URL, or valid SVG markup.";
+        const message = translations[currentLanguage]?.[messageKey]
+            || translations.en?.[messageKey]
+            || fallbackMessage;
+        alertPrompt(message);
+        return false;
     }
 
     // Normalizes URLs to ensure they're valid
@@ -386,7 +440,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function appendShortcutLogo(container, url) {
+    function appendShortcutLogo(container, name, url, customIcon) {
         const hostname = new URL(normalizeUrl(url)).hostname.replace(/^www\./iu, "");
 
         function setIconType(element, type) {
@@ -397,16 +451,20 @@ document.addEventListener("DOMContentLoaded", function () {
         function createLetterFallback() {
             let letter = "?";
 
-            if (name.trim()) {
-                letter = name.trim().charAt(0).toUpperCase();
+            const shortcutName = String(name || "").trim();
+            if (shortcutName) {
+                letter = shortcutName.charAt(0).toUpperCase();
             } else {
-                try {
-                    hostname = new URL(normalizeUrl(url)).hostname.replace(/^www\./, "");
-                    letter = hostname.charAt(0).toUpperCase() || "?";
-                } catch {
-                    letter = (url.trim()?.charAt(0) || "?").toUpperCase();
-                }
+                letter = hostname.charAt(0).toUpperCase() || "?";
             }
+
+            const safeLetter = letter.replace(/[&<>"']/g, character => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&apos;",
+            }[character]));
 
             // TODO: MutationObserver to update colors when theme changes
             const selectedTheme = localStorage.getItem("selectedTheme");
@@ -418,7 +476,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle"
                         font-size="30" font-family="Inter, Segoe UI, Arial, sans-serif" font-weight="700"
                         fill="${color}">
-                        ${letter}
+                        ${safeLetter}
                     </text>
                 </svg>
             `;
@@ -434,19 +492,15 @@ document.addEventListener("DOMContentLoaded", function () {
             customIconImg.src = customIcon.trim();
             customIconImg.alt = "";
             customIconImg.referrerPolicy = "no-referrer";
+            customIconImg.draggable = false;
             setIconType(customIconImg, "custom");
             customIconImg.addEventListener("error", () => {
                 customIconImg.src = createLetterFallback().src;
                 setIconType(customIconImg, "letter");
             }, { once: true });
 
+            container.appendChild(customIconImg);
             return customIconImg;
-        }
-
-        try {
-            hostname = new URL(normalizeUrl(url)).hostname.replace(/^www\./, "");
-        } catch (error) {
-            return createLetterFallback();
         }
 
         // GitHub shortcut
@@ -470,12 +524,13 @@ document.addEventListener("DOMContentLoaded", function () {
         image.alt = "";
         image.draggable = false;
         image.addEventListener("error", () => {
-            if (!image.src.endsWith("/svgs/offline.svg")) image.src = "./svgs/offline.svg";
+            image.src = createLetterFallback().src;
+            setIconType(image, "letter");
         }, { once: true });
         container.appendChild(image);
     }
 
-    function createRenderedShortcut(name, url, index) {
+    function createRenderedShortcut(name, url, customIcon, index) {
         const shortcut = document.createElement("div");
         shortcut.className = "shortcuts";
         shortcut._index = index;
@@ -484,7 +539,7 @@ document.addEventListener("DOMContentLoaded", function () {
         link.href = normalizeUrl(url);
         const logo = document.createElement("div");
         logo.className = "shortcutLogoContainer";
-        appendShortcutLogo(logo, url);
+        appendShortcutLogo(logo, name, url, customIcon);
         const label = document.createElement("span");
         label.className = "shortcut-name";
         label.textContent = name;
@@ -826,7 +881,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const fragment = document.createDocumentFragment();
 
         order.forEach((item, index) => {
-            fragment.appendChild(createRenderedShortcut(item.name, item.url, index));
+            fragment.appendChild(createRenderedShortcut(item.name, item.url, item.icon || "", index));
         });
 
         dom.shortcutsContainer.innerHTML = "";

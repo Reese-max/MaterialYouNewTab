@@ -222,6 +222,11 @@ const zh_TW = {
     "shortcutInputName": "捷徑名稱",
     "shortcutInputUrl": "捷徑網址",
     "shortcutInputIcon": "自訂圖示：網址或 SVG（選填）",
+    "invalidIconMessage": "請輸入 HTTPS／HTTP 圖片網址、圖片資料網址，或有效的 SVG 內容。",
+    "invalidSvgMessage": "SVG 無效或包含不安全的內容。",
+    "invalidFileTypeMessage": "請選擇支援的圖片檔案。",
+    "iconFileTooLargeMessage": "圖示檔案為 {size} KB，大小上限為 {max} KB。",
+    "iconStorageQuotaMessage": "瀏覽器儲存空間不足，無法儲存此圖示。",
     "recentlyAddedBookmarks": "最近新增",
 
     // To-do List
