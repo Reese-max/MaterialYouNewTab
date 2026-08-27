@@ -2,12 +2,13 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 
 const ai = fs.readFileSync("scripts/ai-assist.js", "utf8");
-const html = fs.readFileSync("index.html", "utf8");
+const preload = fs.readFileSync("scripts/preload.js", "utf8");
 const chromium = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
 const firefox = JSON.parse(fs.readFileSync("manifest(firefox).json", "utf8"));
 const readme = fs.readFileSync("README.md", "utf8");
 
-assert.match(html, /scripts\/ai-assist\.js/, "index.html must load AI Assist");
+assert.match(preload, /scripts\/ai-assist\.js/, "preload must load AI Assist from a local extension asset");
+assert.match(preload, /data-mynt-ai-assist|myntAiAssist/i, "AI Assist loader must guard against duplicate injection");
 assert.match(ai, /myntAiAssistSettings/, "AI Assist settings key is missing");
 for (const provider of ["auto", "chrome", "local", "off"]) {
     assert.match(ai, new RegExp(`\\b${provider}\\b`), `Provider ${provider} is missing`);
