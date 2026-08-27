@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
 	"name": "MYNT: Material You New Tab",
-	"version": "3.4.0",
-	"description": "繁體中文優先的 Material You 新分頁，整合搜尋、待辦、專注、便籤與工作區。",
+	"version": "3.5.0",
+	"description": "繁體中文優先的 Material You 新分頁，整合搜尋、待辦、專注、便籤、工作區與裝置端 AI 輔助。",
 	"optional_permissions": ["bookmarks", "favicon"],
 	"optional_host_permissions": [
 		"https://www.google.com/*"
