@@ -208,9 +208,6 @@
             <span id="pomodoroFocusStreak">0 day streak</span>
             <button id="pomodoroStatsBtn" type="button">Stats</button>
         </div>
-        <div class="pomodoroFocusTask" id="pomodoroFocusTask" style="display:none;">
-            <span id="pomodoroFocusLabel">Focus</span>: <span id="pomodoroFocusTaskName">-</span>
-        </div>
     </div>
 
     <!-- --------------------- Bookmark System --------------------- -->
@@ -869,58 +866,6 @@
         <!-- --------end of rightDiv---------------------- -->
     </div>
     <!---End of centerDiv--->
-
-    <section id="todayWorkPanel" class="todayWorkPanel" aria-labelledby="todayWorkTitle">
-        <header class="todayWorkHeader">
-            <div>
-                <span id="todayWorkEyebrow">TODAY</span>
-                <h1 id="todayWorkTitle">Today's work</h1>
-                <p id="todayWorkDate"></p>
-            </div>
-            <button id="todayCommandButton" type="button" aria-label="Open quick command">
-                <span id="todayCommandLabel">Quick command</span>
-                <kbd>Ctrl K</kbd>
-            </button>
-        </header>
-
-        <div class="todayNextAction">
-            <div class="todayNextCopy">
-                <span id="todayNextLabel">Do this next</span>
-                <strong id="todayNextTask">Choose one important task below</strong>
-                <small id="todayFocusResult">Today 0 min · This week 0 min</small>
-            </div>
-            <button id="todayStartFocusBtn" type="button" disabled>Start focus</button>
-        </div>
-
-        <label class="todayGoalField" for="todayGoalInput">
-            <span id="todayGoalLabel">Today's goal</span>
-            <input id="todayGoalInput" maxlength="120" autocomplete="off"
-                placeholder="What must be true by the end of today?">
-        </label>
-
-        <div class="todayPriorityHeading">
-            <div>
-                <h2 id="todayPrioritiesTitle">Three important tasks</h2>
-                <p id="todayPrioritiesInfo">Choose from your To Do List, then mark one as the next action.</p>
-            </div>
-            <div class="todayProgressWrapper">
-                <span id="todayPriorityCount">0 / 3</span>
-                <div class="todayProgressCont" aria-hidden="true">
-                    <div class="todayProgressBar" id="todayProgressBar" style="width: 0%;"></div>
-                </div>
-            </div>
-        </div>
-        <ol id="todayPriorityList" class="todayPriorityList"></ol>
-
-        <form id="todayQuickAddForm" class="todayQuickAddForm">
-            <label class="srOnly" for="todayQuickAddInput" id="todayQuickAddLabel">New important task</label>
-            <input id="todayQuickAddInput" maxlength="120" required autocomplete="off"
-                placeholder="Add an important task...">
-            <button id="todayQuickAddBtn" type="submit">Add</button>
-        </form>
-
-        <p id="todayPanelStatus" class="todayPanelStatus" role="status" aria-live="polite"></p>
-    </section>
 
     <!-- ------shortcuts------------------ -->
     <div id="shortcuts-section">
@@ -2086,11 +2031,6 @@
                     <div class="focusStatCard"><strong id="focusStreakValue">0</strong><span id="focusStreakLabel">Day streak</span></div>
                 </div>
                 <div id="focusWeekChart" class="focusWeekChart" aria-label="Seven-day focus chart"></div>
-                <div class="focusTaskResultsHeader">
-                    <h4 id="focusTaskResultsTitle">Results by task</h4>
-                    <span id="focusTaskResultsInfo">Today / this week</span>
-                </div>
-                <div id="focusTaskResults" class="focusTaskResults"></div>
             </section>
 
             <section class="controlSection" id="workspaceSection" aria-labelledby="workspaceTitle">
