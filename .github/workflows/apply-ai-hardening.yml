@@ -1,20 +1,20 @@
-name: Apply AI Assist hardening
+name: Apply modular AI Assist architecture
 
 on:
   push:
     branches:
       - feature/ai-assist-3.5.0
     paths:
-      - .github/workflows/apply-ai-hardening.yml
+      - .integration/ai-hardening/trigger.txt
 
 permissions:
   contents: write
 
 jobs:
   harden:
-    name: Apply and verify AI Assist hardening
+    name: Apply and verify modular AI Assist hardening
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout AI Assist branch
@@ -29,12 +29,12 @@ jobs:
         with:
           node-version: 22
 
-      - name: Restore and apply verified hardening payload
+      - name: Restore and apply verified modular payload
         shell: bash
         run: |
           set -euo pipefail
-          payload_root="$RUNNER_TEMP/mynt-ai-hardening"
-          archive="$RUNNER_TEMP/mynt-ai-hardening.tar.gz"
+          payload_root="$RUNNER_TEMP/mynt-ai-modular"
+          archive="$RUNNER_TEMP/mynt-ai-modular.zip"
           mkdir -p "$payload_root"
           export MYNT_HARDENING_ARCHIVE="$archive"
           python3 - <<'PY'
@@ -44,75 +44,56 @@ jobs:
           from pathlib import Path
 
           expected_chunks = {
-              'chunk-00.b64': '213e73a56ec806c3c25295a5fc2c49538ca078126c6d31e065ee023c610ce5f0',
-              'chunk-01.b64': '48661179073ff860fb06f187946945d313014688ba20707d865d3dccd4d9fe8d',
-              'chunk-02.b64': '3efe48cefc867bb17d055226b683809577077e74d74ffff126148b81dd050869',
-              'chunk-03.b64': '1e18bf94c4c5f4c2b41e305663dc90de9a67ae246feb8aab02a546dcdf814981',
-              'chunk-04.b64': '73962b6dff2be286b17c2899666c90f4515ff1e7be03722b4af5e5bfadf32f59',
-              'chunk-05.b64': '8d9bd22a0d45dc13cdb68168282b5e82697807cfe1269786d21b8096f5fc3b1a',
+              'chunk-00.b64': '1be5a95be18cf39f0c35e49e70672434e49c447dcedada0599e53c9007536451',
+              'chunk-01.b64': '5b255a9a26e883e351f75e20e3c4d64c8efa26ef4d0e0f5f24b568c98f63e32c',
+              'chunk-02.b64': 'a0058b37dae014742b541675bf1ad539cb4f5338969421a8b48b3c5834f7e8d3',
+              'chunk-03.b64': 'a6573a6de0dc6a6e293d082d7ee659323cab658f2663cfc34668a694eca7cb85',
+              'chunk-04.b64': 'd0308b10f18f40bd49b7a02f3def481d06a5cf81c0bcf6d5ac137b5e85db4eed',
+              'chunk-05.b64': '790640f5bf6e12f45567939eaaabd3325784460f15e0b013071764ec8d1cf194',
           }
 
-          parts = []
-          mismatches = []
           paths = sorted(Path('.integration/ai-hardening').glob('chunk-*.b64'))
           if [path.name for path in paths] != list(expected_chunks):
               raise SystemExit(f'Unexpected hardening chunk set: {[path.name for path in paths]}')
 
+          parts = []
           for path in paths:
-              raw = path.read_text(encoding='ascii')
-              clean = ''.join(raw.split())
+              clean = ''.join(path.read_text(encoding='ascii').split())
               digest = hashlib.sha256(clean.encode('ascii')).hexdigest()
-              print(f'{path}: raw={len(raw)} clean={len(clean)} mod4={len(clean) % 4} sha256={digest}')
+              print(f'{path}: chars={len(clean)} sha256={digest}')
               if digest != expected_chunks[path.name]:
-                  mismatches.append(f'{path.name}: expected {expected_chunks[path.name]}, got {digest}')
+                  raise SystemExit(f'{path.name}: expected {expected_chunks[path.name]}, got {digest}')
               parts.append(clean)
 
-          if mismatches:
-              raise SystemExit('Hardening payload chunk mismatch:\n' + '\n'.join(mismatches))
-
           encoded = ''.join(parts)
-          print(f'payload-base64: chars={len(encoded)} mod4={len(encoded) % 4}')
-          if len(encoded) % 4:
-              raise SystemExit('Hardening payload Base64 length is invalid.')
-
-          try:
-              payload = base64.b64decode(encoded, validate=True)
-          except Exception as error:
-              raise SystemExit(f'Hardening payload Base64 validation failed: {error}') from error
-
+          payload = base64.b64decode(encoded, validate=True)
           digest = hashlib.sha256(payload).hexdigest()
-          expected = '5c48c2b7dc28c674beba998224a52336872341ffaf18dcafcc31ca70c50ec3ce'
+          expected = '8a7a7ace5ef10156a3c9c4d234a8050fe972357c01d4da5fa95e51504c52e40b'
           print(f'payload-sha256: {digest}')
           if digest != expected:
               raise SystemExit(f'Hardening payload digest mismatch: expected {expected}, got {digest}')
-
           Path(os.environ['MYNT_HARDENING_ARCHIVE']).write_bytes(payload)
           PY
-          tar -xzf "$archive" -C "$payload_root"
-          export MYNT_HARDENING_PAYLOAD="$payload_root"
-          python3 "$payload_root/apply.py"
+          unzip -q "$archive" -d "$payload_root"
+          bundle="$payload_root/MYNT-3.5.0-ai-hardening"
+          python3 "$bundle/apply.py" .
 
-          # The committed Pomodoro source uses LF. Normalize runner-side CRLF so
-          # the final commit contains only the actual event-contract change.
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('scripts/pomodoro.js')
-          path.write_bytes(path.read_bytes().replace(b'\r\n', b'\n'))
-          PY
-
-      - name: Run static and unit gates
+      - name: Run architecture, static, and unit gates
         shell: bash
         run: |
           set -euo pipefail
+          node --check scripts/ai-core.js
+          node --check scripts/productivity-actions.js
           node --check scripts/ai-assist.js
+          node --check scripts/preload.js
           node --check scripts/dashboard-tools.js
-          node --check scripts/pomodoro.js
-          node --check tools/smoke-chromium.mjs
+          node --check tools/smoke-ai-assist.mjs
           node tools/check-customizations.mjs
           node tools/check-release-metadata.mjs
           node tools/check-upstream-integration.mjs
           node tools/check-ai-assist.mjs
-          node tools/test-ai-assist.mjs
+          node tools/test-ai-core.mjs
+          node tools/test-productivity-actions.mjs
           node tools/build-web-preview.mjs
           node tools/check-web-preview.mjs
           python3 -m py_compile tools/install-chrome-for-testing.py
@@ -121,21 +102,40 @@ jobs:
       - name: Install Chrome for Testing
         run: python3 tools/install-chrome-for-testing.py
 
-      - name: Run real Chromium AI smoke
+      - name: Run source Chromium regression and AI E2E
         shell: bash
         run: |
           set -euo pipefail
           command -v xvfb-run
           xvfb-run -a node tools/smoke-chromium.mjs
+          xvfb-run -a node tools/smoke-ai-assist.mjs
 
-      - name: Commit verified hardening
+      - name: Commit verified source architecture
         shell: bash
         run: |
           set -euo pipefail
-          git rm .github/workflows/apply-ai-hardening.yml
-          git rm -r .integration/ai-hardening
+          rm -rf dist tools/__pycache__
+          git checkout HEAD -- .github/workflows/qa.yml .github/workflows/package-extension.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "feat(ai): harden event contracts and end-to-end tests"
+          git add \
+            README.md \
+            CHANGELOG.md \
+            docs/AI-ARCHITECTURE.md \
+            scripts/ai-core.js \
+            scripts/productivity-actions.js \
+            scripts/ai-assist.js \
+            scripts/preload.js \
+            scripts/dashboard-tools.js \
+            tools/check-ai-assist.mjs \
+            tools/install-chrome-for-testing.py \
+            tools/smoke-ai-assist.mjs \
+            tools/test-ai-core.mjs \
+            tools/test-productivity-actions.mjs
+          git diff --cached --check
+          if git diff --cached --diff-filter=ACMR --name-only | grep -E '^(dist/|.*__pycache__|\.integration/|\.github/workflows/)'; then
+            echo 'Forbidden generated, integration, or workflow path entered the source commit.' >&2
+            exit 1
+          fi
+          git commit -m "refactor(ai): separate core actions and provider UI"
           git push origin HEAD:feature/ai-assist-3.5.0
