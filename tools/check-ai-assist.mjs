@@ -1,0 +1,29 @@
+import fs from "node:fs";
+import assert from "node:assert/strict";
+
+const ai = fs.readFileSync("scripts/ai-assist.js", "utf8");
+const html = fs.readFileSync("index.html", "utf8");
+const chromium = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+const firefox = JSON.parse(fs.readFileSync("manifest(firefox).json", "utf8"));
+const readme = fs.readFileSync("README.md", "utf8");
+
+assert.match(html, /scripts\/ai-assist\.js/, "index.html must load AI Assist");
+assert.match(ai, /myntAiAssistSettings/, "AI Assist settings key is missing");
+for (const provider of ["auto", "chrome", "local", "off"]) {
+    assert.match(ai, new RegExp(`\\b${provider}\\b`), `Provider ${provider} is missing`);
+}
+assert.match(ai, /LanguageModel\.availability/, "Chrome built-in AI availability check is missing");
+assert.match(ai, /LanguageModel\.create/, "Chrome built-in AI session creation is missing");
+assert.match(ai, /localPlan\(/, "Local planner fallback is missing");
+assert.match(ai, /localOrganize\(/, "Local Scratchpad fallback is missing");
+assert.match(ai, /mynt:todo-create/, "Scratchpad-to-Todo action is missing");
+assert.match(ai, /myntTodayPlan/, "Today-plan integration is missing");
+assert.match(ai, /Chrome built-in AI unavailable; using local fallback/, "Auto fallback path is missing");
+assert.doesNotMatch(ai, /OPENAI_API_KEY|GEMINI_API_KEY|sk-[A-Za-z0-9_-]{12,}/, "AI Assist must not embed API credentials");
+assert.doesNotMatch(ai, /https?:\/\//, "AI Assist v1 must not call remote AI endpoints");
+assert.equal(chromium.version, "3.5.0", "Chromium version must be 3.5.0");
+assert.equal(firefox.version, "3.5.0", "Firefox version must be 3.5.0");
+assert.match(readme, /AI Assist/i, "README must document AI Assist");
+assert.match(readme, /3\.5\.0/, "README must document version 3.5.0");
+
+console.log('AI_ASSIST_CHECK_OK providers=4 cloud=none version=3.5.0');
