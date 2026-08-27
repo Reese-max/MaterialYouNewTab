@@ -183,7 +183,6 @@ function applyLanguage(lang) {
         "pomodoroResetPosText",
         "pomodoroResetPosInfo",
         "pomodoroSessionsLabel",
-        "pomodoroFocusLabel",
         "bongoCatText",
         "bongoCatInfo",
         "bongoCatCostumeText",

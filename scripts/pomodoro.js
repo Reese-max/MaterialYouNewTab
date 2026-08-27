@@ -23,8 +23,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const pomodoroPauseBtn = document.getElementById("pomodoroPauseBtn");
     const pomodoroResetBtn = document.getElementById("pomodoroResetBtn");
     const pomodoroSessionsCount = document.getElementById("pomodoroSessionsCount");
-    const pomodoroFocusTask = document.getElementById("pomodoroFocusTask");
-    const pomodoroFocusTaskName = document.getElementById("pomodoroFocusTaskName");
     const pomodoroAutoStartCheckbox = document.getElementById("pomodoroAutoStartCheckbox");
     const pomodoroSoundCheckbox = document.getElementById("pomodoroSoundCheckbox");
     const pomodoroNotifCheckbox = document.getElementById("pomodoroNotifCheckbox");
@@ -85,7 +83,6 @@ document.addEventListener("DOMContentLoaded", function () {
         state: "pomodoroState",
         sessionsToday: "pomodoroSessionsToday",
         sessionsDate: "pomodoroSessionsDate",
-        focusTask: "myntFocusTask",
         iconSize: "pomodoroIconSize",
         panelScale: "pomodoroPanelScale",
     };
@@ -102,7 +99,6 @@ document.addEventListener("DOMContentLoaded", function () {
         currentRound: 1,
         isRunning: false,
         lastTick: null,
-        task: null,
     };
     let timerInterval = null;
 
@@ -149,9 +145,6 @@ document.addEventListener("DOMContentLoaded", function () {
             pomodoroState.currentRound = saved.currentRound ?? 1;
             pomodoroState.isRunning = saved.isRunning ?? false;
             pomodoroState.lastTick = saved.lastTick ?? null;
-            pomodoroState.task = saved.task?.id && saved.task?.title
-                ? { id: String(saved.task.id), title: String(saved.task.title).slice(0, 120) }
-                : null;
             return true;
         } catch {
             return false;
@@ -179,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem(KEYS.sessionsDate, getTodayStr());
         pomodoroSessionsCount.textContent = count;
         document.dispatchEvent(new CustomEvent("mynt:pomodoro-complete", {
-            detail: { minutes: getWorkMinutes(), sessionsToday: count, task: pomodoroState.task }
+            detail: { minutes: getWorkMinutes(), sessionsToday: count }
         }));
     }
 
@@ -234,15 +227,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // --- Timer controls ---
     function startPomodoro() {
         if (pomodoroState.isRunning) return;
-        if (pomodoroState.phase === "work") {
-            const task = getSelectedFocusTask();
-            if (!task) {
-                document.dispatchEvent(new CustomEvent("mynt:focus-task-required"));
-                return;
-            }
-            pomodoroState.task = task;
-            updatePomodoroFocusTask();
-        }
         pomodoroState.isRunning = true;
         pomodoroRingFg.classList.add("running");
         pomodoroState.lastTick = Date.now();
@@ -294,7 +278,6 @@ document.addEventListener("DOMContentLoaded", function () {
             currentRound: 1,
             isRunning: false,
             lastTick: null,
-            task: null,
         };
         pomodoroRingFg.classList.remove("running");
         savePomodoroState();
@@ -409,29 +392,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         }
-    }
-
-    // --- Focus task (integration with ToDo list) ---
-    function getSelectedFocusTask() {
-        try {
-            const selected = JSON.parse(localStorage.getItem(KEYS.focusTask) || "null");
-            const todos = JSON.parse(localStorage.getItem("todoList") || "{}");
-            const todo = selected?.id ? todos[selected.id] : null;
-            if (!todo || todo.status === "completed" || !String(todo.title || "").trim()) return null;
-            return { id: String(selected.id), title: String(todo.title).trim().slice(0, 120) };
-        } catch {
-            return null;
-        }
-    }
-
-    function updatePomodoroFocusTask() {
-        const task = getSelectedFocusTask() || (pomodoroState.isRunning ? pomodoroState.task : null);
-        if (!task) {
-            pomodoroFocusTask.style.display = "none";
-            return;
-        }
-        pomodoroFocusTaskName.textContent = task.title;
-        pomodoroFocusTask.style.display = "";
     }
 
     // --- Panel drag functionality ---
@@ -654,7 +614,6 @@ document.addEventListener("DOMContentLoaded", function () {
             pomodoroPanel.style.animation = "";
         }
         panelOpen = true;
-        updatePomodoroFocusTask();
     }
 
     function getCurrentPanelScale() {
@@ -705,23 +664,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     pomodoroResetBtn.addEventListener("click", function () {
         resetPomodoro();
-    });
-
-    document.addEventListener("mynt:focus-task-selected", updatePomodoroFocusTask);
-    document.addEventListener("mynt:pomodoro-start-task", function (event) {
-        const id = String(event.detail?.id || "").trim();
-        const title = String(event.detail?.title || "").trim().slice(0, 120);
-        if (!id || !title) {
-            document.dispatchEvent(new CustomEvent("mynt:focus-task-required"));
-            return;
-        }
-        localStorage.setItem(KEYS.focusTask, JSON.stringify({ id, title }));
-        updatePomodoroFocusTask();
-        setTimeout(function () {
-            if (!pomodoroCheckbox.checked) pomodoroCheckbox.click();
-            if (!panelOpen) openPanel();
-            startPomodoro();
-        }, 0);
     });
 
     // --- Visibility change (compensate offline time) ---

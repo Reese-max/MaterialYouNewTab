@@ -40,7 +40,7 @@ function createTodo(title) {
     while (todoList[id]) id += "x";
     todoList[id] = { title: rawText, status: "pending", pinned: false };
     todoulList.appendChild(createTodoItemDOM(id, rawText, "pending", false));
-    SaveToDoData({ createdId: id });
+    SaveToDoData();
     return id;
 }
 
@@ -177,28 +177,19 @@ todoulList.addEventListener("click", (event) => {
 });
 
 // Save JSON to local Storage
-function SaveToDoData(extra = {}) {
+function SaveToDoData() {
     localStorage.setItem("todoList", JSON.stringify(todoList));
     const items = Object.entries(todoList).map(([id, todo]) => ({ id, ...todo }));
     document.dispatchEvent(new CustomEvent("mynt:todo-updated", {
         detail: {
             completed: items.filter(todo => todo.status === "completed").length,
             total: items.length,
-            items,
-            ...extra
+            items
         }
     }));
 }
 
 document.addEventListener("mynt:todo-create", event => createTodo(event.detail?.title));
-document.addEventListener("mynt:todo-complete", event => {
-    const id = String(event.detail?.id || "");
-    if (!todoList[id] || todoList[id].status === "completed") return;
-    todoList[id].status = "completed";
-    [...todoulList.querySelectorAll("[data-todoitem]")]
-        .find(item => item.dataset.todoitem === id)?.classList.add("checked");
-    SaveToDoData();
-});
 
 // Fetch saved JSON and create list items using it
 function ShowToDoList() {

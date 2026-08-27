@@ -28,7 +28,6 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - **Traditional Chinese first** — `zh-TW` remains the default while all 32 upstream locales are restored; missing custom strings fall back to English.
 - **Google search + search bangs** — use shortcuts such as `!yt`, `!gh`, and `!gpt` to jump directly to common services.
 - **Scratchpad** — quick notes, smart list continuation, Markdown task toggling, copy, convert-to-task, and `.md` export.
-- **Today dashboard** — choose three priorities, track completion progress, and surface the next action.
 - **Workspaces** — create Study, Work, Coding, Relax, or custom modes with preferred widgets, focus duration, background, and launch URLs.
 - **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
 - **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
@@ -43,9 +42,8 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - Quick shortcuts with uploaded/URL/SVG custom icons and `Alt+1`–`Alt+9` launching
 - Configurable AI tool launchers with right-click settings access
 - To-Do List and daily habits
-- Pomodoro timer, seven-day focus stats, streaks, and task-linked focus history
+- Pomodoro timer, seven-day focus stats, and streaks
 - Scratchpad and Markdown export
-- Today Top 3 planning and progress
 - Workspace presets and multi-tab launchers
 - Sidebar bookmarks and Google Apps launcher
 - Command Palette, keyboard shortcuts, Daily Quote mode, and an in-extension What's New page
@@ -140,7 +138,7 @@ If you prefer the upstream stable release instead of this customized fork, use t
 - [Upstream Mozilla Add-ons build](https://addons.mozilla.org/en-US/firefox/addon/mynt/)
 - [Upstream GitHub releases](https://github.com/prem-k-r/MaterialYouNewTab/releases/latest)
 
-> These upstream packages may not contain the Scratchpad, workspace launcher, ambient audio, Today progress, shortcut guide, or other Reese-max customizations present in this repository.
+> These upstream packages may not contain the Scratchpad, workspace launcher, ambient audio, shortcut guide, or other Reese-max customizations present in this repository.
 
 ## Permissions and privacy
 
@@ -173,7 +171,7 @@ The check validates, among other things:
 - local asset references
 - required custom scripts and UI IDs
 - duplicate HTML IDs and CSP-sensitive patterns
-- Today / focus / workspace data helpers
+- focus / workspace data helpers
 - backup rollback behavior
 - Google-only autocomplete configuration
 - locale key parity

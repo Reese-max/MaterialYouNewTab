@@ -28,11 +28,11 @@
 ### Reese-max 能力
 
 - `zh_TW` 為首次使用的預設語言，英文為缺漏字串回退
-- Today Top 3、下一步行動、習慣、進度與專注統計
+- 習慣與專注統計
 - Work、Study、Relax 與自訂 Workspace
 - Scratchpad、智慧清單、轉待辦、複製與 Markdown 匯出
 - Search Bangs、Command Palette 與快捷鍵指南
-- Pomodoro 任務連結及環境音
+- Pomodoro 與環境音
 - 無障礙、高對比、減少動畫與文字縮放
 - 本機備份、驗證、還原與失敗回滾
 

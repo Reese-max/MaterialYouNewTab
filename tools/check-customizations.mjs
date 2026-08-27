@@ -56,31 +56,32 @@ for (const script of ["scripts/pomodoro.js", "scripts/bongocat.js", "scripts/das
 
 for (const id of [
     "commandPaletteDialog", "controlCenterDialog", "habitList", "serviceStatusList", "focusWeekChart",
-    "todayWorkPanel", "todayGoalInput", "todayPriorityList", "todayStartFocusBtn",
-    "workspacePresetGrid", "workspaceEditorForm", "focusTaskResults",
+    "workspacePresetGrid", "workspaceEditorForm",
     "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow",
-    "todayProgressBar", "shortcutsHelpDialog", "scratchpadDownloadBtn"
+    "shortcutsHelpDialog", "scratchpadDownloadBtn"
 ]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `Missing custom UI: ${id}`);
+}
+for (const id of [
+    "todayWorkPanel", "todayGoalInput", "todayPriorityList", "todayStartFocusBtn",
+    "todayCommandButton", "todayQuickAddForm", "todayProgressBar", "pomodoroFocusTask", "focusTaskResults"
+]) {
+    assert.ok(!htmlIds.includes(id), `Removed Today UI returned: ${id}`);
 }
 const pomodoroCode = read("scripts/pomodoro.js");
 const todoCode = read("scripts/todo-list.js");
 assert.match(pomodoroCode, /mynt:pomodoro-complete/);
-assert.match(pomodoroCode, /mynt:pomodoro-start-task/);
-assert.match(pomodoroCode, /task: pomodoroState\.task/);
+assert.match(
+    pomodoroCode,
+    /function startPomodoro\(\) \{\s*if \(pomodoroState\.isRunning\) return;\s*pomodoroState\.isRunning = true;/,
+    "Pomodoro must start without a Today task"
+);
+assert.doesNotMatch(pomodoroCode, /myntFocusTask|mynt:focus-task-required|mynt:pomodoro-start-task/);
+assert.doesNotMatch(dashboardCode, /myntTodayPlan|myntTaskFocusHistory|myntFocusTask|myntNormalizeTodayPlan|myntRecordTaskFocus|myntTaskFocusStats/);
 assert.match(todoCode, /mynt:todo-updated/);
 assert.match(todoCode, /mynt:todo-create/);
-assert.match(todoCode, /mynt:todo-complete/);
+assert.doesNotMatch(todoCode, /mynt:todo-complete/);
 assert.match(html, /data-workspace-background=["']video["']/);
-assert.ok(
-    html.indexOf('class="todayNextAction"') < html.indexOf('class="todayGoalField"'),
-    "The next action must remain above planning fields"
-);
-assert.match(
-    dashboardCode,
-    /Boolean\(selectedId\)\s*&&\s*selectedId === todayPlan\.nextTaskId/,
-    "Empty priority slots must not look selected"
-);
 assert.match(read("privacy-policy.html"), /服務狀態只會在 localStorage 記錄/);
 
 const dashboardContext = { module: { exports: {} } };
@@ -100,24 +101,6 @@ assert.equal(dashboard.myntFocusStreak(focusFixture, now), 2, "Streak should con
 const sevenDays = dashboard.myntSevenDayStats(focusFixture, now);
 assert.equal(sevenDays.length, 7);
 assert.equal(sevenDays.at(-1).key, dashboard.myntDateKey(now));
-
-const todos = {
-    t1: { title: "Ship the brief", status: "pending" },
-    t2: { title: "Old task", status: "completed" },
-    t3: { title: "Review sources", status: "pending" }
-};
-const plan = dashboard.myntNormalizeTodayPlan({
-    date: dashboard.myntDateKey(now), goal: "  Publish today  ",
-    priorityIds: ["t1", "t1", "t2", "t3"], nextTaskId: "t2"
-}, todos, now);
-assert.equal(plan.goal, "Publish today");
-assert.equal(JSON.stringify(plan.priorityIds), JSON.stringify(["t1", "t3", ""]));
-assert.equal(plan.nextTaskId, "");
-
-let taskHistory = dashboard.myntRecordTaskFocus({}, { id: "t1", title: "Ship the brief" }, 25, yesterday);
-taskHistory = dashboard.myntRecordTaskFocus(taskHistory, { id: "t1", title: "Ship the brief" }, 50, now);
-assert.equal(dashboard.myntTaskFocusStats(taskHistory, "t1", now).today, 50);
-assert.equal(dashboard.myntTaskFocusStats(taskHistory, "t1", now).week, 75);
 
 const workspaces = dashboard.myntNormalizeWorkspaces([{
     id: "research", name: "Research", background: "wallpaper", focusMinutes: 999,

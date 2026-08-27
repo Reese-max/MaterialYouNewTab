@@ -51,59 +51,6 @@ const MYNT_WORKSPACE_WIDGETS = [
     "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox", "scratchpadCheckbox"
 ];
 
-function myntNormalizeTodayPlan(raw, todos, now = new Date()) {
-    const source = raw && typeof raw === "object" && raw.date === myntDateKey(now) ? raw : {};
-    const pending = new Set(Object.entries(todos && typeof todos === "object" ? todos : {})
-        .filter(([, todo]) => todo && todo.status !== "completed" && String(todo.title || "").trim())
-        .map(([id]) => id));
-    const priorityIds = [];
-    for (const id of Array.isArray(source.priorityIds) ? source.priorityIds : []) {
-        if (pending.has(id) && !priorityIds.includes(id)) priorityIds.push(id);
-        if (priorityIds.length === 3) break;
-    }
-    while (priorityIds.length < 3) priorityIds.push("");
-    const nextTaskId = priorityIds.includes(source.nextTaskId) ? source.nextTaskId : "";
-    return {
-        date: myntDateKey(now),
-        goal: String(source.goal || "").trim().slice(0, 120),
-        priorityIds,
-        nextTaskId
-    };
-}
-
-function myntRecordTaskFocus(raw, task, minutes, now = new Date()) {
-    const id = String(task?.id || "").trim();
-    const title = String(task?.title || "").trim().slice(0, 120);
-    const numericMinutes = Math.floor(Number(minutes));
-    if (!id || !title || !Number.isFinite(numericMinutes) || numericMinutes < 1) {
-        return raw && typeof raw === "object" ? raw : {};
-    }
-    const amount = Math.min(120, numericMinutes);
-    const history = raw && typeof raw === "object" && !Array.isArray(raw) ? { ...raw } : {};
-    const previous = history[id] && typeof history[id] === "object" ? history[id] : {};
-    const days = previous.days && typeof previous.days === "object" ? { ...previous.days } : {};
-    const key = myntDateKey(now);
-    const today = days[key] && typeof days[key] === "object" ? days[key] : {};
-    days[key] = {
-        minutes: Math.max(0, Math.floor(Number(today.minutes) || 0)) + amount,
-        sessions: Math.max(0, Math.floor(Number(today.sessions) || 0)) + 1
-    };
-    const recentDays = Object.fromEntries(Object.entries(days)
-        .filter(([date]) => /^\d{4}-\d{2}-\d{2}$/.test(date))
-        .sort(([a], [b]) => a.localeCompare(b)).slice(-370));
-    history[id] = { title, days: recentDays };
-    return history;
-}
-
-function myntTaskFocusStats(history, taskId, now = new Date()) {
-    const days = history?.[taskId]?.days || {};
-    const today = Math.max(0, Number(days[myntDateKey(now)]?.minutes) || 0);
-    const week = Array.from({ length: 7 }, (_, index) =>
-        Math.max(0, Number(days[myntDateKey(myntShiftDate(now, index - 6))]?.minutes) || 0)
-    ).reduce((total, minutes) => total + minutes, 0);
-    return { today, week };
-}
-
 function myntNormalizeWorkspaces(raw, defaults = []) {
     const source = Array.isArray(raw) ? raw : defaults;
     const clean = [];
@@ -127,8 +74,7 @@ function myntNormalizeWorkspaces(raw, defaults = []) {
 
 if (typeof module !== "undefined") {
     module.exports = {
-        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeTodayPlan,
-        myntRecordTaskFocus, myntTaskFocusStats, myntNormalizeWorkspaces
+        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeWorkspaces
     };
 }
 
@@ -137,9 +83,6 @@ if (typeof document !== "undefined") {
         const KEYS = {
             accessibility: "myntAccessibility",
             focusHistory: "myntFocusHistory",
-            taskFocusHistory: "myntTaskFocusHistory",
-            todayPlan: "myntTodayPlan",
-            focusTask: "myntFocusTask",
             habits: "myntHabits",
             serviceStatus: "myntServiceStatus",
             workspace: "myntWorkspacePreset",
@@ -175,8 +118,7 @@ if (typeof document !== "undefined") {
             const sameKeyIds = [
                 "controlCenterText", "controlCenterInfo", "controlCenterEyebrow",
                 "focusStatsTitle", "focusStatsInfo", "focusMinutesLabel",
-                "focusSessionsValueLabel", "focusStreakLabel", "focusTaskResultsTitle",
-                "focusTaskResultsInfo", "workspaceTitle", "workspaceInfo", "workspaceAddBtn",
+                "focusSessionsValueLabel", "focusStreakLabel", "workspaceTitle", "workspaceInfo", "workspaceAddBtn",
                 "workspaceNameLabel", "workspaceWidgetsLegend", "workspaceWidgetShortcuts",
                 "workspaceWidgetBookmarks", "workspaceWidgetTodo", "workspaceWidgetPomodoro",
                 "workspaceWidgetAi", "workspaceWidgetGoogle", "workspaceWidgetQuotes",
@@ -191,10 +133,7 @@ if (typeof document !== "undefined") {
                 "permissionNotificationsTitle", "permissionNotificationsInfo", "permissionLocationTitle",
                 "permissionLocationInfo", "privacyDisclosureWeather", "privacyDisclosureIp",
                 "privacyDisclosureSearch", "privacyDisclosureLocal", "serviceStatusTitle",
-                "serviceStatusInfo", "commandPaletteTitle", "commandPaletteEmpty",
-                "todayWorkEyebrow", "todayWorkTitle", "todayCommandLabel", "todayGoalLabel", "todayPrioritiesTitle",
-                "todayPrioritiesInfo", "todayQuickAddLabel", "todayQuickAddBtn", "todayNextLabel",
-                "todayStartFocusBtn"
+                "serviceStatusInfo", "commandPaletteTitle", "commandPaletteEmpty"
             ];
             sameKeyIds.forEach(id => {
                 const element = document.getElementById(id);
@@ -206,11 +145,8 @@ if (typeof document !== "undefined") {
             document.getElementById("pomodoroStatsBtn").textContent = t("focusStatsButton", "Stats");
             document.getElementById("habitInput").placeholder = t("habitPlaceholder", "Add a daily habit...");
             document.getElementById("commandPaletteInput").placeholder = t("commandPalettePlaceholder", "Search commands...");
-            document.getElementById("todayGoalInput").placeholder = t("todayGoalPlaceholder", "What must be true by the end of today?");
-            document.getElementById("todayQuickAddInput").placeholder = t("todayQuickAddPlaceholder", "Add an important task...");
             document.getElementById("commandPaletteDialog").setAttribute("aria-label", t("commandPaletteTitle", "Command palette"));
             document.getElementById("closeControlCenterBtn").setAttribute("aria-label", t("menuCloseText", "Close"));
-            document.getElementById("todayCommandButton").setAttribute("aria-label", t("todayOpenCommands", "Open quick command"));
         }
 
         // Service status records only a service identifier, result, and timestamp.
@@ -341,7 +277,6 @@ if (typeof document !== "undefined") {
         }
 
         let focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
-        let taskFocusHistory = readJSON(KEYS.taskFocusHistory, {});
 
         function migratePomodoroToday() {
             const sessions = Math.max(0, Number(localStorage.getItem("pomodoroSessionsToday")) || 0);
@@ -393,215 +328,7 @@ if (typeof document !== "undefined") {
                 chart.appendChild(column);
             });
 
-            const results = document.getElementById("focusTaskResults");
-            const taskRows = Object.entries(taskFocusHistory || {}).map(([id, entry]) => ({
-                id,
-                title: String(entry?.title || "").trim(),
-                ...myntTaskFocusStats(taskFocusHistory, id)
-            })).filter(row => row.title && row.week > 0)
-                .sort((a, b) => b.week - a.week || b.today - a.today).slice(0, 5);
-            results.replaceChildren();
-            if (!taskRows.length) {
-                const empty = document.createElement("p");
-                empty.className = "focusTaskResultsEmpty";
-                empty.textContent = t("focusTaskResultsEmpty", "Complete a selected task session to see results here.");
-                results.appendChild(empty);
-            } else {
-                taskRows.forEach(row => {
-                    const item = document.createElement("div");
-                    item.className = "focusTaskResultRow";
-                    const title = document.createElement("strong");
-                    title.textContent = row.title;
-                    const value = document.createElement("span");
-                    value.textContent = format("focusTaskResultValue", "{today} min / {week} min", row);
-                    item.append(title, value);
-                    results.appendChild(item);
-                });
-            }
         }
-
-        // Today's work panel keeps To-do as the task source of truth.
-        function normalizeTodoMap(raw) {
-            if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
-            const clean = {};
-            for (const [id, todo] of Object.entries(raw)) {
-                const title = String(todo?.title || "").trim().slice(0, 120);
-                if (!title) continue;
-                clean[id] = { title, status: todo.status === "completed" ? "completed" : "pending" };
-            }
-            return clean;
-        }
-
-        let todoState = normalizeTodoMap(readJSON("todoList", {}));
-        let todayPlan = myntNormalizeTodayPlan(readJSON(KEYS.todayPlan, {}), todoState);
-        let lastSyncedFocusTask = null;
-
-        function pendingTodos() {
-            return Object.entries(todoState)
-                .filter(([, todo]) => todo.status !== "completed")
-                .map(([id, todo]) => ({ id, title: todo.title }));
-        }
-
-        function nextTask() {
-            const todo = todoState[todayPlan.nextTaskId];
-            return todo?.status === "pending" ? { id: todayPlan.nextTaskId, title: todo.title } : null;
-        }
-
-        function syncFocusTask() {
-            const task = nextTask();
-            const serialized = task ? JSON.stringify(task) : "";
-            if (serialized === lastSyncedFocusTask) return;
-            lastSyncedFocusTask = serialized;
-            if (task) localStorage.setItem(KEYS.focusTask, serialized);
-            else localStorage.removeItem(KEYS.focusTask);
-            document.dispatchEvent(new CustomEvent("mynt:focus-task-selected", { detail: task }));
-        }
-
-        function saveTodayPlan(status = "") {
-            todayPlan = myntNormalizeTodayPlan(todayPlan, todoState);
-            localStorage.setItem(KEYS.todayPlan, JSON.stringify(todayPlan));
-            syncFocusTask();
-            renderTodayPanel();
-            document.getElementById("todayPanelStatus").textContent = status;
-        }
-
-        function chooseTodayTask(id) {
-            if (!todoState[id] || todoState[id].status === "completed") return;
-            if (!todayPlan.priorityIds.includes(id)) {
-                const emptyIndex = todayPlan.priorityIds.indexOf("");
-                todayPlan.priorityIds[emptyIndex === -1 ? 2 : emptyIndex] = id;
-            }
-            todayPlan.nextTaskId = id;
-            saveTodayPlan(format("todayTaskSelected", "Next action: {name}", { name: todoState[id].title }));
-        }
-
-        function renderTodayPanel() {
-            todayPlan = myntNormalizeTodayPlan(todayPlan, todoState);
-            const tasks = pendingTodos();
-            const goalInput = document.getElementById("todayGoalInput");
-            if (document.activeElement !== goalInput) goalInput.value = todayPlan.goal;
-            document.getElementById("todayWorkDate").textContent = new Intl.DateTimeFormat(
-                lang === "zh_TW" ? "zh-TW" : "en",
-                { month: "long", day: "numeric", weekday: "long" }
-            ).format(new Date());
-
-            const list = document.getElementById("todayPriorityList");
-            list.replaceChildren();
-            todayPlan.priorityIds.forEach((selectedId, index) => {
-                const row = document.createElement("li");
-                row.className = `todayPriorityRow${Boolean(selectedId) && selectedId === todayPlan.nextTaskId ? " active" : ""}`;
-                const number = document.createElement("span");
-                number.className = "todayPriorityNumber";
-                number.textContent = String(index + 1).padStart(2, "0");
-                const select = document.createElement("select");
-                select.setAttribute("aria-label", format("todayPriorityAria", "Important task {number}", { number: index + 1 }));
-                const empty = document.createElement("option");
-                empty.value = "";
-                empty.textContent = t("todayPriorityEmpty", "Choose a task");
-                select.appendChild(empty);
-                tasks.forEach(task => {
-                    const option = document.createElement("option");
-                    option.value = task.id;
-                    option.textContent = task.title;
-                    select.appendChild(option);
-                });
-                select.value = selectedId;
-                select.addEventListener("change", () => {
-                    const previous = todayPlan.priorityIds[index];
-                    todayPlan.priorityIds = todayPlan.priorityIds.map((id, slot) =>
-                        slot !== index && id === select.value ? "" : id
-                    );
-                    todayPlan.priorityIds[index] = select.value;
-                    if (todayPlan.nextTaskId === previous) todayPlan.nextTaskId = select.value;
-                    if (!todayPlan.nextTaskId && select.value) todayPlan.nextTaskId = select.value;
-                    saveTodayPlan();
-                });
-
-                const nextLabel = document.createElement("label");
-                nextLabel.className = "todayNextChoice";
-                const radio = document.createElement("input");
-                radio.type = "radio";
-                radio.name = "todayNextTask";
-                radio.checked = Boolean(selectedId) && selectedId === todayPlan.nextTaskId;
-                radio.disabled = !selectedId;
-                radio.setAttribute("aria-label", t("todayMarkNext", "Make next action"));
-                radio.addEventListener("change", () => {
-                    todayPlan.nextTaskId = selectedId;
-                    saveTodayPlan();
-                });
-                const nextText = document.createElement("span");
-                nextText.textContent = t("todayNextChoice", "Next");
-                nextLabel.append(radio, nextText);
-
-                const complete = document.createElement("button");
-                complete.type = "button";
-                complete.className = "todayCompleteTask";
-                complete.disabled = !selectedId;
-                complete.textContent = "✓";
-                complete.setAttribute("aria-label", selectedId
-                    ? format("todayCompleteAria", "Complete {name}", { name: todoState[selectedId]?.title || "" })
-                    : t("todayCompleteDisabled", "Choose a task first"));
-                complete.addEventListener("click", () => {
-                    document.dispatchEvent(new CustomEvent("mynt:todo-complete", { detail: { id: selectedId } }));
-                });
-                row.append(number, select, nextLabel, complete);
-                list.appendChild(row);
-            });
-
-            const selectedCount = todayPlan.priorityIds.filter(Boolean).length;
-            const completedCount = todayPlan.priorityIds.filter(id => id && todoState[id]?.status === "completed").length;
-            document.getElementById("todayPriorityCount").textContent = `${completedCount > 0 ? `${completedCount} done · ` : ""}${selectedCount} / 3`;
-            const progressBar = document.getElementById("todayProgressBar");
-            if (progressBar) {
-                const percent = Math.round((completedCount / 3) * 100);
-                progressBar.style.width = `${percent}%`;
-                progressBar.classList.toggle("allCompleted", completedCount === 3);
-            }
-            const task = nextTask();
-            document.getElementById("todayNextTask").textContent = task?.title || t("todayNextEmpty", "Choose one important task below");
-            const overallToday = focusHistory[myntDateKey()]?.minutes || 0;
-            const overallWeek = myntSevenDayStats(focusHistory).reduce((sum, day) => sum + day.minutes, 0);
-            const taskStats = task ? myntTaskFocusStats(taskFocusHistory, task.id) : { today: overallToday, week: overallWeek };
-            document.getElementById("todayFocusResult").textContent = format(
-                task ? "todayTaskFocusResult" : "todayAllFocusResult",
-                task ? "This task: today {today} min · this week {week} min" : "All tasks: today {today} min · this week {week} min",
-                taskStats
-            );
-            document.getElementById("todayStartFocusBtn").disabled = !task;
-        }
-
-        document.getElementById("todayGoalInput").addEventListener("input", event => {
-            todayPlan.goal = event.target.value.slice(0, 120);
-            localStorage.setItem(KEYS.todayPlan, JSON.stringify(todayPlan));
-        });
-        document.getElementById("todayQuickAddForm").addEventListener("submit", event => {
-            event.preventDefault();
-            const input = document.getElementById("todayQuickAddInput");
-            const title = input.value.trim();
-            if (!title) return input.reportValidity();
-            document.dispatchEvent(new CustomEvent("mynt:todo-create", { detail: { title } }));
-            input.value = "";
-        });
-        document.getElementById("todayStartFocusBtn").addEventListener("click", () => {
-            const task = nextTask();
-            if (!task) return;
-            document.dispatchEvent(new CustomEvent("mynt:pomodoro-start-task", { detail: task }));
-            document.getElementById("todayPanelStatus").textContent = format("todayFocusStarted", "Focusing on {name}", { name: task.title });
-        });
-        document.getElementById("todayCommandButton").addEventListener("click", () => openCommandPalette());
-        document.addEventListener("mynt:focus-task-required", () => {
-            const panel = document.getElementById("todayWorkPanel");
-            panel.classList.remove("needsTask");
-            void panel.offsetWidth;
-            panel.classList.add("needsTask");
-            document.getElementById("todayPanelStatus").textContent = t("todayTaskRequired", "Choose a next action before starting focus.");
-            document.querySelector("#todayPriorityList select")?.focus();
-        });
-        window.addEventListener("focus", () => {
-            todoState = normalizeTodoMap(readJSON("todoList", {}));
-            todayPlan = myntNormalizeTodayPlan(readJSON(KEYS.todayPlan, {}), todoState);
-            saveTodayPlan();
-        });
 
         // Habits. Two built-in habits are completed by Pomodoro and To-do events.
         function normalizeHabits(raw) {
@@ -729,29 +456,11 @@ if (typeof document !== "undefined") {
             const saved = focusHistory[today] || { sessions: 0, minutes: 0 };
             focusHistory[today] = { sessions: saved.sessions + 1, minutes: saved.minutes + minutes };
             saveFocusHistory();
-            if (event.detail?.task?.id && event.detail?.task?.title) {
-                taskFocusHistory = myntRecordTaskFocus(taskFocusHistory, event.detail.task, minutes);
-                localStorage.setItem(KEYS.taskFocusHistory, JSON.stringify(taskFocusHistory));
-            }
             markSystemHabit("pomodoro");
             renderFocusStats();
-            renderTodayPanel();
         });
         document.addEventListener("mynt:todo-updated", event => {
             if (Number(event.detail?.completed) > 0) markSystemHabit("todo");
-            todoState = Array.isArray(event.detail?.items)
-                ? normalizeTodoMap(Object.fromEntries(event.detail.items.map(todo => [todo.id, todo])))
-                : normalizeTodoMap(readJSON("todoList", {}));
-            todayPlan = myntNormalizeTodayPlan(todayPlan, todoState);
-            const createdId = String(event.detail?.createdId || "");
-            if (createdId && todoState[createdId]?.status === "pending") {
-                const emptyIndex = todayPlan.priorityIds.indexOf("");
-                todayPlan.priorityIds[emptyIndex === -1 ? 2 : emptyIndex] = createdId;
-                todayPlan.nextTaskId = createdId;
-                saveTodayPlan(format("todayTaskAdded", "Added and selected: {name}", { name: todoState[createdId].title }));
-            } else {
-                saveTodayPlan();
-            }
         });
         document.addEventListener("DOMContentLoaded", () => {
             try {
@@ -1238,7 +947,6 @@ if (typeof document !== "undefined") {
         }
 
         const commandDefinitions = [
-            { id: "today", label: "commandToday", info: "commandTodayInfo", run: () => document.getElementById("todayWorkPanel").scrollIntoView({ block: "center" }) },
             { id: "shortcutsHelp", label: "commandShortcutsHelp", info: "commandShortcutsHelpInfo", run: () => openShortcutsHelp() },
             { id: "control", label: "commandOpenControl", info: "commandOpenControlInfo", run: () => openControlCenter() },
             { id: "focus", label: "commandFocusStats", info: "commandFocusStatsInfo", run: () => openControlCenter("focusStatsSection") },
@@ -1347,13 +1055,6 @@ if (typeof document !== "undefined") {
         async function renderCommands(query = "") {
             const token = ++commandRenderToken;
             const normalized = query.trim().toLocaleLowerCase();
-            const taskCommands = pendingTodos().map(task => ({
-                id: `task-${task.id}`,
-                labelText: task.title,
-                infoText: t("commandTaskInfo", "Set as next action"),
-                group: "commandGroupTask",
-                run: () => chooseTodayTask(task.id)
-            })).filter(command => matchesCommand(command, normalized)).slice(0, 6);
             const workspaceLaunchCommands = workspaces.filter(p => p.urls && p.urls.length > 0).map(preset => ({
                 id: `launch-workspace-${preset.id}`,
                 labelText: format("commandLaunchWorkspace", "Launch {name} sites ({count})", { name: preset.name, count: preset.urls.length }),
@@ -1383,7 +1084,6 @@ if (typeof document !== "undefined") {
             }] : [];
             const base = [
                 ...commandDefinitions.filter(command => matchesCommand(command, normalized)),
-                ...taskCommands,
                 ...createCommand,
                 ...workspaceCommands,
                 ...workspaceLaunchCommands,
@@ -1493,7 +1193,6 @@ if (typeof document !== "undefined") {
         renderFocusStats();
         renderHabits();
         renderWorkspace();
-        saveTodayPlan();
         renderServiceStatus();
         renderPermissions();
     })();
