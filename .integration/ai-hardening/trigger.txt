@@ -1,0 +1,3 @@
+trigger=modular-ai-hardening-v2
+payload_sha256=ff3b4fa30e62ec864cf63214bc72994d2972e2d6e947a5e11d945060c1f09d59
+requested_at=2026-08-27T07:10:00Z

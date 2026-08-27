@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - feature/upstream-full-integration
+      - feature/ai-assist-3.5.0
   workflow_dispatch:
 
 concurrency:
@@ -42,6 +43,9 @@ jobs:
 
       - name: Run upstream integration checks
         run: node tools/check-upstream-integration.mjs
+
+      - name: Run AI Assist checks
+        run: node tools/check-ai-assist.mjs
 
       - name: Install Chrome for Testing
         shell: bash

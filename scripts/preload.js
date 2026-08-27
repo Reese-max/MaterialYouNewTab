@@ -124,3 +124,14 @@
         }
     }
 })();
+
+// AI Assist is loaded as a local same-origin script so existing HTML structure stays stable.
+// The module itself waits for DOMContentLoaded and is a no-op when the provider is set to Off.
+(function loadAiAssist() {
+    if (document.querySelector('script[data-mynt-ai-assist]')) return;
+    const script = document.createElement('script');
+    script.src = 'scripts/ai-assist.js';
+    script.async = false;
+    script.dataset.myntAiAssist = 'true';
+    document.head.appendChild(script);
+})();

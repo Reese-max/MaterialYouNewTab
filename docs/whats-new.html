@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MYNT 3.4.0 更新內容</title>
+    <title>MYNT 3.5.0 更新內容</title>
     <link rel="icon" href="../favicon/icon128.png">
     <style>
         :root { color-scheme: light dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -25,30 +25,28 @@
     <header>
         <img src="../favicon/icon128.png" alt="MYNT">
         <div>
-            <h1>MYNT 3.4.0</h1>
-            <div class="meta">Reese-max 客製整合版 · 上游同步至 <code>e279bb9</code></div>
+            <h1>MYNT 3.5.0 — AI Assist</h1>
+            <div class="meta">Reese-max 客製版 · 本機優先 AI 輔助 · 上游融合基準 <code>e279bb9</code></div>
         </div>
     </header>
 
     <section>
-        <h2>原版完整更新</h2>
+        <h2>AI Assist 第一階段</h2>
         <ul>
-            <li>捷徑支援本機圖片、圖片網址及貼上 SVG 的自訂圖示，並保留離線 fallback。</li>
-            <li>新增每日語錄模式，可讓同一則語錄固定顯示一天。</li>
-            <li>使用 <code>Alt + 1</code> 至 <code>Alt + 9</code> 快速開啟前九個捷徑。</li>
-            <li>AI Tools 圖示可用右鍵直接開啟設定。</li>
-            <li>整合主題預載、桌布、透明度、圖示及多語系修正。</li>
-            <li>恢復 32 種語言；繁體中文仍為預設語言，缺少的客製字串會回退英文。</li>
+            <li>Today 新增「AI 幫我安排今天」，依待辦、Top 3、釘選任務、今日目標與近期專注紀錄提出建議。</li>
+            <li>Scratchpad 新增「AI 整理」，可產生摘要、擷取待辦、整理 Markdown，並由使用者決定是否加入 Todo 或取代便箋。</li>
+            <li>提供 <code>Auto</code>、Chrome 內建 AI、Local smart assist、Off 四種模式。</li>
+            <li>Auto 模式會優先使用 Chrome Prompt API；不可用時自動退回本機固定規則，因此 Firefox、舊 Chrome 與未下載模型的裝置仍可使用。</li>
+            <li>第一階段沒有 MYNT 雲端 AI endpoint、沒有 API Key，也不會自動把 Todo 或 Scratchpad 傳送到遠端伺服器。</li>
         </ul>
     </section>
 
     <section>
-        <h2>客製功能保留並融合</h2>
+        <h2>仍保留的 3.4.0 融合成果</h2>
         <ul>
-            <li>Today Top 3、下一步行動、專注統計及工作區模式。</li>
-            <li>Scratchpad、Markdown 匯出、智慧清單及轉換待辦。</li>
-            <li>Search Bang、Command Palette、快捷鍵指南及無障礙控制。</li>
-            <li>Pomodoro、任務連動、雨聲／海浪／白噪音／營火環境音。</li>
+            <li>上游融合基準仍為 <code>e279bb9</code>，保留自訂捷徑圖示、Daily Quote、<code>Alt + 1</code> 至 <code>Alt + 9</code>、32 種語言與主題／桌布修正。</li>
+            <li>Today Top 3、下一步行動、專注統計、Workspaces、Scratchpad、Search Bang 與 Command Palette。</li>
+            <li>Pomodoro 任務連動、環境音、備份還原、隱私中心與無障礙控制。</li>
         </ul>
     </section>
 

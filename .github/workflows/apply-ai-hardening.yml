@@ -1,0 +1,141 @@
+name: Apply modular AI Assist architecture
+
+on:
+  push:
+    branches:
+      - feature/ai-assist-3.5.0
+    paths:
+      - .integration/ai-hardening/trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    name: Apply and verify modular AI Assist hardening
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout AI Assist branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: feature/ai-assist-3.5.0
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Restore and apply verified modular payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload_root="$RUNNER_TEMP/mynt-ai-modular"
+          archive="$RUNNER_TEMP/mynt-ai-modular.tar.gz"
+          mkdir -p "$payload_root"
+          export MYNT_HARDENING_ARCHIVE="$archive"
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import os
+          from pathlib import Path
+
+          expected_chunks = {
+              'chunk-00.b64': 'c8817375cb44d2fb52f1e7af5585cc4489bb3897f3bb5e8b3301cc4bb7d71d2e',
+              'chunk-01.b64': 'a091c8865add779c2077226bdb9d4febdcb824982a3937f55dda2519dc17eba7',
+              'chunk-02.b64': 'bde65d029f8bdd4c652bd87c49e1bcb1d4a9fc84f288a350287fcc3fb997ca99',
+              'chunk-03.b64': '6876181cf4b014085ace55e9796cd4a4d3bba918ddb0417d1102be95c333a4e6',
+              'chunk-04.b64': 'ed02d8c59083fc0fb1bc5c9e07b28727713d7d73c9785cc9d60d261f2228cee3',
+              'chunk-05.b64': 'd811d45ccc7945bb3e1d2563a5fcb28cd50ebb68f7d8832c5f3e0878147f6760',
+          }
+
+          paths = sorted(Path('.integration/ai-hardening').glob('chunk-*.b64'))
+          if [path.name for path in paths] != list(expected_chunks):
+              raise SystemExit(f'Unexpected hardening chunk set: {[path.name for path in paths]}')
+
+          parts = []
+          for path in paths:
+              clean = ''.join(path.read_text(encoding='ascii').split())
+              digest = hashlib.sha256(clean.encode('ascii')).hexdigest()
+              print(f'{path}: chars={len(clean)} sha256={digest}')
+              if digest != expected_chunks[path.name]:
+                  raise SystemExit(f'{path.name}: expected {expected_chunks[path.name]}, got {digest}')
+              parts.append(clean)
+
+          encoded = ''.join(parts)
+          payload = base64.b64decode(encoded, validate=True)
+          digest = hashlib.sha256(payload).hexdigest()
+          expected = 'ff3b4fa30e62ec864cf63214bc72994d2972e2d6e947a5e11d945060c1f09d59'
+          print(f'payload-sha256: {digest}')
+          if digest != expected:
+              raise SystemExit(f'Hardening payload digest mismatch: expected {expected}, got {digest}')
+          Path(os.environ['MYNT_HARDENING_ARCHIVE']).write_bytes(payload)
+          PY
+          tar -xzf "$archive" -C "$payload_root"
+          python3 "$payload_root/apply.py"
+
+      - name: Run architecture, static, and unit gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/ai-core.js
+          node --check scripts/productivity-actions.js
+          node --check scripts/ai-assist.js
+          node --check scripts/preload.js
+          node --check scripts/dashboard-tools.js
+          node --check tools/smoke-ai-assist.mjs
+          node tools/check-customizations.mjs
+          node tools/check-release-metadata.mjs
+          node tools/check-upstream-integration.mjs
+          node tools/check-ai-assist.mjs
+          node tools/test-ai-core.mjs
+          node tools/test-productivity-actions.mjs
+          node tools/build-web-preview.mjs
+          node tools/check-web-preview.mjs
+          python3 -m py_compile tools/install-chrome-for-testing.py
+          git diff --check
+
+      - name: Install Chrome for Testing
+        run: python3 tools/install-chrome-for-testing.py
+
+      - name: Run source Chromium regression and AI E2E
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v xvfb-run
+          xvfb-run -a node tools/smoke-chromium.mjs
+          xvfb-run -a node tools/smoke-ai-assist.mjs
+
+      - name: Commit verified source architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist tools/__pycache__
+          git checkout HEAD -- .github/workflows/qa.yml .github/workflows/package-extension.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            AGENTS.md \
+            README.md \
+            CHANGELOG.md \
+            docs/AI-ARCHITECTURE.md \
+            scripts/ai-core.js \
+            scripts/productivity-actions.js \
+            scripts/ai-assist.js \
+            scripts/preload.js \
+            scripts/dashboard-tools.js \
+            tools/check-ai-assist.mjs \
+            tools/install-chrome-for-testing.py \
+            tools/smoke-ai-assist.mjs \
+            tools/test-ai-core.mjs \
+            tools/test-productivity-actions.mjs
+          git diff --cached --check
+          if git diff --cached --diff-filter=ACMR --name-only | grep -E '^(dist/|.*__pycache__|\.integration/|\.github/workflows/)'; then
+            echo 'Forbidden generated, integration, or workflow path entered the source commit.' >&2
+            exit 1
+          fi
+          git commit -m "refactor(ai): separate core actions and provider UI"
+          git push origin HEAD:feature/ai-assist-3.5.0
