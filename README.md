@@ -6,14 +6,14 @@
 
 <p align="center">
   <strong>Reese-max customized edition</strong><br>
-  A Traditional Chinese-first, Material You-inspired browser dashboard for search, focus, tasks, notes, bookmarks, weather, and workspaces.
+  A Traditional Chinese-first, Material You-inspired browser dashboard for search, focus, tasks, notes, bookmarks, weather, workspaces, and local-first AI assistance.
 </p>
 
 <p align="center">
   <a href="https://github.com/Reese-max/MaterialYouNewTab"><img src="https://img.shields.io/github/license/Reese-max/MaterialYouNewTab" alt="License"></a>
   <a href="https://github.com/Reese-max/MaterialYouNewTab/commits/main"><img src="https://img.shields.io/github/last-commit/Reese-max/MaterialYouNewTab" alt="Last commit"></a>
   <a href="https://github.com/Reese-max/MaterialYouNewTab"><img src="https://img.shields.io/github/stars/Reese-max/MaterialYouNewTab" alt="Stars"></a>
-  <img src="https://img.shields.io/badge/version-3.4.0-blue" alt="Version 3.4.0">
+  <img src="https://img.shields.io/badge/version-3.5.0-blue" alt="Version 3.5.0">
 </p>
 
 > [!IMPORTANT]
@@ -29,6 +29,7 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - **Google search + search bangs** — use shortcuts such as `!yt`, `!gh`, and `!gpt` to jump directly to common services.
 - **Scratchpad** — quick notes, smart list continuation, Markdown task toggling, copy, convert-to-task, and `.md` export.
 - **Today dashboard** — choose three priorities, track completion progress, and surface the next action.
+- **AI Assist** — plan today's Top 3 and organize Scratchpad notes with Chrome built-in AI when available, with a deterministic local fallback and a full Off mode.
 - **Workspaces** — create Study, Work, Coding, Relax, or custom modes with preferred widgets, focus duration, background, and launch URLs.
 - **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
 - **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
@@ -42,6 +43,7 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - Clock and live weather
 - Quick shortcuts with uploaded/URL/SVG custom icons and `Alt+1`–`Alt+9` launching
 - Configurable AI tool launchers with right-click settings access
+- Local-first AI Assist for Today planning and Scratchpad organization; no cloud AI endpoint or API key is included in v3.5.0
 - To-Do List and daily habits
 - Pomodoro timer, seven-day focus stats, streaks, and task-linked focus history
 - Scratchpad and Markdown export
@@ -57,8 +59,8 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 
 | Target | Manifest | Version |
 | --- | --- | ---: |
-| Chromium browsers | Manifest V3 (`manifest.json`) | `3.4.0` |
-| Firefox / Zen | Manifest V2 (`manifest(firefox).json`) | `3.4.0` |
+| Chromium browsers | Manifest V3 (`manifest.json`) | `3.5.0` |
+| Firefox / Zen | Manifest V2 (`manifest(firefox).json`) | `3.5.0` |
 
 ## Installation
 
@@ -132,6 +134,16 @@ zen.urlbar.replace-newtab
 
 and set it to `false`.
 
+## AI Assist 3.5.0
+
+AI Assist is intentionally smaller than a chatbot. It is attached to existing productivity flows:
+
+- **Today → AI plan today** reads pending Todo items, the existing Top 3, pinned tasks, today's goal, and recent focus minutes, then proposes up to three priorities, one next action, and a focus duration.
+- **Scratchpad → AI organize** returns a short summary, extracted tasks, and organized Markdown. Nothing is changed until you explicitly choose **Add tasks** or **Replace scratchpad**.
+- **Provider modes**: `Auto`, `Chrome built-in AI`, `Local smart assist`, and `Off`.
+- `Auto` first checks Chrome's built-in Prompt API. If it is unavailable or the model cannot be used, MYNT falls back to deterministic local JavaScript.
+- Firefox and browsers without Chrome's built-in model therefore keep a working local fallback.
+
 ## Upstream store builds
 
 If you prefer the upstream stable release instead of this customized fork, use the official upstream listings below:
@@ -140,7 +152,7 @@ If you prefer the upstream stable release instead of this customized fork, use t
 - [Upstream Mozilla Add-ons build](https://addons.mozilla.org/en-US/firefox/addon/mynt/)
 - [Upstream GitHub releases](https://github.com/prem-k-r/MaterialYouNewTab/releases/latest)
 
-> These upstream packages may not contain the Scratchpad, workspace launcher, ambient audio, Today progress, shortcut guide, or other Reese-max customizations present in this repository.
+> These upstream packages may not contain the Scratchpad, workspace launcher, ambient audio, Today progress, AI Assist, shortcut guide, or other Reese-max customizations present in this repository.
 
 ## Permissions and privacy
 
@@ -152,21 +164,26 @@ The Chromium build uses minimal optional permissions:
 
 MYNT also uses browser storage (`localStorage` and IndexedDB) for interface settings and productivity data. Weather and other optional features may contact their documented third-party services when enabled.
 
+AI Assist v3.5.0 does **not** add a cloud AI endpoint. In `Auto` mode it tries Chrome's browser-managed Prompt API on supported desktop Chrome installations and otherwise uses deterministic local JavaScript. Suggestions are never applied until you explicitly choose an action such as **Apply suggestion**, **Add tasks**, or **Replace scratchpad**. No OpenAI, Gemini, or other provider key is stored by this release.
+
 Personal WeatherAPI keys are intentionally excluded from backup exports and must be re-entered after restoring on another browser profile.
 
 See [privacy-policy.html](./privacy-policy.html) for the in-project disclosure.
 
 ## Development and QA
 
-No package installation is required for the repository's core validation script.
+No package installation is required for the repository's core validation scripts.
 
 Run:
 
 ```bash
 node tools/check-customizations.mjs
+node tools/check-release-metadata.mjs
+node tools/check-upstream-integration.mjs
+node tools/check-ai-assist.mjs
 ```
 
-The check validates, among other things:
+The checks validate, among other things:
 
 - JavaScript syntax
 - Chrome and Firefox permission expectations
@@ -179,21 +196,10 @@ The check validates, among other things:
 - locale key parity
 - Traditional Chinese default language and 32-locale fallback wiring
 - upstream/custom fused feature invariants
+- AI Assist provider modes, local fallback, Chrome Prompt API feature detection, and absence of cloud credentials/endpoints
 - referenced background videos
 
-Release/branding metadata is additionally checked with:
-
-```bash
-node tools/check-release-metadata.mjs
-```
-
-Upstream/custom fusion is additionally checked with:
-
-```bash
-node tools/check-upstream-integration.mjs
-```
-
-For changes intended for `main`, all three checks should pass before merge.
+For changes intended for `main`, all four checks plus the Chromium runtime smoke test should pass before merge.
 
 ## Repository workflow
 
@@ -211,7 +217,7 @@ Then open a Pull Request against `Reese-max/MaterialYouNewTab:main`.
 
 ## Integrated upstream baseline
 
-This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through commit `e279bb9` (2026-08-24), plus conflict reconciliation that preserves the Reese-max productivity layer. Upstream custom shortcut icons, Daily Quote, `Alt+1`–`Alt+9`, AI Tools context-menu settings, update notes, UI fixes, and all 32 locales are included.
+This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through commit `e279bb9` (2026-08-24), plus conflict reconciliation that preserves the Reese-max productivity layer. Upstream custom shortcut icons, Daily Quote, `Alt+1`–`Alt+9`, AI Tools context-menu settings, update notes, UI fixes, and all 32 locales are included. MYNT 3.5.0 adds the Reese-max local-first AI Assist layer on top of that baseline.
 
 ## Feedback
 
