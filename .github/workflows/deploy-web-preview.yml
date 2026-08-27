@@ -3,24 +3,25 @@ name: Deploy web preview
 on:
   push:
     branches:
-      - feature/upstream-full-integration
       - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: github-pages
+  group: web-preview-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build verified preview
+    name: Build and publish verified preview
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      pages_enabled: ${{ steps.pages.outputs.enabled }}
 
     steps:
       - name: Checkout
@@ -45,17 +46,86 @@ jobs:
       - name: Validate web preview
         run: node tools/check-web-preview.mjs
 
+      - name: Publish synchronized preview branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          preview_source="$(mktemp -d)"
+          preview_repo="$(mktemp -d)"
+          cp -a dist/web-preview/. "$preview_source/"
+          touch "$preview_source/.nojekyll"
+
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads "$remote" web-preview >/dev/null 2>&1; then
+            rm -rf "$preview_repo"
+            git clone --quiet --depth 1 --branch web-preview "$remote" "$preview_repo"
+          else
+            git init --quiet "$preview_repo"
+            git -C "$preview_repo" checkout --quiet -b web-preview
+            git -C "$preview_repo" remote add origin "$remote"
+          fi
+
+          find "$preview_repo" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$preview_source/." "$preview_repo/"
+
+          git -C "$preview_repo" config user.name "github-actions[bot]"
+          git -C "$preview_repo" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$preview_repo" add -A
+
+          if git -C "$preview_repo" diff --cached --quiet; then
+            echo "Preview branch already matches ${GITHUB_SHA}."
+          else
+            git -C "$preview_repo" commit --quiet -m "chore(preview): sync ${GITHUB_SHA}"
+            git -C "$preview_repo" push --quiet origin HEAD:web-preview
+          fi
+
+          {
+            echo "### Synchronized web preview"
+            echo
+            echo "- Source commit: \`${GITHUB_SHA}\`"
+            echo "- Preview branch: \`web-preview\`"
+            echo "- Live preview: https://raw.githack.com/${GITHUB_REPOSITORY}/web-preview/index.html"
+            echo "- Verification center: https://raw.githack.com/${GITHUB_REPOSITORY}/web-preview/verify.html"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Detect GitHub Pages availability
+        id: pages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /tmp/pages.json --write-out '%{http_code}' \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages")"
+
+          if [[ "$status" == "200" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages is enabled; the verified artifact will also be deployed there."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages is not enabled (HTTP ${status}); the synchronized web-preview branch remains available through raw.githack.com."
+          fi
+
       - name: Configure GitHub Pages
+        if: ${{ steps.pages.outputs.enabled == 'true' }}
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload GitHub Pages artifact
+        if: ${{ steps.pages.outputs.enabled == 'true' }}
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist/web-preview
 
   deploy:
-    name: Publish preview
+    name: Publish GitHub Pages preview
     needs: build
+    if: ${{ needs.build.outputs.pages_enabled == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
