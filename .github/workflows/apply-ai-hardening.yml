@@ -34,7 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           payload_root="$RUNNER_TEMP/mynt-ai-modular"
-          archive="$RUNNER_TEMP/mynt-ai-modular.zip"
+          archive="$RUNNER_TEMP/mynt-ai-modular.tar.gz"
           mkdir -p "$payload_root"
           export MYNT_HARDENING_ARCHIVE="$archive"
           python3 - <<'PY'
@@ -44,12 +44,12 @@ jobs:
           from pathlib import Path
 
           expected_chunks = {
-              'chunk-00.b64': '1be5a95be18cf39f0c35e49e70672434e49c447dcedada0599e53c9007536451',
-              'chunk-01.b64': '5b255a9a26e883e351f75e20e3c4d64c8efa26ef4d0e0f5f24b568c98f63e32c',
-              'chunk-02.b64': 'a0058b37dae014742b541675bf1ad539cb4f5338969421a8b48b3c5834f7e8d3',
-              'chunk-03.b64': 'a6573a6de0dc6a6e293d082d7ee659323cab658f2663cfc34668a694eca7cb85',
-              'chunk-04.b64': 'd0308b10f18f40bd49b7a02f3def481d06a5cf81c0bcf6d5ac137b5e85db4eed',
-              'chunk-05.b64': '790640f5bf6e12f45567939eaaabd3325784460f15e0b013071764ec8d1cf194',
+              'chunk-00.b64': 'c8817375cb44d2fb52f1e7af5585cc4489bb3897f3bb5e8b3301cc4bb7d71d2e',
+              'chunk-01.b64': 'a091c8865add779c2077226bdb9d4febdcb824982a3937f55dda2519dc17eba7',
+              'chunk-02.b64': 'bde65d029f8bdd4c652bd87c49e1bcb1d4a9fc84f288a350287fcc3fb997ca99',
+              'chunk-03.b64': '6876181cf4b014085ace55e9796cd4a4d3bba918ddb0417d1102be95c333a4e6',
+              'chunk-04.b64': 'ed02d8c59083fc0fb1bc5c9e07b28727713d7d73c9785cc9d60d261f2228cee3',
+              'chunk-05.b64': 'd811d45ccc7945bb3e1d2563a5fcb28cd50ebb68f7d8832c5f3e0878147f6760',
           }
 
           paths = sorted(Path('.integration/ai-hardening').glob('chunk-*.b64'))
@@ -68,15 +68,14 @@ jobs:
           encoded = ''.join(parts)
           payload = base64.b64decode(encoded, validate=True)
           digest = hashlib.sha256(payload).hexdigest()
-          expected = '8a7a7ace5ef10156a3c9c4d234a8050fe972357c01d4da5fa95e51504c52e40b'
+          expected = 'ff3b4fa30e62ec864cf63214bc72994d2972e2d6e947a5e11d945060c1f09d59'
           print(f'payload-sha256: {digest}')
           if digest != expected:
               raise SystemExit(f'Hardening payload digest mismatch: expected {expected}, got {digest}')
           Path(os.environ['MYNT_HARDENING_ARCHIVE']).write_bytes(payload)
           PY
-          unzip -q "$archive" -d "$payload_root"
-          bundle="$payload_root/MYNT-3.5.0-ai-hardening"
-          python3 "$bundle/apply.py" .
+          tar -xzf "$archive" -C "$payload_root"
+          python3 "$payload_root/apply.py"
 
       - name: Run architecture, static, and unit gates
         shell: bash
@@ -119,6 +118,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
+            AGENTS.md \
             README.md \
             CHANGELOG.md \
             docs/AI-ARCHITECTURE.md \
