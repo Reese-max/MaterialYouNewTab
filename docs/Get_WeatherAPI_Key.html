@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherAPI 金鑰取得指南</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #0056b3;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        h3:not(:first-of-type) {
+            margin-top: 35px;
+        }
+
+        section {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        img {
+            display: block;
+            margin: 10px auto;
+            max-width: 100%;
+            height: auto;
+        }
+
+        p,
+        li {
+            margin: 10px 0;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #0056b3;
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #121212;
+                color: #e0e0e0;
+            }
+
+            section {
+                background: #1e1e1e;
+            }
+
+            h1,
+            h2,
+            h3 {
+                color: #90caf9;
+            }
+
+            footer {
+                background: #1e1e1e;
+                color: #90caf9;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WeatherAPI 金鑰取得指南</h1>
+
+    <section>
+        <h2>步驟 1：前往 WeatherAPI 網站</h2>
+        <p>前往 WeatherAPI 官方網站：<a href="https://www.weatherapi.com/"
+                target="_blank" rel="noopener noreferrer">https://www.weatherapi.com/</a>。</p>
+        <img src="https://i.ibb.co/84gMfmJ/Screenshot-2024-12-07-121438.png" alt="WeatherAPI 首頁" border="0">
+    </section>
+
+    <section>
+        <h2>步驟 2：註冊帳戶</h2>
+        <ol>
+            <li>點擊首頁右上角的 <strong>Sign Up</strong>（註冊）按鈕。</li>
+            <li>填寫必要欄位：
+                <ul>
+                    <li><strong>電子郵件地址：</strong>提供一個有效的電子郵件地址。</li>
+                    <li><strong>密碼：</strong>建立一個安全的密碼。</li>
+                </ul>
+            </li>
+            <li>同意服務條款。</li>
+            <li>如有提示，請完成 CAPTCHA 驗證。</li>
+            <li>點擊 <strong>Sign Up</strong> 建立您的帳戶。</li>
+        </ol>
+        <img src="https://i.ibb.co/xX9psXB/Screenshot-2024-12-07-121609.png" alt="註冊表單" border="0">
+        <p><em>注意：如果您已有帳戶，請點擊 <strong>Login</strong>（登入）並輸入您的帳號密碼。</em></p>
+    </section>
+
+    <section>
+        <h2>步驟 3：驗證您的電子郵件地址</h2>
+        <p>請檢查您的電子郵件收件匣，查看 WeatherAPI 寄來的驗證郵件。開啟郵件並點擊其中提供的驗證連結。</p>
+        <p><em>提示：如果在收件匣中找不到郵件，請檢查垃圾郵件或垃圾桶資料夾。</em></p>
+    </section>
+
+    <section>
+        <h2>步驟 4：登入您的帳戶</h2>
+        <ol>
+            <li>返回 WeatherAPI 網站。</li>
+            <li>點擊 <strong>Login</strong>（登入）。</li>
+            <li>輸入您的電子郵件地址和密碼。</li>
+            <li>點擊 <strong>Login</strong> 存取您的帳戶。</li>
+        </ol>
+        <img src="https://i.ibb.co/71PFHvB/Screenshot-2024-12-07-121704.png" alt="登入頁面" border="0">
+    </section>
+
+    <section>
+        <h2>步驟 5：複製您的 API 金鑰</h2>
+        <ol>
+            <li>登入後，前往 <strong>Dashboard</strong>（儀表板）。</li>
+            <li>如果 API 區段未開啟，請找到並開啟它。</li>
+            <li>您會看到您的 API 金鑰以及 <strong>Copy</strong>（複製）選項。點擊它即可複製您的 API 金鑰。</li>
+        </ol>
+        <img src="https://i.ibb.co/jfW8f65/IMG-20241207-122916.png" alt="儀表板與 API 金鑰" border="0">
+    </section>
+
+    <section>
+        <h2>步驟 6：貼上您的 API 金鑰</h2>
+        <ol>
+            <li>將<b>您的 API 金鑰</b>貼到擴充功能選單中的 WeatherAPI 金鑰欄位。</li>
+            <li>按下 Enter 或點擊儲存按鈕以完成設定。</li>
+        </ol>
+        <img src="https://i.ibb.co/CM3yrCG/image.png" alt="貼上 API 金鑰" border="0">
+    </section>
+
+    <section>
+        <h2>常見問題</h2>
+
+        <h3>為什麼位置不準確？</h3>
+        <p>此擴充功能使用您的 <b>IP 位址</b>來判斷位置，這通常不太精確。如果偵測到的位置與您的實際位置不同，您可以：</p>
+        <ul>
+            <li>手動輸入您的<b>城市名稱</b>或<b>地理座標</b>。</li>
+            <li>使用 <b>GPS</b> 選項取得更精確的位置。</li>
+        </ul>
+
+        <h3>為什麼需要 API 金鑰？</h3>
+        <p>API 金鑰是用於管理存取權限和監控使用量的唯一識別碼。</p>
+        <ul>
+            <li>我們的擴充功能目前使用<b>共享</b>的 API 金鑰，每月允許最多 15,000,000 次呼叫。由於超過 300,000 位活躍使用者，這些共享金鑰可能很快就會達到上限。一旦達到上限，天氣資料將無法存取，直到下個月限額重設。</li>
+            <li>使用<b>您自己的 API 金鑰</b>可確保天氣資料始終可用。</li>
+        </ul>
+
+        <h3>使用自己的 API 金鑰有什麼好處？</h3>
+        <p>使用您自己的 API 金鑰有以下幾個主要優勢：</p>
+        <ul>
+            <li><strong>不中斷服務：</strong>使用自己的 API 金鑰可避免意外的限額問題，確保服務不中斷，讓您持續存取天氣資料。</li>
+            <li><strong>位置建議：</strong>在位置輸入欄位中啟用位置搜尋建議，讓您在輸入時快速找到並選擇正確的位置選項。</li>
+            <li><strong>分析報告：</strong>透過帳戶儀表板的詳細報告，存取 API 使用情況的深入分析。</li>
+            <li><strong>隱私保護：</strong>您的 API 活動僅與您的帳戶關聯，確保資料保持私密且受到保護。</li>
+            <li><strong>合規性：</strong>確保遵守 WeatherAPI 的服務條款和使用政策，避免違規。</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>天氣資料由 <a href="https://www.weatherapi.com/" title="免費天氣 API">WeatherAPI.com</a> 提供
+        </p>
+    </footer>
+</body>
+
+</html>

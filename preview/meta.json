@@ -1,0 +1,19 @@
+{
+  "product": "MYNT: Material You New Tab",
+  "version": "3.4.0",
+  "branch": "main",
+  "commit": "cc7a59074a3c8f4df21c93d12613496a8d4a02d8",
+  "builtAt": "2026-08-27T01:02:25.120Z",
+  "repository": "Reese-max/MaterialYouNewTab",
+  "repositoryUrl": "https://github.com/Reese-max/MaterialYouNewTab",
+  "commitUrl": "https://github.com/Reese-max/MaterialYouNewTab/commit/cc7a59074a3c8f4df21c93d12613496a8d4a02d8",
+  "runId": "33028795220",
+  "runNumber": "10",
+  "runUrl": "https://github.com/Reese-max/MaterialYouNewTab/actions/runs/33028795220",
+  "previewLimitations": [
+    "browser extension permissions",
+    "new tab override",
+    "background service worker lifecycle",
+    "incognito behavior"
+  ]
+}
