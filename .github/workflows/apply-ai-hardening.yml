@@ -1,0 +1,82 @@
+name: Apply AI Assist hardening
+
+on:
+  push:
+    branches:
+      - feature/ai-assist-3.5.0
+    paths:
+      - .github/workflows/apply-ai-hardening.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    name: Apply and verify AI Assist hardening
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout AI Assist branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: feature/ai-assist-3.5.0
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Restore and apply verified hardening payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload_root="$RUNNER_TEMP/mynt-ai-hardening"
+          archive="$RUNNER_TEMP/mynt-ai-hardening.tar.gz"
+          mkdir -p "$payload_root"
+          cat .integration/ai-hardening/chunk-*.b64 | tr -d '\r\n' | base64 --decode > "$archive"
+          tar -xzf "$archive" -C "$payload_root"
+          export MYNT_HARDENING_PAYLOAD="$payload_root"
+          python3 "$payload_root/apply.py"
+
+      - name: Run static and unit gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/ai-assist.js
+          node --check scripts/dashboard-tools.js
+          node --check scripts/pomodoro.js
+          node --check tools/smoke-chromium.mjs
+          node tools/check-customizations.mjs
+          node tools/check-release-metadata.mjs
+          node tools/check-upstream-integration.mjs
+          node tools/check-ai-assist.mjs
+          node tools/test-ai-assist.mjs
+          node tools/build-web-preview.mjs
+          node tools/check-web-preview.mjs
+          python3 -m py_compile tools/install-chrome-for-testing.py
+          git diff --check
+
+      - name: Install Chrome for Testing
+        run: python3 tools/install-chrome-for-testing.py
+
+      - name: Run real Chromium AI smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v xvfb-run
+          xvfb-run -a node tools/smoke-chromium.mjs
+
+      - name: Commit verified hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/apply-ai-hardening.yml
+          git rm -r .integration/ai-hardening
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat(ai): harden event contracts and end-to-end tests"
+          git push origin HEAD:feature/ai-assist-3.5.0
