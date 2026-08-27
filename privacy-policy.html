@@ -141,7 +141,7 @@
 
     <div class="container" id="mainContainer">
         <h1>MYNT: Material You New Tab 隱私權政策</h1>
-        <p><small>最後更新：2026 年 8 月 26 日</small></p>
+        <p><small>最後更新：2026 年 8 月 27 日</small></p>
 
         <h2>簡介</h2>
         <p>「MYNT: Material You New Tab」是一款開源擴充功能，旨在美化瀏覽器的預設首頁和新分頁。它最初是使用 HTML、CSS 和
@@ -170,6 +170,17 @@
             <li><strong>語音辨識（Web Speech API）：</strong>僅在您點擊麥克風圖示後啟動。音訊處理由瀏覽器提供者控制，依瀏覽器實作可能傳送至其語音服務；MYNT 不另行儲存音訊。</li>
             <li><strong>地理位置：</strong>僅在您確認啟用 GPS 天氣後請求。取得的經緯度會傳送至 WeatherAPI 以查詢天氣。</li>
         </ul>
+
+        <h3>AI Assist（3.5.0 起）</h3>
+        <p>AI Assist 是選用的生產力輔助功能，可在 Today 與 Scratchpad 中提供建議。設定提供 <code>Auto</code>、Chrome 內建 AI、Local smart assist 與 <code>Off</code> 四種模式；選擇 <code>Off</code> 後不會執行 AI Assist 分析。</p>
+        <ul>
+            <li><strong>Today 規劃：</strong>只在您主動點擊 AI 規劃按鈕後，使用未完成待辦、現有 Top 3、釘選狀態、今日目標與近期專注分鐘數產生建議。</li>
+            <li><strong>Scratchpad 整理：</strong>只在您主動點擊 AI 整理按鈕後，使用目前便箋文字產生摘要、待辦候選與整理後 Markdown。</li>
+            <li><strong>Chrome 內建 AI：</strong>在支援的 Chrome 桌面版本中，MYNT 可呼叫瀏覽器提供的 Prompt API。模型由 Chrome 管理，首次使用時瀏覽器可能下載裝置端模型；MYNT 不會將 Prompt 傳送至 MYNT 自有伺服器。</li>
+            <li><strong>本機智慧輔助：</strong>若 Chrome 內建 AI 不可用，<code>Auto</code> 模式會退回固定的 JavaScript 規則，在瀏覽器內完成排序、摘要與待辦擷取，不會呼叫遠端 AI API。</li>
+            <li><strong>使用者控制：</strong>AI 建議不會自行修改資料；只有您明確點擊「套用建議」、「加入 Todo」或「取代便箋」後，對應內容才會寫入本機資料。</li>
+        </ul>
+        <p>MYNT 3.5.0 不包含 OpenAI、Gemini 或其他雲端模型的 API Key，也沒有 MYNT 雲端 AI endpoint。若未來加入可選雲端 AI Provider，必須另行更新本政策與介面揭露後才會啟用。</p>
 
         <h3>外部 API</h3>
         <p>只有相關功能啟用或觸發時，MYNT 才會使用下列服務：</p>
@@ -219,7 +230,7 @@
         </ul>
 
         <h3>本機儲存</h3>
-        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
+        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好、AI Assist Provider 偏好及上傳的桌布。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
         <p>控制中心的服務狀態只會在 localStorage 記錄服務識別名稱、成功或失敗結果、HTTP 狀態碼及時間；不會記錄完整網址、搜尋文字、位置、API 金鑰，也不會傳送至專案營運者。</p>
 
         <h3>代理伺服器（選用）</h3>
@@ -236,7 +247,7 @@
 
 
         <h3>更新與解除安裝頁面</h3>
-        <p>Chromium 版本更新後會在本機開啟擴充功能內的 <code>docs/whats-new.html</code>，說明本次整合內容。解除安裝後，瀏覽器可能開啟 Reese-max Fork 的公開 GitHub 頁面供您自行查看；此動作不會自動上傳擴充功能設定、便籤、待辦、搜尋文字、位置、API 金鑰或其他本機資料。</p>
+        <p>Chromium 版本更新後會在本機開啟擴充功能內的 <code>docs/whats-new.html</code>，說明本次整合內容。解除安裝後，瀏覽器可能開啟 Reese-max Fork 的公開 GitHub 頁面供您自行查看；此動作不會自動上傳擴充功能設定、便箋、待辦、搜尋文字、位置、API 金鑰或其他本機資料。</p>
 
         <h2>透明度與安全性</h2>
         <p>雖然我們努力保持程式碼的安全性，但我們承認沒有任何專案能完全避免潛在問題。在少數情況下，可能會因貢獻而引入非預期的程式碼或錯誤。我們鼓勵使用者直接在 GitHub 上檢閱原始碼以確保安心。請僅在您完全信任其內容時使用此擴充功能。</p>
