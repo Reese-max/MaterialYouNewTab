@@ -92,6 +92,14 @@ jobs:
           export MYNT_HARDENING_PAYLOAD="$payload_root"
           python3 "$payload_root/apply.py"
 
+          # The committed Pomodoro source uses LF. Normalize runner-side CRLF so
+          # the final commit contains only the actual event-contract change.
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/pomodoro.js')
+          path.write_bytes(path.read_bytes().replace(b'\r\n', b'\n'))
+          PY
+
       - name: Run static and unit gates
         shell: bash
         run: |
