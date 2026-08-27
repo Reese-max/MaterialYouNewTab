@@ -36,7 +36,38 @@ jobs:
           payload_root="$RUNNER_TEMP/mynt-ai-hardening"
           archive="$RUNNER_TEMP/mynt-ai-hardening.tar.gz"
           mkdir -p "$payload_root"
-          cat .integration/ai-hardening/chunk-*.b64 | tr -d '\r\n' | base64 --decode > "$archive"
+          export MYNT_HARDENING_ARCHIVE="$archive"
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import os
+          from pathlib import Path
+
+          parts = []
+          for path in sorted(Path('.integration/ai-hardening').glob('chunk-*.b64')):
+              raw = path.read_text(encoding='ascii')
+              clean = ''.join(raw.split())
+              print(f'{path}: raw={len(raw)} clean={len(clean)} mod4={len(clean) % 4}')
+              parts.append(clean)
+
+          encoded = ''.join(parts)
+          print(f'payload-base64: chars={len(encoded)} mod4={len(encoded) % 4}')
+          if len(encoded) % 4:
+              raise SystemExit('Hardening payload Base64 length is invalid.')
+
+          try:
+              payload = base64.b64decode(encoded, validate=True)
+          except Exception as error:
+              raise SystemExit(f'Hardening payload Base64 validation failed: {error}') from error
+
+          digest = hashlib.sha256(payload).hexdigest()
+          expected = '5c48c2b7dc28c674beba998224a52336872341ffaf18dcafcc31ca70c50ec3ce'
+          print(f'payload-sha256: {digest}')
+          if digest != expected:
+              raise SystemExit(f'Hardening payload digest mismatch: expected {expected}, got {digest}')
+
+          Path(os.environ['MYNT_HARDENING_ARCHIVE']).write_bytes(payload)
+          PY
           tar -xzf "$archive" -C "$payload_root"
           export MYNT_HARDENING_PAYLOAD="$payload_root"
           python3 "$payload_root/apply.py"
