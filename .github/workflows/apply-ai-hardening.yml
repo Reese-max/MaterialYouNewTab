@@ -43,12 +43,32 @@ jobs:
           import os
           from pathlib import Path
 
+          expected_chunks = {
+              'chunk-00.b64': '213e73a56ec806c3c25295a5fc2c49538ca078126c6d31e065ee023c610ce5f0',
+              'chunk-01.b64': '48661179073ff860fb06f187946945d313014688ba20707d865d3dccd4d9fe8d',
+              'chunk-02.b64': '3efe48cefc867bb17d055226b683809577077e74d74ffff126148b81dd050869',
+              'chunk-03.b64': '1e18bf94c4c5f4c2b41e305663dc90de9a67ae246feb8aab02a546dcdf814981',
+              'chunk-04.b64': '73962b6dff2be286b17c2899666c90f4515ff1e7be03722b4af5e5bfadf32f59',
+              'chunk-05.b64': '8d9bd22a0d45dc13cdb68168282b5e82697807cfe1269786d21b8096f5fc3b1a',
+          }
+
           parts = []
-          for path in sorted(Path('.integration/ai-hardening').glob('chunk-*.b64')):
+          mismatches = []
+          paths = sorted(Path('.integration/ai-hardening').glob('chunk-*.b64'))
+          if [path.name for path in paths] != list(expected_chunks):
+              raise SystemExit(f'Unexpected hardening chunk set: {[path.name for path in paths]}')
+
+          for path in paths:
               raw = path.read_text(encoding='ascii')
               clean = ''.join(raw.split())
-              print(f'{path}: raw={len(raw)} clean={len(clean)} mod4={len(clean) % 4}')
+              digest = hashlib.sha256(clean.encode('ascii')).hexdigest()
+              print(f'{path}: raw={len(raw)} clean={len(clean)} mod4={len(clean) % 4} sha256={digest}')
+              if digest != expected_chunks[path.name]:
+                  mismatches.append(f'{path.name}: expected {expected_chunks[path.name]}, got {digest}')
               parts.append(clean)
+
+          if mismatches:
+              raise SystemExit('Hardening payload chunk mismatch:\n' + '\n'.join(mismatches))
 
           encoded = ''.join(parts)
           print(f'payload-base64: chars={len(encoded)} mod4={len(encoded) % 4}')
