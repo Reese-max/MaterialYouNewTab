@@ -1,293 +1,232 @@
-<!-- Initialized : Sun 20 Aug 2023 03:41:08 PM IST -->
 <h1 align="center">
-
-<a href="https://prem-k-r.github.io/MaterialYouNewTab/"><img src="https://github.com/user-attachments/assets/48c3a9cb-06fa-4c45-92ec-194cdb7c5661" width="58"></a>
-<br>
-MYNT: Material You New Tab
-
+  <img src="https://github.com/user-attachments/assets/48c3a9cb-06fa-4c45-92ec-194cdb7c5661" width="58" alt="MYNT icon">
+  <br>
+  MYNT: Material You New Tab
 </h1>
-<div align="center">
-
-MYNT: Material You New Tab is a customizable browser extension that turns the New Tab page into a Traditional Chinese-first dashboard with Google search, focus tools, bookmarks, weather, and playful widgets.
-
-</div>
-
-<div align="center">
-
-![License](https://img.shields.io/github/license/prem-k-r/MaterialYouNewTab)
-![Last Commit](https://img.shields.io/github/last-commit/prem-k-r/MaterialYouNewTab)
-![GitHub contributors](https://img.shields.io/github/contributors/prem-k-r/MaterialYouNewTab)
-![GitHub stars](https://img.shields.io/github/stars/prem-k-r/MaterialYouNewTab)
-![GitHub forks](https://img.shields.io/github/forks/prem-k-r/MaterialYouNewTab)
-
-[![](https://img.shields.io/chrome-web-store/v/jjpokbgpiljgndebfoljdeihhkpcpfgl.svg)](https://chrome.google.com/webstore/detail/mynt-material-you-new-tab/jjpokbgpiljgndebfoljdeihhkpcpfgl) [![](https://img.shields.io/chrome-web-store/rating/jjpokbgpiljgndebfoljdeihhkpcpfgl.svg)](https://chrome.google.com/webstore/detail/mynt-material-you-new-tab/jjpokbgpiljgndebfoljdeihhkpcpfgl) [![](https://img.shields.io/chrome-web-store/users/jjpokbgpiljgndebfoljdeihhkpcpfgl.svg)](https://chrome.google.com/webstore/detail/mynt-material-you-new-tab/jjpokbgpiljgndebfoljdeihhkpcpfgl) ‾ [![](https://img.shields.io/amo/v/mynt.svg)](https://addons.mozilla.org/en-US/firefox/addon/mynt/) [![](https://img.shields.io/amo/rating/mynt.svg)](https://addons.mozilla.org/en-US/firefox/addon/mynt/) [![](https://img.shields.io/amo/users/mynt.svg)](https://addons.mozilla.org/en-US/firefox/addon/mynt/)
-
-</div>
 
 <p align="center">
-  <a href="#-features">Features</a> •
-  <a href="#-installation-guide">Installation Guide</a> •
-  <a href="#download">Download</a> •
-  <a href="#-currently-supported-languages-2">Currently Supported Languages</a>
-<br>
-  <a href="#-contributing">Contributing</a> •
-  <a href="#-star-history">Star History</a> •
-  <a href="#-issues-and-support">Issues and Support</a> •
-  <a href="#-privacy-policy">Privacy Policy</a> •
-  <a href="#-license">License</a>
+  <strong>Reese-max customized edition</strong><br>
+  A Traditional Chinese-first, Material You-inspired browser dashboard for search, focus, tasks, notes, bookmarks, weather, and workspaces.
 </p>
-
-<img src="https://i.postimg.cc/CF43Yzj1/material-you-new-Tab-poster.webp" alt="Screenshot 1" width="100%">
-
-#### 🔴 🟡 🟢 Test live: [https://prem-k-r.github.io/MaterialYouNewTab/](https://prem-k-r.github.io/MaterialYouNewTab/)
-
-## ✨ Features
-
-- **Google Search**: Search Google directly from the New Tab, with optional Google autocomplete suggestions and integrated voice typing.
-- **Customizable Themes**: Choose from a selection of themes or use the built-in color picker to match your style.
-- **Wallpaper**: Upload your own wallpapers or enable daily random images sourced from [Lorem Picsum](https://picsum.photos).
-- **Personalized Greeting**: Add a custom message or your name, so you're greeted each time you open a new tab.
-- **Clock & Time Display**: Choose between a modern analog or digital clock.
-- **Live Weather Updates**: View real-time temperature, conditions, humidity, feels like, and max-min temperature values. Supports °C and °F with location customization.
-- **Quick Shortcuts**: Access common platforms (YouTube, Email, WhatsApp, etc.) or add your own shortcuts for instant navigation.
-- **AI Tools**: Open ChatGPT, Claude, and YouTube with one click, then reorder or hide them in settings.
-- **To-Do List**: Manage daily tasks, pin important ones, and enjoy automatic cleanup at the start of each day (pinned tasks reset to pending).
-- **Pomodoro Timer & Focus Stats**: Run configurable focus and break sessions with sound, desktop notifications, a seven-day chart, and a local streak counter.
-- **Daily Habits**: Track custom habits; completed Pomodoro sessions and To-Do items update two built-in habits automatically.
-- **Command Palette**: Press `Ctrl+K` (`⌘K` on macOS) to search actions, open widgets, and apply Work, Study, or Relax presets.
-- **Control Center**: Review optional permissions, third-party service health, and local privacy disclosures in one place.
-- **Accessibility**: Reduce motion, pause decorative video, increase contrast, or scale interface text without browser zoom.
-- **Bongo Cat**: Add a keyboard-reactive cat with selectable outfits, styles, and a draggable position.
-- **Sidebar Bookmarks**: View, delete, and organize bookmarks in either list or grid layout.
-- **Google Apps**: Quickly launch Gmail, Drive, Docs, and other Google services.
-- **Backup & Reset**: Save or restore your setup anytime, or reset local settings and wallpaper data with one click. Personal WeatherAPI keys are excluded from backup files and must be re-entered after restoring on a new profile.
-- **Language Support**: Includes English and Traditional Chinese, with Traditional Chinese as the default.
-- **Browser Compatibility**: Supports all Chromium-based browsers, including **Chrome**, **Edge**, **Brave**, and **Opera**, as well as Firefox-based browsers like **Firefox** and **Zen**.
-
-## 📥 Installation Guide
-
-### Download
-
-1. **Development Version** (local manifest v3.3.6)
-
-    - **Clone the Repository**:
-      Use the following command to clone the repository:
-
-       ```bash
-       git clone https://github.com/prem-k-r/MaterialYouNewTab.git
-       ```
-
-    - Alternatively, download the latest version as a ZIP file by clicking below:
-
-      [![Download ZIP](https://img.shields.io/badge/Download-ZIP-blue.svg)](https://github.com/prem-k-r/MaterialYouNewTab/archive/refs/heads/main.zip)
-
-    - You can also download the ZIP file by clicking on the Code button. On the repository page, look for a green button labeled **Code**. Click on the **Code** button, and in the dropdown menu, select **Download ZIP**.
-
-2. **Stable Release**
 
 <p align="center">
-    <a href="https://github.com/prem-k-r/MaterialYouNewTab/releases/latest"><img src="https://github.com/user-attachments/assets/51048d6d-0b35-4f62-8351-4a3ea52d2213" alt="Download from GitHub" height="48" /></a>
-    <a href="https://chromewebstore.google.com/detail/mynt-material-you-new-tab/jjpokbgpiljgndebfoljdeihhkpcpfgl"><img src="https://github.com/user-attachments/assets/7a829ba4-dcd0-452b-922a-5efacbfda498" alt="Download from Chrome Web Store" height="48" /></a>
-    <a href="https://addons.mozilla.org/en-US/firefox/addon/mynt/"><img src="https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg" alt="Download from Mozilla Add-ons" height="48" /></a>
+  <a href="https://github.com/Reese-max/MaterialYouNewTab"><img src="https://img.shields.io/github/license/Reese-max/MaterialYouNewTab" alt="License"></a>
+  <a href="https://github.com/Reese-max/MaterialYouNewTab/commits/main"><img src="https://img.shields.io/github/last-commit/Reese-max/MaterialYouNewTab" alt="Last commit"></a>
+  <a href="https://github.com/Reese-max/MaterialYouNewTab"><img src="https://img.shields.io/github/stars/Reese-max/MaterialYouNewTab" alt="Stars"></a>
+  <img src="https://img.shields.io/badge/version-3.4.0-blue" alt="Version 3.4.0">
 </p>
 
----
+> [!IMPORTANT]
+> This repository is a customized fork of [prem-k-r/MaterialYouNewTab](https://github.com/prem-k-r/MaterialYouNewTab). The Chrome Web Store and Mozilla Add-ons listings belong to the upstream project and **do not include Reese-max-specific customizations unless those changes are later accepted upstream**.
 
-### Installation
+## Overview
 
-#### ![Chromium](https://img.icons8.com/?size=20&id=104996&format=png&color=000000) Chromium-Based Browsers
+MYNT replaces the browser New Tab page with a local-first productivity dashboard. This fork keeps the upstream Material You design while adding a stronger Traditional Chinese-first workflow and additional productivity features.
 
-1. **Install from Chrome Web Store**:
+### Reese-max edition highlights
 
-   - [Chrome Web Store link](https://chromewebstore.google.com/detail/mynt-material-you-new-tab/jjpokbgpiljgndebfoljdeihhkpcpfgl)
+- **Traditional Chinese first** — `zh-TW` remains the default while all 32 upstream locales are restored; missing custom strings fall back to English.
+- **Google search + search bangs** — use shortcuts such as `!yt`, `!gh`, and `!gpt` to jump directly to common services.
+- **Scratchpad** — quick notes, smart list continuation, Markdown task toggling, copy, convert-to-task, and `.md` export.
+- **Today dashboard** — choose three priorities, track completion progress, and surface the next action.
+- **Workspaces** — create Study, Work, Coding, Relax, or custom modes with preferred widgets, focus duration, background, and launch URLs.
+- **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
+- **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
+- **Keyboard help** — press `?` outside text fields to open the shortcut guide; use `Alt+1`–`Alt+9` to launch the first nine shortcuts.
+- **Local-first state** — tasks, settings, habits, focus history, workspaces, and scratchpad content are stored in browser storage.
 
-   **Or** follow the manual steps below:
+## Core features
 
-2. **Manual Installation**:
+- Google Search with optional Google autocomplete suggestions and voice typing
+- Material You themes, dark/light/system mode, custom colors, wallpaper, and video background
+- Clock and live weather
+- Quick shortcuts with uploaded/URL/SVG custom icons and `Alt+1`–`Alt+9` launching
+- Configurable AI tool launchers with right-click settings access
+- To-Do List and daily habits
+- Pomodoro timer, seven-day focus stats, streaks, and task-linked focus history
+- Scratchpad and Markdown export
+- Today Top 3 planning and progress
+- Workspace presets and multi-tab launchers
+- Sidebar bookmarks and Google Apps launcher
+- Command Palette, keyboard shortcuts, Daily Quote mode, and an in-extension What's New page
+- Accessibility controls including reduced motion, contrast, and text scaling
+- Bongo Cat widget
+- Backup, restore, and local reset controls
 
-   - **Prepare the Extension Folder**:
+## Version
 
-     - Ensure you’ve cloned the repository or downloaded the ZIP file and extracted it.
+| Target | Manifest | Version |
+| --- | --- | ---: |
+| Chromium browsers | Manifest V3 (`manifest.json`) | `3.4.0` |
+| Firefox / Zen | Manifest V2 (`manifest(firefox).json`) | `3.4.0` |
 
-   - **Open Extensions Page**:
-     Open your preferred browser and enter the following text in the address bar:
+## Installation
 
-     - ![Chrome](https://img.icons8.com/color/20/000000/chrome--v1.png) Chrome: `chrome://extensions`
+### Recommended: install the Reese-max custom edition
 
-     - ![Edge](https://img.icons8.com/?size=20&id=dGm9KIZPpukc&format=png&color=000000) Edge: `edge://extensions`
+This is the only installation path that guarantees you are running the custom features in this repository.
 
-     - ![Brave](https://img.icons8.com/color/20/000000/brave-web-browser.png) Brave: `brave://extensions`
+#### Option A — Clone with Git
 
-     - ![Opera](https://img.icons8.com/color/20/000000/opera--v1.png) Opera: `opera://extensions`
-
-   - **Enable Developer Mode**:
-
-     - Turn on **Developer Mode** in the extensions page.
-
-   - **Load Unpacked Extension**:
-     - Click on **Load unpacked** and select your extracted extension folder.
-
-3. **Additional Steps ONLY for <img height="16" src="https://cdn.simpleicons.org/opera"/> Opera (or <img height="16" src="https://cdn.simpleicons.org/operagx"/> Opera GX)**:
-
-> [!NOTE]
-> Opera does **not support replacing the default New Tab**.  
-> This method only sets the extension as a **startup page**.
-
-<details><summary>Click here for the workaround</summary>
-
-- Go to the **Settings**.
-- Scroll to the **On startup** section (use the search option if needed).
-- Click on **Open a specific page or set of pages** and then click on **Add a new page**.
-- Add the following (replace 32-character extension ID if installed manually) to the **Site URL**:
-
-```text
-chrome-extension://jjpokbgpiljgndebfoljdeihhkpcpfgl/index.html
+```bash
+git clone https://github.com/Reese-max/MaterialYouNewTab.git
+cd MaterialYouNewTab
 ```
 
-- To find the extension ID:
+#### Option B — Download ZIP
 
-  - Go to `opera://extensions`, find the extension, and copy the 32-character ID from its details.
+Download the current `main` branch:
 
-- To simulate new tabs:
+[Download Reese-max/MaterialYouNewTab ZIP](https://github.com/Reese-max/MaterialYouNewTab/archive/refs/heads/main.zip)
 
-  - Bookmark the extension page to access new tab pages manually.
+Extract the ZIP before loading the extension.
 
-  - Or, right-click the tab and select **Duplicate tab**.
+### Chrome / Edge / Brave / Chromium
 
-</details>
+1. Download or clone this repository.
+2. Open the browser extensions page:
+   - Chrome: `chrome://extensions`
+   - Edge: `edge://extensions`
+   - Brave: `brave://extensions`
+3. Enable **Developer mode**.
+4. Select **Load unpacked**.
+5. Choose the repository folder containing `manifest.json`.
+6. Open a new tab and verify that MYNT appears.
 
-Below are screenshots of the process to guide you through each step visually.
+> [!NOTE]
+> A manually loaded extension is a development build. Your browser may display developer-mode warnings. Keep the folder in place because the browser loads the extension directly from it.
 
-<img src="https://i.postimg.cc/w6JYypvc/chrome.png" alt="Screenshot 1" width="569">
-<img src="https://i.postimg.cc/0ksR7BKg/edge.png" alt="Screenshot 2" width="569">
-<img src="https://i.postimg.cc/MqPSg5NR/brave.png" alt="Screenshot 3" width="569">
+### Opera / Opera GX
 
----
+Opera may not allow an unpacked extension to replace the native New Tab page in the same way as Chrome-based browsers. You can still load the extension in developer mode and use its extension page as a startup/home page.
 
-#### ![Firefox](https://img.icons8.com/color/20/000000/firefox--v1.png) Firefox
+After loading the unpacked extension:
 
-1. **Install from Mozilla Extensions Store**:
+1. Open `opera://extensions` and find MYNT.
+2. Copy the extension ID.
+3. Use the following page as a startup/home page, replacing `<EXTENSION_ID>`:
 
-   - [Mozilla Add-ons link](https://addons.mozilla.org/en-US/firefox/addon/mynt/)
+```text
+chrome-extension://<EXTENSION_ID>/index.html
+```
 
-<img src="https://i.postimg.cc/bPW2fHX7/FireFox.png" alt="Screenshot" width="569">
+### Firefox / Zen — custom edition
 
-2. **Update the Homepage**:
+The Reese-max custom edition is not published as a signed Mozilla Add-on. Manual loading is therefore intended for development/testing.
 
-   - Open Firefox and **obtain the UUID**:
-      - Hover over the New Tab button (next to the tab close button). A tooltip will display the extension's unique ID, which looks like this: `0f31e1c1-d63c-4660-b950-8bfbda3bb20a`. Copy or note this ID.
-      - Alternatively, type `about:debugging#/runtime/this-firefox` in the address bar and find the extension's UUID there.
-   - Open **Settings** and navigate to **Home**, or type `about:preferences#home` in the address bar.
-   - Under the **Homepage and new windows** section, select **Custom URLs...**.
-   - Paste the following URL, replacing the ID with your actual UUID:
+1. Download or clone this repository.
+2. Make a separate copy of the extension folder for Firefox testing.
+3. In that copy, remove `manifest.json`.
+4. Rename `manifest(firefox).json` to `manifest.json`.
+5. Open `about:debugging#/runtime/this-firefox`.
+6. Select **Load Temporary Add-on**.
+7. Choose the renamed `manifest.json`.
 
-     ```text
-     moz-extension://e31d6701-f699-414f-bb4c-8fde495c432e/index.html
-     ```
+Firefox temporary add-ons normally need to be loaded again after restarting the browser.
 
-   - This will update both your homepage and new tab to the extension.
-  
-3. **Additional Steps ONLY for Zen Browser** <img height="16" src="https://cdn.simpleicons.org/zenbrowser"/> :
+For Zen Browser, if Zen overrides the custom New Tab page, open `about:config`, search for:
 
-   - Open a new tab and go to `about:config`.
-   - Accept the risk and continue if prompted.
-   - In the search bar, type:
+```text
+zen.urlbar.replace-newtab
+```
 
-     ```text
-     zen.urlbar.replace-newtab
-     ```
+and set it to `false`.
 
-   - Set its value to **false** by clicking the toggle icon.
+## Upstream store builds
 
-   This ensures the browser does not override the custom New Tab page set by the extension.
+If you prefer the upstream stable release instead of this customized fork, use the official upstream listings below:
 
-4. **Manual Installation (Temporary)**:
+- [Upstream Chrome Web Store build](https://chromewebstore.google.com/detail/mynt-material-you-new-tab/jjpokbgpiljgndebfoljdeihhkpcpfgl)
+- [Upstream Mozilla Add-ons build](https://addons.mozilla.org/en-US/firefox/addon/mynt/)
+- [Upstream GitHub releases](https://github.com/prem-k-r/MaterialYouNewTab/releases/latest)
 
-   - Clone the repository or download and extract the ZIP file.
-   - **Prepare the Manifest**:
+> These upstream packages may not contain the Scratchpad, workspace launcher, ambient audio, Today progress, shortcut guide, or other Reese-max customizations present in this repository.
 
-     - Delete the existing `manifest.json` file.
-     - Rename `manifest(firefox).json` to `manifest.json`.
+## Permissions and privacy
 
-   - **Load Temporary Add-on**:
-     - Go to `about:debugging#/runtime/this-firefox`, select **"This Firefox"**, then click **Load Temporary Add-on**.
-     - Browse and select the updated `manifest.json`.
+The Chromium build uses minimal optional permissions:
 
----
+- `bookmarks` — requested only when browser bookmark integration is enabled
+- `favicon` — optional Chromium favicon access
+- `https://www.google.com/*` — optional host access for Google search suggestions
 
-<!-- ### Installation Video
+MYNT also uses browser storage (`localStorage` and IndexedDB) for interface settings and productivity data. Weather and other optional features may contact their documented third-party services when enabled.
 
-For a step-by-step walkthrough, watch this [installation guide video](https://youtu.be/P4ryQPixfw8).
+Personal WeatherAPI keys are intentionally excluded from backup exports and must be re-entered after restoring on another browser profile.
 
-[![Watch the video](https://img.youtube.com/vi/P4ryQPixfw8/0.jpg)](https://youtu.be/P4ryQPixfw8) -->
+See [privacy-policy.html](./privacy-policy.html) for the in-project disclosure.
 
-## 🌐 Currently Supported Languages (2)
+## Development and QA
 
-| Language                                                                                     | Code  | Translator(s)                                                                         |
-| -------------------------------------------------------------------------------------------- | :---: | ------------------------------------------------------------------------------------- |
-| <img src='https://flagcdn.com/us.svg' width=20> &nbsp; **English**                           |  en   | [XengShi](https://github.com/XengShi/), [Prem](https://github.com/prem-k-r/)          |
-| <img src='https://flagcdn.com/tw.svg' width=20> &nbsp; **Chinese** (Traditional) - 繁體中文   | zh-TW | [C. Y. Tseng](https://github.com/Eddie40802)                                          |
+No package installation is required for the repository's core validation script.
 
-Check the [Translation Status Page](https://prem-k-r.github.io/MaterialYouNewTab/tools/languagesAnalysis.html) for an overview of completed languages and missing strings analysis.
-
-If you'd like to contribute quotes in any of the languages used in MYNT, check out [Multilingual Quotes](https://github.com/prem-k-r/multilingual-quotes-api).
-
-## ✅ Development Check
-
-Run the zero-dependency customization check before packaging:
+Run:
 
 ```bash
 node tools/check-customizations.mjs
 ```
 
-It validates both manifests, local asset references, the Google-only search configuration, locale key parity, and video usage.
+The check validates, among other things:
 
-## 🤝 Contributing
+- JavaScript syntax
+- Chrome and Firefox permission expectations
+- local asset references
+- required custom scripts and UI IDs
+- duplicate HTML IDs and CSP-sensitive patterns
+- Today / focus / workspace data helpers
+- backup rollback behavior
+- Google-only autocomplete configuration
+- locale key parity
+- Traditional Chinese default language and 32-locale fallback wiring
+- upstream/custom fused feature invariants
+- referenced background videos
 
-Contributions are welcome! If you’d like to contribute:
+Release/branding metadata is additionally checked with:
 
-1. Follow the guidelines in the [CONTRIBUTING.md](./CONTRIBUTING.md) file.
-2. Fork the repository.
-3. Create a new branch: `git checkout -b feature/YourFeature`.
-4. Commit your changes: `git commit -m 'Add Your Feature'`.
-5. Push to the branch: `git push origin feature/YourFeature`.
-6. Open a pull request.
+```bash
+node tools/check-release-metadata.mjs
+```
 
-## ⭐ Star History
+Upstream/custom fusion is additionally checked with:
 
-Here is the star history chart for the **MYNT: Material You New Tab** repository. It shows the growth of stars over time, reflecting the increasing interest and support for the project.
+```bash
+node tools/check-upstream-integration.mjs
+```
 
-<a href="https://star-history.com/#prem-k-r/MaterialYouNewTab&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=prem-k-r/MaterialYouNewTab&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=prem-k-r/MaterialYouNewTab&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=prem-k-r/MaterialYouNewTab&type=Date" />
- </picture>
-</a>
+For changes intended for `main`, all three checks should pass before merge.
 
-## ❓ Issues and Support
+## Repository workflow
 
-- If you encounter any issues or bugs, feel free to open an issue on [GitHub](https://github.com/prem-k-r/MaterialYouNewTab/issues).
-- For general questions or support, you can contact the repository maintainers through the **Telegram group**: [Join here](https://t.me/Material_You_NewTab).
+Suggested contribution flow for this fork:
 
-## 🛡 Privacy Policy
+```bash
+git checkout -b feature/your-change
+# edit files
+git add .
+git commit -m "feat: describe your change"
+git push -u origin feature/your-change
+```
 
-MYNT: Material You New Tab prioritizes your privacy and is focused solely on providing a better browsing experience.
-We make the following commitments:
+Then open a Pull Request against `Reese-max/MaterialYouNewTab:main`.
 
-- **No commercialization** — no ads, paid features, or premium tiers
-- **No first-party tracking** — no analytics, telemetry, or background reporting operated by MYNT
-- **Local settings** — preferences, cached weather, quotes, tasks, and customizations stay in browser storage
-- **Explicit third-party use** — optional features such as search suggestions, weather, random wallpapers, quotes, speech recognition, and favicon fallback contact the services documented in the Privacy Policy
+## Integrated upstream baseline
 
-For more details, read the bundled [Privacy Policy](./privacy-policy.html).
+This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through commit `e279bb9` (2026-08-24), plus conflict reconciliation that preserves the Reese-max productivity layer. Upstream custom shortcut icons, Daily Quote, `Alt+1`–`Alt+9`, AI Tools context-menu settings, update notes, UI fixes, and all 32 locales are included.
 
-## 📜 License
+## Feedback
 
-Copyright (C) 2024-2026 Prem Kumar
+- [Fork repository](https://github.com/Reese-max/MaterialYouNewTab)
+- [Integration and repair Pull Requests](https://github.com/Reese-max/MaterialYouNewTab/pulls)
+- [In-project feedback page](./docs/feedback.html)
 
-Copyright (C) 2023-2025 XengShi
+## Upstream attribution
 
-> This extension is the continuation of XengShi's Material You NewTab [(_Learn more_)](https://github.com/prem-k-r/MaterialYouNewTab/discussions/28#discussioncomment-13837571).
+This project is derived from [prem-k-r/MaterialYouNewTab](https://github.com/prem-k-r/MaterialYouNewTab), which itself includes work from earlier MYNT contributors. Upstream author and contributor attribution in source files and project history is intentionally retained.
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0). This means you must **not** distribute this software, whether original or modified, to any platform **without** its source code or the reference to its original source code. See the [LICENSE](https://github.com/prem-k-r/MaterialYouNewTab/blob/main/LICENSE) file for details.
+The multilingual quotes service used by the project is maintained separately at [prem-k-r/multilingual-quotes-api](https://github.com/prem-k-r/multilingual-quotes-api).
+
+## License
+
+Licensed under the **GNU General Public License v3.0 (GPL-3.0)**. See [LICENSE](./LICENSE).
+
+When redistributing a modified build, preserve the applicable GPL notices, provide the corresponding source as required by GPL-3.0, and retain upstream copyright/attribution notices.

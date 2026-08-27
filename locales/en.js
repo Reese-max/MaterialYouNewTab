@@ -1,5 +1,6 @@
 // English (Default)
 const en = {
+    "newTabTitle": "New Tab",
     // Menu Items
     "github": "GitHub",
     "feedback": "Feedback",
@@ -204,7 +205,7 @@ const en = {
     "editShortcutsText": "Edit Shortcuts",
     "shortcutsInfoText": "Choose which shortcuts get shown",
     "editShortcutsList": "Saved Shortcuts",
-    "editShortcutsListInfo": "You can add new shortcuts by clicking the \"+\" icon or edit existing ones by clicking on the shortcut name or URL.",
+    "editShortcutsListInfo": "You can add new shortcuts by clicking the \"+\" icon or edit existing ones by clicking on the shortcut name or URL.\nTo reset a custom icon, simply clear the image URL.",
     "adaptiveIconText": "Adaptive Icons",
     "adaptiveIconInfoText": "Shortcut icons will adapt to theme",
     "bookmarksText": "Bookmarks",
@@ -216,6 +217,17 @@ const en = {
     "googleAppsMenuText": "Google Apps",
     "googleAppsMenuInfo": "Show shortcuts for Google Apps",
     "googleAppsHover": "Google Apps",    // Keep this shorter
+
+    "shortcutDefaultName": "New Shortcut",
+    "shortcutInputName": "Shortcut Name",
+    "shortcutInputUrl": "Shortcut URL",
+    "shortcutInputIcon": "Custom Icon: URL or SVG (optional)",
+    "invalidIconMessage": "Use an HTTPS/HTTP image URL, an image data URL, or valid SVG markup.",
+    "invalidSvgMessage": "The SVG is invalid or contains unsafe content.",
+    "invalidFileTypeMessage": "Choose a supported image file.",
+    "iconFileTooLargeMessage": "Icon file is {size} KB. Maximum is {max} KB.",
+    "iconStorageQuotaMessage": "The icon could not be saved because browser storage is full.",
+    "recentlyAddedBookmarks": "Recently Added",
 
     // To-do List
     "todoListText": "To Do List",
@@ -300,6 +312,8 @@ const en = {
     "hideSearchWithInfo": "Hide the Google provider row below the search bar",
     "motivationalQuotesText": "Motivational Quotes",
     "motivationalQuotesInfo": "Show quotes below the searchbar",
+    "newQuoteOnRefreshText": "Daily Quote",
+    "newQuoteOnRefreshInfo": "Show one quote per day instead of refreshing each time",
     "search_suggestions_button": "Search Suggestions",
     "search_suggestions_text": "Enable search suggestions",
 

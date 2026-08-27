@@ -1,0 +1,96 @@
+name: QA
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - feature/upstream-full-integration
+  workflow_dispatch:
+
+concurrency:
+  group: qa-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate extension
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Run customization checks
+        run: node tools/check-customizations.mjs
+
+      - name: Run release metadata checks
+        run: node tools/check-release-metadata.mjs
+
+      - name: Run upstream integration checks
+        run: node tools/check-upstream-integration.mjs
+
+      - name: Install Chrome for Testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from urllib.request import urlopen, urlretrieve
+          from zipfile import ZipFile
+
+          metadata_url = "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json"
+          with urlopen(metadata_url, timeout=30) as response:
+              metadata = json.load(response)
+
+          stable = metadata["channels"]["Stable"]
+          download = next(item for item in stable["downloads"]["chrome"] if item["platform"] == "linux64")
+          install_root = Path(os.environ["RUNNER_TEMP"]) / "chrome-for-testing"
+          archive = install_root / "chrome-linux64.zip"
+          install_root.mkdir(parents=True, exist_ok=True)
+          urlretrieve(download["url"], archive)
+
+          with ZipFile(archive) as package:
+              package.extractall(install_root)
+
+          browser_root = install_root / "chrome-linux64"
+          executable_names = (
+              "chrome",
+              "chrome_crashpad_handler",
+              "chrome_sandbox",
+              "xdg-mime",
+              "xdg-settings",
+          )
+          for name in executable_names:
+              executable = browser_root / name
+              if executable.exists():
+                  executable.chmod(executable.stat().st_mode | 0o111)
+
+          chrome = browser_root / "chrome"
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
+              environment.write(f"CHROME_BIN={chrome}\n")
+              environment.write(f"CHROME_FOR_TESTING_VERSION={stable['version']}\n")
+          print(f"Installed Chrome for Testing {stable['version']} at {chrome}")
+          PY
+
+      - name: Run Chromium new-tab smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v xvfb-run
+          xvfb-run -a node tools/smoke-chromium.mjs

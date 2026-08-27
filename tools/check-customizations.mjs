@@ -143,11 +143,13 @@ assert.match(
 );
 assert.match(weatherCode, /initializeWeather\(\{ allowNetwork: !isHidden && isWeatherWidgetRendered\(\) \}\)/);
 assert.match(weatherCode, /if \(!allowNetwork\) return;/);
-assert.doesNotMatch(shortcutsCode, /\bonerror\s*=/i, "Shortcut icons must not use inline handlers");
+assert.doesNotMatch(shortcutsCode, /(?:<[^>]*\bonerror\s*=|setAttribute\(\s*["\']onerror["\'])/i, "Shortcut icons must not inject inline error handlers");
 
 const languageTool = read("tools/languagesAnalysis.html");
-assert.doesNotMatch(languageTool, /locales\/(?!en\.js|zh_TW\.js)[^"']+\.js/);
-assert.match(languageTool, /const languages = \{ en, zh_TW \};/);
+for (const code of ["en","pt","ne","es","hi","hu","zh","zh_TW","cs","it","tr","bn","vi","ru","uz","ja","ko","idn","mr","fr","az","sl","ur","de","fa","ar_SA","el","ta","th","pl","uk","sv"]) {
+    assert.match(languageTool, new RegExp("locales/" + code + "\\.js"));
+}
+assert.match(read("scripts/languages.js"), /sv:\s*sv/);
 
 const referencedSource = [...sources, searchCode].join("\n");
 const videos = readdirSync(resolve(root, "videos"));

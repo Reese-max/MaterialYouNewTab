@@ -1,0 +1,223 @@
+name: Build extension packages
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - feature/upstream-full-integration
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Package Chromium, Firefox, and web preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      SOURCE_REF: ${{ github.head_ref || github.ref_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Build clean release candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(node -p "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')).version")"
+          rm -rf dist
+          mkdir -p dist/chromium dist/firefox
+
+          common_excludes=(
+            --exclude '.git/'
+            --exclude '.github/'
+            --exclude '.integration/'
+            --exclude 'dist/'
+            --exclude 'tools/'
+            --exclude 'web-preview/'
+            --exclude '.gitignore'
+            --exclude 'AGENTS.md'
+            --exclude 'README.md'
+            --exclude 'CHANGELOG.md'
+            --exclude 'CODE_OF_CONDUCT.md'
+            --exclude 'CONTRIBUTING.md'
+            --exclude 'docs/SELF-VERIFICATION.md'
+          )
+
+          rsync -a "${common_excludes[@]}" \
+            --exclude 'manifest(firefox).json' \
+            ./ dist/chromium/
+
+          rsync -a "${common_excludes[@]}" \
+            --exclude 'manifest.json' \
+            --exclude 'manifest(firefox).json' \
+            ./ dist/firefox/
+          cp 'manifest(firefox).json' dist/firefox/manifest.json
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const sourceManifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          const sourceVersion = sourceManifest.version;
+          const targets = [
+            { name: 'chromium', expectedManifestVersion: 3 },
+            { name: 'firefox', expectedManifestVersion: 2 },
+          ];
+          const requiredPaths = [
+            'index.html',
+            'style.css',
+            'scripts',
+            'locales',
+            'docs/whats-new.html',
+            'privacy-policy.html',
+            'LICENSE',
+          ];
+          const forbiddenPaths = [
+            '.git',
+            '.github',
+            '.integration',
+            'dist',
+            'tools',
+            'web-preview',
+            '.gitignore',
+            'AGENTS.md',
+            'README.md',
+            'CHANGELOG.md',
+            'CODE_OF_CONDUCT.md',
+            'CONTRIBUTING.md',
+            'docs/SELF-VERIFICATION.md',
+            'manifest(firefox).json',
+          ];
+
+          for (const target of targets) {
+            const packageRoot = path.join('dist', target.name);
+            const manifestPath = path.join(packageRoot, 'manifest.json');
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+            if (manifest.version !== sourceVersion) {
+              throw new Error(`${target.name}: manifest version ${manifest.version} does not match ${sourceVersion}`);
+            }
+            if (manifest.manifest_version !== target.expectedManifestVersion) {
+              throw new Error(`${target.name}: expected manifest_version ${target.expectedManifestVersion}`);
+            }
+            for (const relativePath of requiredPaths) {
+              if (!fs.existsSync(path.join(packageRoot, relativePath))) {
+                throw new Error(`${target.name}: missing ${relativePath}`);
+              }
+            }
+            for (const relativePath of forbiddenPaths) {
+              if (fs.existsSync(path.join(packageRoot, relativePath))) {
+                throw new Error(`${target.name}: development-only path leaked into package: ${relativePath}`);
+              }
+            }
+          }
+
+          const chromiumManifest = JSON.parse(fs.readFileSync('dist/chromium/manifest.json', 'utf8'));
+          if (!chromiumManifest.background?.service_worker) {
+            throw new Error('chromium: background service worker is missing');
+          }
+          if (!fs.existsSync(path.join('dist/chromium', chromiumManifest.background.service_worker))) {
+            throw new Error('chromium: background service worker file is missing');
+          }
+
+          const firefoxManifest = JSON.parse(fs.readFileSync('dist/firefox/manifest.json', 'utf8'));
+          if (!firefoxManifest.browser_specific_settings?.gecko?.id) {
+            throw new Error('firefox: Gecko extension ID is missing');
+          }
+
+          const buildInfo = {
+            product: sourceManifest.name,
+            version: sourceVersion,
+            sourceRepository: process.env.GITHUB_REPOSITORY,
+            sourceRef: process.env.SOURCE_REF,
+            sourceSha: process.env.SOURCE_SHA,
+            workflowRunId: process.env.GITHUB_RUN_ID,
+            workflowRunNumber: process.env.GITHUB_RUN_NUMBER,
+            builtAt: new Date().toISOString(),
+            packages: [
+              `MYNT-${sourceVersion}-chromium.zip`,
+              `MYNT-${sourceVersion}-firefox.zip`,
+              `MYNT-${sourceVersion}-web-preview.zip`,
+            ],
+          };
+          fs.writeFileSync('dist/BUILD_INFO.json', `${JSON.stringify(buildInfo, null, 2)}\n`);
+          console.log(`PACKAGE_LAYOUT_OK version=${sourceVersion} source=${process.env.SOURCE_SHA}`);
+          NODE
+
+          if find dist/chromium dist/firefox -type l -print -quit | grep -q .; then
+            echo 'Symbolic links are not allowed in release packages.' >&2
+            exit 1
+          fi
+
+          node tools/build-web-preview.mjs
+          node tools/check-web-preview.mjs
+
+          (
+            cd dist/chromium
+            zip -qr "../MYNT-${version}-chromium.zip" .
+          )
+          (
+            cd dist/firefox
+            zip -qr "../MYNT-${version}-firefox.zip" .
+          )
+          (
+            cd dist/web-preview
+            zip -qr "../MYNT-${version}-web-preview.zip" .
+          )
+
+          unzip -t "dist/MYNT-${version}-chromium.zip"
+          unzip -t "dist/MYNT-${version}-firefox.zip"
+          unzip -t "dist/MYNT-${version}-web-preview.zip"
+
+          (
+            cd dist
+            sha256sum \
+              "MYNT-${version}-chromium.zip" \
+              "MYNT-${version}-firefox.zip" \
+              "MYNT-${version}-web-preview.zip" \
+              > SHA256SUMS.txt
+            sha256sum -c SHA256SUMS.txt
+          )
+
+          {
+            echo "### Verified release candidates"
+            echo
+            echo "Source: \`${SOURCE_SHA}\`"
+            echo
+            echo "- \`MYNT-${version}-chromium.zip\`"
+            echo "- \`MYNT-${version}-firefox.zip\`"
+            echo "- \`MYNT-${version}-web-preview.zip\`"
+            echo "- \`SHA256SUMS.txt\`"
+            echo "- \`BUILD_INFO.json\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload verified release candidates
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mynt-release-candidates-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            dist/MYNT-*.zip
+            dist/SHA256SUMS.txt
+            dist/BUILD_INFO.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
