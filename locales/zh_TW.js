@@ -1,6 +1,17 @@
 // Chinese (Traditional)
 const zh_TW = {
     "newTabTitle": "新分頁",
+    "waypointBrand": "航點",
+    "waypointDestinationsTitle": "常用網站",
+    "waypointBookmarksLabel": "全部書籤",
+    "waypointFocusTitle": "專注",
+    "waypointShortcutHint": "提示：按 Alt＋1–9 可直接開啟網站",
+    "waypointStartLabel": "開始",
+    "waypointPauseLabel": "暫停",
+    "waypointResetLabel": "重設",
+    "waypointPomodoroReady": "準備開始",
+    "waypointPomodoroRunning": "專注中",
+    "waypointSearchPlaceholder": "前往網站或搜尋",
     // Menu Items
     "github": "GitHub",
     "feedback": "意見回饋",

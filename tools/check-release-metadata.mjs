@@ -11,7 +11,7 @@ const firefoxManifest = JSON.parse(read("manifest(firefox).json"));
 const readme = read("README.md");
 
 const repo = "Reese-max/MaterialYouNewTab";
-const productName = "MYNT: Material You New Tab";
+const productName = "航點 — 新分頁啟動台";
 const version = chromeManifest.version;
 
 assert.equal(

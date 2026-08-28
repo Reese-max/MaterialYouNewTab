@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -411,8 +411,162 @@ async function main() {
     }));
 }
 
+async function previewMain() {
+    const chromeBinary = findChrome();
+    const previewUrl = process.env.WAYPOINT_PREVIEW_URL;
+    const width = Number(process.env.WAYPOINT_VIEWPORT_WIDTH || 1440);
+    const height = Number(process.env.WAYPOINT_VIEWPORT_HEIGHT || 900);
+    const screenshotPath = process.env.WAYPOINT_SCREENSHOT;
+
+    chrome = spawn(chromeBinary, [
+        "--headless=new",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-background-networking",
+        "--no-first-run",
+        `--user-data-dir=${profileDir}`,
+        "--remote-debugging-port=0",
+        "about:blank",
+    ], { stdio: ["ignore", "pipe", "pipe"] });
+
+    for (const stream of [chrome.stdout, chrome.stderr]) {
+        stream.setEncoding("utf8");
+        stream.on("data", chunk => chromeOutput.push(...chunk.split(/\r?\n/u).filter(Boolean)));
+    }
+
+    const { port } = await waitForDevToolsPort();
+    const deadline = Date.now() + 10_000;
+    let target;
+    while (!target && Date.now() < deadline) {
+        target = (await fetchTargets(port)).find(item => item.type === "page" && item.webSocketDebuggerUrl);
+        if (!target) await delay(100);
+    }
+    assert.ok(target, "Headless preview page target was not created");
+
+    pageClient = new CdpClient(target.webSocketDebuggerUrl);
+    const runtimeExceptions = [];
+    const consoleErrors = [];
+    pageClient.on("Runtime.exceptionThrown", ({ exceptionDetails }) => {
+        runtimeExceptions.push(exceptionDetails.exception?.description || exceptionDetails.text || "Unknown runtime exception");
+    });
+    pageClient.on("Runtime.consoleAPICalled", ({ type, args = [] }) => {
+        if (type === "error") consoleErrors.push(args.map(arg => arg.value || arg.description || "").join(" "));
+    });
+    await Promise.all([
+        pageClient.send("Page.enable"),
+        pageClient.send("Runtime.enable"),
+        pageClient.send("Log.enable"),
+        pageClient.send("Emulation.setDeviceMetricsOverride", {
+            width,
+            height,
+            deviceScaleFactor: 1,
+            mobile: width <= 600,
+        }),
+    ]);
+
+    const loaded = pageClient.waitForEvent("Page.loadEventFired", 20_000);
+    await pageClient.send("Page.navigate", { url: previewUrl });
+    await loaded;
+    await delay(2200);
+
+    const initial = await evaluate(`(() => {
+        const visible = element => {
+            if (!element) return false;
+            const style = getComputedStyle(element);
+            const box = element.getBoundingClientRect();
+            return style.display !== "none" && style.visibility !== "hidden" && box.width > 0 && box.height > 0;
+        };
+        const labels = [...document.querySelectorAll("#shortcutsContainer .shortcut-name")];
+        const dateBox = document.querySelector("#waypointDate")?.getBoundingClientRect();
+        const focusBox = document.querySelector(".waypoint-focus")?.getBoundingClientRect();
+        const destinationsBox = document.querySelector(".waypoint-destinations")?.getBoundingClientRect();
+        return {
+            title: document.title,
+            lang: document.documentElement.lang,
+            appVisible: visible(document.querySelector("#waypointApp")),
+            searchVisible: visible(document.querySelector("#searchQ")),
+            searchPlaceholder: document.querySelector("#searchQ")?.placeholder || "",
+            shortcutCount: labels.length,
+            visibleShortcutLabels: labels.filter(visible).length,
+            pomodoroVisible: visible(document.querySelector("#pomodoroTimeDisplay")),
+            ctrlKVisible: [...document.querySelectorAll("body *")].some(element => visible(element) && /Ctrl\\s*\\+?\\s*K/iu.test(element.textContent || "")),
+            legacyBrandVisible: [...document.querySelectorAll("body *")].some(element => visible(element) && /Material You New Tab|MYNT/iu.test(element.textContent || "")),
+            horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1,
+            dateWithinViewport: Boolean(dateBox && dateBox.left >= 0 && dateBox.right <= innerWidth),
+            mobileOrder: innerWidth > 600 || Boolean(focusBox && destinationsBox && focusBox.top >= destinationsBox.bottom),
+        };
+    })()`);
+
+    assert.equal(initial.appVisible, true, "Waypoint shell is not visible");
+    assert.equal(initial.searchVisible, true, "Search input is not visible");
+    assert.equal(initial.searchPlaceholder, "前往網站或搜尋", "Waypoint search placeholder is incorrect");
+    assert.ok(initial.shortcutCount > 0, "No frequent sites rendered");
+    assert.equal(initial.visibleShortcutLabels, initial.shortcutCount, "One or more site labels are hidden");
+    assert.equal(initial.pomodoroVisible, true, "Pomodoro timer is not visible");
+    assert.equal(initial.ctrlKVisible, false, "Ctrl K hint is still visible");
+    assert.equal(initial.legacyBrandVisible, false, "Legacy Material You branding is visible");
+    assert.equal(initial.horizontalOverflow, false, "The page overflows horizontally");
+    assert.equal(initial.dateWithinViewport, true, "The header date is clipped");
+    assert.equal(initial.mobileOrder, true, "Mobile focus rail appears before the destinations finish");
+
+    await evaluate(`document.querySelector("#pomodoroStartBtn").click()`);
+    await delay(1100);
+    const running = await evaluate(`(() => ({
+        state: document.querySelector("#waypointPomodoroState")?.textContent,
+        pauseVisible: getComputedStyle(document.querySelector("#pomodoroPauseBtn")).display !== "none",
+        time: document.querySelector("#pomodoroTimeDisplay")?.textContent,
+    }))()`);
+    assert.equal(running.pauseVisible, true, "Pomodoro did not enter the running state");
+    assert.equal(running.state, "專注中", "Pomodoro status label did not update");
+    assert.notEqual(running.time, "25:00", "Pomodoro time did not advance");
+    await evaluate(`document.querySelector("#pomodoroPauseBtn").click()`);
+    await evaluate(`document.querySelector("#pomodoroResetBtn").click()`);
+
+    const bookmarkDelegated = await evaluate(`(() => {
+        const source = document.querySelector("#bookmarkButton");
+        const originalClick = source.click;
+        let delegated = false;
+        source.click = () => { delegated = true; };
+        document.querySelector("#waypointBookmarksButton").click();
+        source.click = originalClick;
+        return delegated;
+    })()`);
+    assert.equal(bookmarkDelegated, true, "Waypoint bookmark action did not delegate to the extension control");
+
+    await evaluate(`document.querySelector("#waypointSettingsButton").click()`);
+    await delay(100);
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector("#menuBar")).display !== "none"`), true, "Settings did not open");
+    await evaluate(`document.querySelector("#menuCloseButton").click()`);
+    await delay(600);
+
+    if (screenshotPath) {
+        const capture = await pageClient.send("Page.captureScreenshot", {
+            format: "png",
+            captureBeyondViewport: false,
+        });
+        writeFileSync(screenshotPath, Buffer.from(capture.data, "base64"));
+    }
+
+    const fatalConsoleErrors = consoleErrors.filter(message => /\b(?:ReferenceError|TypeError|SyntaxError|Uncaught)\b/iu.test(message));
+    assert.deepEqual(runtimeExceptions, [], `Runtime exceptions were observed:\n${runtimeExceptions.join("\n\n")}`);
+    assert.deepEqual(fatalConsoleErrors, [], `Fatal console errors were observed:\n${fatalConsoleErrors.join("\n\n")}`);
+
+    console.log(JSON.stringify({
+        status: "WAYPOINT_PREVIEW_OK",
+        viewport: `${width}x${height}`,
+        shortcutCount: initial.shortcutCount,
+        ctrlKVisible: initial.ctrlKVisible,
+        legacyBrandVisible: initial.legacyBrandVisible,
+        horizontalOverflow: initial.horizontalOverflow,
+        pomodoroTime: running.time,
+        screenshot: screenshotPath || "",
+    }));
+}
+
 try {
-    await main();
+    await (process.env.WAYPOINT_PREVIEW_URL ? previewMain() : main());
 } catch (error) {
     const output = chromeOutput.slice(-40).join("\n");
     console.error(error instanceof Error ? error.stack : error);

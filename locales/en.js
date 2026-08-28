@@ -1,6 +1,17 @@
 // English (Default)
 const en = {
     "newTabTitle": "New Tab",
+    "waypointBrand": "Waypoint",
+    "waypointDestinationsTitle": "Frequent sites",
+    "waypointBookmarksLabel": "All bookmarks",
+    "waypointFocusTitle": "Focus",
+    "waypointShortcutHint": "Tip: press Alt + 1–9 to open a site",
+    "waypointStartLabel": "Start",
+    "waypointPauseLabel": "Pause",
+    "waypointResetLabel": "Reset",
+    "waypointPomodoroReady": "Ready to start",
+    "waypointPomodoroRunning": "Focusing",
+    "waypointSearchPlaceholder": "Go to a website or search",
     // Menu Items
     "github": "GitHub",
     "feedback": "Feedback",

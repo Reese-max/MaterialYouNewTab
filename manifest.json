@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
-	"name": "MYNT: Material You New Tab",
+	"name": "航點 — 新分頁啟動台",
 	"version": "3.4.0",
-	"description": "繁體中文優先的 Material You 新分頁，整合搜尋、待辦、專注、便籤與工作區。",
+	"description": "以搜尋、常用網站、書籤與番茄鐘為核心的本機優先新分頁啟動台。",
 	"optional_permissions": ["bookmarks", "favicon"],
 	"optional_host_permissions": [
 		"https://www.google.com/*"
