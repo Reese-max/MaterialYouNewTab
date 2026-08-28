@@ -30,6 +30,7 @@ const dashboardCode = read("scripts/dashboard-tools.js");
 const backupCode = read("scripts/backup-restore.js");
 const weatherCode = read("scripts/weather.js");
 const shortcutsCode = read("scripts/shortcuts.js");
+const bookmarksCode = read("scripts/bookmarks.js");
 const sources = [html, read("privacy-policy.html"), read("style.css"), read("scripts/bongocat.js"), dashboardCode];
 const htmlIds = Array.from(html.matchAll(/\bid=["']([^"']+)["']/g), match => match[1]);
 const duplicateIds = htmlIds.filter((id, index) => htmlIds.indexOf(id) !== index);
@@ -58,7 +59,7 @@ for (const id of [
     "commandPaletteDialog", "controlCenterDialog", "habitList", "serviceStatusList", "focusWeekChart",
     "workspacePresetGrid", "workspaceEditorForm",
     "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow",
-    "shortcutsHelpDialog", "scratchpadDownloadBtn"
+    "shortcutsHelpDialog", "scratchpadDownloadBtn", "bookmarksSubtitle", "bookmarkShortcutStatus"
 ]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `Missing custom UI: ${id}`);
 }
@@ -127,6 +128,23 @@ assert.match(
 assert.match(weatherCode, /initializeWeather\(\{ allowNetwork: !isHidden && isWeatherWidgetRendered\(\) \}\)/);
 assert.match(weatherCode, /if \(!allowNetwork\) return;/);
 assert.doesNotMatch(shortcutsCode, /(?:<[^>]*\bonerror\s*=|setAttribute\(\s*["\']onerror["\'])/i, "Shortcut icons must not inject inline error handlers");
+assert.match(shortcutsCode, /mynt:add-shortcut/);
+assert.match(shortcutsCode, /mynt:shortcut-feedback/);
+assert.match(bookmarksCode, /mynt:add-shortcut/);
+assert.match(bookmarksCode, /mynt:shortcut-feedback/);
+
+const shortcutsContext = { module: { exports: {} }, document: { addEventListener() {} }, URL };
+vm.runInNewContext(shortcutsCode, shortcutsContext);
+const { myntPlanShortcutPin } = shortcutsContext.module.exports;
+const plannedShortcut = myntPlanShortcutPin([], { name: "GitHub", url: "github.com" });
+assert.equal(plannedShortcut.status, "added");
+assert.equal(plannedShortcut.item.url, "https://github.com/");
+assert.equal(
+    myntPlanShortcutPin([{ name: "GitHub", url: "https://github.com/" }], { name: "GitHub", url: "github.com" }).status,
+    "duplicate"
+);
+assert.equal(myntPlanShortcutPin([{ name: "One", url: "one.example" }], { name: "Two", url: "two.example" }, 1).status, "full");
+assert.equal(myntPlanShortcutPin([], { name: "Unsafe", url: "javascript:alert(1)" }).status, "invalid");
 
 const languageTool = read("tools/languagesAnalysis.html");
 for (const code of ["en","pt","ne","es","hi","hu","zh","zh_TW","cs","it","tr","bn","vi","ru","uz","ja","ko","idn","mr","fr","az","sl","ur","de","fa","ar_SA","el","ta","th","pl","uk","sv"]) {

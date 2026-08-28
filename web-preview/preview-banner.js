@@ -74,7 +74,7 @@
         const copy = document.createElement("span");
         copy.className = "mynt-preview-copy";
         const title = document.createElement("strong");
-        title.textContent = "航點 網頁預覽";
+        title.textContent = "MYNT 網頁預覽";
         const detail = document.createElement("small");
         const shortCommit = String(meta.commit || "unknown").slice(0, 7);
         detail.textContent = `v${meta.version || "?"} · ${meta.branch || "?"} · ${shortCommit}`;

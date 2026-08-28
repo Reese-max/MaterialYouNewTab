@@ -4,6 +4,43 @@
  * Licensed under the GNU General Public License v3.0 (GPL-3.0)
  */
 
+function myntNormalizeShortcutUrl(url) {
+    const trimmed = String(url || "").trim();
+    if (!trimmed) return null;
+
+    const candidate = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
+    try {
+        const parsed = new URL(candidate);
+        return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : null;
+    } catch {
+        return null;
+    }
+}
+
+function myntPlanShortcutPin(shortcuts, candidate, maxShortcuts = 50) {
+    const current = Array.isArray(shortcuts) ? shortcuts : [];
+    const normalizedUrl = myntNormalizeShortcutUrl(candidate?.url);
+    if (!normalizedUrl) return { status: "invalid" };
+
+    const duplicate = current.some(item => myntNormalizeShortcutUrl(item?.url) === normalizedUrl);
+    if (duplicate) return { status: "duplicate" };
+    if (current.length >= maxShortcuts) return { status: "full" };
+
+    const fallbackName = new URL(normalizedUrl).hostname.replace(/^www\./iu, "");
+    return {
+        status: "added",
+        item: {
+            name: String(candidate?.name || "").trim() || fallbackName,
+            url: normalizedUrl,
+            icon: ""
+        }
+    };
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    Object.assign(module.exports, { myntNormalizeShortcutUrl, myntPlanShortcutPin });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     // Constants
     const MAX_SHORTCUTS = 50;
@@ -119,6 +156,44 @@ document.addEventListener("DOMContentLoaded", function () {
         // Button events
         dom.newShortcutButton.addEventListener("click", handleNewShortcutClick);
         dom.resetShortcutsButton.addEventListener("click", resetShortcuts);
+        document.addEventListener("mynt:add-shortcut", handleBookmarkShortcut);
+    }
+
+    function dispatchShortcutFeedback(status, name, url) {
+        document.dispatchEvent(new CustomEvent("mynt:shortcut-feedback", {
+            detail: { status, name, url }
+        }));
+    }
+
+    function handleBookmarkShortcut(event) {
+        const plan = myntPlanShortcutPin(shortcutsCache, event.detail, MAX_SHORTCUTS);
+        const name = String(event.detail?.name || "").trim();
+        const url = myntNormalizeShortcutUrl(event.detail?.url) || String(event.detail?.url || "");
+
+        if (plan.status !== "added") {
+            dispatchShortcutFeedback(plan.status, name, url);
+            return;
+        }
+
+        const previousStorage = snapshotShortcutStorage();
+        const nextShortcuts = [...shortcutsCache, plan.item];
+
+        try {
+            writeShortcutStorage(nextShortcuts);
+        } catch (storageError) {
+            try {
+                restoreShortcutStorage(previousStorage);
+            } catch (rollbackError) {
+                console.error("Shortcut pin rollback failed:", rollbackError);
+            }
+            console.error("Unable to add bookmark to shortcuts:", storageError);
+            dispatchShortcutFeedback("error", plan.item.name, plan.item.url);
+            return;
+        }
+
+        shortcutsCache = nextShortcuts;
+        rebuildShortcutEditor(nextShortcuts);
+        dispatchShortcutFeedback("added", plan.item.name, plan.item.url);
     }
 
     // Handles the new shortcut button click with animation and focus
@@ -442,16 +517,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Normalizes URLs to ensure they're valid
     function normalizeUrl(url) {
-        const trimmed = String(url || "").trim();
-        const candidate = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
-
-        try {
-            const parsed = new URL(candidate);
-            if (parsed.protocol !== "https:" && parsed.protocol !== "http:") throw new Error("Unsupported protocol");
-            return parsed.href;
-        } catch {
-            return PLACEHOLDER.url;
-        }
+        return myntNormalizeShortcutUrl(url) || PLACEHOLDER.url;
     }
 
     function appendShortcutLogo(container, name, url, customIcon) {
@@ -551,6 +617,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const link = document.createElement("a");
         link.href = normalizeUrl(url);
+        link.title = name;
+        link.setAttribute("aria-label", name);
         const logo = document.createElement("div");
         logo.className = "shortcutLogoContainer";
         appendShortcutLogo(logo, name, url, customIcon);

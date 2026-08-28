@@ -1,12 +1,12 @@
 <h1 align="center">
-  <img src="favicon/icon128.png" width="58" alt="航點 icon">
+  <img src="https://github.com/user-attachments/assets/48c3a9cb-06fa-4c45-92ec-194cdb7c5661" width="58" alt="MYNT icon">
   <br>
-  航點 — 新分頁啟動台
+  MYNT: Material You New Tab
 </h1>
 
 <p align="center">
-  <strong>Waypoint new-tab launcher</strong><br>
-  A local-first launch surface centered on websites, search, bookmarks, and a Pomodoro timer.
+  <strong>Reese-max customized edition</strong><br>
+  A Traditional Chinese-first, Material You-inspired browser dashboard for search, focus, tasks, notes, bookmarks, weather, and workspaces.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 
 ## Overview
 
-航點 replaces the browser New Tab page with a local-first website launcher. Frequent sites and search lead the page, while bookmarks and the Pomodoro timer remain immediately available without turning the surface into a dashboard.
+MYNT replaces the browser New Tab page with a local-first productivity dashboard. This fork keeps the upstream Material You design while adding a stronger Traditional Chinese-first workflow and additional productivity features.
 
 ### Reese-max edition highlights
 
@@ -30,6 +30,7 @@
 - **Scratchpad** — quick notes, smart list continuation, Markdown task toggling, copy, convert-to-task, and `.md` export.
 - **Workspaces** — create Study, Work, Coding, Relax, or custom modes with preferred widgets, focus duration, background, and launch URLs.
 - **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
+- **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
 - **Keyboard help** — press `?` outside text fields to open the shortcut guide; use `Alt+1`–`Alt+9` to launch the first nine shortcuts.
 - **Local-first state** — tasks, settings, habits, focus history, workspaces, and scratchpad content are stored in browser storage.
 
@@ -88,7 +89,7 @@ Extract the ZIP before loading the extension.
 3. Enable **Developer mode**.
 4. Select **Load unpacked**.
 5. Choose the repository folder containing `manifest.json`.
-6. Open a new tab and verify that 航點 appears.
+6. Open a new tab and verify that MYNT appears.
 
 > [!NOTE]
 > A manually loaded extension is a development build. Your browser may display developer-mode warnings. Keep the folder in place because the browser loads the extension directly from it.
@@ -99,7 +100,7 @@ Opera may not allow an unpacked extension to replace the native New Tab page in 
 
 After loading the unpacked extension:
 
-1. Open `opera://extensions` and find 航點.
+1. Open `opera://extensions` and find MYNT.
 2. Copy the extension ID.
 3. Use the following page as a startup/home page, replacing `<EXTENSION_ID>`:
 
@@ -147,7 +148,7 @@ The Chromium build uses minimal optional permissions:
 - `favicon` — optional Chromium favicon access
 - `https://www.google.com/*` — optional host access for Google search suggestions
 
-航點 also uses browser storage (`localStorage` and IndexedDB) for interface settings and productivity data. Weather and other optional features may contact their documented third-party services when enabled.
+MYNT also uses browser storage (`localStorage` and IndexedDB) for interface settings and productivity data. Weather and other optional features may contact their documented third-party services when enabled.
 
 Personal WeatherAPI keys are intentionally excluded from backup exports and must be re-entered after restoring on another browser profile.
 

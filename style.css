@@ -742,7 +742,7 @@ body[data-bg="wallpaper"] .tooltip-text {
 	opacity: 0;
 	transition: all 0.5s;
 	pointer-events: none;
-	z-index: 4;
+	z-index: 20;
 }
 
 #bookmarksContainer:has(.bookmark-sidebar.open) {
@@ -803,7 +803,7 @@ body[data-bg="wallpaper"] .bookmark-button {
 	background-color: var(--accentLightTint-blue);
 	color: white;
 	transition: inset-inline-end 0.3s var(--md-motion-ease);
-	z-index: 5;
+	z-index: 21;
 	display: block;
 	border-end-start-radius: var(--round);
 	box-sizing: border-box;
@@ -818,10 +818,14 @@ body[data-bg="wallpaper"] .bookmark-button {
 
 .bookmark-sidebar-header {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
-	padding: 30px 20px 50px 20px;
+	padding: 28px 24px 48px;
 	background-color: var(--bg-color-blue);
+}
+
+.bookmark-heading-copy {
+	min-width: 0;
 }
 
 .bookmark-sidebar.open {
@@ -831,14 +835,22 @@ body[data-bg="wallpaper"] .bookmark-button {
 body #bookmarkButton.bookmark-button.rotate {
 	color: var(--accentLightTint-blue);
 	inset-inline-end: 450px;
-	z-index: 5;
+	z-index: 22;
 }
 
 .bookmark-sidebar-header h2 {
 	color: var(--textColorDark-blue);
-	text-align: center;
+	text-align: start;
 	font-size: 1.5rem;
-	flex-grow: 1;
+	line-height: 1.2;
+	margin: 0;
+}
+
+#bookmarksSubtitle {
+	color: color-mix(in srgb, var(--textColorDark-blue) 72%, transparent);
+	font-size: 0.82rem;
+	line-height: 1.4;
+	margin: 5px 0 0;
 }
 
 .bookmark-search-container {
@@ -901,12 +913,32 @@ body #bookmarkButton.bookmark-button.rotate {
 	display: none; /* Hidden by default */
 }
 
+#clearSearchButton svg {
+	display: block;
+	fill: currentColor;
+	height: 18px;
+	width: 18px;
+}
+
+.bookmark-shortcut-status {
+	color: var(--darkerColor-blue);
+	font-size: 0.8rem;
+	line-height: 1.35;
+	margin: 0;
+	min-height: 19px;
+	padding: 2px 24px 0;
+}
+
+.bookmark-shortcut-status:empty {
+	visibility: hidden;
+}
+
 #bookmarkList {
 	list-style-type: none;
 	padding: 0;
 	margin: 0;
 	text-align: start;
-	height: calc(100% - 242px);
+	height: calc(100% - 280px);
 	overflow-y: auto; /* Add vertical scrollbar */
 	scroll-behavior: smooth;
 	overflow-x: hidden;
@@ -941,8 +973,8 @@ body #bookmarkButton.bookmark-button.rotate {
 .bookmark-controls-container {
 	display: flex;
 	justify-content: space-between;
-	gap: 40px; /* Space between Sort by and View as sections */
-	padding: 6px 32px;
+	gap: 20px;
+	padding: 8px 24px;
 }
 
 .bookmark-control-group {
@@ -1021,7 +1053,11 @@ body #bookmarkButton.bookmark-button.rotate {
 
 #bookmarkList li:not(.folder) {
 	display: flex;
-	width: calc(100% - 10px);
+	align-items: center;
+	gap: 4px;
+	padding-inline: 8px 10px;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 #bookmarkList:is(.grid-view) ul:not(.hidden),
@@ -1035,8 +1071,10 @@ body #bookmarkButton.bookmark-button.rotate {
 }
 
 #bookmarkList:is(.grid-view) li:not(.folder) {
+	flex-direction: column;
 	width: 100%;
 	padding-bottom: 6px;
+	padding-inline: 2px;
 }
 
 #bookmarkList:is(.grid-view) li a {
@@ -1077,10 +1115,12 @@ body #bookmarkButton.bookmark-button.rotate {
 	text-decoration: none;
 	/* word-break: break-word; */
 	padding: 8px;
-	padding-inline-end: 24px;
+	padding-inline-end: 8px;
 	border-radius: 8px;
 	width: 100%;
 	display: flex;
+	align-items: center;
+	min-width: 0;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1094,6 +1134,8 @@ body #bookmarkButton.bookmark-button.rotate {
 
 #bookmarkList:is(.grid-view) li a span {
 	text-align: center;
+	display: block;
+	width: 100%;
 }
 
 .favicon {
@@ -1151,27 +1193,95 @@ body #bookmarkButton.bookmark-button.rotate {
 	transform: rotate(-90deg);
 }
 
-#bookmarkList:is(.grid-view) .bookmark-delete-button {
-	top: 12px;
-	inset-inline-end: 6px;
+.bookmark-item-actions {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex: 0 0 auto;
+	opacity: 0.58;
+	transition: opacity 0.18s var(--md-motion-decelerate);
+}
+
+.bookmark-item:hover > .bookmark-item-actions,
+.bookmark-item:focus-within > .bookmark-item-actions {
+	opacity: 1;
+}
+
+.bookmark-pin-button,
+.bookmark-delete-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	height: 32px;
+	border: 0;
+	border-radius: 16px;
+	color: var(--darkColor-blue);
+	cursor: pointer;
+	background: color-mix(in srgb, var(--bg-color-blue) 72%, transparent);
+}
+
+.bookmark-pin-button {
+	padding: 0 9px;
+}
+
+.bookmark-pin-button svg,
+.bookmark-delete-button svg {
+	display: block;
+	fill: currentColor;
+	height: 17px;
+	width: 17px;
+}
+
+.bookmark-pin-label {
+	font-size: 0.7rem;
+	font-weight: 600;
+	white-space: nowrap;
 }
 
 .bookmark-delete-button {
-	background: none;
-	border: none;
-	color: var(--darkColor-blue);
-	cursor: pointer;
-	position: absolute;
-	inset-inline-end: 10px; /* Position it to the right */
-	top: 50%;
-	transform: translateY(-50%);
-	opacity: 0;
-	pointer-events: none;
+	width: 32px;
+	padding: 0;
 }
 
-:hover > .bookmark-delete-button {
-	opacity: 1;
-	pointer-events: auto;
+.bookmark-pin-button:hover:not(:disabled),
+.bookmark-pin-button:focus-visible {
+	background: var(--darkColor-blue);
+	color: var(--whitishColor-blue);
+}
+
+.bookmark-delete-button:hover,
+.bookmark-delete-button:focus-visible {
+	background: color-mix(in srgb, #b3261e 14%, transparent);
+	color: #8c1d18;
+}
+
+.bookmark-pin-button:focus-visible,
+.bookmark-delete-button:focus-visible {
+	outline: 2px solid var(--darkColor-blue);
+	outline-offset: 2px;
+}
+
+.bookmark-pin-button:disabled {
+	cursor: default;
+	opacity: 0.55;
+}
+
+#bookmarkList:is(.grid-view) .bookmark-item-actions {
+	justify-content: center;
+	margin-top: 2px;
+	opacity: 0.7;
+	position: static;
+	width: 100%;
+}
+
+#bookmarkList:is(.grid-view) .bookmark-pin-label {
+	display: none;
+}
+
+#bookmarkList:is(.grid-view) .bookmark-pin-button {
+	padding: 0;
+	width: 32px;
 }
 
 /* Modal Styling */
@@ -2926,7 +3036,7 @@ html[lang="ur"] .qtRounder2 {
 	display: flex;
 	justify-content: center;
 	width: 100%;
-	height: calc(var(--shortcut-size) + var(--gap) * 2);
+	height: calc(var(--shortcut-size) + var(--gap) * 2 + 28px);
 	position: fixed;
 	/* background: gold; */
 	inset-inline-start: 0;
@@ -2983,6 +3093,7 @@ html[lang="ur"] .qtRounder2 {
 	display: flex;
 	flex-wrap: wrap;
 	padding: var(--shortcut-bar-gap-and-padding);
+	padding-block-end: calc(var(--shortcut-bar-gap-and-padding) + 28px);
 	justify-content: center;
 	width: fit-content;
 	/* gap: var(--gap) var(--shortcut-bar-gap-and-padding); */
@@ -3015,15 +3126,15 @@ html[lang="ur"] .qtRounder2 {
 }
 
 .shortcutsContainer .shortcuts:hover {
-	transform: translateY(-10px) scale(1.03);
+	transform: translateY(-6px) scale(1.03);
 	/* box-shadow: 0 5px 10px var(--accentLightTint-blue); */
 	border-radius: 100px;
 }
 
 .shortcuts .shortcut-name {
-	visibility: hidden;
+	visibility: visible;
 	position: absolute;
-	bottom: -30px;
+	bottom: -24px;
 	inset-inline-end: 0;
 	inset-inline-start: 50%;
 	transform: translateX(-50%);
@@ -3036,13 +3147,14 @@ html[lang="ur"] .qtRounder2 {
 	background-color: transparent;
 	padding: 0;
 	border-radius: 0;
-	opacity: 0;
+	opacity: 0.76;
 	transition: all 0.3s;
-	font-size: 1rem;
+	font-size: 0.78rem;
+	font-weight: 600;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	max-width: 120px;
+	max-width: 82px;
 }
 
 body[data-bg="wallpaper"] .shortcuts .shortcut-name {
@@ -3059,9 +3171,16 @@ body[data-bg="wallpaper"] .shortcuts .shortcut-name {
 	transform: translateX(50%);
 }
 
-.shortcuts:hover .shortcut-name {
+.shortcuts:hover .shortcut-name,
+.shortcuts a:focus-visible .shortcut-name {
 	visibility: visible;
 	opacity: 1;
+	max-width: 120px;
+}
+
+.shortcutsContainer .shortcuts a:focus-visible {
+	outline: 3px solid var(--darkColor-blue);
+	outline-offset: 4px;
 }
 
 .shortcutsContainer .shortcuts a {
@@ -5516,7 +5635,7 @@ body[data-bg="wallpaper"] .dropdown-content {
 		gap: 1.8rem;
 		flex-wrap: nowrap;
 		max-width: unset;
-		padding: 20px 0;
+		padding: 20px 0 48px;
 	}
 	#shortcuts-section {
 		padding-left: 30px;
@@ -7651,6 +7770,22 @@ html.myntHighContrast button {
 	#menuButton {
 		scale: 1;
 	}
+
+	.bookmark-item-actions {
+		opacity: 1;
+	}
+
+	.bookmark-pin-label {
+		display: none;
+	}
+
+	.bookmark-pin-button,
+	.bookmark-delete-button {
+		height: 40px;
+		width: 40px;
+		padding: 0;
+		border-radius: 20px;
+	}
 }
 
 @media screen and (max-width: 620px) {
@@ -7709,6 +7844,25 @@ html.myntHighContrast button {
 }
 
 @media screen and (max-width: 500px) {
+	.bookmark-sidebar {
+		border-end-start-radius: 0;
+		width: 100vw;
+	}
+
+	.bookmark-sidebar .topOutRoundCorner {
+		display: none;
+	}
+
+	.bookmark-sidebar-header {
+		padding-inline-start: 84px;
+	}
+
+	body #bookmarkButton.bookmark-button.rotate {
+		inset-inline-end: auto;
+		inset-inline-start: 12px;
+		top: 12px;
+	}
+
 	body[data-workspace-background="video"] {
 		min-height: 100dvh;
 		padding-top: 0;
@@ -8190,892 +8344,5 @@ html.myntHighContrast button {
 @media screen and (max-width: 540px) {
 	.shortcutsHelpGrid {
 		grid-template-columns: 1fr;
-	}
-}
-
-/* ------------ Waypoint ------------ */
-body.waypoint-page {
-	--waypoint-paper: #f4f0e8;
-	--waypoint-ink: #151515;
-	--waypoint-muted: #6e6a63;
-	--waypoint-line: #232323;
-	--waypoint-soft-line: #b7b0a5;
-	--waypoint-accent: #ff4f0a;
-	--waypoint-panel: #faf7f1;
-	position: relative !important;
-	display: block !important;
-	width: 100% !important;
-	height: 100dvh !important;
-	min-height: 100dvh !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	overflow: hidden !important;
-	background: var(--waypoint-paper) !important;
-	color: var(--waypoint-ink) !important;
-	font-family: "Aptos", "Noto Sans TC", "Microsoft JhengHei", sans-serif !important;
-}
-
-body.waypoint-page.black-theme {
-	--waypoint-paper: #11110f;
-	--waypoint-ink: #f5f1e9;
-	--waypoint-muted: #aaa49a;
-	--waypoint-line: #eee9df;
-	--waypoint-soft-line: #555149;
-	--waypoint-accent: #ff6425;
-	--waypoint-panel: #181815;
-}
-
-body.waypoint-page *,
-body.waypoint-page *::before,
-body.waypoint-page *::after {
-	box-sizing: border-box;
-}
-
-body.waypoint-page > :not(#waypointApp):not(#bookmarksContainer):not(#editBookmarkModal):not(#menuBar):not(dialog):not(#prompt-modal-container):not(#aiToolsSettingsModal):not(#aiToolsSettingsOverlay) {
-	display: none !important;
-}
-
-.waypoint-app {
-	display: grid;
-	grid-template-rows: 62px minmax(0, 1fr) 46px;
-	width: 100%;
-	height: 100dvh;
-	min-height: 640px;
-	padding: 22px 38px 16px;
-	background: var(--waypoint-paper);
-	color: var(--waypoint-ink);
-}
-
-.waypoint-header {
-	display: grid;
-	grid-template-columns: auto auto 1fr;
-	align-items: start;
-	gap: clamp(28px, 4vw, 64px);
-	font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
-	font-size: 1rem;
-	letter-spacing: .01em;
-}
-
-.waypoint-brand {
-	font-family: "Aptos Display", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-	font-size: 1.22rem;
-	font-weight: 800;
-	letter-spacing: .04em;
-}
-
-.waypoint-time,
-.waypoint-date {
-	white-space: nowrap;
-}
-
-.waypoint-layout {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) clamp(280px, 25vw, 380px);
-	min-height: 0;
-}
-
-.waypoint-primary {
-	min-width: 0;
-	padding: clamp(48px, 7vh, 86px) clamp(42px, 5vw, 78px) 20px clamp(54px, 7vw, 112px);
-}
-
-.waypoint-search {
-	margin-bottom: clamp(54px, 7vh, 82px);
-}
-
-#waypointSearchSlot {
-	position: relative;
-	width: 100%;
-}
-
-body.waypoint-page #searchbar {
-	position: relative !important;
-	top: auto !important;
-	left: auto !important;
-	display: block !important;
-	width: 100% !important;
-	height: 72px !important;
-	min-height: 72px !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	scale: 1 !important;
-	transform: none !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-bottom: 2px solid var(--waypoint-line) !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	backdrop-filter: none !important;
-}
-
-body.waypoint-page #searchbar .searchIcon,
-body.waypoint-page #searchbar .searchControls,
-body.waypoint-page #searchbar .dropdown {
-	display: none !important;
-}
-
-body.waypoint-page #searchbar .searchbar-content {
-	display: block !important;
-	width: 100% !important;
-	height: 100% !important;
-	padding: 0 !important;
-}
-
-body.waypoint-page #searchQ {
-	width: 100% !important;
-	height: 100% !important;
-	margin: 0 !important;
-	padding: 0 8px 10px 0 !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-radius: 0 !important;
-	outline: 0 !important;
-	box-shadow: none !important;
-	color: var(--waypoint-ink) !important;
-	font: 500 clamp(2rem, 3vw, 3.15rem)/1 "Aptos Display", "Noto Sans TC", "Microsoft JhengHei", sans-serif !important;
-	letter-spacing: -.035em;
-}
-
-body.waypoint-page #searchQ::placeholder {
-	color: var(--waypoint-ink) !important;
-	opacity: 1;
-}
-
-body.waypoint-page #searchbar:focus-within {
-	border-bottom-color: var(--waypoint-accent) !important;
-}
-
-body.waypoint-page #resultBox {
-	position: absolute !important;
-	top: 72px !important;
-	left: 0 !important;
-	z-index: 40 !important;
-	width: 100% !important;
-	max-height: min(42vh, 330px) !important;
-	margin: 0 !important;
-	padding: 8px 0 !important;
-	overflow-y: auto !important;
-	background: var(--waypoint-panel) !important;
-	border: 1px solid var(--waypoint-line) !important;
-	border-top: 0 !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	color: var(--waypoint-ink) !important;
-}
-
-body.waypoint-page #resultBox .resultItem {
-	padding: 12px 16px !important;
-	border-radius: 0 !important;
-	font-size: 1rem !important;
-}
-
-body.waypoint-page #resultBox .resultItem:hover,
-body.waypoint-page #resultBox .resultItem.active {
-	background: var(--waypoint-accent) !important;
-	color: #111 !important;
-}
-
-.waypoint-destinations {
-	min-height: 0;
-}
-
-.waypoint-destinations > h1 {
-	margin: 0 0 20px;
-	padding-bottom: 18px;
-	border-bottom: 1px solid var(--waypoint-line);
-	font-size: 1.25rem;
-	font-weight: 800;
-	letter-spacing: .02em;
-}
-
-body.waypoint-page #shortcuts-section {
-	position: static !important;
-	display: block !important;
-	width: 100% !important;
-	height: auto !important;
-	max-height: min(46vh, 430px) !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	overflow-x: hidden !important;
-	overflow-y: auto !important;
-	scale: 1 !important;
-	transform: none !important;
-}
-
-body.waypoint-page #shortcuts-section .wrapper {
-	position: static !important;
-	display: block !important;
-	width: 100% !important;
-	height: auto !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	overflow: visible !important;
-}
-
-body.waypoint-page #flexMonitor,
-body.waypoint-page #defaultMonitor,
-body.waypoint-page #shortcutsContainer::before {
-	display: none !important;
-}
-
-body.waypoint-page #shortcutsContainer {
-	position: static !important;
-	display: grid !important;
-	grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-	gap: 0 clamp(34px, 5vw, 72px) !important;
-	width: 100% !important;
-	height: auto !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	overflow: visible !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	counter-reset: waypoint-destination;
-}
-
-body.waypoint-page #shortcutsContainer .shortcuts {
-	position: relative !important;
-	display: block !important;
-	width: 100% !important;
-	height: auto !important;
-	min-height: 104px !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-bottom: 1px solid var(--waypoint-soft-line) !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	transform: none !important;
-	counter-increment: waypoint-destination;
-}
-
-body.waypoint-page #shortcutsContainer .shortcuts a {
-	position: relative !important;
-	display: grid !important;
-	grid-template-columns: 58px 52px minmax(0, 1fr) 20px !important;
-	align-items: center !important;
-	gap: 16px !important;
-	width: 100% !important;
-	height: 103px !important;
-	margin: 0 !important;
-	padding: 0 6px 0 0 !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	color: var(--waypoint-ink) !important;
-	text-decoration: none !important;
-	transform: none !important;
-}
-
-body.waypoint-page #shortcutsContainer .shortcuts a::before {
-	position: static !important;
-	display: block !important;
-	content: counter(waypoint-destination, decimal-leading-zero) !important;
-	color: var(--waypoint-accent) !important;
-	font: 400 2.25rem/1 "Cascadia Mono", Consolas, monospace !important;
-	letter-spacing: -.08em;
-}
-
-body.waypoint-page #shortcutsContainer .shortcuts a::after {
-	position: static !important;
-	display: block !important;
-	content: "↗" !important;
-	width: auto !important;
-	height: auto !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-radius: 0 !important;
-	color: currentColor !important;
-	font: 400 1.35rem/1 sans-serif !important;
-	opacity: 1 !important;
-	transform: none !important;
-}
-
-body.waypoint-page #shortcutsContainer .shortcutLogoContainer {
-	position: static !important;
-	display: grid !important;
-	place-items: center !important;
-	width: 48px !important;
-	height: 48px !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	transform: none !important;
-}
-
-body.waypoint-page #shortcutsContainer .shortcutLogoContainer svg,
-body.waypoint-page #shortcutsContainer .shortcutLogoContainer img {
-	width: 44px !important;
-	height: 44px !important;
-	max-width: 44px !important;
-	max-height: 44px !important;
-	border-radius: 0 !important;
-	filter: grayscale(1) contrast(1.35);
-}
-
-body.waypoint-page.black-theme #shortcutsContainer .shortcutLogoContainer img {
-	filter: grayscale(1) contrast(1.35) invert(1);
-}
-
-body.waypoint-page #shortcutsContainer .shortcutDarkColor,
-body.waypoint-page #shortcutsContainer .accentColor {
-	fill: var(--waypoint-ink) !important;
-}
-
-body.waypoint-page #shortcutsContainer .shortcut-name {
-	position: static !important;
-	display: block !important;
-	visibility: visible !important;
-	min-width: 0;
-	width: auto !important;
-	max-width: none !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	overflow: hidden;
-	opacity: 1 !important;
-	color: inherit !important;
-	font: 600 clamp(1.35rem, 2vw, 2rem)/1.1 "Aptos Display", "Noto Sans TC", "Microsoft JhengHei", sans-serif !important;
-	letter-spacing: -.025em;
-	text-align: left !important;
-	text-overflow: ellipsis;
-	transform: none !important;
-	white-space: nowrap;
-}
-
-body.waypoint-page #shortcutsContainer .shortcuts a:hover,
-body.waypoint-page #shortcutsContainer .shortcuts a:focus-visible {
-	color: var(--waypoint-accent) !important;
-	outline: 0 !important;
-}
-
-body.waypoint-page #shortcutsContainer .shortcuts:has(a:hover),
-body.waypoint-page #shortcutsContainer .shortcuts:has(a:focus-visible) {
-	border-bottom-color: var(--waypoint-accent) !important;
-}
-
-.waypoint-text-action {
-	display: inline-flex;
-	align-items: center;
-	gap: 18px;
-	min-height: 48px;
-	margin: 16px 0 0;
-	padding: 4px 2px;
-	background: transparent;
-	border: 0;
-	border-radius: 0;
-	color: var(--waypoint-ink);
-	font: 700 1rem/1 "Aptos", "Noto Sans TC", sans-serif;
-	cursor: pointer;
-}
-
-.waypoint-text-action:hover,
-.waypoint-text-action:focus-visible {
-	color: var(--waypoint-accent);
-	outline: 2px solid var(--waypoint-accent);
-	outline-offset: 4px;
-}
-
-.waypoint-focus {
-	min-width: 0;
-	padding: clamp(48px, 7vh, 86px) clamp(28px, 3vw, 52px);
-	border-left: 1px solid var(--waypoint-line);
-}
-
-.waypoint-focus > h2 {
-	margin: 0;
-	font-size: 1.22rem;
-	font-weight: 800;
-	letter-spacing: .04em;
-}
-
-.waypoint-accent-rule {
-	display: block;
-	width: 52px;
-	height: 3px;
-	margin: 20px 0 clamp(48px, 8vh, 82px);
-	background: var(--waypoint-accent);
-}
-
-body.waypoint-page #pomodoroPanel {
-	position: static !important;
-	top: auto !important;
-	left: auto !important;
-	right: auto !important;
-	display: flex !important;
-	flex-direction: column !important;
-	align-items: flex-start !important;
-	width: 100% !important;
-	height: auto !important;
-	min-height: 0 !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	overflow: visible !important;
-	opacity: 1 !important;
-	background: transparent !important;
-	border: 0 !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	backdrop-filter: none !important;
-	color: var(--waypoint-ink) !important;
-	transform: none !important;
-	transition: none !important;
-	animation: none !important;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoro-bg-video,
-body.waypoint-page #pomodoroPanel .pomodoro-bg-overlay,
-body.waypoint-page #pomodoroPanel .pomodoro-drag-handle,
-body.waypoint-page #pomodoroPanel .pomodoroProgressRing,
-body.waypoint-page #pomodoroPanel .pomodoroRoundDisplay,
-body.waypoint-page #pomodoroPanel .pomodoroAmbientRow,
-body.waypoint-page #pomodoroPanel .pomodoroSessionsToday,
-body.waypoint-page #pomodoroPanel .pomodoroFocusSummary {
-	display: none !important;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroPhaseLabel {
-	order: 0;
-	margin: 0 0 16px;
-	color: var(--waypoint-muted) !important;
-	font: 700 .78rem/1 "Cascadia Mono", Consolas, monospace !important;
-	letter-spacing: .14em;
-	text-transform: uppercase;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroCircleWrap {
-	order: 1;
-	position: static !important;
-	display: block !important;
-	width: auto !important;
-	height: auto !important;
-	margin: 0 !important;
-}
-
-body.waypoint-page #pomodoroTimeDisplay {
-	position: static !important;
-	display: block !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	color: var(--waypoint-ink) !important;
-	font: 300 clamp(4.6rem, 7vw, 7.2rem)/.9 "Cascadia Mono", Consolas, monospace !important;
-	letter-spacing: -.08em;
-	text-shadow: none !important;
-	transform: none !important;
-}
-
-.waypoint-pomodoro-state {
-	order: 2;
-	margin: 22px 0 42px;
-	color: var(--waypoint-ink);
-	font-size: 1.22rem;
-	font-weight: 700;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroControls {
-	order: 3;
-	display: flex !important;
-	align-items: flex-end !important;
-	justify-content: flex-start !important;
-	gap: 14px !important;
-	width: auto !important;
-	margin: 0 !important;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroBtn {
-	position: relative !important;
-	place-items: center !important;
-	width: 74px !important;
-	height: 74px !important;
-	margin: 0 !important;
-	padding: 14px 8px 10px !important;
-	background: transparent !important;
-	border: 1px solid var(--waypoint-line) !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	color: var(--waypoint-ink) !important;
-	cursor: pointer;
-	transform: none !important;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroBtn svg {
-	width: 24px;
-	height: 24px;
-	fill: var(--waypoint-accent) !important;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroBtn span {
-	display: block;
-	margin-top: 4px;
-	font-size: .72rem;
-	font-weight: 800;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroResetBtn {
-	width: 58px !important;
-	height: 58px !important;
-	padding: 8px 6px !important;
-	border-color: var(--waypoint-soft-line) !important;
-	color: var(--waypoint-muted) !important;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroBtn:hover,
-body.waypoint-page #pomodoroPanel .pomodoroBtn:focus-visible {
-	background: var(--waypoint-accent) !important;
-	color: #111 !important;
-	outline: 0 !important;
-}
-
-body.waypoint-page #pomodoroPanel .pomodoroBtn:hover svg,
-body.waypoint-page #pomodoroPanel .pomodoroBtn:focus-visible svg {
-	fill: #111 !important;
-}
-
-.waypoint-footer {
-	display: flex;
-	align-items: end;
-	gap: 34px;
-	color: var(--waypoint-muted);
-	font-family: "Cascadia Mono", Consolas, monospace;
-	font-size: .78rem;
-}
-
-.waypoint-settings {
-	display: grid;
-	place-items: center;
-	width: 42px;
-	height: 42px;
-	padding: 0;
-	background: transparent;
-	border: 1px solid transparent;
-	border-radius: 0;
-	color: var(--waypoint-ink);
-	cursor: pointer;
-}
-
-.waypoint-settings svg {
-	fill: currentColor;
-}
-
-.waypoint-settings:hover,
-.waypoint-settings:focus-visible {
-	border-color: var(--waypoint-accent);
-	color: var(--waypoint-accent);
-	outline: 0;
-}
-
-body.waypoint-page .bookmark-sidebar {
-	position: fixed !important;
-	top: 0 !important;
-	right: 0 !important;
-	left: auto !important;
-	z-index: 120 !important;
-	width: min(440px, 100vw) !important;
-	height: 100dvh !important;
-	padding: 30px !important;
-	background: var(--waypoint-panel) !important;
-	border: 0 !important;
-	border-left: 1px solid var(--waypoint-line) !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	color: var(--waypoint-ink) !important;
-	transform: translateX(100%) !important;
-	transition: transform 180ms ease !important;
-}
-
-body.waypoint-page .bookmark-sidebar.open {
-	transform: translateX(0) !important;
-}
-
-body.waypoint-page .bookmark-sidebar .topOutRoundCorner {
-	display: none !important;
-}
-
-body.waypoint-page .bookmark-sidebar-header h2 {
-	color: var(--waypoint-ink) !important;
-	font-size: 1.6rem !important;
-}
-
-body.waypoint-page .bookmark-sidebar input,
-body.waypoint-page .bookmark-sidebar button,
-body.waypoint-page #editBookmarkModal input,
-body.waypoint-page #editBookmarkModal button {
-	border-radius: 0 !important;
-	box-shadow: none !important;
-}
-
-body.waypoint-page .bookmark-sidebar input {
-	background: transparent !important;
-	border: 0 !important;
-	border-bottom: 1px solid var(--waypoint-line) !important;
-	color: var(--waypoint-ink) !important;
-}
-
-body.waypoint-page .bookmark-sidebar button {
-	background: transparent !important;
-	border: 1px solid var(--waypoint-soft-line) !important;
-	color: var(--waypoint-ink) !important;
-}
-
-body.waypoint-page .menuBar {
-	background: color-mix(in srgb, var(--waypoint-ink) 18%, transparent) !important;
-	backdrop-filter: none !important;
-}
-
-body.waypoint-page .menuBar .menuCont {
-	width: min(470px, 100vw) !important;
-	height: 100dvh !important;
-	scale: 1 !important;
-	background: var(--waypoint-panel) !important;
-	border: 0 !important;
-	border-left: 1px solid var(--waypoint-line) !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	color: var(--waypoint-ink) !important;
-}
-
-body.waypoint-page .menuCont .topRounder {
-	display: none !important;
-}
-
-body.waypoint-page .menuCont .topDiv,
-body.waypoint-page .menuCont .sectionOuter,
-body.waypoint-page .menuCont .ttcont,
-body.waypoint-page .menuCont .tiles,
-body.waypoint-page .menuCont input,
-body.waypoint-page .menuCont select,
-body.waypoint-page .menuCont button {
-	border-radius: 0 !important;
-	box-shadow: none !important;
-}
-
-body.waypoint-page .menuCont .topDiv {
-	background: var(--waypoint-panel) !important;
-	border-bottom: 1px solid var(--waypoint-line) !important;
-}
-
-body.waypoint-page .menuCont .topDiv h1,
-body.waypoint-page .menuCont .bigText,
-body.waypoint-page .menuCont .sectionTitle {
-	color: var(--waypoint-ink) !important;
-}
-
-body.waypoint-page .menuCont .tiles,
-body.waypoint-page .menuCont .ttcont {
-	background: transparent !important;
-	border: 1px solid var(--waypoint-soft-line) !important;
-}
-
-body.waypoint-page .myntDialog,
-body.waypoint-page .ai-modal-content,
-body.waypoint-page #editBookmarkModal .modal-content,
-body.waypoint-page #prompt-modal-box {
-	background: var(--waypoint-panel) !important;
-	border: 1px solid var(--waypoint-line) !important;
-	border-radius: 4px !important;
-	box-shadow: none !important;
-	color: var(--waypoint-ink) !important;
-}
-
-body.waypoint-page .myntDialog button,
-body.waypoint-page .myntDialog input,
-body.waypoint-page .myntDialog select,
-body.waypoint-page .ai-modal-content button,
-body.waypoint-page .ai-modal-content input {
-	border-radius: 0 !important;
-	box-shadow: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	body.waypoint-page *,
-	body.waypoint-page *::before,
-	body.waypoint-page *::after {
-		scroll-behavior: auto !important;
-		transition-duration: .01ms !important;
-		animation-duration: .01ms !important;
-		animation-iteration-count: 1 !important;
-	}
-}
-
-@media screen and (max-width: 900px) {
-	body.waypoint-page {
-		height: auto !important;
-		overflow: auto !important;
-	}
-
-	.waypoint-app {
-		grid-template-rows: auto auto auto;
-		height: auto;
-		min-height: 100dvh;
-		padding: 20px 18px 14px;
-	}
-
-	.waypoint-header {
-		grid-template-columns: auto auto 1fr;
-		gap: 24px;
-	}
-
-	.waypoint-layout {
-		grid-template-columns: 1fr;
-	}
-
-	.waypoint-primary {
-		padding: 70px 28px 26px;
-	}
-
-	.waypoint-focus {
-		padding: 30px 28px;
-		border-top: 1px solid var(--waypoint-line);
-		border-left: 0;
-	}
-
-	.waypoint-accent-rule {
-		margin-bottom: 34px;
-	}
-
-	body.waypoint-page #pomodoroPanel {
-		display: grid !important;
-		grid-template-areas:
-			"phase controls"
-			"timer controls"
-			"state controls";
-		grid-template-columns: minmax(0, 1fr) auto !important;
-		align-items: center !important;
-		column-gap: 28px !important;
-	}
-
-	body.waypoint-page #pomodoroPanel .pomodoroPhaseLabel {
-		grid-area: phase;
-		margin: 0 0 10px;
-	}
-
-	body.waypoint-page #pomodoroPanel .pomodoroCircleWrap {
-		grid-area: timer;
-	}
-
-	.waypoint-pomodoro-state {
-		grid-area: state;
-		margin: 12px 0 0;
-	}
-
-	body.waypoint-page #pomodoroPanel .pomodoroControls {
-		grid-area: controls;
-	}
-
-	.waypoint-footer {
-		padding-top: 14px;
-	}
-}
-
-@media screen and (max-width: 600px) {
-	.waypoint-app {
-		padding-inline: 16px;
-	}
-
-	.waypoint-header {
-		grid-template-columns: auto auto minmax(0, 1fr);
-		gap: 12px;
-		font-size: .88rem;
-	}
-
-	.waypoint-date {
-		display: block;
-		width: 100%;
-		min-width: 0;
-		text-align: right;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.waypoint-primary {
-		padding: 64px 8px 24px;
-	}
-
-	.waypoint-search {
-		margin-bottom: 68px;
-	}
-
-	body.waypoint-page #searchbar,
-	body.waypoint-page #searchQ {
-		height: 68px !important;
-		min-height: 68px !important;
-	}
-
-	body.waypoint-page #searchQ {
-		font-size: clamp(1.7rem, 8.5vw, 2.45rem) !important;
-	}
-
-	body.waypoint-page #resultBox {
-		top: 68px !important;
-	}
-
-	body.waypoint-page #shortcuts-section {
-		max-height: none !important;
-		overflow: visible !important;
-	}
-
-	body.waypoint-page #shortcutsContainer {
-		grid-template-columns: 1fr !important;
-	}
-
-	body.waypoint-page #shortcutsContainer .shortcuts,
-	body.waypoint-page #shortcutsContainer .shortcuts a {
-		min-height: 94px !important;
-		height: 94px !important;
-	}
-
-	body.waypoint-page #shortcutsContainer .shortcuts a {
-		grid-template-columns: 52px 48px minmax(0, 1fr) 18px !important;
-		gap: 12px !important;
-	}
-
-	body.waypoint-page #shortcutsContainer .shortcuts a::before {
-		font-size: 2rem !important;
-	}
-
-	body.waypoint-page #shortcutsContainer .shortcutLogoContainer,
-	body.waypoint-page #shortcutsContainer .shortcutLogoContainer svg,
-	body.waypoint-page #shortcutsContainer .shortcutLogoContainer img {
-		width: 42px !important;
-		height: 42px !important;
-	}
-
-	body.waypoint-page #shortcutsContainer .shortcut-name {
-		font-size: clamp(1.35rem, 6vw, 1.85rem) !important;
-	}
-
-	.waypoint-focus {
-		padding: 26px 8px 22px;
-	}
-
-	body.waypoint-page #pomodoroTimeDisplay {
-		font-size: clamp(3.8rem, 19vw, 5.4rem) !important;
-	}
-
-	body.waypoint-page #pomodoroPanel .pomodoroBtn {
-		width: 68px !important;
-		height: 68px !important;
-	}
-
-	body.waypoint-page #pomodoroPanel .pomodoroResetBtn {
-		width: 52px !important;
-		height: 52px !important;
-	}
-
-	#waypointShortcutHint {
-		display: none;
-	}
-
-	body.waypoint-page .bookmark-sidebar {
-		width: 100vw !important;
-		padding: 22px 18px !important;
 	}
 }
