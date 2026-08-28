@@ -121,6 +121,14 @@ function applyLanguage(lang) {
 
     // Mapping of text elements and their translation keys
     const translationMap = [
+        "waypointBrand",
+        "waypointDestinationsTitle",
+        "waypointBookmarksLabel",
+        "waypointFocusTitle",
+        "waypointShortcutHint",
+        "waypointStartLabel",
+        "waypointPauseLabel",
+        "waypointResetLabel",
         "feedback",
         "resetsettings",
         "shortcutsText",
@@ -299,7 +307,7 @@ function applyLanguage(lang) {
     const placeholderMap = [
         { id: "userLoc", key: "userLoc" },
         { id: "userAPI", key: "userAPI" },
-        { id: "searchQ", key: "searchPlaceholder" },
+        { id: "searchQ", key: "waypointSearchPlaceholder" },
         { id: "todoInput", key: "todoPlaceholder" },
         { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "editBookmarkName", key: "editBookmarkName" },
@@ -350,6 +358,8 @@ function applyLanguage(lang) {
     applyTranslations(translationMap, false);  // For innerTexts with same ID and keys
 
     const accessibleLabelMap = [
+        { id: "waypointBookmarksButton", key: "waypointBookmarksLabel" },
+        { id: "waypointSettingsButton", key: "settingsSectionTitle" },
         { id: "todoListCont", key: "todoListText" },
         { id: "pomodoroCont", key: "pomodoroText" },
         { id: "bookmarkButton", key: "bookmarksText" },

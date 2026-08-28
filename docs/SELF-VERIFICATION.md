@@ -1,4 +1,4 @@
-# MYNT 3.4.0 自我驗證指南
+# 航點 3.4.0 自我驗證指南
 
 本指南把驗證拆成兩部分：
 
@@ -26,7 +26,7 @@ GitHub Pages 第一次使用需要由 Repository 管理者做一次設定：
 
 ## 二、網頁預覽檢查
 
-先開啟預覽首頁，等待右上角或右下角出現「MYNT 網頁預覽」狀態，再進入 `verify.html`。
+先開啟預覽首頁，等待右上角或右下角出現「航點網頁預覽」狀態，再進入 `verify.html`。
 
 最低通過標準：
 
@@ -35,7 +35,7 @@ GitHub Pages 第一次使用需要由 Repository 管理者做一次設定：
 - 控制中心、待辦清單與 Scratchpad 元件存在
 - Console 沒有 `ReferenceError`、`TypeError`、`SyntaxError` 或 `Uncaught`
 - 搜尋、Search Bang、工作模式、待辦、Scratchpad、番茄鐘與每日語錄可操作
-- `Ctrl/Command + K`、`?`、`Alt + 1`～`9` 沒有衝突
+- `?`、`Alt + 1`～`9` 沒有衝突
 
 ### 網頁預覽的已知限制
 
@@ -60,7 +60,7 @@ GitHub Pages 第一次使用需要由 Repository 管理者做一次設定：
 7. Brave：開啟 `brave://extensions`
 8. 開啟「開發人員模式」
 9. 選擇「載入未封裝項目」，指定剛解壓的 Chromium 資料夾
-10. 新開一個分頁確認 MYNT 已取代預設頁面
+10. 新開一個分頁確認航點已取代預設頁面
 
 ## 四、真實擴充套件驗證清單
 

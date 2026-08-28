@@ -86,7 +86,47 @@
     <script src="locales/sv.js"></script>
 </head>
 
-<body data-bg="wallpaper" data-workspace-background="video">
+<body class="waypoint-page" data-bg="wallpaper" data-workspace-background="video">
+    <main id="waypointApp" class="waypoint-app" aria-labelledby="waypointBrand">
+        <header class="waypoint-header">
+            <strong id="waypointBrand" class="waypoint-brand">航點</strong>
+            <time id="waypointTime" class="waypoint-time" datetime="">--:--</time>
+            <span id="waypointDate" class="waypoint-date">載入日期</span>
+        </header>
+
+        <div class="waypoint-layout">
+            <div class="waypoint-primary">
+                <section class="waypoint-search" aria-label="搜尋或前往網站">
+                    <div id="waypointSearchSlot"></div>
+                </section>
+
+                <section class="waypoint-destinations" aria-labelledby="waypointDestinationsTitle">
+                    <h1 id="waypointDestinationsTitle">常用網站</h1>
+                    <div id="waypointShortcutSlot"></div>
+                    <button id="waypointBookmarksButton" class="waypoint-text-action" type="button">
+                        <span id="waypointBookmarksLabel">全部書籤</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </section>
+            </div>
+
+            <aside class="waypoint-focus" aria-labelledby="waypointFocusTitle">
+                <h2 id="waypointFocusTitle">專注</h2>
+                <span class="waypoint-accent-rule" aria-hidden="true"></span>
+                <div id="waypointPomodoroSlot"></div>
+            </aside>
+        </div>
+
+        <footer class="waypoint-footer">
+            <button id="waypointSettingsButton" class="waypoint-settings" type="button" aria-label="設定">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26">
+                    <path d="M12 8.25A3.75 3.75 0 1 0 12 15.75 3.75 3.75 0 0 0 12 8.25Zm9 3.75-2.18-1.26a7.1 7.1 0 0 0-.52-1.24l.65-2.43-2.02-2.02-2.43.65a7.1 7.1 0 0 0-1.24-.52L12 3H9.14L7.88 5.18c-.43.14-.85.32-1.24.52l-2.43-.65-2.02 2.02.65 2.43c-.2.39-.38.81-.52 1.24L.14 12v2.86l2.18 1.26c.14.43.32.85.52 1.24l-.65 2.43 2.02 2.02 2.43-.65c.39.2.81.38 1.24.52L9.14 24H12l1.26-2.18c.43-.14.85-.32 1.24-.52l2.43.65 2.02-2.02-.65-2.43c.2-.39.38-.81.52-1.24L21 14.86V12Zm-9 5.5A5.5 5.5 0 1 1 12 6.5a5.5 5.5 0 0 1 0 11Z" transform="scale(.86) translate(1.95 -1.95)" />
+                </svg>
+            </button>
+            <span id="waypointShortcutHint">提示：按 Alt＋1–9 可直接開啟網站</span>
+        </footer>
+    </main>
+
     <!-- --------------------- Video Background --------------------- -->
     <video id="videoBg" muted loop playsinline preload="metadata" aria-hidden="true"
         style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;">
@@ -181,14 +221,18 @@
         <div class="pomodoroControls">
             <button class="pomodoroBtn" id="pomodoroStartBtn" title="Start">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span id="waypointStartLabel">開始</span>
             </button>
             <button class="pomodoroBtn" id="pomodoroPauseBtn" title="Pause" style="display:none;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+                <span id="waypointPauseLabel">暫停</span>
             </button>
             <button class="pomodoroBtn pomodoroResetBtn" id="pomodoroResetBtn" title="Reset">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                <span id="waypointResetLabel">重設</span>
             </button>
         </div>
+        <div id="waypointPomodoroState" class="waypoint-pomodoro-state" aria-live="polite">準備開始</div>
         <div class="pomodoroAmbientRow" id="pomodoroAmbientRow">
             <button class="pomodoroAmbientToggleBtn" id="pomodoroAmbientToggleBtn" type="button" title="Ambient Sound">🎧</button>
             <select id="pomodoroAmbientSelect" class="pomodoroAmbientSelect" aria-label="Ambient Sound Type">
@@ -1015,14 +1059,14 @@
             </div>
             <!-- ---end of rounder--- -->
             <div class="topDiv">
-                <h1>Material You New Tab</h1>
+                <h1>航點</h1>
             </div>
             <div class="optCont" id="optCont">
                 <div class="page" id="overviewPage">
                     <div class="tilesCont">
 
                         <!-- ----tiles----------- -->
-                        <a class="tiles" href="https://github.com/prem-k-r/MaterialYouNewTab">
+                        <a class="tiles" href="https://github.com/Reese-max/MaterialYouNewTab">
                             <div class="icon">
                                 <svg height="100%" viewBox="0 0 20 20" width="100%" xmlns="http://www.w3.org/2000/svg">
                                     <path id="githab" class="bgLightTint notTargeted"
@@ -1034,7 +1078,7 @@
                         </a>
                         <!-- -----end of tiles-------- -->
                         <!-- ----tiles----------- -->
-                        <a class="tiles" href="https://prem-k-r.github.io/MaterialYouNewTab/docs/feedback.html">
+                        <a class="tiles" href="docs/feedback.html">
                             <div class="icon">
                                 <svg height="100%" viewBox="0 0 18 17" width="100%" xmlns="http://www.w3.org/2000/svg">
                                     <path id="sujhaw" class="bgLightTint notTargeted" clip-rule="evenodd"
@@ -1615,7 +1659,7 @@
                                             <div id="locationSuggestions" class="location-suggestion-box"></div>
 
                                             <div class="bottom">
-                                                <a href="https://prem-k-r.github.io/MaterialYouNewTab/privacy-policy.html"
+                                                <a href="privacy-policy.html"
                                                     id="PrivacyPolicy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
                                                 <button class="savebtn" id="saveLoc">Save</button>
                                             </div>
@@ -1642,7 +1686,7 @@
                                             <input id="userAPI" placeholder="Your weatherAPI key" type="password"
                                                 autocomplete="off" spellcheck="false">
                                             <div class="bottom">
-                                                <a href="https://prem-k-r.github.io/MaterialYouNewTab/docs/Get_WeatherAPI_Key.html"
+                                                <a href="docs/Get_WeatherAPI_Key.html"
                                                     id="LearnMoreButton" target="_blank" rel="noopener noreferrer">Learn more</a>
                                                 <button class="savebtn" id="saveAPI">Save</button>
                                             </div>
@@ -1906,7 +1950,7 @@
                                 <div class="bigText" id="updateFirefoxHomepage">Update Homepage</div>
                                 <div class="infoText" id="updateFirefoxHomepageInfo">To change your homepage
                                     like the new tab as well, visit <a
-                                        href="https://github.com/prem-k-r/MaterialYouNewTab#-firefox"
+                                        href="https://github.com/Reese-max/MaterialYouNewTab#firefox"
                                         target="_blank" rel="noopener noreferrer">this link</a> and follow the instructions.
                                 </div>
                             </div>

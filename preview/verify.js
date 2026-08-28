@@ -16,7 +16,7 @@
 
     const extensionChecks = [
         ["ext-install", "下載 Chromium ZIP、解壓後以「載入未封裝項目」安裝成功。"],
-        ["ext-newtab", "新開分頁實際顯示 MYNT，而不是一般網站分頁。"],
+        ["ext-newtab", "新開分頁實際顯示航點，而不是一般網站分頁。"],
         ["ext-console", "新分頁 DevTools Console 沒有 ReferenceError、TypeError、SyntaxError 或 Uncaught。"],
         ["ext-icon", "自訂圖示可使用圖片網址、上傳圖片與安全 SVG，重載後仍保留。"],
         ["ext-icon-security", "含 script、onload、javascript: 或 foreignObject 的 SVG 會被拒絕且不會保存。"],
