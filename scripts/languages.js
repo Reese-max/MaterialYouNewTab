@@ -121,14 +121,6 @@ function applyLanguage(lang) {
 
     // Mapping of text elements and their translation keys
     const translationMap = [
-        "waypointBrand",
-        "waypointDestinationsTitle",
-        "waypointBookmarksLabel",
-        "waypointFocusTitle",
-        "waypointShortcutHint",
-        "waypointStartLabel",
-        "waypointPauseLabel",
-        "waypointResetLabel",
         "feedback",
         "resetsettings",
         "shortcutsText",
@@ -271,6 +263,7 @@ function applyLanguage(lang) {
         "bookmarksText",
         "bookmarksInfo",
         "bookmarksHeading",
+        "bookmarksSubtitle",
         "bookmarkSortBy",
         "sortAlphabetical",
         "sortTimeAdded",
@@ -307,7 +300,7 @@ function applyLanguage(lang) {
     const placeholderMap = [
         { id: "userLoc", key: "userLoc" },
         { id: "userAPI", key: "userAPI" },
-        { id: "searchQ", key: "waypointSearchPlaceholder" },
+        { id: "searchQ", key: "searchPlaceholder" },
         { id: "todoInput", key: "todoPlaceholder" },
         { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "editBookmarkName", key: "editBookmarkName" },
@@ -358,20 +351,41 @@ function applyLanguage(lang) {
     applyTranslations(translationMap, false);  // For innerTexts with same ID and keys
 
     const accessibleLabelMap = [
-        { id: "waypointBookmarksButton", key: "waypointBookmarksLabel" },
-        { id: "waypointSettingsButton", key: "settingsSectionTitle" },
         { id: "todoListCont", key: "todoListText" },
         { id: "pomodoroCont", key: "pomodoroText" },
         { id: "bookmarkButton", key: "bookmarksText" },
         { id: "googleAppsCont", key: "googleAppsMenuText" },
         { id: "aiToolsIcon", key: "ai_tools_button" },
         { id: "micIcon", key: "voiceSearchLabel" },
-        { id: "menuButton", key: "openSettingsLabel" }
+        { id: "menuButton", key: "openSettingsLabel" },
+        { id: "clearSearchButton", key: "clearBookmarkSearchLabel", title: true },
+        { id: "newShortcutButton", key: "addShortcutLabel", title: true },
+        { id: "resetButton", key: "resetShortcutsLabel", title: true }
     ];
-    accessibleLabelMap.forEach(({ id, key }) => {
+    accessibleLabelMap.forEach(({ id, key, title }) => {
         const element = document.getElementById(id);
         const label = translations[lang]?.[key] || translations.en?.[key];
-        if (element && label) element.setAttribute("aria-label", label);
+        if (!element || !label) return;
+        element.setAttribute("aria-label", label);
+        if (title) element.title = label;
+    });
+
+    const pinLabel = translations[lang]?.bookmarkPinToShortcuts || translations.en?.bookmarkPinToShortcuts;
+    const pinnedLabel = translations[lang]?.bookmarkPinnedLabel || translations.en?.bookmarkPinnedLabel;
+    document.querySelectorAll(".bookmark-pin-button").forEach(button => {
+        const label = button.disabled ? pinnedLabel : pinLabel;
+        const bookmarkTitle = button.closest("li")?.querySelector("a span")?.textContent?.trim();
+        button.title = label;
+        button.setAttribute("aria-label", bookmarkTitle ? `${label}: ${bookmarkTitle}` : label);
+        const text = button.querySelector(".bookmark-pin-label");
+        if (text) text.textContent = label;
+    });
+
+    const deleteLabel = translations[lang]?.bookmarkDeleteLabel || translations.en?.bookmarkDeleteLabel;
+    document.querySelectorAll(".bookmark-delete-button").forEach(button => {
+        const bookmarkTitle = button.closest("li")?.querySelector("a span")?.textContent?.trim();
+        button.title = deleteLabel;
+        button.setAttribute("aria-label", bookmarkTitle ? `${deleteLabel}: ${bookmarkTitle}` : deleteLabel);
     });
 
     // For userText

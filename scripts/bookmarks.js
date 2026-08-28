@@ -16,6 +16,7 @@ const bookmarkSearchClearButton = document.getElementById("clearSearchButton");
 const bookmarkViewGrid = document.getElementById("bookmarkViewGrid");
 const bookmarkViewList = document.getElementById("bookmarkViewList");
 const bookmarksCheckbox = document.getElementById("bookmarksCheckbox");
+const bookmarkShortcutStatus = document.getElementById("bookmarkShortcutStatus");
 
 const editBookmarkModal = document.getElementById("editBookmarkModal");
 const editBookmarkName = document.getElementById("editBookmarkName");
@@ -24,6 +25,7 @@ const editBookmarkFavicon = document.getElementById("editBookmarkFavicon");
 const saveBookmarkChanges = document.getElementById("saveBookmarkChanges");
 const cancelBookmarkEdit = document.getElementById("cancelBookmarkEdit");
 let currentBookmarkId = null;
+let bookmarkStatusTimer = null;
 
 const sortAlphabetical = document.getElementById("sortAlphabetical");
 const sortTimeAdded = document.getElementById("sortTimeAdded");
@@ -51,6 +53,57 @@ bookmarkViewGrid.addEventListener("click", function () {
 
 bookmarkViewList.addEventListener("click", function () {
     if (bookmarkGridCheckbox.checked) bookmarkGridCheckbox.click();
+});
+
+document.addEventListener("mynt:shortcut-feedback", function (event) {
+    const { status, name = "", url = "" } = event.detail || {};
+    const keyByStatus = {
+        added: "bookmarkShortcutAdded",
+        duplicate: "bookmarkShortcutExists",
+        full: "bookmarkShortcutFull",
+        invalid: "bookmarkShortcutInvalid",
+        error: "bookmarkShortcutError"
+    };
+    const fallbackByStatus = {
+        added: "{title} was added to shortcuts.",
+        duplicate: "{title} is already in shortcuts.",
+        full: "Shortcut limit reached. Remove one before adding another.",
+        invalid: "This bookmark does not have a valid web address.",
+        error: "Could not add this bookmark. Try again."
+    };
+    const messageKey = keyByStatus[status];
+    if (!messageKey || !bookmarkShortcutStatus) return;
+
+    const localized = translations[currentLanguage]?.[messageKey]
+        || translations.en?.[messageKey]
+        || fallbackByStatus[status];
+    bookmarkShortcutStatus.textContent = localized.replace("{title}", name || url);
+
+    if (status === "added" || status === "duplicate") {
+        const pinnedLabel = translations[currentLanguage]?.bookmarkPinnedLabel
+            || translations.en?.bookmarkPinnedLabel
+            || "Added";
+        document.querySelectorAll(".bookmark-pin-button").forEach(button => {
+            let buttonUrl = button.dataset.url || "";
+            try {
+                buttonUrl = new URL(buttonUrl).href;
+            } catch {
+                return;
+            }
+            if (buttonUrl !== url) return;
+
+            button.disabled = true;
+            button.title = pinnedLabel;
+            button.setAttribute("aria-label", pinnedLabel);
+            const label = button.querySelector(".bookmark-pin-label");
+            if (label) label.textContent = pinnedLabel;
+        });
+    }
+
+    clearTimeout(bookmarkStatusTimer);
+    bookmarkStatusTimer = setTimeout(() => {
+        bookmarkShortcutStatus.textContent = "";
+    }, 3200);
 });
 
 document.addEventListener("click", function (event) {
@@ -385,6 +438,7 @@ function displayBookmarks(bookmarkNodes) {
             list.appendChild(folderItem);
         } else if (node.url) {
             let item = document.createElement("li");
+            item.classList.add("bookmark-item");
             item.dataset.id = node.id; // Add ID as dataset for context menu
             item.dataset.url = node.url; // Add URL as dataset for search functionality
             let link = document.createElement("a");
@@ -396,10 +450,40 @@ function displayBookmarks(bookmarkNodes) {
             setBookmarkFavicon(favicon, node.url);
             favicon.classList.add("favicon");
 
-            // Create the delete button
+            const actionContainer = document.createElement("div");
+            actionContainer.classList.add("bookmark-item-actions");
+
+            const pinButton = document.createElement("button");
+            const pinLabel = translations[currentLanguage]?.bookmarkPinToShortcuts
+                || translations.en?.bookmarkPinToShortcuts
+                || "Add to shortcuts";
+            pinButton.type = "button";
+            pinButton.classList.add("bookmark-pin-button");
+            pinButton.dataset.url = node.url;
+            pinButton.title = pinLabel;
+            pinButton.setAttribute("aria-label", `${pinLabel}: ${node.title || node.url}`);
+            pinButton.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>`;
+            const pinText = document.createElement("span");
+            pinText.classList.add("bookmark-pin-label");
+            pinText.textContent = pinLabel;
+            pinButton.appendChild(pinText);
+            pinButton.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                document.dispatchEvent(new CustomEvent("mynt:add-shortcut", {
+                    detail: { name: node.title, url: node.url }
+                }));
+            });
+
             let deleteButton = document.createElement("button");
-            deleteButton.textContent = "✖";
+            const deleteLabel = translations[currentLanguage]?.bookmarkDeleteLabel
+                || translations.en?.bookmarkDeleteLabel
+                || "Delete bookmark";
+            deleteButton.type = "button";
             deleteButton.classList.add("bookmark-delete-button");
+            deleteButton.title = deleteLabel;
+            deleteButton.setAttribute("aria-label", `${deleteLabel}: ${node.title || node.url}`);
+            deleteButton.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 21q-.825 0-1.413-.588T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.588 1.413T17 21zm2-4h2V8H9zm4 0h2V8h-2z"/></svg>`;
 
             deleteButton.addEventListener("click", async function (event) {
                 event.preventDefault();
@@ -427,8 +511,9 @@ function displayBookmarks(bookmarkNodes) {
 
             link.appendChild(favicon);
             link.appendChild(span);
+            actionContainer.append(pinButton, deleteButton);
             item.appendChild(link);
-            item.appendChild(deleteButton); // Add delete button to the item
+            item.appendChild(actionContainer);
 
             // Open links in the current tab or new tab if ctrl pressed
             link.addEventListener("click", function (event) {
@@ -470,7 +555,7 @@ function displayBookmarks(bookmarkNodes) {
 bookmarkList.addEventListener("contextmenu", function (event) {
     event.preventDefault(); // Prevent default right-click menu
 
-    const bookmarkItem = event.target.closest("li[data-id]");
+    const bookmarkItem = event.target.closest("li[data-id][data-url]");
     if (!bookmarkItem) return;
 
     currentBookmarkId = bookmarkItem.dataset.id;

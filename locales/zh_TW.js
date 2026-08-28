@@ -1,17 +1,6 @@
 // Chinese (Traditional)
 const zh_TW = {
     "newTabTitle": "新分頁",
-    "waypointBrand": "航點",
-    "waypointDestinationsTitle": "常用網站",
-    "waypointBookmarksLabel": "全部書籤",
-    "waypointFocusTitle": "專注",
-    "waypointShortcutHint": "提示：按 Alt＋1–9 可直接開啟網站",
-    "waypointStartLabel": "開始",
-    "waypointPauseLabel": "暫停",
-    "waypointResetLabel": "重設",
-    "waypointPomodoroReady": "準備開始",
-    "waypointPomodoroRunning": "專注中",
-    "waypointSearchPlaceholder": "前往網站或搜尋",
     // Menu Items
     "github": "GitHub",
     "feedback": "意見回饋",
@@ -181,7 +170,7 @@ const zh_TW = {
     "editShortcutsText": "編輯捷徑",
     "shortcutsInfoText": "選擇要顯示的捷徑",
     "editShortcutsList": "已儲存的捷徑",
-    "editShortcutsListInfo": "您可以透過點擊“+”圖示新增新的捷徑，或透過點擊捷徑名稱或 URL 來編輯現有捷徑",
+    "editShortcutsListInfo": "拖曳即可排序；按「＋」新增網站，也可以從書籤側欄一鍵加入。所有變更只儲存在本機。",
     "adaptiveIconText": "自適應圖示形狀",
     "adaptiveIconInfoText": "捷徑圖示將依主題色顯示，且以較小尺寸呈現",
     "bookmarksText": "書籤",
@@ -321,6 +310,7 @@ const zh_TW = {
 
     // Bookmarks
     "bookmarksHeading": "書籤",
+    "bookmarksSubtitle": "搜尋、整理，或加入捷徑",
     "bookmarkSortBy": "排序方式",
     "sortAlphabetical": "A-Z",
     "sortTimeAdded": "由舊到新",
@@ -331,6 +321,17 @@ const zh_TW = {
     "editBookmarkHeading": "編輯書籤",
     "editBookmarkName": "書籤名稱",
     "editBookmarkURL": "書籤網址",
+    "bookmarkPinToShortcuts": "加入捷徑",
+    "bookmarkPinnedLabel": "已加入",
+    "bookmarkDeleteLabel": "刪除書籤",
+    "clearBookmarkSearchLabel": "清除書籤搜尋",
+    "bookmarkShortcutAdded": "已將 {title} 加入捷徑。",
+    "bookmarkShortcutExists": "{title} 已經在捷徑中。",
+    "bookmarkShortcutFull": "捷徑已達上限，請先移除一個再加入。",
+    "bookmarkShortcutInvalid": "這個書籤沒有有效的網站網址。",
+    "bookmarkShortcutError": "無法加入這個書籤，請再試一次。",
+    "addShortcutLabel": "新增捷徑",
+    "resetShortcutsLabel": "重設捷徑",
 
     // New Tab Item
     "conditionText": "你好！今天感覺怎麼樣？",

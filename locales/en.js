@@ -1,17 +1,6 @@
 // English (Default)
 const en = {
     "newTabTitle": "New Tab",
-    "waypointBrand": "Waypoint",
-    "waypointDestinationsTitle": "Frequent sites",
-    "waypointBookmarksLabel": "All bookmarks",
-    "waypointFocusTitle": "Focus",
-    "waypointShortcutHint": "Tip: press Alt + 1–9 to open a site",
-    "waypointStartLabel": "Start",
-    "waypointPauseLabel": "Pause",
-    "waypointResetLabel": "Reset",
-    "waypointPomodoroReady": "Ready to start",
-    "waypointPomodoroRunning": "Focusing",
-    "waypointSearchPlaceholder": "Go to a website or search",
     // Menu Items
     "github": "GitHub",
     "feedback": "Feedback",
@@ -181,7 +170,7 @@ const en = {
     "editShortcutsText": "Edit Shortcuts",
     "shortcutsInfoText": "Choose which shortcuts get shown",
     "editShortcutsList": "Saved Shortcuts",
-    "editShortcutsListInfo": "You can add new shortcuts by clicking the \"+\" icon or edit existing ones by clicking on the shortcut name or URL.\nTo reset a custom icon, simply clear the image URL.",
+    "editShortcutsListInfo": "Drag to reorder. Use + to add a site, or pin any bookmark from the bookmarks panel. Changes are saved locally.",
     "adaptiveIconText": "Adaptive Icons",
     "adaptiveIconInfoText": "Shortcut icons will adapt to theme",
     "bookmarksText": "Bookmarks",
@@ -321,6 +310,7 @@ const en = {
 
     // Bookmarks
     "bookmarksHeading": "Bookmarks",
+    "bookmarksSubtitle": "Search, organize, or add to shortcuts",
     "bookmarkSortBy": "Sort by",
     "sortAlphabetical": "A-Z",
     "sortTimeAdded": "Old-New",
@@ -331,6 +321,17 @@ const en = {
     "editBookmarkHeading": "Edit Bookmark",
     "editBookmarkName": "Bookmark Name",
     "editBookmarkURL": "Bookmark URL",
+    "bookmarkPinToShortcuts": "Add to shortcuts",
+    "bookmarkPinnedLabel": "Added",
+    "bookmarkDeleteLabel": "Delete bookmark",
+    "clearBookmarkSearchLabel": "Clear bookmark search",
+    "bookmarkShortcutAdded": "{title} was added to shortcuts.",
+    "bookmarkShortcutExists": "{title} is already in shortcuts.",
+    "bookmarkShortcutFull": "Shortcut limit reached. Remove one before adding another.",
+    "bookmarkShortcutInvalid": "This bookmark does not have a valid web address.",
+    "bookmarkShortcutError": "Could not add this bookmark. Try again.",
+    "addShortcutLabel": "Add shortcut",
+    "resetShortcutsLabel": "Reset shortcuts",
 
     // New Tab Item
     "conditionText": "Hello! How are you today?",
