@@ -34,3 +34,22 @@ No new reproducible P0/P1/P2 finding was confirmed from the static evidence revi
 ## Runtime status
 
 Current-main CI is real execution evidence. This Round 1 did not install the extension into a browser profile or execute the accessibility/restore scenarios, so those remain pending.
+
+---
+
+# Round 2 continuation — 2026-09-06
+
+Status: **NO NEW STATIC P0/P1/P2 / BROWSER-RUNTIME PENDING — NOT CLEAN**
+
+This continuation rechecked the extension permission and local-data trust boundary.
+
+## Additional evidence reviewed
+
+- Chromium MV3 requests only optional `bookmarks` and `favicon` permissions plus optional `https://www.google.com/*` host access; it does not declare broad `<all_urls>` access.
+- README explicitly distinguishes this custom fork from upstream store packages and documents which package path actually contains Reese-max customizations.
+- Productivity state remains local-first and the project documents backup/restore, while WeatherAPI keys are intentionally excluded from backups.
+- Static search did not identify a distinct new authorization/privacy/remote-code finding that passed the P0/P1/P2 quality gate in this continuation.
+
+## CLEAN status
+
+Still **NOT CLEAN**. A second static pass is not sufficient: real Chromium/Firefox load, keyboard/screen-reader/200% zoom, and corrupt/partial restore scenarios still require current runtime/browser evidence before the two-round CLEAN condition can be satisfied.
