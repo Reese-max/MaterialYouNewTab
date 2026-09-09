@@ -60,9 +60,7 @@ try {
             const r=await evaluate('(()=>{const n=document.getElementById("examShell"),r=n.getBoundingClientRect();return {x:r.x,y:r.y+scrollY,width:r.width};})()');
             assert.ok(Math.abs(r.x)<=1 && Math.abs(r.y)<=1 && Math.abs(r.width-width)<=2,JSON.stringify(r));
         });
-        await test(`Search text retains useful input space at ${width}`,async()=>{
-            assert.ok(await evaluate('document.getElementById("searchQ").getBoundingClientRect().width >= 100'));
-        });
+        await test(`Search text retains useful input space at ${width}`,async()=>assert.ok(await evaluate('document.getElementById("searchQ").getBoundingClientRect().width >= 100')));
         if(width===1440||width===390)await shot('layout-'+width);
     }
     await client.send('Emulation.setDeviceMetricsOverride',{width:1440,height:960,deviceScaleFactor:1,mobile:false});
@@ -73,13 +71,11 @@ try {
     await test('Save persists compact view without losing existing shortcuts',async()=>{const before=await evaluate('localStorage.getItem("shortcutAmount")');await evaluate('document.getElementById("examOpenSettings").click();document.getElementById("examField-compact").checked=true;document.querySelector("#examSettingsDialog form").requestSubmit()');assert.ok(await evaluate('JSON.parse(localStorage.getItem("myntExamDashboard")).compact && document.getElementById("policeExamCountdownCard").classList.contains("is-compact")'));assert.equal(await evaluate('localStorage.getItem("shortcutAmount")'),before);});
     await test('Custom schedule keeps intentional empty until-label empty', async()=>{
         await evaluate(`document.getElementById('examOpenSettings').click();document.getElementById('examField-compact').checked=false;document.getElementById('examField-examStart').value='2028-06-12';document.getElementById('examField-examEnd').value='2028-06-13';document.getElementById('examField-registrationStart').value='2028-03-09';document.getElementById('examField-registrationEnd').value='2028-03-18';document.querySelector('#examSettingsDialog form').requestSubmit()`);
-        const value=await evaluate(`document.querySelector('.exam-phase-row span').textContent`);
-        assert.equal(value,'');
-        assert.notEqual(value,'customUntil');
+        const value=await evaluate(`document.querySelector('.exam-phase-row span').textContent`); assert.equal(value,''); assert.notEqual(value,'customUntil');
     });
     await test('Classic roundtrip restores original nodes, not copies',async()=>{await evaluate('window.originalSearch=document.getElementById("searchQ");document.querySelector(".exam-nav button").click()');assert.ok(await evaluate('!document.body.hasAttribute("data-exam-layout") && document.getElementById("searchQ")===window.originalSearch && !!document.querySelector("body > .centerDiv")'));await evaluate('document.getElementById("examReturnButton").click()');assert.ok(await evaluate('document.body.hasAttribute("data-exam-layout") && document.getElementById("searchQ")===window.originalSearch'));});
     await test('Study-only video pause is restored on Classic', async()=>{
-        await evaluate(`document.body.dataset.workspaceBackground='video';const v=document.getElementById('videoBg');await v.play();await new Promise(r=>setTimeout(r,50));`);
+        await evaluate(`(async()=>{document.body.dataset.workspaceBackground='video';const v=document.getElementById('videoBg');await v.play();await new Promise(r=>setTimeout(r,50));return v.paused;})()`);
         assert.equal(await evaluate(`document.getElementById('videoBg').paused`),true);
         await evaluate(`document.querySelector('.exam-nav button').click()`); await delay(100);
         assert.equal(await evaluate(`document.getElementById('videoBg').paused`),false);
@@ -90,8 +86,11 @@ try {
         await evaluate(`document.getElementById('examOpenSettings').click();document.getElementById('examField-useWallpaper').checked=true;document.querySelector('#examSettingsDialog form').requestSubmit()`); await delay(100);
         assert.equal(await evaluate(`document.getElementById('videoBg').paused`),false);
     });
-    await test('Dark mode follows existing preference',async()=>{await evaluate('document.documentElement.dataset.preferredTheme="dark"');assert.equal(await evaluate('getComputedStyle(document.getElementById("examShell")).backgroundColor'),'rgb(23, 20, 30)');await shot('dark');});
-    await test('Settings survive reload',async()=>{await client.send('Page.reload');await poll(async()=>{try{return await evaluate('!!document.querySelector("#examShell:not([hidden])")');}catch{return false;}});assert.ok(await evaluate('JSON.parse(localStorage.getItem("myntExamDashboard")).useWallpaper'));});
+    await test('Dark mode follows existing preference without wallpaper override',async()=>{
+        await evaluate(`document.getElementById('examOpenSettings').click();document.getElementById('examField-useWallpaper').checked=false;document.querySelector('#examSettingsDialog form').requestSubmit();document.documentElement.dataset.preferredTheme='dark'`); await delay(50);
+        assert.equal(await evaluate('getComputedStyle(document.getElementById("examShell")).backgroundColor'),'rgb(23, 20, 30)');await shot('dark');
+    });
+    await test('Settings survive reload',async()=>{await client.send('Page.reload');await poll(async()=>{try{return await evaluate('!!document.querySelector("#examShell:not([hidden])")');}catch{return false;}});assert.equal(await evaluate('JSON.parse(localStorage.getItem("myntExamDashboard")).useWallpaper'),false);});
     await test('No runtime exceptions',async()=>assert.deepEqual(errors,[]));
     const dom=await evaluate(`['.exam-header','.exam-grid','.exam-main','.exam-aside','#searchQ','#shortcuts-section','#shortcutsContainer','.exam-widget-dock'].map(sel=>{const n=document.querySelector(sel);if(!n)return {sel,missing:true};const r=n.getBoundingClientRect(),s=getComputedStyle(n);return {sel,rect:{x:r.x,y:r.y,w:r.width,h:r.height},display:s.display,position:s.position,visibility:s.visibility};})`);
     writeFileSync(resolve(evidence,'dom-debug.json'),JSON.stringify(dom,null,2));
