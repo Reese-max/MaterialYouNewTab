@@ -108,6 +108,11 @@ jobs:
           MYNT_EXAM_EVIDENCE: ${{ runner.temp }}/mynt-exam-evidence
         run: xvfb-run -a node tools/smoke-exam-dashboard.mjs
 
+      - name: Run Figma UI v2 refinement regressions
+        env:
+          MYNT_EXAM_EVIDENCE: ${{ runner.temp }}/mynt-exam-evidence
+        run: xvfb-run -a node tools/smoke-exam-ui-v2.mjs
+
       - name: Upload exam UI browser evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

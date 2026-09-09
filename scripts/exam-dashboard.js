@@ -11,6 +11,7 @@
         const localized = copy()[key] ?? dictionaries.en?.[key] ?? key;
         return Object.entries(values).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), localized);
     };
+    const appText = key => translations[read('selectedLanguage')]?.[key] ?? translations.en[key];
     const el = (tag, className, text) => {
         const n = document.createElement(tag);
         if (className) n.className = className;
@@ -26,9 +27,7 @@
         const n = el('span', `exam-icon exam-icon-${name}`); n.setAttribute('aria-hidden', 'true'); return n;
     }
     function trigger(id) { $(id)?.click(); }
-    function tool(label, asset, sourceId) {
-        const b = button('', () => trigger(sourceId), 'exam-icon-button');
-        b.title = label; b.setAttribute('aria-label', label); b.append(icon(asset));
+    function mirrorDisclosure(b, sourceId) {
         const source = $(sourceId);
         if (source) {
             const controls = source.getAttribute('aria-controls');
@@ -38,6 +37,34 @@
             new MutationObserver(syncDisclosure).observe(source, { attributes: true, attributeFilter: ['aria-expanded'] });
         }
         return b;
+    }
+    function tool(label, asset, sourceId) {
+        const b = button('', () => trigger(sourceId), 'exam-icon-button');
+        b.title = label; b.setAttribute('aria-label', label); b.append(icon(asset));
+        return mirrorDisclosure(b, sourceId);
+    }
+    function openWallpaperSettings() {
+        const source = $('menuButton');
+        if (!source) return;
+        if (source.getAttribute('aria-expanded') !== 'true') source.click();
+        // Reuse the existing menu and disclosure handlers; never trigger upload or download.
+        let attempts = 0;
+        const reveal = () => {
+            if (source.getAttribute('aria-expanded') !== 'true') return;
+            if (getComputedStyle($('menuBar')).display === 'none') {
+                if (++attempts < 60) requestAnimationFrame(reveal);
+                return;
+            }
+            if (typeof pageReset === 'function') pageReset();
+            const heading = document.querySelector('.appearanceSection .sectionHeader');
+            if (heading?.getAttribute('aria-expanded') !== 'true') heading?.click();
+            requestAnimationFrame(() => {
+                if (source.getAttribute('aria-expanded') !== 'true') return;
+                $('uploadTrigger')?.scrollIntoView({ block: 'center', behavior: 'instant' });
+                $('uploadTrigger')?.focus({ preventScroll: true });
+            });
+        };
+        requestAnimationFrame(reveal);
     }
     const shell = el('div', 'exam-shell'); shell.id = 'examShell'; shell.hidden = true;
     const decor = el('div', 'exam-petals'); decor.setAttribute('aria-hidden', 'true'); shell.append(decor);
@@ -102,8 +129,10 @@
     focus.title = t('focusHelp');
     const focusTime = el('span', 'exam-focus-time'); focus.append(focusTime, el('span', '', t('focus')));
     const footerActions = el('div', 'exam-footer-actions');
-    footerActions.append(button(t('tools'), () => trigger('openControlCenterBtn')), button(t('wallpaper'), () => openSettings()),
-        button(t('appearance'), () => trigger('menuButton')));
+    const wallpaperButton = mirrorDisclosure(button(t('wallpaper'), openWallpaperSettings), 'menuButton');
+    wallpaperButton.id = 'examChooseWallpaper';
+    footerActions.append(button(t('tools'), () => trigger('openControlCenterBtn')), wallpaperButton,
+        mirrorDisclosure(button(t('appearance'), () => trigger('menuButton')), 'menuButton'));
     footer.append(localLabel, widgetDock, focus, footerActions); shell.append(footer);
     const status = el('p', 'exam-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); shell.append(status);
     const returnButton = button(t('returnStudy'), () => setLayout(true), 'exam-button exam-return'); returnButton.id = 'examReturnButton';
@@ -112,8 +141,17 @@
     const form = el('form', 'exam-form'); form.noValidate = true;
     const formHeader = el('div', 'exam-form-header'); const formTitle = el('h2', '', t('settings')); formTitle.id = 'examSettingsTitle';
     const closeButton = button('×', () => dialog.close(), 'exam-icon-button'); closeButton.setAttribute('aria-label', t('close'));
-    formHeader.append(formTitle, closeButton); form.append(formHeader, el('p', 'exam-muted', t('intro')));
-    const controls = {};
+    formHeader.append(formTitle, closeButton);
+    const formHeading = el('div', 'exam-settings-heading');
+    formHeading.append(formHeader, el('p', 'exam-muted', t('intro')));
+    const formBody = el('div', 'exam-form-body');
+    form.append(formHeading, formBody);
+    const controls = {}, fieldErrors = {};
+    function group(name) {
+        const section = el('fieldset', 'exam-form-section');
+        section.append(el('legend', '', name));
+        formBody.append(section); return section;
+    }
     function toggle(key, help) {
         const label = el('label', 'exam-toggle'); const text = el('span', 'exam-toggle-label');
         text.append(el('strong', '', t(key)), el('small', '', t(help)));
@@ -126,21 +164,36 @@
         const input = el('input'); input.type = type; input.name = key; input.id = 'examField-' + key; input.required = true;
         if (type === 'date') { input.min = '2000-01-01'; input.max = '2100-12-31'; }
         else input.maxLength = 80;
-        label.append(input); controls[key] = input; return label;
+        const error = el('small', 'exam-field-error'); error.id = input.id + '-error'; error.hidden = true;
+        label.append(input, error); controls[key] = input; fieldErrors[key] = error; return label;
     }
-    form.append(toggle('enabled', 'enabledHelp'), field('title', 'text', 'titleLabel'));
+    const examGroup = group(t('titleLabel'));
+    examGroup.append(field('title', 'text', 'titleLabel'));
     for (const pair of [['examStart', 'examEnd'], ['registrationStart', 'registrationEnd']]) {
-        const row = el('div', 'exam-fields-row'); pair.forEach(key => row.append(field(key, 'date'))); form.append(row);
+        const row = el('div', 'exam-fields-row'); pair.forEach(key => row.append(field(key, 'date'))); examGroup.append(row);
     }
     const timezone = el('div', 'exam-timezone'); timezone.append(el('strong', '', t('timezone')), el('p', '', t('timezoneHelp')));
-    form.append(timezone, toggle('registration', 'registrationHelp'), toggle('phase', 'phaseHelp'),
-        toggle('compact', 'compactHelp'), toggle('useWallpaper', 'wallpaperHelp'), el('p', 'exam-muted', t('presetNote')));
+    examGroup.append(timezone);
+    const displayGroup = group(appText('personalizationSectionTitle'));
+    displayGroup.append(toggle('enabled', 'enabledHelp'), toggle('registration', 'registrationHelp'),
+        toggle('phase', 'phaseHelp'), toggle('compact', 'compactHelp'), el('p', 'exam-muted', t('presetNote')));
+    const appearanceGroup = group(appText('appearanceSectionTitle'));
+    appearanceGroup.append(toggle('useWallpaper', 'wallpaperHelp'));
     const formError = el('p', 'exam-error'); formError.id = 'examFormError'; formError.setAttribute('role', 'alert'); formError.hidden = true;
-    form.append(formError, el('p', 'exam-muted exam-storage-note', t('localSettings')));
+    formBody.prepend(formError);
+    const formFooter = el('div', 'exam-settings-footer');
+    formFooter.append(el('p', 'exam-muted exam-storage-note', t('localSettings')));
     const actions = el('div', 'exam-form-actions');
     const cancel = button(t('cancel'), () => dialog.close(), 'exam-button exam-tonal');
     const save = el('button', 'exam-button exam-primary', t('save')); save.type = 'submit'; save.id = 'examSaveSettings';
-    actions.append(cancel, save); form.append(actions); dialog.append(form);
+    actions.append(cancel, save); formFooter.append(actions); form.append(formFooter); dialog.append(form);
+    const narrowLayout = matchMedia('(max-width: 850px)');
+    function syncReadingOrder() {
+        // Keep keyboard/reading order aligned with the single-column visual order.
+        if (narrowLayout.matches) main.insertBefore(aside, shortcutsSlot);
+        else grid.append(aside);
+    }
+    syncReadingOrder(); narrowLayout.addEventListener('change', syncReadingOrder);
     document.body.append(shell, returnButton, dialog);
     let openedRaw = null, previousFocus = null, timer = null, active = false, videoPausedByExam = false;
     // Bookmarks preserve both original node identities and event handlers on every mode switch.
@@ -165,7 +218,8 @@
         }
         if (!videoPausedByExam) return;
         if (document.body.dataset.workspaceBackground !== 'video') { videoPausedByExam = false; return; }
-        if (document.hidden) return;
+        if (document.hidden || document.documentElement.classList.contains('myntReducedMotion')
+            || document.documentElement.classList.contains('myntHighContrast') || navigator.connection?.saveData) return;
         videoPausedByExam = false;
         const playing = video.play();
         if (playing?.catch) playing.catch(() => {});
@@ -223,13 +277,14 @@
         for (const [key, input] of Object.entries(controls)) {
             if (input.type === 'checkbox') input.checked = settings[key]; else input.value = settings[key];
             input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby');
+            if (fieldErrors[key]) { fieldErrors[key].hidden = true; fieldErrors[key].textContent = ''; }
         }
         formError.hidden = true; formError.textContent = ''; previousFocus = document.activeElement;
-        dialog.showModal(); closeButton.focus();
+        dialog.showModal(); formBody.scrollTop = 0; closeButton.focus();
     }
     dialog.addEventListener('close', () => {
         if (previousFocus instanceof HTMLElement && previousFocus.isConnected && previousFocus.getClientRects().length) previousFocus.focus();
-        else (active ? hiddenCardButton : returnButton).focus();
+        else (active ? (settings.enabled ? settingsButton : hiddenCardButton) : returnButton).focus();
     });
     dialog.addEventListener('click', event => {
         if (event.target !== dialog) return;
@@ -245,24 +300,42 @@
         if (!issue) issue = write(next);
         if (issue) {
             formError.textContent = t(issue); formError.hidden = false;
-            const focusKey = issue === 'invalidTitle' ? 'title' : issue === 'invalidDate'
-                ? Object.keys(controls).find(k => controls[k].type === 'date' && !Number.isFinite(C.day(next[k]))) : 'examEnd';
-            if (issue.startsWith('invalid') && controls[focusKey]) {
-                controls[focusKey].setAttribute('aria-invalid', 'true'); controls[focusKey].setAttribute('aria-describedby', formError.id);
-                controls[focusKey].focus();
+            let invalidKeys = [];
+            if (issue === 'invalidTitle') invalidKeys = ['title'];
+            else if (issue === 'invalidDate') invalidKeys = Object.keys(fieldErrors).filter(key =>
+                controls[key].type === 'date' && !Number.isFinite(C.day(next[key])));
+            else if (issue === 'invalidOrder') {
+                if (C.day(next.examEnd) < C.day(next.examStart)) invalidKeys.push('examEnd');
+                if (C.day(next.registrationEnd) < C.day(next.registrationStart)) invalidKeys.push('registrationEnd');
+                if (C.day(next.registrationEnd) >= C.day(next.examStart)) invalidKeys.push('registrationEnd', 'examStart');
             }
-            formError.scrollIntoView({ block: 'nearest' }); return;
+            for (const key of new Set(invalidKeys)) {
+                controls[key].setAttribute('aria-invalid', 'true');
+                controls[key].setAttribute('aria-describedby', fieldErrors[key].id);
+                fieldErrors[key].textContent = t(issue); fieldErrors[key].hidden = false;
+            }
+            if (invalidKeys.length) {
+                controls[invalidKeys[0]].focus({ preventScroll: true });
+                controls[invalidKeys[0]].closest('.exam-field').scrollIntoView({ block: 'nearest', behavior: 'instant' });
+            } else { formError.tabIndex = -1; formError.focus({ preventScroll: true }); formBody.scrollTop = 0; }
+            return;
         }
         status.textContent = t('saved'); dialog.close();
     });
-    form.addEventListener('input', event => event.target.removeAttribute('aria-invalid'));
+    form.addEventListener('input', () => {
+        for (const [key, error] of Object.entries(fieldErrors)) {
+            controls[key].removeAttribute('aria-invalid'); controls[key].removeAttribute('aria-describedby');
+            error.hidden = true; error.textContent = '';
+        }
+        formError.hidden = true; formError.textContent = '';
+    });
     function render() {
         const now = Date.now(), s = C.state(settings, now);
         const locale = read('selectedLanguage') === 'zh_TW' ? 'zh-TW' : 'en';
         const current = new Date(now);
         date.textContent = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(current);
         clock.textContent = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hour12: read('hourformat') === 'true' }).format(current);
-        clock.dateTime = current.toISOString(); clock.hidden = read('hideClockVisible') === 'true';
+        clock.dateTime = current.toISOString(); clock.hidden = read('hideClockVisible') === 'true'; date.hidden = clock.hidden;
         title.textContent = settings.title === C.DEFAULTS.title ? t('examTitle') : settings.title;
         subtitle.hidden = settings.title !== C.DEFAULTS.title || settings.examStart !== C.DEFAULTS.examStart;
         number.textContent = s.status === 'finished' ? t('finished') : s.status === 'exam' ? t('dayN', { n: s.examDay }) : String(s.remaining);
