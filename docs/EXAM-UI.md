@@ -18,14 +18,14 @@ This feature branch implements the Figma study homepage as an alternative layout
 
 ## Behavior and integration
 
-- The existing `custom-text.js` loads the three local modules in order and the local CSS. There is no new build framework or network dependency.
+- The existing `custom-text.js` loads the local countdown core, `locales/exam.js`, dashboard script and local CSS in order. There is no new build framework or network dependency.
 - Study mode relocates the original DOM nodes with restore markers. Classic mode puts the same nodes back, preserving handlers and local data instead of copying or replacing widgets.
 - Study mode is enabled for the new feature by default. The 日常 / Classic button restores the previous layout. The 備考首頁 / Study homepage chip reopens it.
 - Configured shortcuts and AI tools are preserved; the sample Figma shortcut list is not written over personal settings.
 - The focus button opens the existing Pomodoro panel. It does not create a second timer or falsely imply a session has started.
 - Existing theme preferences control light/dark colors. Existing wallpapers remain saved and can be used instead of the abstract petals.
 - The existing packaged Poppins font is reused. Chinese text uses locally available Noto Sans TC, PingFang TC or Microsoft JhengHei fallbacks; no font download is added. Consequently glyph metrics may differ from Figma on machines lacking Noto Sans TC.
-- English and Traditional Chinese strings live in `exam-i18n.js`; other locales use English for this feature. Existing locale files are not removed or modified.
+- English and Traditional Chinese exam strings live in `locales/exam.js`, which extends the existing `translations` catalog after `languages.js` builds its English-fallback locale objects. Traditional Chinese gets its dedicated copy; all other existing locales inherit the English exam copy through the same catalog path. Dedicated tests enforce English/Traditional Chinese key and placeholder parity.
 
 ## Dates and persistence
 
