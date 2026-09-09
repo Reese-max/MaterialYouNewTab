@@ -42,6 +42,17 @@ try {
     await poll(async()=>{try{return await evaluate('!!document.querySelector("#examShell:not([hidden])")');}catch{return false;}});
     await test('Real unpacked extension loaded the Figma workspace',async()=>assert.equal(await evaluate('location.protocol'),'chrome-extension:'));
     await test('No duplicate DOM IDs',async()=>assert.deepEqual(await evaluate('[...document.querySelectorAll("[id]")].map(n=>n.id).filter((v,i,a)=>a.indexOf(v)!==i)'),[]));
+    await test('Study toolbar exposes the original disclosure relationships', async()=>{
+        const map=await evaluate(`(()=>{const tools=[...document.querySelectorAll('.exam-toolbar .exam-icon-button')];const originals=['bookmarkButton','googleAppsCont','menuButton'].map(id=>document.getElementById(id));return tools.map((tool,i)=>({toolControls:tool.getAttribute('aria-controls'),sourceControls:originals[i]?.getAttribute('aria-controls'),toolExpanded:tool.getAttribute('aria-expanded'),sourceExpanded:originals[i]?.getAttribute('aria-expanded')}));})()`);
+        assert.deepEqual(map.map(x=>x.toolControls),map.map(x=>x.sourceControls));
+        assert.deepEqual(map.map(x=>x.toolExpanded),map.map(x=>x.sourceExpanded));
+    });
+    await test('Study toolbar mirrors disclosure state changes', async()=>{
+        await evaluate(`document.getElementById('bookmarkButton').setAttribute('aria-expanded','true')`); await delay(50);
+        assert.equal(await evaluate(`document.querySelector('.exam-toolbar .exam-icon-button').getAttribute('aria-expanded')`),'true');
+        await evaluate(`document.getElementById('bookmarkButton').setAttribute('aria-expanded','false')`); await delay(50);
+        assert.equal(await evaluate(`document.querySelector('.exam-toolbar .exam-icon-button').getAttribute('aria-expanded')`),'false');
+    });
     for(const [width,height] of [[1440,960],[1024,768],[390,844],[320,700],[720,480]]){
         await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await delay(250);
         await test(`No horizontal overflow at ${width}x${height}`,async()=>assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth+2')));
@@ -60,9 +71,27 @@ try {
     await test('Cancel does not write state',async()=>{const a=await evaluate('localStorage.getItem("myntExamDashboard")');await evaluate('document.getElementById("examField-title").value="Not saved";document.getElementById("examSettingsDialog").close()');assert.equal(await evaluate('localStorage.getItem("myntExamDashboard")'),a);});
     await test('Invalid date order is rejected',async()=>{await evaluate('document.getElementById("examOpenSettings").click();document.getElementById("examField-examEnd").value="2027-06-01";document.querySelector("#examSettingsDialog form").requestSubmit()');assert.ok(await evaluate('document.getElementById("examSettingsDialog").open && !document.getElementById("examFormError").hidden'));await evaluate('document.getElementById("examSettingsDialog").close()');});
     await test('Save persists compact view without losing existing shortcuts',async()=>{const before=await evaluate('localStorage.getItem("shortcutAmount")');await evaluate('document.getElementById("examOpenSettings").click();document.getElementById("examField-compact").checked=true;document.querySelector("#examSettingsDialog form").requestSubmit()');assert.ok(await evaluate('JSON.parse(localStorage.getItem("myntExamDashboard")).compact && document.getElementById("policeExamCountdownCard").classList.contains("is-compact")'));assert.equal(await evaluate('localStorage.getItem("shortcutAmount")'),before);});
+    await test('Custom schedule keeps intentional empty until-label empty', async()=>{
+        await evaluate(`document.getElementById('examOpenSettings').click();document.getElementById('examField-compact').checked=false;document.getElementById('examField-examStart').value='2028-06-12';document.getElementById('examField-examEnd').value='2028-06-13';document.getElementById('examField-registrationStart').value='2028-03-09';document.getElementById('examField-registrationEnd').value='2028-03-18';document.querySelector('#examSettingsDialog form').requestSubmit()`);
+        const value=await evaluate(`document.querySelector('.exam-phase-row span').textContent`);
+        assert.equal(value,'');
+        assert.notEqual(value,'customUntil');
+    });
     await test('Classic roundtrip restores original nodes, not copies',async()=>{await evaluate('window.originalSearch=document.getElementById("searchQ");document.querySelector(".exam-nav button").click()');assert.ok(await evaluate('!document.body.hasAttribute("data-exam-layout") && document.getElementById("searchQ")===window.originalSearch && !!document.querySelector("body > .centerDiv")'));await evaluate('document.getElementById("examReturnButton").click()');assert.ok(await evaluate('document.body.hasAttribute("data-exam-layout") && document.getElementById("searchQ")===window.originalSearch'));});
+    await test('Study-only video pause is restored on Classic', async()=>{
+        await evaluate(`document.body.dataset.workspaceBackground='video';const v=document.getElementById('videoBg');await v.play();await new Promise(r=>setTimeout(r,50));`);
+        assert.equal(await evaluate(`document.getElementById('videoBg').paused`),true);
+        await evaluate(`document.querySelector('.exam-nav button').click()`); await delay(100);
+        assert.equal(await evaluate(`document.getElementById('videoBg').paused`),false);
+        await evaluate(`document.getElementById('examReturnButton').click()`); await delay(50);
+        assert.equal(await evaluate(`document.getElementById('videoBg').paused`),true);
+    });
+    await test('Enabling existing wallpaper releases an exam-paused video', async()=>{
+        await evaluate(`document.getElementById('examOpenSettings').click();document.getElementById('examField-useWallpaper').checked=true;document.querySelector('#examSettingsDialog form').requestSubmit()`); await delay(100);
+        assert.equal(await evaluate(`document.getElementById('videoBg').paused`),false);
+    });
     await test('Dark mode follows existing preference',async()=>{await evaluate('document.documentElement.dataset.preferredTheme="dark"');assert.equal(await evaluate('getComputedStyle(document.getElementById("examShell")).backgroundColor'),'rgb(23, 20, 30)');await shot('dark');});
-    await test('Settings survive reload',async()=>{await client.send('Page.reload');await poll(async()=>{try{return await evaluate('!!document.querySelector("#examShell:not([hidden])")');}catch{return false;}});assert.ok(await evaluate('document.getElementById("policeExamCountdownCard").classList.contains("is-compact")'));});
+    await test('Settings survive reload',async()=>{await client.send('Page.reload');await poll(async()=>{try{return await evaluate('!!document.querySelector("#examShell:not([hidden])")');}catch{return false;}});assert.ok(await evaluate('JSON.parse(localStorage.getItem("myntExamDashboard")).useWallpaper'));});
     await test('No runtime exceptions',async()=>assert.deepEqual(errors,[]));
     const dom=await evaluate(`['.exam-header','.exam-grid','.exam-main','.exam-aside','#searchQ','#shortcuts-section','#shortcutsContainer','.exam-widget-dock'].map(sel=>{const n=document.querySelector(sel);if(!n)return {sel,missing:true};const r=n.getBoundingClientRect(),s=getComputedStyle(n);return {sel,rect:{x:r.x,y:r.y,w:r.width,h:r.height},display:s.display,position:s.position,visibility:s.visibility};})`);
     writeFileSync(resolve(evidence,'dom-debug.json'),JSON.stringify(dom,null,2));
