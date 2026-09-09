@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 const C = require('../scripts/exam-countdown-core.js');
-const copy = require('../scripts/exam-i18n.js');
+const copy = require('../locales/exam.js');
 const root = fileURLToPath(new URL('..', import.meta.url));
 let checks = 0;
 function check(name, run) { run(); checks++; console.log(`PASS ${name}`); }
@@ -40,8 +40,17 @@ check('Corrupt storage falls back with warning', () => ['{','null','[]','{}','tr
 check('No storage migration needed for old installation', () => {assert.equal(C.parse(null).error,'');assert.deepEqual(C.parse(null).settings,C.DEFAULTS);});
 check('Roundtrip preserves hidden / compact / dates', () => {const data={...C.DEFAULTS,enabled:false,compact:true};assert.deepEqual(C.parse(JSON.stringify(data)).settings,data);});
 check('Unknown keys and prototype fields are not copied', () => {const v=C.parse(JSON.stringify({...C.DEFAULTS,arbitrary:'no'})).settings;assert.equal(v.arbitrary,undefined);});
-check('English / Traditional Chinese key parity', () => assert.deepEqual(Object.keys(copy.en).sort(),Object.keys(copy.zh_TW).sort()));
-check('Translation placeholders parity', () => Object.keys(copy.en).forEach(k=>assert.deepEqual(copy.en[k].match(/\{\w+\}/g)||[],copy.zh_TW[k].match(/\{\w+\}/g)||[])));
+check('English / Traditional Chinese exam key parity', () => assert.deepEqual(Object.keys(copy.en).sort(),Object.keys(copy.zh_TW).sort()));
+check('Exam translation placeholders parity', () => Object.keys(copy.en).forEach(k=>assert.deepEqual(copy.en[k].match(/\{\w+\}/g)||[],copy.zh_TW[k].match(/\{\w+\}/g)||[])));
+check('Exam copy uses the locale catalog path and centralized fallback bridge', () => {
+    const source=readFileSync(resolve(root,'locales/exam.js'),'utf8');
+    const loader=readFileSync(resolve(root,'scripts/custom-text.js'),'utf8');
+    assert.match(source, /translations/);
+    assert.match(source, /examDashboard/);
+    assert.match(loader, /locales\/exam\.js/);
+    assert.doesNotMatch(loader, /exam-i18n\.js/);
+    assert.equal(existsSync(resolve(root,'scripts/exam-i18n.js')),false);
+});
 check('Feature has no external network or executable HTML sinks', () => {
     const code=readFileSync(resolve(root,'scripts/exam-dashboard.js'),'utf8');
     assert.doesNotMatch(code, /\bfetch\s*\(|XMLHttpRequest|\.innerHTML\s*=|\beval\s*\(|new Function\s*\(/);
