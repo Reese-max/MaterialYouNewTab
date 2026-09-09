@@ -29,5 +29,11 @@ body[data-exam-layout] .exam-shell { width:100%; margin:0; }
     .exam-main #enterBtn { padding-inline:10px; }
     .exam-grid { row-gap:16px; }
 }
+/* At phone widths the keyboard already provides submit; removing the redundant
+   text button preserves a useful editable search field without shrinking touch targets. */
+@media(max-width:360px) {
+    .exam-main #enterBtn { display:none; }
+    .exam-main #searchbar { padding-inline:12px; gap:6px; }
+}
 /* Keep SVG filter definitions available without an inline baseline above the page. */
 body[data-exam-layout] > svg[height="0"] { position:absolute; width:0; height:0; }
