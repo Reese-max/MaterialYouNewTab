@@ -195,7 +195,7 @@
     }
     syncReadingOrder(); narrowLayout.addEventListener('change', syncReadingOrder);
     document.body.append(shell, returnButton, dialog);
-    let openedRaw = null, previousFocus = null, timer = null, active = false, videoPausedByExam = false;
+    let openedRaw = null, openedPresetTitle = null, previousFocus = null, timer = null, active = false, videoPausedByExam = false;
     // Bookmarks preserve both original node identities and event handlers on every mode switch.
     const moved = [];
     const originalGreetingPlaceholder = $('userText')?.dataset.placeholder;
@@ -274,8 +274,10 @@
     function openSettings() {
         if (dialog.open) return;
         openedRaw = read(C.KEY); settings = C.parse(openedRaw).settings;
+        openedPresetTitle = settings.title === C.DEFAULTS.title ? t('examTitle') : null;
         for (const [key, input] of Object.entries(controls)) {
-            if (input.type === 'checkbox') input.checked = settings[key]; else input.value = settings[key];
+            if (input.type === 'checkbox') input.checked = settings[key];
+            else input.value = key === 'title' && openedPresetTitle !== null ? openedPresetTitle : settings[key];
             input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby');
             if (fieldErrors[key]) { fieldErrors[key].hidden = true; fieldErrors[key].textContent = ''; }
         }
@@ -283,6 +285,8 @@
         dialog.showModal(); formBody.scrollTop = 0; closeButton.focus();
     }
     dialog.addEventListener('close', () => {
+        // The queued close event must not steal focus from an already reopened dialog.
+        if (dialog.open) return;
         if (previousFocus instanceof HTMLElement && previousFocus.isConnected && previousFocus.getClientRects().length) previousFocus.focus();
         else (active ? (settings.enabled ? settingsButton : hiddenCardButton) : returnButton).focus();
     });
@@ -296,6 +300,7 @@
         let issue = read(C.KEY) !== openedRaw ? 'stale' : '';
         const next = { ...settings };
         for (const [key, input] of Object.entries(controls)) next[key] = input.type === 'checkbox' ? input.checked : input.value.trim();
+        if (openedPresetTitle !== null && next.title === openedPresetTitle) next.title = C.DEFAULTS.title;
         issue ||= C.validate(next);
         if (!issue) issue = write(next);
         if (issue) {

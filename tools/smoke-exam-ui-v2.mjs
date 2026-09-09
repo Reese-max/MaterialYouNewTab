@@ -61,6 +61,18 @@ try {
         assert.ok(await evaluate('document.getElementById("examField-registrationEnd").getAttribute("aria-describedby")==="examField-registrationEnd-error" && !document.getElementById("examField-registrationEnd-error").hidden'));
         await screenshot('inline-error-390');await close();
     });
+    await test('Rapid close and reopen never lets an old close event steal modal focus',async()=>{
+        await evaluate('document.getElementById("examOpenSettings").click();document.getElementById("examSettingsDialog").close();document.getElementById("examOpenSettings").click();document.getElementById("examField-registrationEnd").value="2027-03-01";document.querySelector("#examSettingsDialog form").requestSubmit()');
+        await delay(100);assert.equal(await evaluate('document.activeElement.id'),'examField-registrationEnd');await close();await delay(100);
+    });
+    await test('English and fallback preset titles localize without rewriting the stored sentinel',async()=>{
+        for(const language of ['en','de']) {
+            await evaluate(`localStorage.setItem('selectedLanguage',${JSON.stringify(language)})`);await open();
+            assert.equal(await evaluate('document.getElementById("examField-title").value'),'2027 Police Examination (Level 3)');
+            await save();await delay(100);assert.ok(await evaluate('JSON.parse(localStorage.getItem("myntExamDashboard")).title===MyntExamCore.DEFAULTS.title'));
+        }
+        await evaluate('localStorage.setItem("selectedLanguage","zh_TW")');
+    });
     await test('Invalid exam order keeps an inline error and reachable Save',async()=>{
         await open();await evaluate('document.getElementById("examField-examEnd").value="2027-06-01"');await save();
         assert.equal(await evaluate('document.activeElement.id'),'examField-examEnd');
