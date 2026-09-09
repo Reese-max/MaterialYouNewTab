@@ -10,9 +10,10 @@
     const catalog = typeof translations !== 'undefined' ? translations : null;
     if (!catalog?.en?.examDashboard) return;
 
+    const english = catalog.en.examDashboard;
     const dictionaries = {};
     for (const [code, strings] of Object.entries(catalog)) {
-        dictionaries[code] = strings.examDashboard ?? catalog.en.examDashboard;
+        dictionaries[code] = Object.freeze({ ...english, ...(strings.examDashboard ?? {}) });
     }
     root.MyntExamCopy = Object.freeze(dictionaries);
 })(typeof globalThis !== 'undefined' ? globalThis : this);
