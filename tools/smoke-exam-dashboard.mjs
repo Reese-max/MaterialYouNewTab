@@ -45,6 +45,13 @@ try {
     for(const [width,height] of [[1440,960],[1024,768],[390,844],[320,700],[720,480]]){
         await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await delay(250);
         await test(`No horizontal overflow at ${width}x${height}`,async()=>assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth+2')));
+        await test(`Study layout fills viewport without classic gutters at ${width}`,async()=>{
+            const r=await evaluate('(()=>{const n=document.getElementById("examShell"),r=n.getBoundingClientRect();return {x:r.x,y:r.y+scrollY,width:r.width};})()');
+            assert.ok(Math.abs(r.x)<=1 && Math.abs(r.y)<=1 && Math.abs(r.width-width)<=2,JSON.stringify(r));
+        });
+        await test(`Search text retains useful input space at ${width}`,async()=>{
+            assert.ok(await evaluate('document.getElementById("searchQ").getBoundingClientRect().width >= 100'));
+        });
         if(width===1440||width===390)await shot('layout-'+width);
     }
     await client.send('Emulation.setDeviceMetricsOverride',{width:1440,height:960,deviceScaleFactor:1,mobile:false});
