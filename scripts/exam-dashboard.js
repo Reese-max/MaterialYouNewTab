@@ -7,7 +7,10 @@
     const read = key => { try { return localStorage.getItem(key); } catch { return null; } };
     let { settings, error: initialError } = C.parse(read(C.KEY));
     const copy = () => dictionaries[read('selectedLanguage')] || dictionaries.en;
-    const t = (key, values = {}) => Object.entries(values).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), copy()[key] || key);
+    const t = (key, values = {}) => {
+        const localized = copy()[key] ?? dictionaries.en?.[key] ?? key;
+        return Object.entries(values).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), localized);
+    };
     const el = (tag, className, text) => {
         const n = document.createElement(tag);
         if (className) n.className = className;
@@ -23,9 +26,18 @@
         const n = el('span', `exam-icon exam-icon-${name}`); n.setAttribute('aria-hidden', 'true'); return n;
     }
     function trigger(id) { $(id)?.click(); }
-    function tool(label, asset, action) {
-        const b = button('', action, 'exam-icon-button'); b.title = label; b.setAttribute('aria-label', label);
-        b.append(icon(asset)); return b;
+    function tool(label, asset, sourceId) {
+        const b = button('', () => trigger(sourceId), 'exam-icon-button');
+        b.title = label; b.setAttribute('aria-label', label); b.append(icon(asset));
+        const source = $(sourceId);
+        if (source) {
+            const controls = source.getAttribute('aria-controls');
+            if (controls) b.setAttribute('aria-controls', controls);
+            const syncDisclosure = () => b.setAttribute('aria-expanded', source.getAttribute('aria-expanded') || 'false');
+            syncDisclosure();
+            new MutationObserver(syncDisclosure).observe(source, { attributes: true, attributeFilter: ['aria-expanded'] });
+        }
+        return b;
     }
     const shell = el('div', 'exam-shell'); shell.id = 'examShell'; shell.hidden = true;
     const decor = el('div', 'exam-petals'); decor.setAttribute('aria-hidden', 'true'); shell.append(decor);
@@ -40,9 +52,9 @@
         if (setLayout(false)) target.click();
     }));
     const toolbar = el('div', 'exam-toolbar');
-    toolbar.append(tool(t('bookmarks'), 'book', () => trigger('bookmarkButton')),
-        tool(t('apps'), 'grid', () => trigger('googleAppsCont')),
-        tool(t('appearance'), 'settings', () => trigger('menuButton')));
+    toolbar.append(tool(t('bookmarks'), 'book', 'bookmarkButton'),
+        tool(t('apps'), 'grid', 'googleAppsCont'),
+        tool(t('appearance'), 'settings', 'menuButton'));
     header.append(brand, nav, toolbar); shell.append(header);
     const grid = el('main', 'exam-grid');
     const main = el('section', 'exam-main'); main.setAttribute('aria-label', t('study'));
@@ -130,7 +142,7 @@
     const save = el('button', 'exam-button exam-primary', t('save')); save.type = 'submit'; save.id = 'examSaveSettings';
     actions.append(cancel, save); form.append(actions); dialog.append(form);
     document.body.append(shell, returnButton, dialog);
-    let openedRaw = null, previousFocus = null, timer = null, active = false;
+    let openedRaw = null, previousFocus = null, timer = null, active = false, videoPausedByExam = false;
     // Bookmarks preserve both original node identities and event handlers on every mode switch.
     const moved = [];
     const originalGreetingPlaceholder = $('userText')?.dataset.placeholder;
@@ -142,6 +154,21 @@
     }
     function restore() {
         moved.reverse().forEach(({ node, marker }) => { marker.replaceWith(node); }); moved.length = 0;
+    }
+    function syncExamVideo() {
+        const video = $('videoBg');
+        if (!video) return;
+        const shouldPause = active && !settings.useWallpaper;
+        if (shouldPause) {
+            if (!video.paused) { videoPausedByExam = true; video.pause(); }
+            return;
+        }
+        if (!videoPausedByExam) return;
+        if (document.body.dataset.workspaceBackground !== 'video') { videoPausedByExam = false; return; }
+        if (document.hidden) return;
+        videoPausedByExam = false;
+        const playing = video.play();
+        if (playing?.catch) playing.catch(() => {});
     }
     function applyLayout() {
         if (settings.layout !== active) {
@@ -169,9 +196,14 @@
         shell.hidden = !active; returnButton.hidden = active;
         card.hidden = !settings.enabled; hiddenCardButton.hidden = settings.enabled;
         card.classList.toggle('is-compact', settings.compact);
-        // Pause an obscured video without erasing the original wallpaper configuration.
-        if (active && !settings.useWallpaper) $('videoBg')?.pause();
+        syncExamVideo();
     }
+    $('videoBg')?.addEventListener('play', () => {
+        const video = $('videoBg');
+        if (video && active && !settings.useWallpaper && !video.paused) {
+            videoPausedByExam = true; video.pause();
+        }
+    });
     function write(next) {
         const issue = C.validate(next);
         if (issue) return issue;
