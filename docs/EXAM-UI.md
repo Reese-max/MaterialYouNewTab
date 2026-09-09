@@ -18,14 +18,16 @@ This feature branch implements the Figma study homepage as an alternative layout
 
 ## Behavior and integration
 
-- The existing `custom-text.js` loads the local countdown core, `locales/exam.js`, dashboard script and local CSS in order. There is no new build framework or network dependency.
+- The existing `custom-text.js` loads the local countdown core, locale bridge, dashboard script and local CSS in order. There is no new build framework or network dependency.
 - Study mode relocates the original DOM nodes with restore markers. Classic mode puts the same nodes back, preserving handlers and local data instead of copying or replacing widgets.
 - Study mode is enabled for the new feature by default. The 日常 / Classic button restores the previous layout. The 備考首頁 / Study homepage chip reopens it.
 - Configured shortcuts and AI tools are preserved; the sample Figma shortcut list is not written over personal settings.
 - The focus button opens the existing Pomodoro panel. It does not create a second timer or falsely imply a session has started.
 - Existing theme preferences control light/dark colors. Existing wallpapers remain saved and can be used instead of the abstract petals.
+- If Study mode temporarily hides the bundled video background, the feature records that it performed the pause and resumes the existing video only when Study stops hiding it and the saved workspace background is still video. An unrelated video synchronizer cannot leave the hidden Study video running.
 - The existing packaged Poppins font is reused. Chinese text uses locally available Noto Sans TC, PingFang TC or Microsoft JhengHei fallbacks; no font download is added. Consequently glyph metrics may differ from Figma on machines lacking Noto Sans TC.
-- English and Traditional Chinese exam strings live in `locales/exam.js`, which extends the existing `translations` catalog after `languages.js` builds its English-fallback locale objects. Traditional Chinese gets its dedicated copy; all other existing locales inherit the English exam copy through the same catalog path. Dedicated tests enforce English/Traditional Chinese key and placeholder parity.
+- English and Traditional Chinese exam strings are canonical nested entries in `locales/en.js` and `locales/zh_TW.js`. The existing `languages.js` English-fallback merge therefore supplies the English exam object to other locales. `locales/exam.js` is only a small runtime bridge that exposes those already-built catalog objects to the exam module; it contains no duplicate exam copy.
+- Replacement Study toolbar buttons mirror the original bookmark, Google Apps and settings controls' `aria-controls` and `aria-expanded` disclosure state.
 
 ## Dates and persistence
 
@@ -35,7 +37,7 @@ The preset dates come from the requested configuration: exam June 12–13, 2027;
 
 Countdowns compare calendar dates in Asia/Taipei and refresh on minute boundaries, page focus, visibility return and cross-tab updates. The last registration/exam dates are inclusive date reminders. Exam day 2 shows day 2, not “starts today”; after the final day the countdown is finished rather than negative.
 
-The four study phases are for the June 12, 2027 preset only. A different exam date shows a custom schedule rather than imposing the old phase dates. No percentage purports to measure actual learning completion.
+The four study phases are for the June 12, 2027 preset only. A different exam date shows a custom schedule rather than imposing the old phase dates. Intentional empty locale values such as the custom schedule's absent “until” label remain empty rather than leaking an implementation key. No percentage purports to measure actual learning completion.
 
 ## Validation
 
