@@ -63,6 +63,10 @@ document.addEventListener("DOMContentLoaded", () => {
         style.rel = "stylesheet";
         style.href = "scripts/exam-dashboard.css";
         document.head.appendChild(style);
+        const compatibility = document.createElement("link");
+        compatibility.rel = "stylesheet";
+        compatibility.href = "scripts/exam-widget-compat.css";
+        document.head.appendChild(compatibility);
         for (const path of ["exam-countdown-core.js", "exam-i18n.js", "exam-dashboard.js"]) {
             const script = document.createElement("script");
             script.src = `scripts/${path}`;

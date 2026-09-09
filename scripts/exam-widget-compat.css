@@ -1,0 +1,12 @@
+/* MYNT — compatibility styles for existing widgets in the Figma layout. GPL-3.0. */
+.black-theme .mynt-preset-dark-tint { fill:#bfbfbf !important; }
+body[data-exam-layout][data-exam-shortcuts] #shortcuts-section { display:flex !important; }
+.exam-greeting #userText { background:transparent !important; max-height:none; overflow:visible; }
+.exam-widget-dock { display:flex; align-items:center; gap:6px; }
+.exam-widget-dock :is(.todoListCont,.scratchpadCont,.pomodoroCont) {
+    position:static !important; inset:auto !important; transform:none !important; scale:1 !important;
+    width:44px; height:44px; margin:0; padding:4px; background:var(--mynt-surface); border-radius:50%;
+}
+.exam-widget-dock .dot-icon { width:28px; height:28px; }
+.exam-widget-dock .tooltip-text { display:none; }
+@media(max-width:850px) { .exam-widget-dock { justify-content:center; } }

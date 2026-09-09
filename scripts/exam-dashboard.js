@@ -80,6 +80,7 @@
     const hiddenCardButton = button(t('hidden') + ' · ' + t('openSettings'), () => openSettings()); hiddenCardButton.hidden = true;
     aside.append(hiddenCardButton); grid.append(main, aside); shell.append(grid);
     const footer = el('footer', 'exam-footer');
+    const widgetDock = el('div', 'exam-widget-dock');
     const localLabel = el('p', 'exam-muted', t('local'));
     const focus = button('', () => {
         const checkbox = $('pomodoroCheckbox');
@@ -91,7 +92,7 @@
     const footerActions = el('div', 'exam-footer-actions');
     footerActions.append(button(t('tools'), () => trigger('openControlCenterBtn')), button(t('wallpaper'), () => openSettings()),
         button(t('appearance'), () => trigger('menuButton')));
-    footer.append(localLabel, focus, footerActions); shell.append(footer);
+    footer.append(localLabel, widgetDock, focus, footerActions); shell.append(footer);
     const status = el('p', 'exam-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); shell.append(status);
     const returnButton = button(t('returnStudy'), () => setLayout(true), 'exam-button exam-return'); returnButton.id = 'examReturnButton';
     const dialog = el('dialog', 'exam-settings'); dialog.id = 'examSettingsDialog'; dialog.setAttribute('aria-labelledby', 'examSettingsTitle');
@@ -147,6 +148,7 @@
             if (settings.layout) {
                 move($('userText'), greeting); move(document.querySelector('.centerDiv'), searchSlot);
                 move($('aiToolsCont'), aiSlot); move($('shortcuts-section'), shortcutsSlot);
+                for (const id of ['todoListCont', 'scratchpadCont', 'pomodoroCont']) move($(id), widgetDock);
                 if ($('userText') && !read('userText')) {
                     $('userText').dataset.placeholder = t('greeting'); $('userText').textContent = t('greeting');
                 }
@@ -162,6 +164,7 @@
             active = settings.layout;
         }
         document.body.toggleAttribute('data-exam-layout', active);
+        document.body.toggleAttribute('data-exam-shortcuts', active && read('shortcutsCheckboxState') !== 'unchecked');
         document.body.toggleAttribute('data-exam-wallpaper', active && settings.useWallpaper);
         shell.hidden = !active; returnButton.hidden = active;
         card.hidden = !settings.enabled; hiddenCardButton.hidden = settings.enabled;
@@ -268,7 +271,17 @@
     document.addEventListener('visibilitychange', () => { applyLayout(); schedule(); });
     window.addEventListener('pageshow', schedule); window.addEventListener('focus', schedule);
     window.addEventListener('pagehide', () => clearTimeout(timer));
-    document.addEventListener('change', () => { render(); });
+    document.addEventListener('change', () => { applyLayout(); render(); });
+    // Built-in shortcut SVGs historically repeated a purely stylistic ID.
+    // Convert only that known preset selector to a class, including later re-renders.
+    const shortcutRoot = $('shortcutsContainer');
+    function normalizePresetTintIds() {
+        shortcutRoot?.querySelectorAll('.shortcutLogoContainer [id="darkLightTint"]').forEach(node => {
+            node.classList.add('mynt-preset-dark-tint'); node.removeAttribute('id');
+        });
+    }
+    normalizePresetTintIds();
+    if (shortcutRoot) new MutationObserver(normalizePresetTintIds).observe(shortcutRoot, { childList: true, subtree: true });
     const styleReady = $('examDashboardStyles');
     function ready() { applyLayout(); schedule(); if (initialError) status.textContent = t(initialError); }
     if (styleReady?.sheet) ready(); else styleReady?.addEventListener('load', ready, { once: true });

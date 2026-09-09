@@ -26,7 +26,7 @@ class CDP {
 async function poll(fn, ms=20000){const until=Date.now()+ms;while(Date.now()<until){const value=await fn();if(value)return value;await delay(100);}throw new Error('Timed out waiting for browser state');}
 async function evaluate(source){const r=await client.send('Runtime.evaluate',{expression:source,returnByValue:true,awaitPromise:true,userGesture:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value;}
 async function shot(name){const {data}=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(resolve(evidence,name+'.png'),Buffer.from(data,'base64'));}
-const passed=[]; async function test(name,fn){await fn();passed.push(name);console.log('PASS '+name);}
+const passed=[], failed=[]; async function test(name,fn){try{await fn();passed.push(name);console.log('PASS '+name);}catch(error){failed.push({name,error:String(error)});console.error('FAIL '+name+': '+error);}}
 try {
     chrome=spawn(process.env.CHROME_BIN||'chromium',['--no-sandbox','--no-first-run','--no-default-browser-check','--disable-dev-shm-usage',`--user-data-dir=${profile}`,'--remote-debugging-port=0',`--disable-extensions-except=${root}`,`--load-extension=${root}`,'about:blank'],{stdio:['ignore','ignore','pipe']});
     let launchError;chrome.on('error',e=>launchError=e);
@@ -36,6 +36,7 @@ try {
     const extensionOrigin=worker.url.split('/').slice(0,3).join('/');
     const page=await poll(async()=>(await targets()).find(t=>t.type==='page'&&t.webSocketDebuggerUrl));
     client=new CDP(page.webSocketDebuggerUrl);await client.send('Page.enable');await client.send('Runtime.enable');
+    await client.send('Emulation.setTimezoneOverride',{timezoneId:'Asia/Taipei'});
     await client.send('Network.enable');await client.send('Network.setBlockedURLs',{urls:['https://*','http://*']});
     await client.send('Page.navigate',{url:extensionOrigin+'/index.html'});
     await poll(async()=>{try{return await evaluate('!!document.querySelector("#examShell:not([hidden])")');}catch{return false;}});
@@ -56,11 +57,14 @@ try {
     await test('Dark mode follows existing preference',async()=>{await evaluate('document.documentElement.dataset.preferredTheme="dark"');assert.equal(await evaluate('getComputedStyle(document.getElementById("examShell")).backgroundColor'),'rgb(23, 20, 30)');await shot('dark');});
     await test('Settings survive reload',async()=>{await client.send('Page.reload');await poll(async()=>{try{return await evaluate('!!document.querySelector("#examShell:not([hidden])")');}catch{return false;}});assert.ok(await evaluate('document.getElementById("policeExamCountdownCard").classList.contains("is-compact")'));});
     await test('No runtime exceptions',async()=>assert.deepEqual(errors,[]));
+    const dom=await evaluate(`['.exam-header','.exam-grid','.exam-main','.exam-aside','#searchQ','#shortcuts-section','#shortcutsContainer','.exam-widget-dock'].map(sel=>{const n=document.querySelector(sel);if(!n)return {sel,missing:true};const r=n.getBoundingClientRect(),s=getComputedStyle(n);return {sel,rect:{x:r.x,y:r.y,w:r.width,h:r.height},display:s.display,position:s.position,visibility:s.visibility};})`);
+    writeFileSync(resolve(evidence,'dom-debug.json'),JSON.stringify(dom,null,2));
+    assert.equal(failed.length,0,JSON.stringify(failed));
     console.log(`EXAM_DASHBOARD_SMOKE_OK checks=${passed.length}`);
-    writeFileSync(resolve(evidence,'results.json'),JSON.stringify({passed,errors},null,2));
+    writeFileSync(resolve(evidence,'results.json'),JSON.stringify({passed,failed,errors},null,2));
 } catch(error) {
     if(client)try{await shot('failure');}catch{}
-    writeFileSync(resolve(evidence,'results.json'),JSON.stringify({passed,errors,failure:String(error)},null,2));
+    writeFileSync(resolve(evidence,'results.json'),JSON.stringify({passed,failed,errors,failure:String(error)},null,2));
     throw error;
 } finally {
     for(const c of clients)c.close();if(chrome){chrome.kill('SIGTERM');await delay(500);if(chrome.exitCode===null)chrome.kill('SIGKILL');}
