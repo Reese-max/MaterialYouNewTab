@@ -3,10 +3,17 @@ import { createRequire } from 'node:module';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 const require = createRequire(import.meta.url);
 const C = require('../scripts/exam-countdown-core.js');
-const copy = require('../locales/exam.js');
 const root = fileURLToPath(new URL('..', import.meta.url));
+function readLocale(file, variable) {
+    const source = readFileSync(resolve(root, file), 'utf8');
+    return vm.runInNewContext(`${source}\n${variable};`, {});
+}
+const enLocale = readLocale('locales/en.js', 'en');
+const zhTWLocale = readLocale('locales/zh_TW.js', 'zh_TW');
+const copy = { en: enLocale.examDashboard, zh_TW: zhTWLocale.examDashboard };
 let checks = 0;
 function check(name, run) { run(); checks++; console.log(`PASS ${name}`); }
 const at = date => C.state(C.DEFAULTS, Date.parse(date));
@@ -40,13 +47,16 @@ check('Corrupt storage falls back with warning', () => ['{','null','[]','{}','tr
 check('No storage migration needed for old installation', () => {assert.equal(C.parse(null).error,'');assert.deepEqual(C.parse(null).settings,C.DEFAULTS);});
 check('Roundtrip preserves hidden / compact / dates', () => {const data={...C.DEFAULTS,enabled:false,compact:true};assert.deepEqual(C.parse(JSON.stringify(data)).settings,data);});
 check('Unknown keys and prototype fields are not copied', () => {const v=C.parse(JSON.stringify({...C.DEFAULTS,arbitrary:'no'})).settings;assert.equal(v.arbitrary,undefined);});
+check('Canonical catalogs contain exam copy', () => { assert.ok(copy.en); assert.ok(copy.zh_TW); assert.ok(Object.hasOwn(enLocale,'examDashboard')); assert.ok(Object.hasOwn(zhTWLocale,'examDashboard')); });
 check('English / Traditional Chinese exam key parity', () => assert.deepEqual(Object.keys(copy.en).sort(),Object.keys(copy.zh_TW).sort()));
-check('Exam translation placeholders parity', () => Object.keys(copy.en).forEach(k=>assert.deepEqual(copy.en[k].match(/\{\w+\}/g)||[],copy.zh_TW[k].match(/\{\w+\}/g)||[])));
-check('Exam copy uses the locale catalog path and centralized fallback bridge', () => {
+check('Exam translation placeholders parity', () => Object.keys(copy.en).forEach(k=>assert.deepEqual(String(copy.en[k]).match(/\{\w+\}/g)||[],String(copy.zh_TW[k]).match(/\{\w+\}/g)||[])));
+check('Intentional empty translations remain present', () => { assert.equal(copy.en.customUntil,''); assert.equal(copy.zh_TW.customUntil,''); });
+check('Exam bridge reads canonical translations without duplicate copy', () => {
     const source=readFileSync(resolve(root,'locales/exam.js'),'utf8');
     const loader=readFileSync(resolve(root,'scripts/custom-text.js'),'utf8');
     assert.match(source, /translations/);
     assert.match(source, /examDashboard/);
+    assert.doesNotMatch(source, /2027 Police Examination|116 年三等警察特考/);
     assert.match(loader, /locales\/exam\.js/);
     assert.doesNotMatch(loader, /exam-i18n\.js/);
     assert.equal(existsSync(resolve(root,'scripts/exam-i18n.js')),false);
