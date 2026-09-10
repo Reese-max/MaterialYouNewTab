@@ -9,6 +9,14 @@
 let weatherInitializationPromise = null;
 
 function isWeatherWidgetRendered() {
+    // The exam module loads after DOMContentLoaded. Unknown state must fail closed:
+    // an untouched/corrupt record defaults to Study even before its CSS is applied.
+    try {
+        const core = window.MyntExamCore;
+        if (!core || core.parse(localStorage.getItem(core.KEY)).settings.layout
+            || localStorage.getItem("hideWeatherVisible") === "true") return false;
+    } catch { return false; }
+    if (document.hidden || document.body.hasAttribute("data-exam-layout")) return false;
     const weatherWidget = document.getElementById("hideWeather");
     if (!weatherWidget) return false;
 
@@ -169,6 +177,43 @@ async function getWeatherData({ allowNetwork = true } = {}) {
 
     let activeIndex = -1; // Track keyboard navigation index
     let suggestions = []; // Store fetched location suggestions
+    let suggestionController = null;
+    let weatherController = null;
+    let weatherRequest = null;
+    let hasWeatherData = false;
+
+    function requireVisibleWeather(signal) {
+        if (signal.aborted || !isWeatherWidgetRendered()) {
+            throw new DOMException("Weather is not visible", "AbortError");
+        }
+    }
+
+    function cancelWeatherRequests() {
+        weatherController?.abort();
+        suggestionController?.abort();
+        weatherController = null;
+        suggestionController = null;
+        weatherRequest = null;
+        suggestions = [];
+        locationSuggestions.style.display = "none";
+        toggleAutocomplete();
+    }
+
+    function syncWeather() {
+        if (!isWeatherWidgetRendered()) { cancelWeatherRequests(); return; }
+        if (weatherRequest || hasWeatherData) return;
+        const controller = new AbortController();
+        weatherController = controller;
+        weatherRequest = initializeLocation(controller.signal).then(loaded => {
+            if (weatherController === controller) hasWeatherData = loaded;
+        }).finally(() => {
+            // A cancelled run cannot erase the next run's controller/promise.
+            if (weatherController === controller) {
+                weatherController = null;
+                weatherRequest = null;
+            }
+        });
+    }
 
     // Hide/show browser autocomplete based on suggestion state
     function toggleAutocomplete() {
@@ -181,17 +226,24 @@ async function getWeatherData({ allowNetwork = true } = {}) {
 
     // Fetch location suggestions from weatherAPI
     async function fetchLocationSuggestions(query) {
-        if (!allowNetwork || !savedApiKey || query.length < 3) {
+        suggestionController?.abort();
+        if (!isWeatherWidgetRendered() || !savedApiKey || query.length < 3) {
             suggestions = [];
             locationSuggestions.style.display = "none";
             toggleAutocomplete();
             return;
         }
 
+        const controller = new AbortController();
+        suggestionController = controller;
+        const signal = controller.signal;
         try {
-            const response = await fetch(`https://api.weatherapi.com/v1/search.json?key=${savedApiKey}&q=${query}`);
+            requireVisibleWeather(signal);
+            const response = await fetch(`https://api.weatherapi.com/v1/search.json?key=${savedApiKey}&q=${encodeURIComponent(query)}`, { signal });
             if (!response.ok) throw new Error(`Weather location search failed (${response.status}).`);
-            suggestions = await response.json();
+            const data = await response.json();
+            requireVisibleWeather(signal);
+            suggestions = data;
 
             if (!Array.isArray(suggestions)) throw new Error("Weather location search returned invalid data.");
 
@@ -203,6 +255,7 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                 toggleAutocomplete();
             }
         } catch (error) {
+            if (signal.aborted || !isWeatherWidgetRendered()) return;
             console.error("Error fetching location suggestions:", error);
             suggestions = [];
             toggleAutocomplete();
@@ -325,22 +378,42 @@ async function getWeatherData({ allowNetwork = true } = {}) {
     gpsToggle.checked = useGPS;
     if (useGPS) locationCont.classList.add("inactive");
 
-    // The video-dashboard layout does not render weather. Keep its settings usable without
-    // exposing the user's IP address or spending network/data resources on invisible content.
-    if (!allowNetwork) return;
+    // Controls are initialized once, even when Study hides the weather. Re-evaluate
+    // network permission at every lifecycle change and every asynchronous boundary.
+    document.addEventListener("mynt:exam-layout-change", syncWeather);
+    document.addEventListener("visibilitychange", syncWeather);
+    window.addEventListener("pageshow", syncWeather);
+    window.addEventListener("pagehide", cancelWeatherRequests);
+    window.addEventListener("storage", event => {
+        if (event.key === null || event.key === window.MyntExamCore?.KEY
+            || event.key === "hideWeatherVisible") syncWeather();
+    });
+    const visibilityObserver = new MutationObserver(syncWeather);
+    visibilityObserver.observe(document.body, {
+        attributes: true, attributeFilter: ["class", "style", "data-workspace-background", "data-bg", "data-exam-layout"]
+    });
+    visibilityObserver.observe(document.getElementById("hideWeather"), {
+        attributes: true, attributeFilter: ["class", "style", "hidden"]
+    });
+    if (allowNetwork) syncWeather();
 
     // Function to fetch GPS-based location
-    async function fetchGPSLocation() {
+    async function fetchGPSLocation(signal) {
         const getLocationFromGPS = () => {
             return new Promise((resolve, reject) => {
+                requireVisibleWeather(signal);
+                const aborted = () => reject(new DOMException("Weather is not visible", "AbortError"));
+                signal.addEventListener("abort", aborted, { once: true });
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
+                        signal.removeEventListener("abort", aborted);
+                        if (signal.aborted || !isWeatherWidgetRendered()) { aborted(); return; }
                         resolve({
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
                         });
                     },
-                    (error) => reject(error),
+                    (error) => { signal.removeEventListener("abort", aborted); reject(error); },
                     { timeout: 6000 }
                 );
             });
@@ -348,23 +421,30 @@ async function getWeatherData({ allowNetwork = true } = {}) {
 
         try {
             const { latitude, longitude } = await getLocationFromGPS();
+            requireVisibleWeather(signal);
             return `${latitude},${longitude}`;
         } catch (error) {
+            requireVisibleWeather(signal);
             console.error("Failed to retrieve GPS Location:", error);
         }
     }
 
     // Fetch location based on user preference
-    await (async function initializeLocation() {
+    async function initializeLocation(signal) {
         try {
-            if (useGPS) currentUserLocation = await fetchGPSLocation();
+            requireVisibleWeather(signal);
+            currentUserLocation = savedLocation;
+            if (useGPS) currentUserLocation = await fetchGPSLocation(signal);
+            requireVisibleWeather(signal);
 
             if (!currentUserLocation) {
                 // Fallback to IP-based location if no manual input
                 const ipInfo = "https://ipinfo.io/json/";
-                const locationData = await fetch(ipInfo);
+                requireVisibleWeather(signal);
+                const locationData = await fetch(ipInfo, { signal });
                 if (!locationData.ok) throw new Error(`IP location lookup failed (${locationData.status}).`);
                 const ipLocation = await locationData.json();
+                requireVisibleWeather(signal);
                 if (typeof ipLocation.loc !== "string" || !ipLocation.loc) {
                     throw new Error("IP location lookup returned invalid data.");
                 }
@@ -372,17 +452,20 @@ async function getWeatherData({ allowNetwork = true } = {}) {
             }
 
             // Fetch weather data
-            fetchWeather();
+            return await fetchWeather(signal);
         } catch (error) {
+            // Aborting/hiding must never trigger the IP fallback request.
+            if (signal.aborted || !isWeatherWidgetRendered()) return false;
             console.error("Failed to retrieve IP-based location:", error);
             currentUserLocation = "auto:ip";
-            fetchWeather();
+            return await fetchWeather(signal);
         }
-    })();
+    }
 
     // Fetch weather data based on a location
-    async function fetchWeather() {
+    async function fetchWeather(signal) {
         try {
+            requireVisibleWeather(signal);
             let parsedData = JSON.parse(localStorage.getItem("weatherParsedData"));
             const weatherParsedTime = parseInt(localStorage.getItem("weatherParsedTime"));
             const weatherParsedLocation = localStorage.getItem("weatherParsedLocation");
@@ -401,9 +484,11 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                 // Fetch weather data using Weather API
                 let weatherApi = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${currentUserLocation}&days=1&aqi=no&alerts=no&lang=${lang}`;
 
-                let data = await fetch(weatherApi);
+                requireVisibleWeather(signal);
+                let data = await fetch(weatherApi, { signal });
                 if (!data.ok) throw new Error(`Weather lookup failed (${data.status}).`);
                 parsedData = await data.json();
+                requireVisibleWeather(signal);
                 if (!parsedData.error) {
                     // Extract only the necessary fields before saving
                     const filteredData = {
@@ -443,8 +528,10 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                 }
             }
 
-            // Update weather data
+            // Cached weather can include a remote icon URL, so guard rendering too.
+            requireVisibleWeather(signal);
             UpdateWeather();
+            return true;
 
             function UpdateWeather() {
                 // Weather data
@@ -621,7 +708,8 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                 });
             }
         } catch (error) {
-            console.error("Error fetching weather data:", error);
+            if (!signal.aborted && isWeatherWidgetRendered()) console.error("Error fetching weather data:", error);
+            return false;
         }
     }
 }

@@ -195,7 +195,7 @@
     }
     syncReadingOrder(); narrowLayout.addEventListener('change', syncReadingOrder);
     document.body.append(shell, returnButton, dialog);
-    let openedRaw = null, openedPresetTitle = null, previousFocus = null, timer = null, active = false, videoPausedByExam = false;
+    let openedRaw = null, openedPresetTitle = null, previousFocus = null, timer = null, active = false;
     // Bookmarks preserve both original node identities and event handlers on every mode switch.
     const moved = [];
     const originalGreetingPlaceholder = $('userText')?.dataset.placeholder;
@@ -207,22 +207,6 @@
     }
     function restore() {
         moved.reverse().forEach(({ node, marker }) => { marker.replaceWith(node); }); moved.length = 0;
-    }
-    function syncExamVideo() {
-        const video = $('videoBg');
-        if (!video) return;
-        const shouldPause = active && !settings.useWallpaper;
-        if (shouldPause) {
-            if (!video.paused) { videoPausedByExam = true; video.pause(); }
-            return;
-        }
-        if (!videoPausedByExam) return;
-        if (document.body.dataset.workspaceBackground !== 'video') { videoPausedByExam = false; return; }
-        if (document.hidden || document.documentElement.classList.contains('myntReducedMotion')
-            || document.documentElement.classList.contains('myntHighContrast') || navigator.connection?.saveData) return;
-        videoPausedByExam = false;
-        const playing = video.play();
-        if (playing?.catch) playing.catch(() => {});
     }
     function applyLayout() {
         if (settings.layout !== active) {
@@ -250,14 +234,8 @@
         shell.hidden = !active; returnButton.hidden = active;
         card.hidden = !settings.enabled; hiddenCardButton.hidden = settings.enabled;
         card.classList.toggle('is-compact', settings.compact);
-        syncExamVideo();
+        document.dispatchEvent(new Event('mynt:exam-layout-change'));
     }
-    $('videoBg')?.addEventListener('play', () => {
-        const video = $('videoBg');
-        if (video && active && !settings.useWallpaper && !video.paused) {
-            videoPausedByExam = true; video.pause();
-        }
-    });
     function write(next) {
         const issue = C.validate(next);
         if (issue) return issue;

@@ -46,6 +46,9 @@ jobs:
       - name: Run exam date and settings tests
         run: node tools/test-exam-countdown.mjs
 
+      - name: Run weather and playback lifecycle unit tests
+        run: node tools/test-exam-runtime.mjs
+
       - name: Install Chrome for Testing
         shell: bash
         run: |
@@ -112,6 +115,11 @@ jobs:
         env:
           MYNT_EXAM_EVIDENCE: ${{ runner.temp }}/mynt-exam-evidence
         run: xvfb-run -a node tools/smoke-exam-ui-v2.mjs
+
+      - name: Run weather and playback lifecycle browser tests
+        env:
+          MYNT_EXAM_EVIDENCE: ${{ runner.temp }}/mynt-exam-evidence
+        run: xvfb-run -a node tools/smoke-exam-runtime.mjs
 
       - name: Upload exam UI browser evidence
         if: always()
