@@ -395,7 +395,8 @@ async function getWeatherData({ allowNetwork = true } = {}) {
     visibilityObserver.observe(document.getElementById("hideWeather"), {
         attributes: true, attributeFilter: ["class", "style", "hidden"]
     });
-    if (allowNetwork) syncWeather();
+    if (!allowNetwork) return;
+    syncWeather();
 
     // Function to fetch GPS-based location
     async function fetchGPSLocation(signal) {
