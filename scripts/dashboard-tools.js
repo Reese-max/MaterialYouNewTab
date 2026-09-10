@@ -493,7 +493,16 @@ if (typeof document !== "undefined") {
         let decorativeVideoUsesIdleCallback = false;
 
         function canPlayDecorativeVideo() {
-            return Boolean(decorativeVideo)
+            // Use the same validated defaults as Study before its async UI is ready.
+            let exam;
+            try {
+                const core = window.MyntExamCore;
+                if (!core) return false;
+                exam = core.parse(localStorage.getItem(core.KEY)).settings;
+            } catch { return false; }
+            const coveredByStudy = (exam.layout && !exam.useWallpaper)
+                || (document.body.hasAttribute("data-exam-layout") && !document.body.hasAttribute("data-exam-wallpaper"));
+            return !coveredByStudy && Boolean(decorativeVideo)
                 && document.visibilityState === "visible"
                 && document.body.dataset.workspaceBackground === "video"
                 && !effectiveReducedMotion()
@@ -590,6 +599,8 @@ if (typeof document !== "undefined") {
             if (accessibility.reduceMotion === null) applyAccessibility();
         });
         networkConnection?.addEventListener?.("change", syncDecorativeVideo);
+        // The exam UI never calls play() itself. This owner keeps one playback gate.
+        document.addEventListener("mynt:exam-layout-change", syncDecorativeVideo);
 
         // Existing widget toggles remain the source of truth for editable work modes.
         const workspaceDefaults = [

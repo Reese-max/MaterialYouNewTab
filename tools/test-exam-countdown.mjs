@@ -1,0 +1,72 @@
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
+const require = createRequire(import.meta.url);
+const C = require('../scripts/exam-countdown-core.js');
+const root = fileURLToPath(new URL('..', import.meta.url));
+function readLocale(file, variable) {
+    const source = readFileSync(resolve(root, file), 'utf8');
+    return vm.runInNewContext(`${source}\n${variable};`, {});
+}
+const enLocale = readLocale('locales/en.js', 'en');
+const zhTWLocale = readLocale('locales/zh_TW.js', 'zh_TW');
+const copy = { en: enLocale.examDashboard, zh_TW: zhTWLocale.examDashboard };
+let checks = 0;
+function check(name, run) { run(); checks++; console.log(`PASS ${name}`); }
+const at = date => C.state(C.DEFAULTS, Date.parse(date));
+check('September baseline: 276 exam days / 181 registration days', () => {
+    const s = at('2026-09-09T09:49:00+08:00'); assert.equal(s.remaining,276); assert.equal(s.registrationDays,181);
+});
+check('Stable through Taipei 23:59:59', () => assert.equal(at('2026-09-09T23:59:59+08:00').remaining,276));
+check('Changes at Taipei midnight', () => assert.equal(at('2026-09-10T00:00:00+08:00').remaining,275));
+check('Same instant in UTC', () => assert.deepEqual(at('2026-09-10T00:00:00+08:00'),at('2026-09-09T16:00:00Z')));
+check('Before registration', () => assert.equal(at('2027-03-08T23:59:59+08:00').registration,'upcoming'));
+check('Registration opens, 95 exam days', () => { assert.equal(at('2027-03-09T00:00:00+08:00').registration,'open'); assert.equal(at('2027-03-09T00:00:00+08:00').remaining,95); });
+check('Registration end date inclusive', () => assert.equal(at('2027-03-18T23:59:59+08:00').registration,'open'));
+check('Registration next day closed', () => assert.equal(at('2027-03-19T00:00:00+08:00').registration,'closed'));
+check('One day before exam', () => assert.equal(at('2027-06-11T23:59:59+08:00').remaining,1));
+check('First exam day', () => {const s=at('2027-06-12T00:00:00+08:00');assert.equal(s.status,'exam');assert.equal(s.examDay,1);});
+check('Second day is not today-start', () => assert.equal(at('2027-06-13T12:00:00+08:00').examDay,2));
+check('Last exam day inclusive', () => assert.equal(at('2027-06-13T23:59:59+08:00').status,'exam'));
+check('Exam finished / no negative countdown', () => { const s=at('2027-06-14T00:00:00+08:00');assert.equal(s.status,'finished');assert.equal(s.remaining,0); });
+check('All subjects boundary', () => assert.equal(at('2027-01-01T00:00:00+08:00').phase,'allSubjects'));
+check('Writing boundary', () => assert.equal(at('2027-04-01T00:00:00+08:00').phase,'writing'));
+check('Last 40 days boundary', () => {const s=at('2027-05-03T00:00:00+08:00');assert.equal(s.phase,'final');assert.equal(s.remaining,40);});
+check('Custom dates never reuse misleading preset phases', () => assert.equal(C.state({...C.DEFAULTS,examStart:'2028-06-12',examEnd:'2028-06-13'}).phase,'custom'));
+check('Valid leap day', () => assert.ok(Number.isFinite(C.day('2028-02-29'))));
+check('Reject impossible / rollover dates', () => ['2027-02-29','2027-04-31','2027-13-01','2027-01-00','2027-2-9','abc','1999-01-01','2101-01-01'].forEach(v=>assert.ok(Number.isNaN(C.day(v)))));
+check('Reject reversed exam dates', () => assert.equal(C.validate({...C.DEFAULTS,examEnd:'2027-06-11'}),'invalidOrder'));
+check('Reject reversed registration dates', () => assert.equal(C.validate({...C.DEFAULTS,registrationEnd:'2027-03-08'}),'invalidOrder'));
+check('Reject registration overlapping exam', () => assert.equal(C.validate({...C.DEFAULTS,registrationEnd:'2027-06-12'}),'invalidOrder'));
+check('Reject invalid title', () => ['', ' '.repeat(3),'a'.repeat(81)].forEach(title=>assert.equal(C.validate({...C.DEFAULTS,title}),'invalidTitle')));
+check('Reject invalid boolean / version', () => {assert.equal(C.validate({...C.DEFAULTS,enabled:'false'}),'invalidSettings');assert.equal(C.validate({...C.DEFAULTS,version:2}),'invalidSettings');});
+check('Corrupt storage falls back with warning', () => ['{','null','[]','{}','true'].forEach(v=>{const p=C.parse(v);assert.ok(p.error);assert.deepEqual(p.settings,C.DEFAULTS);}));
+check('No storage migration needed for old installation', () => {assert.equal(C.parse(null).error,'');assert.deepEqual(C.parse(null).settings,C.DEFAULTS);});
+check('Roundtrip preserves hidden / compact / dates', () => {const data={...C.DEFAULTS,enabled:false,compact:true};assert.deepEqual(C.parse(JSON.stringify(data)).settings,data);});
+check('Unknown keys and prototype fields are not copied', () => {const v=C.parse(JSON.stringify({...C.DEFAULTS,arbitrary:'no'})).settings;assert.equal(v.arbitrary,undefined);});
+check('Canonical catalogs contain exam copy', () => { assert.ok(copy.en); assert.ok(copy.zh_TW); assert.ok(Object.hasOwn(enLocale,'examDashboard')); assert.ok(Object.hasOwn(zhTWLocale,'examDashboard')); });
+check('English / Traditional Chinese exam key parity', () => assert.deepEqual(Object.keys(copy.en).sort(),Object.keys(copy.zh_TW).sort()));
+check('Exam translation placeholders parity', () => Object.keys(copy.en).forEach(k=>assert.deepEqual(String(copy.en[k]).match(/\{\w+\}/g)||[],String(copy.zh_TW[k]).match(/\{\w+\}/g)||[])));
+check('Intentional empty translations remain present', () => { assert.equal(copy.en.customUntil,''); assert.equal(copy.zh_TW.customUntil,''); });
+check('Exam bridge reads canonical translations without duplicate copy', () => {
+    const source=readFileSync(resolve(root,'locales/exam.js'),'utf8');
+    const loader=readFileSync(resolve(root,'scripts/custom-text.js'),'utf8');
+    assert.match(source, /translations/);
+    assert.match(source, /examDashboard/);
+    assert.doesNotMatch(source, /2027 Police Examination|116 年三等警察特考/);
+    assert.match(loader, /locales\/exam\.js/);
+    assert.doesNotMatch(loader, /exam-i18n\.js/);
+    assert.equal(existsSync(resolve(root,'scripts/exam-i18n.js')),false);
+});
+check('Feature has no external network or executable HTML sinks', () => {
+    const code=readFileSync(resolve(root,'scripts/exam-dashboard.js'),'utf8');
+    assert.doesNotMatch(code, /\bfetch\s*\(|XMLHttpRequest|\.innerHTML\s*=|\beval\s*\(|new Function\s*\(/);
+});
+check('Every CSS asset is packaged locally', () => {
+    const css=readFileSync(resolve(root,'scripts/exam-dashboard.css'),'utf8');
+    for(const [,path] of css.matchAll(/url\(['"]?([^'"\)]+)['"]?\)/g)) assert.ok(existsSync(resolve(root,'scripts',path)),path);
+});
+console.log(`EXAM_COUNTDOWN_TEST_OK checks=${checks}`);
