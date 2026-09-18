@@ -463,4 +463,37 @@ const zh_TW = {
     "shortcutBangHelp": "平台直達前綴搜尋 (!yt, !gh, !gpt...)",
     "commandShortcutsHelp": "鍵盤快捷鍵指南",
     "commandShortcutsHelpInfo": "查看所有可用快捷鍵",
+
+    // 警察特考備考首頁
+    "examDashboard": {
+        "examTitle": "116 年三等警察特考", "subtitle": "警察資訊管理人員", "milestone": "我的下一個目標",
+        "days": "天", "dayN": "第 {n} 天", "finished": "已結束", "examDate": "距離筆試", "registrationIn": "距離報名",
+        "registrationDates": "報名期間", "registrationOpen": "報名開放中", "registrationClosed": "報名已截止",
+        "reminder": "僅作日期提醒，請依公告確認截止時間。", "examStatus": "筆試進行中", "finishedStatus": "本次筆試已結束",
+        "foundation": "打底期", "allSubjects": "全科完成期", "writing": "申論＋考古題期", "final": "最後 40 天",
+        "custom": "自訂考試時程", "phaseRail": "打底 → 全科 → 申論 → 衝刺", "phaseNote": "備考階段，不代表讀書完成率。",
+        "foundationUntil": "至 12/31", "allSubjectsUntil": "至 3/31", "writingUntil": "至 5/2", "finalUntil": "至 6/11", "customUntil": "",
+        "settings": "考試倒數", "openSettings": "倒數設定", "close": "關閉", "save": "儲存設定", "cancel": "取消",
+        "intro": "讓提醒剛好，不打擾每一次開啟。", "titleLabel": "考試名稱", "examStart": "筆試首日", "examEnd": "筆試末日",
+        "registrationStart": "開始報名", "registrationEnd": "報名截止", "enabled": "在新分頁顯示",
+        "enabledHelp": "倒數卡片與工具列分開，不遮住書籤。", "registration": "顯示報名提醒",
+        "registrationHelp": "只在新分頁提示，不發送系統通知。", "phase": "顯示備考時間軸",
+        "phaseHelp": "時間經過，不等於讀書完成率。", "compact": "精簡顯示", "compactHelp": "只保留考試名稱、天數與日期。",
+        "useWallpaper": "使用原本桌布", "wallpaperHelp": "保留你設定的桌布或影片，取代 Figma 抽象花瓣。",
+        "timezone": "Asia/Taipei · 依臺北日期計算",
+        "timezoneHelp": "跨日、重新開啟或回到分頁時更新；日期可修改，仍以考選部公告為準。",
+        "disclaimer": "依設定日期計算 · 以考選部公告為準", "local": "留在本機，只屬於你的新分頁。",
+        "localSettings": "設定保存在這台瀏覽器，並納入本機備份。", "greeting": "新的一頁，專注當下。",
+        "daily": "日常", "study": "備考", "work": "工作", "relax": "休息", "returnStudy": "備考首頁",
+        "bookmarks": "書籤", "apps": "Google 應用程式", "appearance": "外觀", "wallpaper": "更換桌布", "tools": "全部工具",
+        "focus": "開啟專注計時", "focusHelp": "開啟原有番茄鐘，不會另建計時器", "command": "命令面板",
+        "searchPlaceholder": "搜尋 Google，或使用 ! 捷徑", "hidden": "已隱藏倒數卡片",
+        "invalidSettings": "儲存的設定無法讀取，目前顯示預設值；原資料尚未被覆寫。",
+        "invalidTitle": "請輸入 1～80 字的考試名稱。", "invalidDate": "請輸入 2000～2100 年間的有效日期。",
+        "invalidOrder": "末日不得早於首日，且報名截止日必須早於考試首日。",
+        "storageError": "無法儲存設定，請檢查瀏覽器儲存空間後重試。",
+        "stale": "另一個分頁已變更設定，請關閉並重新開啟設定後再儲存。", "saved": "設定已儲存。",
+        "workspaceMissing": "請到控制中心管理工作區。", "noNotifications": "不發送系統通知",
+        "editHint": "編輯自訂文字", "presetNote": "四階段時間軸適用於 2027/6/12 預設考試；其他日期顯示自訂時程。"
+    }
 };

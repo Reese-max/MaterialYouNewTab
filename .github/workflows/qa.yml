@@ -43,6 +43,12 @@ jobs:
       - name: Run upstream integration checks
         run: node tools/check-upstream-integration.mjs
 
+      - name: Run exam date and settings tests
+        run: node tools/test-exam-countdown.mjs
+
+      - name: Run weather and playback lifecycle unit tests
+        run: node tools/test-exam-runtime.mjs
+
       - name: Install Chrome for Testing
         shell: bash
         run: |
@@ -88,9 +94,38 @@ jobs:
           print(f"Installed Chrome for Testing {stable['version']} at {chrome}")
           PY
 
+      - name: Install CJK fonts for readable browser evidence
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+
       - name: Run Chromium new-tab smoke test
         shell: bash
         run: |
           set -euo pipefail
           command -v xvfb-run
           xvfb-run -a node tools/smoke-chromium.mjs
+
+      - name: Run Figma exam homepage browser tests
+        env:
+          MYNT_EXAM_EVIDENCE: ${{ runner.temp }}/mynt-exam-evidence
+        run: xvfb-run -a node tools/smoke-exam-dashboard.mjs
+
+      - name: Run Figma UI v2 refinement regressions
+        env:
+          MYNT_EXAM_EVIDENCE: ${{ runner.temp }}/mynt-exam-evidence
+        run: xvfb-run -a node tools/smoke-exam-ui-v2.mjs
+
+      - name: Run weather and playback lifecycle browser tests
+        env:
+          MYNT_EXAM_EVIDENCE: ${{ runner.temp }}/mynt-exam-evidence
+        run: xvfb-run -a node tools/smoke-exam-runtime.mjs
+
+      - name: Upload exam UI browser evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mynt-exam-ui-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/mynt-exam-evidence
+          if-no-files-found: warn
+          retention-days: 7

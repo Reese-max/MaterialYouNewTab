@@ -91,7 +91,10 @@ for (const code of localeCodes) {
     assert.match(html, new RegExp("src=[\"']locales/" + code + "\\.js[\"']"));
     assert.match(html, new RegExp("<option value=[\"']" + code + "[\"']"));
     const localeSource = read(path);
-    const declaredLocaleKeys = [...localeSource.matchAll(/^\s*"([^"]+)"\s*:/gm)].map(match => match[1]);
+    // Locale files use four-space indentation for canonical catalog keys. Nested
+    // objects (for example greeting or examDashboard) may legitimately reuse a
+    // name that exists elsewhere, so only same-level catalog keys are duplicate.
+    const declaredLocaleKeys = [...localeSource.matchAll(/^ {4}"([^"]+)"\s*:/gm)].map(match => match[1]);
     const duplicateLocaleKeys = [...new Set(
         declaredLocaleKeys.filter((key, index) => declaredLocaleKeys.indexOf(key) !== index)
     )];

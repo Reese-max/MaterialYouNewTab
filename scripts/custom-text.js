@@ -55,4 +55,23 @@ document.addEventListener("DOMContentLoaded", () => {
             userTextDiv.textContent = userTextDiv.dataset.placeholder;  // Show the placeholder again if empty
         }
     });
+
+    // All resources are packaged locally; scripts are ordered without remote code.
+    if (!document.getElementById("examDashboardStyles")) {
+        const style = document.createElement("link");
+        style.id = "examDashboardStyles";
+        style.rel = "stylesheet";
+        style.href = "scripts/exam-dashboard.css";
+        document.head.appendChild(style);
+        const compatibility = document.createElement("link");
+        compatibility.rel = "stylesheet";
+        compatibility.href = "scripts/exam-widget-compat.css";
+        document.head.appendChild(compatibility);
+        for (const source of ["scripts/exam-countdown-core.js", "locales/exam.js", "scripts/exam-dashboard.js"]) {
+            const script = document.createElement("script");
+            script.src = source;
+            script.async = false;
+            document.head.appendChild(script);
+        }
+    }
 });
