@@ -332,7 +332,8 @@
 @media (max-width: 760px) {
     #mynt-web-preview-badge {
         top: auto;
-        right: 8px;
+        right: auto;
+        left: 8px;
         bottom: 8px;
         max-width: calc(100vw - 16px);
     }

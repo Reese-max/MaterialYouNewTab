@@ -269,7 +269,57 @@ body[data-workspace-background="video"] .centerDiv {
 	z-index: 1;
 }
 
-body[data-workspace-background="video"] .leftDiv { display: none; }
+body[data-workspace-background="video"] .leftDiv {
+	display: block;
+	position: absolute;
+	inset-inline-start: 0;
+	bottom: calc(100% + 14px);
+	width: 100%;
+	transform: none;
+}
+
+body[data-workspace-background="video"] .leftDiv .clock { display: none !important; }
+
+body[data-workspace-background="video"] .ttteexxtt {
+	top: auto;
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: flex-start;
+	gap: 3px;
+	width: fit-content;
+	max-width: 100%;
+	padding: 10px 14px;
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--accentLightTint-blue) 90%, transparent);
+	box-shadow: 0 10px 30px rgba(13, 39, 71, 0.12);
+}
+
+body[data-workspace-background="video"] #userText,
+body[data-workspace-background="video"] #date {
+	max-width: 100%;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border-radius: 0;
+	background: transparent;
+	overflow: visible;
+}
+
+body[data-workspace-background="video"] #userText {
+	font-size: clamp(1.15rem, 2vw, 1.35rem);
+	font-weight: 650;
+}
+
+body[data-workspace-background="video"] #date {
+	font-size: 0.9rem;
+	font-weight: 600;
+	opacity: 0.78;
+}
+
+#userText:focus-visible {
+	outline: 2px solid var(--darkColor-blue);
+	outline-offset: 3px;
+}
 body[data-workspace-background="video"] #hideWeather { display: none; }
 body[data-workspace-background="video"] .searchWithCont { display: none !important; }
 body[data-workspace-background="video"] .bookmark-button { display: flex !important; }
@@ -1984,7 +2034,7 @@ body #bookmarkButton.bookmark-button.rotate {
 	font-size: 1rem;
 	padding-block: 12px;
 	padding-inline-start: 36px;
-	padding-inline-end: 88px;
+	padding-inline-end: 116px;
 	user-select: none;
 	cursor: pointer;
 	position: relative;
@@ -2079,6 +2129,32 @@ body #bookmarkButton.bookmark-button.rotate {
 
 .todoeditbtn:hover {
 	opacity: 1;
+}
+
+.todolistitem .todoDaidaiBtn {
+	position: absolute;
+	inset-inline-end: 84px;
+	top: 50%;
+	width: 25px;
+	height: 25px;
+	transform: translateY(-50%);
+	border: 1px solid color-mix(in srgb, var(--whitishColor-blue) 38%, transparent);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 18%, transparent);
+	color: inherit;
+	font: inherit;
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 1;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.todolistitem .todoDaidaiBtn:hover,
+.todolistitem .todoDaidaiBtn:focus-visible {
+	background: color-mix(in srgb, var(--whitishColor-blue) 32%, transparent);
+	outline: 2px solid color-mix(in srgb, var(--whitishColor-blue) 58%, transparent);
+	outline-offset: 1px;
 }
 
 .todolistitem.pinned .todopinbtn {
@@ -7788,6 +7864,137 @@ html.myntHighContrast button {
 	}
 }
 
+.daidaiConnectionStatus {
+	flex: 0 0 auto;
+	padding: 5px 10px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--textColorDark-blue) 8%, transparent);
+	font-size: 0.72rem;
+	font-weight: 700;
+}
+
+.daidaiConnectionStatus[data-state="connected"] {
+	background: color-mix(in srgb, #2e7d32 14%, transparent);
+	color: #176328;
+}
+
+.daidaiConnectionStatus[data-state="error"] {
+	background: color-mix(in srgb, #b3261e 12%, transparent);
+	color: #9b1c17;
+}
+
+.daidaiConnectRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.daidaiConnectRow > span {
+	min-width: 0;
+}
+
+.daidaiConnectRow small {
+	display: block;
+	margin-top: 4px;
+	font-size: 0.78rem;
+	line-height: 1.4;
+	opacity: 0.75;
+}
+
+.daidaiDisclosureList {
+	padding-inline-end: 6px;
+}
+
+.daidaiActionDialog {
+	width: min(620px, calc(100vw - 32px));
+}
+
+.daidaiActionContent {
+	padding: 24px 26px 18px;
+}
+
+.daidaiActionContent h3 {
+	margin: 0 0 16px;
+	font-size: 1.05rem;
+}
+
+.daidaiActionDiff {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.daidaiActionDiff > div {
+	min-width: 0;
+	padding: 14px;
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 14%, transparent);
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--whitishColor-blue) 70%, transparent);
+}
+
+.daidaiActionDiff span {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	opacity: 0.7;
+}
+
+.daidaiActionDiff pre {
+	max-height: 180px;
+	margin: 0;
+	overflow: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font: inherit;
+	font-size: 0.88rem;
+	user-select: text;
+}
+
+#daidaiActionWarning,
+.daidaiActionStale {
+	margin: 16px 0 0;
+	font-size: 0.8rem;
+	line-height: 1.5;
+	opacity: 0.76;
+}
+
+.daidaiActionStale {
+	color: #9b1c17;
+	font-weight: 600;
+	opacity: 1;
+}
+
+.daidaiActionFooter {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: 16px 26px 22px;
+	border-top: 1px solid color-mix(in srgb, var(--textColorDark-blue) 10%, transparent);
+}
+
+.daidaiActionFooter button {
+	min-height: 40px;
+	padding: 8px 16px;
+	border: 0;
+	border-radius: 999px;
+	font: inherit;
+	font-weight: 650;
+	cursor: pointer;
+}
+
+.daidaiActionFooter button:not(.settingsActionBtn) {
+	background: color-mix(in srgb, var(--textColorDark-blue) 9%, transparent);
+	color: inherit;
+}
+
+.daidaiActionFooter button:disabled,
+#daidaiConnectBtn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 @media screen and (max-width: 620px) {
 	#serviceStatusPill {
 		inset-inline: 16px auto;
@@ -7841,6 +8048,15 @@ html.myntHighContrast button {
 		width: 100%;
 		justify-content: space-between;
 	}
+
+	.daidaiConnectRow {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.daidaiActionDiff {
+		grid-template-columns: 1fr;
+	}
 }
 
 @media screen and (max-width: 500px) {
@@ -7878,6 +8094,27 @@ html.myntHighContrast button {
 		padding: 0;
 		transform: translateY(-50%);
 		align-items: stretch;
+	}
+
+	body[data-workspace-background="video"] .leftDiv {
+		display: block;
+		position: relative;
+		top: auto;
+		bottom: auto;
+		width: 100%;
+		height: auto;
+		margin: 0 0 14px;
+		scale: 1;
+		transform: none;
+	}
+
+	body[data-workspace-background="video"] .ttteexxtt {
+		position: static;
+		inset: auto;
+		display: flex;
+		width: fit-content;
+		height: auto;
+		margin: 0;
 	}
 
 	body[data-workspace-background="video"] .rightDiv {
@@ -7977,6 +8214,273 @@ html.myntHighContrast button {
 }
 /* ------------ End Command & Control Center ------------ */
 
+/* ------------ Reese daily focus and compact settings ------------ */
+.dailyFocusActions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: fit-content;
+	max-width: 100%;
+	margin: 0 0 10px;
+	font-size: 0.76rem;
+}
+
+#dailyFocusStatus {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	opacity: 0.78;
+}
+
+#dailyFocusToggle {
+	flex: 0 0 auto;
+	min-height: 30px;
+	padding: 4px 11px;
+	border: 0;
+	border-radius: 999px;
+	background: var(--darkColor-blue);
+	color: var(--onActionColor-blue);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+#dailyFocusToggle:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+#dailyFocusToggle:focus-visible,
+.settingsGroupTabs button:focus-visible,
+#aiToolsMoreButton:focus-visible,
+.daidaiActionToast button:focus-visible {
+	outline: 2px solid var(--darkColor-blue);
+	outline-offset: 2px;
+}
+
+#userText.is-complete {
+	text-decoration: line-through;
+	opacity: 0.68;
+}
+
+body[data-workspace-background="video"] .ttteexxtt {
+	flex-direction: column;
+}
+
+body[data-workspace-background="video"] #date {
+	order: -2;
+}
+
+body[data-workspace-background="video"] #userText {
+	order: -1;
+}
+
+body[data-workspace-background="video"] .dailyFocusActions {
+	margin: 5px 0 0;
+}
+
+.settingsGroupTabs {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 4px;
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	margin-bottom: 18px;
+	padding: 4px;
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--bg-color-blue) 70%, var(--accentLightTint-blue));
+}
+
+.settingsGroupTabs button {
+	min-width: 0;
+	min-height: 42px;
+	padding: 7px 8px;
+	border: 0;
+	border-radius: 12px;
+	background: transparent;
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-size: 0.78rem;
+	font-weight: 650;
+	cursor: pointer;
+}
+
+.settingsGroupTabs button[aria-selected="true"] {
+	background: var(--whitishColor-blue);
+	box-shadow: 0 3px 10px rgba(13, 39, 71, 0.12);
+}
+
+#overviewPage > .divider {
+	display: none;
+}
+
+.section[hidden] {
+	display: none !important;
+}
+
+.black-theme .settingsGroupTabs {
+	background: #222222;
+}
+
+.black-theme .settingsGroupTabs button[aria-selected="true"] {
+	background: #3a3a3a;
+	color: #ffffff;
+}
+
+html:has(body[data-workspace-background="video"]) {
+	background-color: var(--bg-color-blue);
+}
+
+.showHomeActionHints .homeActionHint {
+	visibility: visible;
+	opacity: 1;
+}
+
+#menuButton .homeActionHint {
+	top: auto;
+	bottom: calc(100% + 10px);
+	pointer-events: none;
+}
+
+/* Mobile keeps the first three visible tools fixed; additional tools open explicitly. */
+.aiToolsOverflowMenu {
+	position: absolute;
+	inset-inline-start: 0;
+	bottom: calc(100% + 8px);
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+	width: min(320px, calc(100vw - 32px));
+	padding: 10px;
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--accentLightTint-blue) 94%, transparent);
+	box-shadow: 0 12px 30px rgba(13, 39, 71, 0.2);
+	backdrop-filter: blur(14px);
+}
+
+.aiToolsOverflowMenu[hidden] {
+	display: none;
+}
+
+.aiToolsOverflowMenu a {
+	display: flex !important;
+	align-items: center;
+	justify-content: flex-start;
+	min-width: 0;
+	height: 46px;
+	padding: 0 12px;
+	border-radius: 12px;
+	background: var(--whitishColor-blue);
+	color: var(--textColorDark-blue);
+	text-decoration: none;
+}
+
+.aiToolsOverflowMenu .tIcon {
+	flex: 0 0 auto;
+	width: 26px;
+	height: 26px;
+	margin-inline-end: 8px;
+}
+
+#aiToolsMoreButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	background: var(--accentLightTint-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	cursor: pointer;
+}
+
+#aiToolsMoreButton[hidden] {
+	display: none;
+}
+
+#aiToolsMoreButton svg {
+	width: 25px;
+	height: 25px;
+	fill: currentColor;
+}
+
+.daidaiActionToast {
+	position: fixed;
+	inset-inline-end: 22px;
+	bottom: 82px;
+	z-index: 1100;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	max-width: min(420px, calc(100vw - 32px));
+	padding: 12px 14px 12px 18px;
+	border-radius: 16px;
+	background: var(--textColorDark-blue);
+	color: var(--whitishColor-blue);
+	box-shadow: 0 12px 30px rgba(13, 39, 71, 0.24);
+}
+
+.daidaiActionToast[hidden] {
+	display: none;
+}
+
+.daidaiActionToast button {
+	min-height: 34px;
+	padding: 5px 12px;
+	border: 0;
+	border-radius: 999px;
+	background: var(--accentLightTint-blue);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+@media screen and (max-width: 500px) {
+	body[data-workspace-background="video"] .aiToolsCont {
+		overflow: visible;
+	}
+
+	body[data-workspace-background="video"] #toolsCont.mobileToolsLayout,
+	#toolsCont.mobileToolsLayout[style*="display: flex"] {
+		display: grid !important;
+		grid-template-columns: repeat(var(--mobile-tool-columns, 3), minmax(0, 1fr));
+		gap: 8px !important;
+		width: 100%;
+	}
+
+	body[data-workspace-background="video"] #toolsCont.mobileToolsLayout a,
+	body[data-workspace-background="video"] #aiToolsMoreButton {
+		flex-direction: column;
+		height: 64px;
+		min-width: 0;
+		padding: 6px;
+		border-radius: 16px;
+	}
+
+	body[data-workspace-background="video"] #toolsCont.mobileToolsLayout .tIcon {
+		width: 27px;
+		height: 27px;
+		margin: 0 0 2px;
+	}
+
+	body[data-workspace-background="video"] #toolsCont.mobileToolsLayout .tLabel,
+	body[data-workspace-background="video"] #aiToolsMoreButton span {
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.7rem;
+	}
+
+	.daidaiActionToast {
+		inset-inline: 16px;
+		bottom: 16px;
+		max-width: none;
+	}
+}
+
 /* ------------ Quick Scratchpad Widget ------------ */
 .scratchpadCont {
 	position: fixed;
@@ -8074,10 +8578,13 @@ html.myntHighContrast button {
 .scratchpadHeaderActions {
 	display: flex;
 	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
 	gap: 6px;
 }
 
 .scratchpadActionBtn {
+	flex: 0 0 auto;
 	appearance: none;
 	border: 1px solid rgba(128, 128, 128, 0.2);
 	background: color-mix(in srgb, var(--accentColor, #0b57d0) 12%, transparent);
@@ -8086,6 +8593,7 @@ html.myntHighContrast button {
 	font-weight: 600;
 	padding: 3px 8px;
 	border-radius: 999px;
+	white-space: nowrap;
 	cursor: pointer;
 	transition: background 0.15s ease, transform 0.15s ease;
 }
@@ -8111,6 +8619,18 @@ html.myntHighContrast button {
 .scratchpadClearBtn:hover {
 	background: rgba(255, 0, 0, 0.1);
 	color: #d32f2f;
+}
+
+@media screen and (max-width: 500px) {
+	.scratchpadHeader {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.scratchpadHeaderActions {
+		width: 100%;
+		justify-content: flex-start;
+	}
 }
 
 #scratchpadInput {

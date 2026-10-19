@@ -46,6 +46,19 @@ function myntSevenDayStats(history, now = new Date()) {
     });
 }
 
+function myntNormalizeGreetingName(value) {
+    return Array.from(String(value || "").trim().replace(/\s+/gu, " ")).slice(0, 30).join("");
+}
+
+function myntFormatGreeting(greeting, name, template = "{greeting}, {name}") {
+    const normalizedName = myntNormalizeGreetingName(name);
+    if (!normalizedName) return String(greeting || "");
+    const greetingStem = String(greeting || "").trim().replace(/[.!。！?？]+$/u, "");
+    return String(template)
+        .replace("{greeting}", () => greetingStem)
+        .replace("{name}", () => normalizedName);
+}
+
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
     "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox", "scratchpadCheckbox"
@@ -74,7 +87,8 @@ function myntNormalizeWorkspaces(raw, defaults = []) {
 
 if (typeof module !== "undefined") {
     module.exports = {
-        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeWorkspaces
+        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeGreetingName,
+        myntFormatGreeting, myntNormalizeWorkspaces
     };
 }
 
@@ -361,6 +375,7 @@ if (typeof document !== "undefined") {
 
         function saveHabits() {
             localStorage.setItem(KEYS.habits, JSON.stringify(habits));
+            document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
         }
 
         function markSystemHabit(source) {
@@ -487,6 +502,7 @@ if (typeof document !== "undefined") {
         }
 
         const decorativeVideo = document.getElementById("videoBg");
+        const decorativeVideoSource = decorativeVideo?.querySelector("source[data-src]");
         const networkConnection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let decorativeVideoStarted = false;
         let decorativeVideoStartHandle = null;
@@ -510,6 +526,12 @@ if (typeof document !== "undefined") {
             decorativeVideoStartHandle = null;
         }
 
+        function loadDecorativeVideo() {
+            if (!decorativeVideoSource || decorativeVideoSource.hasAttribute("src")) return;
+            decorativeVideoSource.src = decorativeVideoSource.dataset.src;
+            decorativeVideo.load();
+        }
+
         function syncDecorativeVideo() {
             if (!decorativeVideo) return;
 
@@ -528,6 +550,7 @@ if (typeof document !== "undefined") {
             const startVideo = () => {
                 decorativeVideoStartHandle = null;
                 if (!canPlayDecorativeVideo()) return;
+                loadDecorativeVideo();
                 decorativeVideoStarted = true;
                 decorativeVideo.play().catch(() => {
                     decorativeVideoStarted = false;

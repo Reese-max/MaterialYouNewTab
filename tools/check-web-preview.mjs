@@ -45,6 +45,9 @@ assert.doesNotMatch(index, /<[^>]+\bon\w+\s*=/iu, "Inline event handler found in
 assert.doesNotMatch(verify, /<[^>]+\bon\w+\s*=/iu, "Inline event handler found in verification page");
 assert.match(banner, /myntPreviewLastSnapshot/u);
 assert.match(banner, /RuntimeError|ReferenceError|TypeError|SyntaxError|Uncaught/iu);
+assert.match(banner, /Reese 新分頁預覽/u);
+assert.match(banner, /max-width: 640px/u);
+assert.match(verify, /Reese 新分頁驗證中心/u);
 assert.match(verifyScript, /myntPreviewManualChecks/u);
 assert.equal(meta.version, sourceManifest.version, "Preview metadata version does not match manifest");
 assert.equal(typeof meta.commit, "string");

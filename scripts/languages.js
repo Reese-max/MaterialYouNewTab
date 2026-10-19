@@ -121,6 +121,7 @@ function applyLanguage(lang) {
 
     // Mapping of text elements and their translation keys
     const translationMap = [
+        "menuTitle",
         "feedback",
         "resetsettings",
         "shortcutsText",
@@ -162,8 +163,25 @@ function applyLanguage(lang) {
         "scratchpadInfo",
         "scratchpadCopyBtn",
         "scratchpadToTaskBtn",
+        "scratchpadAskDaidaiBtn",
+        "scratchpadOrganizeDaidaiBtn",
         "scratchpadClearBtn",
         "scratchpadDownloadBtn",
+        "daidaiIntegrationTitle",
+        "daidaiIntegrationInfo",
+        "daidaiConnectionTitle",
+        "daidaiConnectionInfo",
+        "daidaiConnectBtn",
+        "daidaiDisclosureSummary",
+        "daidaiDisclosurePrivate",
+        "daidaiDisclosureApproval",
+        "daidaiActionEyebrow",
+        "daidaiActionTitle",
+        "daidaiActionBeforeLabel",
+        "daidaiActionAfterLabel",
+        "daidaiActionWarning",
+        "daidaiActionRejectBtn",
+        "daidaiActionConfirmBtn",
         "shortcutsHelpEyebrow",
         "shortcutsHelpTitle",
         "shortcutSearchHelp",
@@ -224,6 +242,8 @@ function applyLanguage(lang) {
         "timeformatinfo",
         "greetingtitle",
         "greetinginfo",
+        "greetingNameTitle",
+        "greetingNameInfo",
         "userTextTitle",
         "userTextInfo",
         "useproxytitletext",
@@ -286,6 +306,9 @@ function applyLanguage(lang) {
         "adjustOpacityDesc",
         "footerToastTitle",
         "footerToastMessage",
+        "settingsGroupPersonal",
+        "settingsGroupWork",
+        "settingsGroupAdvanced",
         "personalizationSectionTitle",
         "clockSectionTitle",
         "searchSectionTitle",
@@ -304,7 +327,8 @@ function applyLanguage(lang) {
         { id: "todoInput", key: "todoPlaceholder" },
         { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "editBookmarkName", key: "editBookmarkName" },
-        { id: "editBookmarkURL", key: "editBookmarkURL" }
+        { id: "editBookmarkURL", key: "editBookmarkURL" },
+        { id: "greetingNameInput", key: "greetingNamePlaceholder" }
     ];
 
     // Mapping of elements and their different translation keys
@@ -317,8 +341,11 @@ function applyLanguage(lang) {
         { id: "saveLoc", key: "saveAPI" },
         { id: "saveBookmarkChanges", key: "saveAPI" },
         { id: "cancelBookmarkEdit", key: "cancelText" },
+        { id: "bookmarkDisplayOptionsSummary", key: "bookmarkDisplayOptions" },
+        { id: "bookmarkUndoButton", key: "bookmarkUndoAction" },
         { id: "aiSettingsHeader", key: "aiToolsSettingsText" },
         { id: "saveAISettingsBtn", key: "saveAPI" },
+        { id: "settingsHintText", key: "openSettingsLabel" },
         { id: "editBookmarkNameLabel", key: "editBookmarkName" },
         { id: "editBookmarkURLLabel", key: "editBookmarkURL" },
         { id: "shortcutsSectionTitle", key: "shortcutsText" },
@@ -354,10 +381,14 @@ function applyLanguage(lang) {
         { id: "todoListCont", key: "todoListText" },
         { id: "pomodoroCont", key: "pomodoroText" },
         { id: "bookmarkButton", key: "bookmarksText" },
+        { id: "bookmarkAddButton", key: "bookmarkAddLabel", title: true },
+        { id: "bookmarkCloseButton", key: "bookmarkCloseLabel", title: true },
+        { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "googleAppsCont", key: "googleAppsMenuText" },
         { id: "aiToolsIcon", key: "ai_tools_button" },
         { id: "micIcon", key: "voiceSearchLabel" },
         { id: "menuButton", key: "openSettingsLabel" },
+        { id: "settingsGroupTabs", key: "settingsGroupLabel" },
         { id: "clearSearchButton", key: "clearBookmarkSearchLabel", title: true },
         { id: "newShortcutButton", key: "addShortcutLabel", title: true },
         { id: "resetButton", key: "resetShortcutsLabel", title: true }
@@ -370,23 +401,7 @@ function applyLanguage(lang) {
         if (title) element.title = label;
     });
 
-    const pinLabel = translations[lang]?.bookmarkPinToShortcuts || translations.en?.bookmarkPinToShortcuts;
-    const pinnedLabel = translations[lang]?.bookmarkPinnedLabel || translations.en?.bookmarkPinnedLabel;
-    document.querySelectorAll(".bookmark-pin-button").forEach(button => {
-        const label = button.disabled ? pinnedLabel : pinLabel;
-        const bookmarkTitle = button.closest("li")?.querySelector("a span")?.textContent?.trim();
-        button.title = label;
-        button.setAttribute("aria-label", bookmarkTitle ? `${label}: ${bookmarkTitle}` : label);
-        const text = button.querySelector(".bookmark-pin-label");
-        if (text) text.textContent = label;
-    });
-
-    const deleteLabel = translations[lang]?.bookmarkDeleteLabel || translations.en?.bookmarkDeleteLabel;
-    document.querySelectorAll(".bookmark-delete-button").forEach(button => {
-        const bookmarkTitle = button.closest("li")?.querySelector("a span")?.textContent?.trim();
-        button.title = deleteLabel;
-        button.setAttribute("aria-label", bookmarkTitle ? `${deleteLabel}: ${bookmarkTitle}` : deleteLabel);
-    });
+    if (typeof renderBookmarks === "function" && bookmarkNodeMap?.size) renderBookmarks();
 
     // For userText
     const userTextDiv = document.getElementById("userText");
@@ -398,6 +413,7 @@ function applyLanguage(lang) {
             userTextDiv.innerText = placeholder;
         }
     }
+    userTextDiv.setAttribute("aria-label", translations[lang]?.userTextTitle || translations["en"].userTextTitle);
 
     // Update placeholders on already-rendered shortcut inputs
     document.querySelectorAll(".shortcutSettingsEntry .shortcutName")
@@ -442,7 +458,8 @@ function applyLanguage(lang) {
     const isRTL = rtlLanguages.includes(lang);
     const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont", ".resultBox", ".quotesCont",
         ".leftDiv", ".shortcutsContainer", ".page", "#prompt-modal-box", ".todo-container",
-        ".bookmark-search-container", ".bookmark-controls-container", "#editBookmarkModal", ".liquidGlass-toast"];
+        ".bookmark-sidebar", ".bookmark-search-container", ".bookmark-controls-container", ".bookmark-state",
+        ".bookmark-section", ".bookmark-action-popover", "#editBookmarkModal", ".liquidGlass-toast"];
 
     rtlSelectors.forEach(selector => {
         document.querySelectorAll(selector).forEach(el => {

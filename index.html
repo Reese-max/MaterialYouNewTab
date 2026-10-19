@@ -46,6 +46,7 @@
     <script defer src="scripts/backup-restore.js"></script>
     <script defer src="scripts/scratchpad.js"></script>
     <script defer src="scripts/ambient-sound.js"></script>
+    <script defer src="scripts/daidai-integration.js"></script>
 
     <!-- LANGUAGES SCRIPTS -->
     <script src="locales/en.js"></script>
@@ -84,9 +85,9 @@
 
 <body data-bg="wallpaper" data-workspace-background="video">
     <!-- --------------------- Video Background --------------------- -->
-    <video id="videoBg" muted loop playsinline preload="metadata" aria-hidden="true"
+    <video id="videoBg" muted loop playsinline preload="none" aria-hidden="true"
         style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;">
-        <source src="./videos/bg.mp4?v=2" type="video/mp4">
+        <source data-src="./videos/bg.mp4?v=2" type="video/mp4">
     </video>
 
     <!-- --------------------- Loading Screen Starting --------------------- -->
@@ -131,6 +132,8 @@
         <div class="scratchpadHeader">
             <h2 id="scratchpadHeading">Scratchpad</h2>
             <div class="scratchpadHeaderActions">
+                <button id="scratchpadAskDaidaiBtn" class="scratchpadActionBtn" type="button">Ask DaiDai</button>
+                <button id="scratchpadOrganizeDaidaiBtn" class="scratchpadActionBtn" type="button">DaiDai → Tasks</button>
                 <button id="scratchpadToTaskBtn" class="scratchpadActionBtn" type="button" title="Convert to Task">➔ Task</button>
                 <button id="scratchpadCopyBtn" class="scratchpadActionBtn" type="button" title="Copy all">Copy</button>
                 <button id="scratchpadDownloadBtn" class="scratchpadActionBtn" type="button" title="Download .md">↓ .md</button>
@@ -221,10 +224,11 @@
                 clip-rule="evenodd" />
         </svg>
         <!-- Text to appear on hover -->
-        <span class="tooltip-text" id="bookmarksHover">書籤</span>
+        <span class="tooltip-text homeActionHint" id="bookmarksHover">書籤</span>
     </button>
     <div id="bookmarksContainer">
-        <div id="bookmarkSidebar" class="bookmark-sidebar">
+        <div id="bookmarkSidebar" class="bookmark-sidebar" role="dialog" aria-modal="true"
+            aria-labelledby="bookmarksHeading" aria-hidden="true" inert>
 
             <div class="topOutRoundCorner">
                 <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
@@ -235,62 +239,96 @@
             <div class="bookmark-sidebar-header">
                 <div class="bookmark-heading-copy">
                     <h2 id="bookmarksHeading">書籤</h2>
-                    <p id="bookmarksSubtitle">搜尋、整理，或加入捷徑</p>
+                    <p id="bookmarksSubtitle">常用優先，快速找到最近與資料夾</p>
+                </div>
+                <div class="bookmark-header-actions">
+                    <button id="bookmarkAddButton" type="button" aria-label="新增書籤" title="新增書籤">
+                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                    </button>
+                    <button id="bookmarkCloseButton" type="button" aria-label="關閉書籤" title="關閉書籤">
+                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
+                    </button>
                 </div>
             </div>
             <div class="bookmark-search-container">
-                <input type="text" id="bookmarkSearch" placeholder="搜尋書籤" />
+                <input type="text" id="bookmarkSearch" placeholder="搜尋書籤" aria-label="搜尋書籤" />
                 <button id="clearSearchButton" type="button" aria-label="清除書籤搜尋" title="清除書籤搜尋">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
                 </button>
             </div>
             <p id="bookmarkShortcutStatus" class="bookmark-shortcut-status" role="status" aria-live="polite"></p>
-            <!-- Adding Sorting buttons along with View Container -->
-            <div class="bookmark-controls-container">
-                <div class="bookmark-control-group">
-                    <h3 id="bookmarkSortBy">排序方式</h3>
-                    <div class="button-group">
-                        <button id="sortAlphabetical" class="bookmark-sort-button active">A-Z</button>
-                        <button id="sortTimeAdded" class="bookmark-sort-button">由舊到新</button>
-                    </div>
-                </div>
 
-                <div class="bookmark-control-group">
-                    <h3 id="bookmarkViewAs">檢視方式</h3>
-                    <div class="button-group">
-                        <input type="checkbox" id="bookmarkGridCheckbox" hidden />
-                        <button id="bookmarkViewGrid" class="bookmark-view-as-button">網格</button>
-                        <button id="bookmarkViewList" class="bookmark-view-as-button">列表</button>
-                    </div>
+            <div id="bookmarkState" class="bookmark-state" role="status" aria-live="polite" hidden>
+                <svg class="bookmark-state-icon" aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14.1l-6.5-3.7-6.5 3.7V5A1.5 1.5 0 0 1 7 3.5Z"/>
+                </svg>
+                <div class="bookmark-state-copy">
+                    <h3 id="bookmarkStateTitle"></h3>
+                    <p id="bookmarkStateDescription"></p>
+                </div>
+                <div class="bookmark-state-actions">
+                    <button id="bookmarkStatePrimary" type="button" hidden></button>
+                    <button id="bookmarkStateSecondary" type="button" hidden></button>
                 </div>
             </div>
-            <ul id="bookmarkList"></ul>
+
+            <div id="bookmarkUndoBar" class="bookmark-undo-bar" role="status" aria-live="polite" hidden>
+                <span id="bookmarkUndoMessage"></span>
+                <button id="bookmarkUndoButton" type="button">復原</button>
+            </div>
+
+            <div id="bookmarkContent" class="bookmark-content" hidden>
+                <details id="bookmarkDisplayOptions" class="bookmark-display-options">
+                    <summary id="bookmarkDisplayOptionsSummary">顯示選項</summary>
+                    <div class="bookmark-controls-container">
+                        <div class="bookmark-control-group">
+                            <h3 id="bookmarkSortBy">排序方式</h3>
+                            <div class="button-group">
+                                <button id="sortAlphabetical" class="bookmark-sort-button active" type="button" aria-pressed="true">A-Z</button>
+                                <button id="sortTimeAdded" class="bookmark-sort-button" type="button" aria-pressed="false">由舊到新</button>
+                            </div>
+                        </div>
+
+                        <div class="bookmark-control-group">
+                            <h3 id="bookmarkViewAs">檢視方式</h3>
+                            <div class="button-group">
+                                <input type="checkbox" id="bookmarkGridCheckbox" hidden />
+                                <button id="bookmarkViewGrid" class="bookmark-view-as-button" type="button" aria-pressed="false">網格</button>
+                                <button id="bookmarkViewList" class="bookmark-view-as-button" type="button" aria-pressed="true">列表</button>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+                <ul id="bookmarkList" aria-labelledby="bookmarksHeading"></ul>
+            </div>
         </div>
     </div>
 
     <!-- Edit Bookmark Modal -->
-    <div id="editBookmarkModal">
+    <dialog id="editBookmarkModal" aria-labelledby="editBookmarkHeading">
         <div class="modal-content">
             <h2 id="editBookmarkHeading">編輯書籤</h2>
 
             <img id="editBookmarkFavicon" src="./svgs/offline.svg" alt="">
 
             <div class="floating-label-field">
-                <input type="text" id="editBookmarkName" autocomplete="off" />
+                <input type="text" id="editBookmarkName" autocomplete="off" placeholder=" " />
                 <label for="editBookmarkName" id="editBookmarkNameLabel">書籤名稱</label>
             </div>
 
             <div class="floating-label-field">
-                <input type="url" id="editBookmarkURL" autocomplete="off" />
+                <input type="url" id="editBookmarkURL" autocomplete="off" placeholder=" " />
                 <label for="editBookmarkURL" id="editBookmarkURLLabel">書籤網址</label>
             </div>
 
+            <p id="bookmarkEditorError" class="bookmark-editor-error" role="alert"></p>
+
             <div class="modal-buttons">
-                <button id="saveBookmarkChanges">儲存</button>
-                <button id="cancelBookmarkEdit">取消</button>
+                <button id="saveBookmarkChanges" type="button">儲存</button>
+                <button id="cancelBookmarkEdit" type="button">取消</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
     <!----------------------- End of Bookmark System ----------------------->
 
@@ -718,7 +756,12 @@
             <!-- ____________end of clock______________ -->
 
             <div class="ttteexxtt">
-                <div id="userText" contenteditable="true" spellcheck="false">Click here to edit</div>
+                <div id="userText" contenteditable="true" spellcheck="false" role="textbox"
+                    aria-label="Editable home heading">What matters most today?</div>
+                <div id="dailyFocusActions" class="dailyFocusActions">
+                    <span id="dailyFocusStatus" role="status" aria-live="polite">Today’s focus</span>
+                    <button id="dailyFocusToggle" type="button" aria-pressed="false">Done</button>
+                </div>
                 <div id="date"></div>
             </div>
         </div>
@@ -1017,14 +1060,14 @@
             </div>
             <!-- ---end of rounder--- -->
             <div class="topDiv">
-                <h1>Material You New Tab</h1>
+                <h1 id="menuTitle">My New Tab</h1>
             </div>
             <div class="optCont" id="optCont">
                 <div class="page" id="overviewPage">
                     <div class="tilesCont">
 
                         <!-- ----tiles----------- -->
-                        <a class="tiles" href="https://github.com/prem-k-r/MaterialYouNewTab">
+                        <a class="tiles" href="https://github.com/Reese-max/MaterialYouNewTab">
                             <div class="icon">
                                 <svg height="100%" viewBox="0 0 20 20" width="100%" xmlns="http://www.w3.org/2000/svg">
                                     <path id="githab" class="bgLightTint notTargeted"
@@ -1036,7 +1079,7 @@
                         </a>
                         <!-- -----end of tiles-------- -->
                         <!-- ----tiles----------- -->
-                        <a class="tiles" href="https://prem-k-r.github.io/MaterialYouNewTab/docs/feedback.html">
+                        <a class="tiles" href="https://github.com/Reese-max/MaterialYouNewTab/issues">
                             <div class="icon">
                                 <svg height="100%" viewBox="0 0 18 17" width="100%" xmlns="http://www.w3.org/2000/svg">
                                     <path id="sujhaw" class="bgLightTint notTargeted" clip-rule="evenodd"
@@ -1051,9 +1094,18 @@
                     </div>
                     <!-- end of tilesCont -->
 
+                    <div id="settingsGroupTabs" class="settingsGroupTabs" role="tablist" aria-label="Settings categories">
+                        <button id="settingsGroupPersonal" type="button" role="tab" aria-selected="true"
+                            data-settings-group-button="personal">Personalization</button>
+                        <button id="settingsGroupWork" type="button" role="tab" aria-selected="false"
+                            data-settings-group-button="work">Work tools</button>
+                        <button id="settingsGroupAdvanced" type="button" role="tab" aria-selected="false"
+                            data-settings-group-button="advanced">Advanced</button>
+                    </div>
+
                     <div class="toggleTextsCont">
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="shortcutsSectionContent">
                                     <span class="sectionTitle" id="shortcutsSectionTitle">Shortcuts</span>
@@ -1108,7 +1160,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="personalizationSectionContent">
                                     <span class="sectionTitle" id="personalizationSectionTitle">Personalization</span>
@@ -1369,7 +1421,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="personal">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="clockSectionContent">
                                     <span class="sectionTitle" id="clockSectionTitle">Clock</span>
@@ -1425,6 +1477,15 @@
                                             </label>
                                         </div>
 
+                                        <div class="ttcont unflex" id="greetingNameField">
+                                            <div class="texts">
+                                                <label class="bigText" id="greetingNameTitle" for="greetingNameInput">Your name</label>
+                                                <div class="infoText" id="greetingNameInfo">Used only for your local greeting</div>
+                                            </div>
+                                            <input id="greetingNameInput" maxlength="30" autocomplete="off" spellcheck="false"
+                                                placeholder="What should this page call you?">
+                                        </div>
+
                                         <div class="ttcont">
                                             <div class="texts">
                                                 <div class="bigText" id="userTextTitle">Customizable Text</div>
@@ -1443,7 +1504,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="searchSectionContent">
                                     <span class="sectionTitle" id="searchSectionTitle">Search</span>
@@ -1545,9 +1606,9 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section" data-settings-group="advanced">
                             <div class="sectionOuter">
-                                <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="weatherSectionContent">
+                                <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="weatherSectionContent">
                                     <span class="sectionTitle" id="weatherSectionTitle">Weather</span>
                                     <span class="sectionChevron"></span>
                                 </button>
@@ -1657,7 +1718,7 @@
 
                     <div class="divider"></div>
 
-                    <div class="section expanded appearanceSection">
+                    <div class="section expanded appearanceSection" data-settings-group="personal">
                         <div class="sectionOuter">
                             <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="appearanceSectionContent">
                                 <span class="sectionTitle" id="appearanceSectionTitle">Appearance</span>
@@ -1778,9 +1839,9 @@
                     </div>
                     <!-- end of themingStuff -->
 
-                    <div class="section expanded">
+                    <div class="section" data-settings-group="advanced">
                         <div class="sectionOuter">
-                            <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="settingsSectionContent">
+                            <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="settingsSectionContent">
                                 <span class="sectionTitle" id="settingsSectionTitle">Settings</span>
                                 <span class="sectionChevron"></span>
                             </button>
@@ -2108,6 +2169,28 @@
                 <ul id="habitList" class="habitList"></ul>
             </section>
 
+            <section class="controlSection" id="daidaiIntegrationSection" aria-labelledby="daidaiIntegrationTitle">
+                <div class="controlSectionHeading">
+                    <div>
+                        <h3 id="daidaiIntegrationTitle">DaiDai integration</h3>
+                        <p id="daidaiIntegrationInfo">Let DaiDai read today's summary and propose changes for your approval.</p>
+                    </div>
+                    <span id="daidaiConnectionStatus" class="daidaiConnectionStatus" aria-live="polite">Disconnected</span>
+                </div>
+                <div class="daidaiConnectRow">
+                    <span>
+                        <strong id="daidaiConnectionTitle">Local connection</strong>
+                        <small id="daidaiConnectionInfo">Connects only to DaiDai on this computer.</small>
+                    </span>
+                    <button id="daidaiConnectBtn" class="settingsActionBtn" type="button">Connect DaiDai</button>
+                </div>
+                <ul class="privacyDisclosureList daidaiDisclosureList">
+                    <li id="daidaiDisclosureSummary">Shares today's task titles and status, focus minutes, and habits.</li>
+                    <li id="daidaiDisclosurePrivate">Scratchpad text is sent only when you press a DaiDai button; bookmarks and searches are never shared.</li>
+                    <li id="daidaiDisclosureApproval">Every proposed task or scratchpad change requires a preview and explicit confirmation.</li>
+                </ul>
+            </section>
+
             <section class="controlSection" id="accessibilitySection" aria-labelledby="accessibilityTitle">
                 <div class="controlSectionHeading">
                     <div>
@@ -2180,7 +2263,36 @@
         </div>
     </dialog>
 
-    <button id="menuButton" type="button" aria-controls="menuBar" aria-expanded="false"></button>
+    <dialog id="daidaiActionDialog" class="myntDialog daidaiActionDialog" aria-labelledby="daidaiActionTitle" aria-describedby="daidaiActionWarning">
+        <header class="controlCenterHeader">
+            <div>
+                <span class="controlCenterEyebrow" id="daidaiActionEyebrow">DaiDai proposal</span>
+                <h2 id="daidaiActionTitle">Preview change</h2>
+            </div>
+        </header>
+        <div class="daidaiActionContent">
+            <h3 id="daidaiActionSummary"></h3>
+            <div class="daidaiActionDiff">
+                <div><span id="daidaiActionBeforeLabel">Current</span><pre id="daidaiActionBefore"></pre></div>
+                <div><span id="daidaiActionAfterLabel">After confirmation</span><pre id="daidaiActionAfter"></pre></div>
+            </div>
+            <p id="daidaiActionStale" class="daidaiActionStale" hidden></p>
+            <p id="daidaiActionWarning">Nothing changes until you confirm.</p>
+        </div>
+        <footer class="daidaiActionFooter">
+            <button id="daidaiActionRejectBtn" type="button">Reject</button>
+            <button id="daidaiActionConfirmBtn" class="settingsActionBtn" type="button">Confirm change</button>
+        </footer>
+    </dialog>
+
+    <div id="daidaiActionToast" class="daidaiActionToast" role="status" aria-live="polite" hidden>
+        <span id="daidaiActionToastText">Change applied.</span>
+        <button id="daidaiActionUndoBtn" type="button">Undo</button>
+    </div>
+
+    <button id="menuButton" type="button" aria-controls="menuBar" aria-expanded="false">
+        <span class="tooltip-text homeActionHint" id="settingsHintText">Settings</span>
+    </button>
     <!-- ending-of-body -->
 
 </body>

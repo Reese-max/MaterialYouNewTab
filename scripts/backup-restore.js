@@ -275,6 +275,7 @@ resetButton.addEventListener("click", async () => {
 
     resetButton.disabled = true;
     try {
+        await globalThis.myntDaidaiDisconnect?.({ removePermission: true });
         await replaceIndexedDB([]);
         localStorage.clear();
         location.reload();

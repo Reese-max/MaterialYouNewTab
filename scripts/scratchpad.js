@@ -41,6 +41,34 @@ document.addEventListener("DOMContentLoaded", function () {
         updateCounts();
     });
 
+    document.addEventListener("mynt:scratchpad-action", event => {
+        const action = event.detail?.action;
+        if (!action || typeof action !== "object") return;
+        const previous = scratchpadInput.value;
+        if (action.type === "scratchpad.append") {
+            const text = typeof action.text === "string" ? action.text.trim().slice(0, 2000) : "";
+            if (!text) return;
+            const separator = scratchpadInput.value && !scratchpadInput.value.endsWith("\n") ? "\n" : "";
+            scratchpadInput.value += `${separator}${text}`;
+        } else if (action.type === "scratchpad.replace") {
+            const before = typeof action.before === "string" ? action.before.trim() : "";
+            if (!before || before.length > 2000 || typeof action.text !== "string" || action.text.length > 2000) return;
+            if (scratchpadInput.value.split(before).length !== 2) return;
+            scratchpadInput.value = scratchpadInput.value.replace(before, action.text.trim());
+        } else {
+            return;
+        }
+        scratchpadInput.dispatchEvent(new Event("input", { bubbles: true }));
+        event.detail.applied = true;
+        const applied = scratchpadInput.value;
+        event.detail.undo = () => {
+            if (scratchpadInput.value !== applied) return false;
+            scratchpadInput.value = previous;
+            scratchpadInput.dispatchEvent(new Event("input", { bubbles: true }));
+            return true;
+        };
+    });
+
     // Copy all content
     if (scratchpadCopyBtn) {
         scratchpadCopyBtn.addEventListener("click", async function () {

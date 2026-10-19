@@ -8,3 +8,10 @@
 .gstack/
 
 .github/
+
+# Local QA / tooling artifacts
+dist/
+.impeccable/
+.wrangler/
+*.bak-*
+

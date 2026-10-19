@@ -116,6 +116,51 @@ document.querySelectorAll(".sectionHeader").forEach(header => {
     });
 });
 
+// Keep the large settings menu scannable without moving its existing controls.
+const settingsGroupButtons = [...document.querySelectorAll("[data-settings-group-button]")];
+const settingsGroupSections = [...document.querySelectorAll("#overviewPage .section[data-settings-group]")];
+
+function selectSettingsGroup(group) {
+    settingsGroupButtons.forEach(button => {
+        const selected = button.dataset.settingsGroupButton === group;
+        button.setAttribute("aria-selected", String(selected));
+        button.tabIndex = selected ? 0 : -1;
+    });
+    settingsGroupSections.forEach(section => {
+        const hidden = section.dataset.settingsGroup !== group;
+        section.hidden = hidden;
+        section.toggleAttribute("inert", hidden);
+    });
+    optCont.scrollTop = 0;
+}
+
+settingsGroupButtons.forEach((button, index) => {
+    button.addEventListener("click", () => selectSettingsGroup(button.dataset.settingsGroupButton));
+    button.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        event.preventDefault();
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const next = settingsGroupButtons[(index + direction + settingsGroupButtons.length) % settingsGroupButtons.length];
+        next.focus();
+        selectSettingsGroup(next.dataset.settingsGroupButton);
+    });
+});
+selectSettingsGroup("personal");
+
+// Explain the two unlabeled floating actions on the first three visits, then simplify them.
+const HOME_HINT_KEY = "myntHomeActionHintViews";
+const hintViews = Math.max(0, Number(localStorage.getItem(HOME_HINT_KEY)) || 0);
+if (hintViews < 3) {
+    document.documentElement.classList.add("showHomeActionHints");
+    localStorage.setItem(HOME_HINT_KEY, String(hintViews + 1));
+}
+
+document.addEventListener("click", event => {
+    if (!event.target.closest("#menuButton, #bookmarkButton")) return;
+    document.documentElement.classList.remove("showHomeActionHints");
+    localStorage.setItem(HOME_HINT_KEY, "3");
+}, true);
+
 
 /* ------ Shortcut Page Transitions & Animations ------ */
 

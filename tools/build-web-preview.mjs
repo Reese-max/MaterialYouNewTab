@@ -48,7 +48,7 @@ if (!index.includes("<head>")) throw new Error("index.html does not contain a <h
 
 index = index.replace(
     "<head>",
-    `<head>\n    ${injectionMarker}\n    <meta name="robots" content="noindex,nofollow">\n    <link rel="stylesheet" href="preview/preview.css">\n    <script src="preview/preview-banner.js"></script>`,
+    `<head>\n    ${injectionMarker}\n    <meta name="robots" content="noindex,nofollow">\n    <link rel="stylesheet" href="preview/preview.css?v=${manifest.version}">\n    <script src="preview/preview-banner.js?v=${manifest.version}"></script>`,
 );
 writeFileSync(indexPath, index);
 

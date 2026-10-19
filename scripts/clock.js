@@ -176,7 +176,9 @@ async function initializeClock() {
                 default: `${dayName.substring(0, 3)}, ${monthName.substring(0, 3)} ${dayOfMonth}`	// Sun, Dec 22
             };
 
-            const newDateString = dateDisplay[currentLanguage] || dateDisplay.default;
+            const newDateString = document.body.dataset.workspaceBackground === "video"
+                ? getGreeting()
+                : dateDisplay[currentLanguage] || dateDisplay.default;
             // Update date if date actually changed or if it's the first time
             if (newDateString !== lastDateString) {
                 document.getElementById("date").innerText = newDateString;
@@ -254,8 +256,11 @@ async function initializeClock() {
         // Get the user's language setting
         const currentLanguage = getLanguageStatus("selectedLanguage") || "en"; // Default to English
 
-        // Return the translated greeting is available
-        return translations[currentLanguage]?.greeting?.[greetingKey] ?? translations["en"].greeting[greetingKey];
+        const greeting = translations[currentLanguage]?.greeting?.[greetingKey] ?? translations["en"].greeting[greetingKey];
+        const template = translations[currentLanguage]?.greetingWithName
+            ?? translations["en"].greetingWithName
+            ?? "{greeting}, {name}";
+        return myntFormatGreeting(greeting, localStorage.getItem("myntGreetingName"), template);
     }
 
     function updatedigiClock() {
@@ -496,6 +501,14 @@ async function initializeClock() {
         const digitalCheckbox = document.getElementById("digitalCheckbox");
         const greetingCheckbox = document.getElementById("greetingcheckbox");
         const greetingField = document.getElementById("greetingField");
+        const greetingNameField = document.getElementById("greetingNameField");
+        const greetingNameInput = document.getElementById("greetingNameInput");
+
+        function syncGreetingNameField() {
+            const enabled = greetingCheckbox.checked;
+            greetingNameField.classList.toggle("inactive", !enabled);
+            greetingNameInput.disabled = !enabled;
+        }
 
         if (localStorage.getItem("greetingEnabled") === null) {
             localStorage.setItem("greetingEnabled", "true");
@@ -503,6 +516,8 @@ async function initializeClock() {
 
         greetingCheckbox.checked = localStorage.getItem("greetingEnabled") === "true";
         greetingCheckbox.disabled = localStorage.getItem("clocktype") !== "digital";
+        greetingNameInput.value = myntNormalizeGreetingName(localStorage.getItem("myntGreetingName"));
+        syncGreetingNameField();
 
         digitalCheckbox.addEventListener("change", function () {
             saveCheckboxState("digitalCheckboxState", digitalCheckbox);
@@ -518,6 +533,7 @@ async function initializeClock() {
                 updatedigiClock();
                 saveActiveStatus("timeformatField", "active");
                 saveActiveStatus("greetingField", "active");
+                syncGreetingNameField();
             } else {
                 timeformatField.classList.add("inactive");
                 greetingField.classList.add("inactive");
@@ -531,6 +547,7 @@ async function initializeClock() {
                 resetDateDisplay();
                 saveActiveStatus("timeformatField", "inactive");
                 saveActiveStatus("greetingField", "inactive");
+                syncGreetingNameField();
             }
         });
 
@@ -545,7 +562,21 @@ async function initializeClock() {
 
         greetingCheckbox.addEventListener("change", () => {
             localStorage.setItem("greetingEnabled", greetingCheckbox.checked);
+            syncGreetingNameField();
             updatedigiClock();
+        });
+
+        greetingNameInput.addEventListener("input", () => {
+            const name = myntNormalizeGreetingName(greetingNameInput.value);
+            if (name) localStorage.setItem("myntGreetingName", name);
+            else localStorage.removeItem("myntGreetingName");
+            lastGreetingString = null;
+            lastDateString = null;
+            if (localStorage.getItem("clocktype") === "digital") updatedigiClock();
+            else updateDate();
+        });
+        greetingNameInput.addEventListener("blur", () => {
+            greetingNameInput.value = myntNormalizeGreetingName(greetingNameInput.value);
         });
 
         loadCheckboxState("digitalCheckboxState", digitalCheckbox);
