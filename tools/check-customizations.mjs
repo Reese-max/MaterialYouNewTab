@@ -213,7 +213,7 @@ const languageTool = read("tools/languagesAnalysis.html");
 for (const code of ["en","pt","ne","es","hi","hu","zh","zh_TW","cs","it","tr","bn","vi","ru","uz","ja","ko","idn","mr","fr","az","sl","ur","de","fa","ar_SA","el","ta","th","pl","uk","sv"]) {
     assert.match(languageTool, new RegExp("locales/" + code + "\\.js"));
 }
-assert.match(read("scripts/languages.js"), /sv:\s*sv/);
+assert.match(read("scripts/languages.js"), /sv:\s*typeof sv/);
 
 const referencedSource = [...sources, searchCode].join("\n");
 const videos = readdirSync(resolve(root, "videos"));

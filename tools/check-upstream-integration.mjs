@@ -88,7 +88,8 @@ const localeCodes = ["en","pt","ne","es","hi","hu","zh","zh_TW","cs","it","tr","
 for (const code of localeCodes) {
     const path = "locales/" + code + ".js";
     assert.ok(existsSync(resolve(root, path)), "Missing locale file: " + path);
-    assert.match(html, new RegExp("src=[\"']locales/" + code + "\\.js[\"']"));
+    assert.match(html, /src=["']scripts\/locale-loader\.js["']/);
+    assert.match(read("scripts/locale-loader.js"), new RegExp('"' + code + '"'));
     assert.match(html, new RegExp("<option value=[\"']" + code + "[\"']"));
     const localeSource = read(path);
     const declaredLocaleKeys = [...localeSource.matchAll(/^\s*"([^"]+)"\s*:/gm)].map(match => match[1]);
@@ -102,7 +103,7 @@ for (const code of localeCodes) {
 }
 assert.match(languages, /const DEFAULT_LANGUAGE = "zh_TW"/);
 assert.match(languages, /\{\s*\.\.\.en,\s*\.\.\.strings\s*\}/);
-assert.match(languages, /sv:\s*sv/);
+assert.match(languages, /sv:\s*typeof sv/);
 assert.match(privacy, /自訂捷徑圖示/);
 assert.match(privacy, /更新與解除安裝頁面/);
 

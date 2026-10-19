@@ -10,49 +10,49 @@
 const DEFAULT_LANGUAGE = "zh_TW";
 
 const localeSources = {
-    en: en,
-    pt: pt,
-    ne: ne,
-    es: es,
-    hi: hi,
-    hu: hu,
-    zh: zh,
-    zh_TW: zh_TW,
-    cs: cs,
-    it: it,
-    tr: tr,
-    bn: bn,
-    vi: vi,
-    ru: ru,
-    uz: uz,
-    ja: ja,
-    ko: ko,
-    idn: idn,
-    mr: mr,
-    fr: fr,
-    az: az,
-    sl: sl,
-    ur: ur,
-    de: de,
-    fa: fa,
-    ar_SA: ar_SA,
-    el: el,
-    ta: ta,
-    th: th,
-    pl: pl,
-    uk: uk,
-    sv: sv,
+    en: typeof en !== "undefined" ? en : undefined,
+    pt: typeof pt !== "undefined" ? pt : undefined,
+    ne: typeof ne !== "undefined" ? ne : undefined,
+    es: typeof es !== "undefined" ? es : undefined,
+    hi: typeof hi !== "undefined" ? hi : undefined,
+    hu: typeof hu !== "undefined" ? hu : undefined,
+    zh: typeof zh !== "undefined" ? zh : undefined,
+    zh_TW: typeof zh_TW !== "undefined" ? zh_TW : undefined,
+    cs: typeof cs !== "undefined" ? cs : undefined,
+    it: typeof it !== "undefined" ? it : undefined,
+    tr: typeof tr !== "undefined" ? tr : undefined,
+    bn: typeof bn !== "undefined" ? bn : undefined,
+    vi: typeof vi !== "undefined" ? vi : undefined,
+    ru: typeof ru !== "undefined" ? ru : undefined,
+    uz: typeof uz !== "undefined" ? uz : undefined,
+    ja: typeof ja !== "undefined" ? ja : undefined,
+    ko: typeof ko !== "undefined" ? ko : undefined,
+    idn: typeof idn !== "undefined" ? idn : undefined,
+    mr: typeof mr !== "undefined" ? mr : undefined,
+    fr: typeof fr !== "undefined" ? fr : undefined,
+    az: typeof az !== "undefined" ? az : undefined,
+    sl: typeof sl !== "undefined" ? sl : undefined,
+    ur: typeof ur !== "undefined" ? ur : undefined,
+    de: typeof de !== "undefined" ? de : undefined,
+    fa: typeof fa !== "undefined" ? fa : undefined,
+    ar_SA: typeof ar_SA !== "undefined" ? ar_SA : undefined,
+    el: typeof el !== "undefined" ? el : undefined,
+    ta: typeof ta !== "undefined" ? ta : undefined,
+    th: typeof th !== "undefined" ? th : undefined,
+    pl: typeof pl !== "undefined" ? pl : undefined,
+    uk: typeof uk !== "undefined" ? uk : undefined,
+    sv: typeof sv !== "undefined" ? sv : undefined,
 };
 
 const translations = Object.fromEntries(
-    Object.entries(localeSources).map(([code, strings]) => [
+    Object.entries(localeSources).filter(([, strings]) => strings).map(([code, strings]) => [
         code,
         code === "en" ? strings : { ...en, ...strings }
     ])
 );
 
 const savedLanguage = localStorage.getItem("selectedLanguage");
-if (!savedLanguage || !translations[savedLanguage]) {
+if (!savedLanguage || !(window.MYNT_LOCALE_CODES || Object.keys(translations)).includes(savedLanguage)) {
     localStorage.setItem("selectedLanguage", DEFAULT_LANGUAGE);
 }
 
@@ -485,7 +485,7 @@ function applyLanguage(lang) {
 
 // Detect language from navigator.language
 document.getElementById("languageSelector").addEventListener("change", (event) => {
-    applyLanguage(event.target.value);
+    saveLanguageStatus("selectedLanguage", event.target.value);
     location.reload();
 });
 
