@@ -1,0 +1,46 @@
+/* Daily focus helpers: tiny icons on the card, details collapsed by default. */
+.dailyFocusActions { flex-wrap: wrap; }
+#dailyFocusTools { display: inline-flex; gap: 2px; align-items: center; }
+.dailyFocusIcon {
+    border: 0; background: transparent; color: inherit; cursor: pointer;
+    font: inherit; font-size: 0.8rem; line-height: 1; padding: 4px 6px;
+    border-radius: 999px; opacity: 0.6; min-width: 24px;
+}
+.dailyFocusIcon:hover, .dailyFocusIcon:focus-visible, .dailyFocusIcon[aria-expanded="true"] { opacity: 1; background: rgba(127, 127, 127, 0.16); }
+#dailyFocusCounter { font-size: 0.72rem; opacity: 0.6; font-variant-numeric: tabular-nums; }
+#dailyFocusCounter.is-full { opacity: 1; color: #d9534f; }
+#dailyFocusSubjectBadge { font-size: 0.72rem; opacity: 0.75; padding: 1px 8px; border-radius: 999px; background: rgba(127, 127, 127, 0.16); }
+#dailyFocusPanel {
+    margin: 6px auto 0; max-width: 460px; text-align: left; font-size: 0.82rem;
+    display: grid; gap: 8px; padding: 10px 12px; border-radius: 14px;
+    background: rgba(127, 127, 127, 0.12); backdrop-filter: blur(6px);
+}
+#dailyFocusPanel[hidden], #dailyFocusPasteWrap[hidden], #dailyFocusNote[hidden], #dailyFocusTools[hidden] { display: none; }
+#dailyFocusSubjects { display: flex; flex-wrap: wrap; gap: 4px; }
+.dailyFocusChip {
+    border: 1px solid rgba(127, 127, 127, 0.35); background: transparent; color: inherit;
+    font: inherit; font-size: 0.74rem; padding: 2px 9px; border-radius: 999px; cursor: pointer; opacity: 0.8;
+}
+.dailyFocusChip[aria-pressed="true"] { opacity: 1; background: rgba(127, 127, 127, 0.25); border-color: transparent; }
+#dailyFocusSteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+#dailyFocusSteps li { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+#dailyFocusSteps label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+#dailyFocusSteps input:checked + span { text-decoration: line-through; opacity: 0.6; }
+.dailyFocusStepRemove { border: 0; background: transparent; color: inherit; cursor: pointer; opacity: 0.5; }
+#dailyFocusStepInput, #dailyFocusPaste {
+    width: 100%; box-sizing: border-box; font: inherit; color: inherit;
+    background: rgba(127, 127, 127, 0.12); border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 8px; padding: 5px 8px;
+}
+#dailyFocusPaste { min-height: 70px; resize: vertical; }
+.dailyFocusRow { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.dailyFocusRow button {
+    border: 0; background: rgba(127, 127, 127, 0.18); color: inherit; font: inherit;
+    font-size: 0.76rem; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+}
+#dailyFocusNote { font-size: 0.74rem; opacity: 0.8; margin: 0; }
+.focusHistoryDialog ol { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 8px; }
+.focusHistoryDialog li { display: grid; grid-template-columns: 3.5em 1fr; column-gap: 8px; }
+.focusHistoryDate { opacity: 0.6; font-variant-numeric: tabular-nums; }
+.focusHistoryMeta { grid-column: 2; font-size: 0.75rem; opacity: 0.6; }
+.focusHistoryMeta:empty { display: none; }

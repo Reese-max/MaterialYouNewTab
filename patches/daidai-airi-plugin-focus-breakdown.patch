@@ -1,0 +1,16 @@
+--- a/daidai-airi-plugin.mjs
++++ b/daidai-airi-plugin.mjs
+@@ -274,6 +274,13 @@
+     return {
+       type: 'submit-prompt',
+       prompt: `【MYNT 待辦】請協助我處理這項待辦。需要更動時請呼叫 mynt_action，等我在 MYNT 預覽並確認；不要聲稱已經修改。\n\nid: ${id}\n狀態: ${item.status}\n內容: ${title}`,
++    }
++  }
++  if (input.kind === 'focus-breakdown') {
++    const text = boundedText(input.text, 3000, 'focus text')
++    return {
++      type: 'submit-prompt',
++      prompt: `【MYNT 今日焦點拆解】請把以下焦點拆成 2–4 個番茄鐘大小的步驟，並針對每一步呼叫 mynt_action 提出 todo.create（title 不超過 40 字，含預估時間），等我在 MYNT 預覽並確認；不要聲稱已經修改。\n\n${text}`,
+     }
+   }
+   throw new TypeError('Unknown MYNT prompt kind.')

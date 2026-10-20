@@ -238,4 +238,16 @@ assert.match(read("scripts/languages.js"), /const DEFAULT_LANGUAGE = "zh_TW";/);
     for (const q of studyQuotes) assert.ok(q.zh && q.author && q.work, "Study quote missing text/author/work: " + q.zh);
     assert.match(read("scripts/study-companion.js"), /shuffled\(/);
 }
+const focusCardCode = read("scripts/focus-card.js");
+const focusCardContext = { module: { exports: {} } };
+vm.runInNewContext(focusCardCode, focusCardContext);
+const focusCard = focusCardContext.module.exports;
+assert.equal(JSON.stringify(focusCard.myntParseFocusSteps("好\n1. **讀第三章**（25 分鐘）\n2、做 10 題\n- 複習錯題\n4. 多的")), JSON.stringify(["讀第三章（25 分鐘）", "做 10 題", "複習錯題"]));
+assert.ok(focusCard.myntChatGptUrl(focusCard.myntBuildFocusPrompt({ text: "測".repeat(160), subject: "資料庫", days: 3 })).startsWith("https://chatgpt.com/?q="));
+assert.ok(focusCard.myntChatGptUrl("x".repeat(5000)).length < 1600);
+assert.equal(Object.keys(focusCard.myntRecordFocusLog(Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`2026-01-${String(i + 1).padStart(2, "0")}`, { t: "a", c: 0 }])), { date: "2026-02-01", text: "b" })).length, 14);
+assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed: false, steps: [{ text: "s", done: true }], rounds: 3, linked: true }, "", "2026-08-31").rounds, undefined);
+assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed: false, steps: [{ text: "s", done: true }] }, "", "2026-08-31").steps.length, 1);
+assert.match(read("index.html"), /scripts\/focus-card\.js/);
+assert.doesNotMatch(focusCardCode, /api[_-]?key|fetch\(/i);
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);

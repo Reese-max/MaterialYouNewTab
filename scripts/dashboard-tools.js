@@ -1111,6 +1111,7 @@ if (typeof document !== "undefined") {
             const base = [
                 ...commandDefinitions.filter(command => matchesCommand(command, normalized)),
                 ...createCommand,
+                ...(window.myntFocusCommands?.(normalized) || []),
                 ...workspaceCommands,
                 ...workspaceLaunchCommands,
                 ...collectLinkCommands("#toolsCont a", "commandGroupAi", normalized),

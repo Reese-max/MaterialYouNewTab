@@ -70,6 +70,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     const undoButton = document.getElementById("daidaiActionUndoBtn");
     const scratchpad = document.getElementById("scratchpadInput");
     let token = null;
+    let focusBreakdownUntil = 0;
+    window.myntDaidai = { paired: () => Boolean(token) };
     let connected = false;
     let revision = 1;
     let syncTimer = null;
@@ -312,8 +314,40 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             void sendPrompt({ kind, text }, button);
         });
     }
+    // Focus breakdown: try the dedicated kind, fall back to scratchpad-ask on older companions.
+    async function sendFocusBreakdown(text) {
+        const report = (ok, mode) => document.dispatchEvent(new CustomEvent("mynt:focus-breakdown-status", { detail: { ok, mode } }));
+        const prompt = String(text || "").slice(0, 3000);
+        if (!prompt.trim()) return report(false, "empty");
+        if (!connected) await connect();
+        if (!connected) return report(false, "offline");
+        clearTimeout(syncTimer);
+        if (!(await syncContext())) return report(false, "offline");
+        focusBreakdownUntil = Date.now() + 5 * 60 * 1000;
+        try {
+            await bridge("/v1/mynt/prompt", { method: "POST", body: { kind: "focus-breakdown", text: prompt } });
+            return report(true, "focus-breakdown");
+        } catch (error) {
+            if (error?.status !== 400) { focusBreakdownUntil = 0; return report(false, "error"); }
+        }
+        try {
+            await bridge("/v1/mynt/prompt", {
+                method: "POST",
+                body: {
+                    kind: "scratchpad-ask",
+                    text: `【MYNT 今日焦點拆解】請呼叫 mynt_action 提出 2–4 個 todo.create 操作（每個 title 不超過 40 字，含預估時間），等我在 MYNT 預覽並確認；不要聲稱已經修改。\n\n${prompt}`
+                }
+            });
+            report(true, "scratchpad-ask");
+        } catch {
+            focusBreakdownUntil = 0;
+            report(false, "error");
+        }
+    }
+
     document.addEventListener("mynt:daidai-prompt", event => {
         if (event.detail?.kind === "todo") void sendPrompt(event.detail, null);
+        else if (event.detail?.kind === "focus-breakdown") void sendFocusBreakdown(event.detail.text);
     });
 
     document.addEventListener("mynt:todo-updated", () => dataChanged());
@@ -426,6 +460,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         pendingPlan = null;
         actionDialog.close();
         if (finalDecision === "confirmed") showActionFeedback(undo);
+        if (finalDecision === "confirmed" && action.type === "todo.create" && Date.now() < focusBreakdownUntil) {
+            document.dispatchEvent(new CustomEvent("mynt:focus-steps-add", { detail: { titles: [action.title] } }));
+        }
         else if (apply) alert(t("daidaiActionFailed", "The change could not be applied."));
         setTimeout(() => void pollActions(), 0);
     }

@@ -15,6 +15,7 @@
     <meta name="google-site-verification" content="j8K161R-W9yVVDoylaoPd2twGbjToAC3EzAFfZU1YOY" />
     <title>新分頁</title>
     <link href="style.css" rel="stylesheet">
+    <link href="styles/focus-card.css" rel="stylesheet">
     <link href="./favicon/icon48.png" id="favicon" rel="icon" type="image/png">
 
     <!-- SCRIPTS -->
@@ -34,6 +35,7 @@
     <script defer src="scripts/clock.js"></script>
     <script defer src="scripts/weather.js"></script>
     <script defer src="scripts/custom-text.js"></script>
+    <script defer src="scripts/focus-card.js"></script>
     <script defer src="scripts/search.js"></script>
     <script defer src="scripts/quotes.js"></script>
     <script defer src="scripts/shortcuts.js"></script>
@@ -732,7 +734,28 @@
                     aria-label="Editable home heading">What matters most today?</div>
                 <div id="dailyFocusActions" class="dailyFocusActions">
                     <span id="dailyFocusStatus" role="status" aria-live="polite">Today’s focus</span>
+                    <span id="dailyFocusSubjectBadge" hidden></span>
+                    <span id="dailyFocusCounter" hidden>0/160</span>
                     <button id="dailyFocusToggle" type="button" aria-pressed="false">Done</button>
+                    <span id="dailyFocusTools">
+                        <button id="dailyFocusPlayBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusPlay|Start a Pomodoro for this focus" data-focus-attr="title">▶</button>
+                        <button id="dailyFocusGptBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusGpt|Break down with ChatGPT" data-focus-attr="title">✦</button>
+                        <button id="dailyFocusMoreBtn" class="dailyFocusIcon" type="button" aria-expanded="false" aria-controls="dailyFocusPanel" data-focus-title data-focus-i18n="dailyFocusMore|Steps and subject" data-focus-attr="title">⋯</button>
+                    </span>
+                </div>
+                <div id="dailyFocusPanel" hidden>
+                    <div id="dailyFocusSubjects" role="group"></div>
+                    <ul id="dailyFocusSteps"></ul>
+                    <input id="dailyFocusStepInput" type="text" maxlength="80" autocomplete="off">
+                    <div class="dailyFocusRow">
+                        <button id="dailyFocusPasteToggle" type="button" data-focus-i18n="dailyFocusPasteToggle|Paste GPT answer">Paste GPT answer</button>
+                        <button id="dailyFocusDaidaiBtn" type="button" hidden data-focus-i18n="dailyFocusDaidai|Break down with DaiDai">Break down with DaiDai</button>
+                    </div>
+                    <div id="dailyFocusPasteWrap" hidden>
+                        <textarea id="dailyFocusPaste" data-focus-i18n="dailyFocusPastePlaceholder|Paste a numbered list (1. 2. 3.)" data-focus-attr="placeholder"></textarea>
+                        <div class="dailyFocusRow"><button id="dailyFocusPasteApply" type="button" data-focus-i18n="dailyFocusPasteApply|Turn into steps">Turn into steps</button></div>
+                    </div>
+                    <p id="dailyFocusNote" role="status" aria-live="polite" hidden></p>
                 </div>
                 <div id="date"></div>
             </div>
@@ -2302,6 +2325,11 @@
         </div>
     </dialog>
 
+    <dialog id="focusHistoryDialog" class="myntDialog focusHistoryDialog" aria-labelledby="focusHistoryTitle">
+        <h2 id="focusHistoryTitle" data-focus-i18n="focusHistoryTitle|Focus history">Focus history</h2>
+        <ol id="focusHistoryList"></ol>
+        <button id="focusHistoryClose" type="button" data-focus-i18n="focusHistoryClose|Close">Close</button>
+    </dialog>
     <dialog id="daidaiActionDialog" class="myntDialog daidaiActionDialog" aria-labelledby="daidaiActionTitle" aria-describedby="daidaiActionWarning">
         <header class="controlCenterHeader">
             <div>

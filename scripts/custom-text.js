@@ -6,6 +6,14 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+function myntNormalizeFocusSteps(steps) {
+    if (!Array.isArray(steps)) return [];
+    return steps
+        .filter(step => step && typeof step.text === "string" && step.text.trim())
+        .slice(0, 3)
+        .map(step => ({ text: step.text.trim().slice(0, 80), done: step.done === true }));
+}
+
 function myntReconcileDailyFocus(saved, legacyText, today) {
     const valid = saved && typeof saved === "object" && typeof saved.date === "string" && typeof saved.text === "string";
     const focus = valid
@@ -17,13 +25,25 @@ function myntReconcileDailyFocus(saved, legacyText, today) {
             carriedFrom: typeof saved.carriedFrom === "string" ? saved.carriedFrom : null
         }
         : { version: 1, date: today, text: String(legacyText || "").trim().slice(0, 160), completed: false, carriedFrom: null };
+    // Optional extras are only present when used, so older shapes stay identical.
+    if (valid && typeof saved.subject === "string" && saved.subject) focus.subject = saved.subject.slice(0, 20);
+    const steps = valid ? myntNormalizeFocusSteps(saved.steps) : [];
+    if (steps.length) focus.steps = steps;
+    if (valid && saved.date === today) {
+        if (Number.isInteger(saved.rounds) && saved.rounds > 0) focus.rounds = Math.min(saved.rounds, 99);
+        if (saved.linked === true) focus.linked = true;
+    }
     if (focus.date === today) return focus;
-    return focus.text && !focus.completed
-        ? { ...focus, date: today, completed: false, carriedFrom: focus.date }
-        : { version: 1, date: today, text: "", completed: false, carriedFrom: null };
+    if (focus.text && !focus.completed) {
+        const carried = { ...focus, date: today, completed: false, carriedFrom: focus.date };
+        delete carried.rounds;
+        delete carried.linked;
+        return carried;
+    }
+    return { version: 1, date: today, text: "", completed: false, carriedFrom: null };
 }
 
-if (typeof module !== "undefined" && module.exports) module.exports = { myntReconcileDailyFocus };
+if (typeof module !== "undefined" && module.exports) module.exports = { myntReconcileDailyFocus, myntNormalizeFocusSteps };
 
 // Daily focus keeps the legacy userText key synchronized for backup compatibility.
 if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", () => {
@@ -34,6 +54,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     const actions = document.getElementById("dailyFocusActions");
     const status = document.getElementById("dailyFocusStatus");
     const toggle = document.getElementById("dailyFocusToggle");
+    const counter = document.getElementById("dailyFocusCounter");
     const language = () => localStorage.getItem("selectedLanguage") || "zh_TW";
     const t = (key, fallback) => translations[language()]?.[key] || translations.en?.[key] || fallback;
     const dateKey = (date = new Date()) => [
@@ -53,11 +74,21 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     let focus = readState();
+    let overwriteConfirmed = false;
 
     function save() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(focus));
         if (focus.text) localStorage.setItem("userText", focus.text);
         else localStorage.removeItem("userText");
+        document.dispatchEvent(new CustomEvent("mynt:focus-changed", { detail: { focus: { ...focus } } }));
+    }
+
+    function updateCounter(length) {
+        if (!counter) return;
+        const near = length >= MAX_LENGTH - 30;
+        counter.hidden = !near;
+        counter.textContent = `${length}/${MAX_LENGTH}`;
+        counter.classList.toggle("is-full", length >= MAX_LENGTH);
     }
 
     function render(syncText = true) {
@@ -67,18 +98,22 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         toggle.disabled = !focus.text;
         toggle.setAttribute("aria-pressed", String(focus.completed));
         toggle.textContent = t(focus.completed ? "dailyFocusReopen" : "dailyFocusDone", focus.completed ? "Reopen" : "Done");
-        status.textContent = focus.completed
+        let label = focus.completed
             ? t("dailyFocusCompleted", "Completed today")
             : focus.carriedFrom
                 ? t("dailyFocusCarried", "Carried over from yesterday")
                 : focus.text
                     ? t("dailyFocusToday", "Today’s focus")
                     : t("dailyFocusEmpty", "Write one focus for today");
+        if (focus.rounds) label += ` · ${t("dailyFocusRounds", "{count} focus rounds").replace("{count}", focus.rounds)}`;
+        status.textContent = label;
+        updateCounter(focus.text.length);
     }
 
     function setVisible(visible) {
         userTextDiv.style.display = visible ? "block" : "none";
         actions.style.display = visible ? "flex" : "none";
+        document.dispatchEvent(new CustomEvent("mynt:focus-visible", { detail: { visible } }));
     }
 
     const isVisible = localStorage.getItem("userTextVisible") !== "false";
@@ -91,6 +126,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     userTextCheckbox.addEventListener("change", () => {
         setVisible(userTextCheckbox.checked);
         localStorage.setItem("userTextVisible", userTextCheckbox.checked);
+    });
+
+    userTextDiv.addEventListener("focus", () => {
+        if (!focus.carriedFrom || !focus.text || focus.completed || overwriteConfirmed) return;
+        if (window.confirm(t("dailyFocusOverwriteConfirm", "Yesterday’s unfinished focus was carried over. Edit or replace it?"))) {
+            overwriteConfirmed = true;
+        } else {
+            userTextDiv.blur();
+        }
     });
 
     userTextDiv.addEventListener("click", () => {
@@ -106,6 +150,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     });
 
     userTextDiv.addEventListener("blur", () => {
+        if (userTextDiv.textContent === (userTextDiv.dataset.placeholder || "")) return render();
         focus.text = userTextDiv.textContent.trim().slice(0, MAX_LENGTH);
         save();
         render();
@@ -114,14 +159,32 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     toggle.addEventListener("click", () => {
         if (!focus.text) return;
         focus.completed = !focus.completed;
+        if (focus.completed) delete focus.linked;
         save();
         render();
+        if (focus.completed) document.dispatchEvent(new CustomEvent("mynt:focus-completed"));
     });
 
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState !== "visible" || focus.date === dateKey()) return;
         focus = myntReconcileDailyFocus(focus, "", dateKey());
+        overwriteConfirmed = false;
         save();
         render();
     });
+
+    window.myntFocus = {
+        get: () => ({ ...focus, steps: (focus.steps || []).map(step => ({ ...step })) }),
+        update(patch) {
+            focus = { ...focus, ...patch };
+            for (const key of ["subject", "steps", "rounds", "linked"]) {
+                const value = focus[key];
+                if (value === undefined || value === null || value === "" || value === false || value === 0 || (Array.isArray(value) && !value.length)) delete focus[key];
+            }
+            if (focus.steps) focus.steps = myntNormalizeFocusSteps(focus.steps);
+            save();
+            render();
+        },
+        render
+    };
 });
