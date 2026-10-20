@@ -27,6 +27,7 @@
     <script defer src="scripts/dashboard-tools.js"></script>
     <script defer src="scripts/alert-modal.js"></script>
     <script defer src="scripts/wallpaper.js"></script>
+    <script defer src="scripts/wallpaper-gallery.js"></script>
     <script defer src="scripts/widgets-transparency.js"></script>
     <script defer src="scripts/clock.js"></script>
     <script defer src="scripts/weather.js"></script>
@@ -2023,6 +2024,40 @@
         <p id="commandPaletteEmpty" class="dialogEmptyState" hidden>No matching commands</p>
     </dialog>
 
+    <dialog id="wallpaperGalleryDialog" class="myntDialog wallpaperGalleryDialog" aria-labelledby="wallpaperGalleryTitle">
+        <header class="controlCenterHeader">
+            <div>
+                <span class="controlCenterEyebrow" id="wallpaperGalleryEyebrow">Background</span>
+                <h2 id="wallpaperGalleryTitle">Wallpapers</h2>
+            </div>
+            <button id="closeWallpaperGalleryBtn" class="dialogIconBtn" type="button" aria-label="Close">&times;</button>
+        </header>
+        <div class="wallpaperGalleryControls">
+            <label class="settingsActionBtn wallpaperFileLabel" for="wallpaperFileInput"><span id="wallpaperAddFilesLabel">Add images / videos</span></label>
+            <input id="wallpaperFileInput" type="file" accept="image/*,video/mp4,video/webm" multiple hidden>
+            <input id="wallpaperUrlInput" type="url" placeholder="https://… image or .mp4/.webm" aria-label="Wallpaper URL">
+            <button id="wallpaperAddUrlBtn" class="settingsActionBtn" type="button">Add URL</button>
+        </div>
+        <div class="wallpaperGalleryControls">
+            <label for="wallpaperModeSelect"><span id="wallpaperModeLabel">Mode</span></label>
+            <select id="wallpaperModeSelect">
+                <option id="wallpaperModeFixed" value="fixed">Fixed</option>
+                <option id="wallpaperModeRandom" value="random">Random on each new tab</option>
+                <option id="wallpaperModeRotate" value="rotate">Auto-rotate</option>
+            </select>
+            <label for="wallpaperMinutesSelect"><span id="wallpaperMinutesLabel">Every (minutes)</span></label>
+            <select id="wallpaperMinutesSelect">
+                <option value="5">5</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
+                <option value="60">60</option>
+            </select>
+        </div>
+        <p id="wallpaperGalleryStatus" class="wallpaperGalleryStatus" role="status" aria-live="polite"></p>
+        <div id="wallpaperGalleryGrid" class="wallpaperGalleryGrid"></div>
+        <p id="wallpaperGalleryEmpty" class="dialogEmptyState" hidden>No wallpapers yet</p>
+    </dialog>
+
     <dialog id="shortcutsHelpDialog" class="myntDialog shortcutsHelpDialog" aria-labelledby="shortcutsHelpTitle">
         <header class="controlCenterHeader">
             <div>
@@ -2035,6 +2070,7 @@
             <div class="shortcutItem"><kbd>/</kbd><span id="shortcutSearchHelp">Focus search bar</span></div>
             <div class="shortcutItem"><kbd>Ctrl</kbd> + <kbd>K</kbd><span id="shortcutCmdHelp">Command Palette</span></div>
             <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>S</kbd><span id="shortcutScratchpadHelp">Toggle Scratchpad</span></div>
+            <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>W</kbd><span id="shortcutWallpaperHelp">Next wallpaper</span></div>
             <div class="shortcutItem"><kbd>?</kbd><span id="shortcutHelpHelp">Shortcuts Guide</span></div>
             <div class="shortcutItem"><kbd>Esc</kbd><span id="shortcutEscHelp">Close open dialog</span></div>
             <div class="shortcutItem"><kbd>!bang</kbd><span id="shortcutBangHelp">Search bangs (!yt, !gh, !gpt...)</span></div>
@@ -2257,6 +2293,17 @@
     <div id="daidaiActionToast" class="daidaiActionToast" role="status" aria-live="polite" hidden>
         <span id="daidaiActionToastText">Change applied.</span>
         <button id="daidaiActionUndoBtn" type="button">Undo</button>
+    </div>
+
+    <div class="wallpaperQuickActions" id="wallpaperQuickActions">
+        <button id="wallpaperGalleryBtn" class="wallpaperQuickBtn" type="button" aria-controls="wallpaperGalleryDialog" aria-label="Wallpaper gallery">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/></svg>
+            <span class="tooltip-text homeActionHint" id="wallpaperGalleryHint">Wallpaper gallery</span>
+        </button>
+        <button id="wallpaperNextBtn" class="wallpaperQuickBtn" type="button" aria-label="Next wallpaper (Alt+W)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            <span class="tooltip-text homeActionHint" id="wallpaperNextHint">Next wallpaper (Alt+W)</span>
+        </button>
     </div>
 
     <button id="menuButton" type="button" aria-controls="menuBar" aria-expanded="false">

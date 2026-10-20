@@ -8866,3 +8866,81 @@ html:has(body[data-workspace-background="video"]) {
 		grid-template-columns: 1fr;
 	}
 }
+
+/* === MYNT wallpaper gallery === */
+.myntGalleryVideo {
+	position: fixed;
+	inset: 0;
+	width: 100vw;
+	height: 100vh;
+	object-fit: cover;
+	z-index: -1;
+	pointer-events: none;
+	display: none;
+}
+body[data-gallery-video="on"] .myntGalleryVideo { display: block; }
+body[data-gallery-video="on"] #videoBg { visibility: hidden; }
+
+.wallpaperQuickActions {
+	position: fixed;
+	right: 84px;
+	bottom: 22px;
+	display: flex;
+	gap: 8px;
+	z-index: 20;
+}
+.wallpaperQuickBtn {
+	position: relative;
+	width: 44px;
+	height: 44px;
+	border: 0;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	cursor: pointer;
+	color: var(--textColorDark-blue, #fff);
+	background: var(--darkColor-blue, rgba(30, 30, 40, 0.55));
+	backdrop-filter: blur(10px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+	transition: transform 0.15s ease, background 0.2s ease;
+}
+.wallpaperQuickBtn:hover { transform: scale(1.07); }
+.wallpaperQuickBtn:focus-visible { outline: 2px solid var(--accentLightTint-blue, #9cf); outline-offset: 2px; }
+.wallpaperQuickBtn svg { width: 22px; height: 22px; fill: currentColor; }
+.wallpaperQuickBtn .tooltip-text { white-space: nowrap; }
+
+.wallpaperGalleryDialog { width: min(760px, 92vw); }
+.wallpaperGalleryControls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	margin: 12px 0;
+}
+.wallpaperGalleryControls input[type="url"] { flex: 1 1 220px; min-width: 0; padding: 8px 10px; border-radius: 10px; }
+.wallpaperFileLabel { cursor: pointer; }
+.wallpaperGalleryGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 10px;
+	max-height: 52vh;
+	overflow: auto;
+}
+.wallpaperCard { position: relative; border-radius: 14px; overflow: hidden; outline: 2px solid transparent; }
+.wallpaperCard.active { outline-color: var(--accentLightTint-blue, #8ab4f8); }
+.wallpaperCardPick { display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 0; cursor: pointer; background: #222; }
+.wallpaperCardPick img, .wallpaperCardPick video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wallpaperVideoBadge {
+	position: absolute; left: 6px; bottom: 6px;
+	font-size: 11px; padding: 2px 6px; border-radius: 8px;
+	color: #fff; background: rgba(0, 0, 0, 0.6);
+}
+.wallpaperCardDelete {
+	position: absolute; top: 4px; right: 4px;
+	width: 24px; height: 24px; border: 0; border-radius: 50%;
+	cursor: pointer; color: #fff; background: rgba(0, 0, 0, 0.55);
+	opacity: 0; transition: opacity 0.15s;
+}
+.wallpaperCard:hover .wallpaperCardDelete, .wallpaperCardDelete:focus-visible { opacity: 1; }
+.wallpaperGalleryStatus { min-height: 1.2em; font-size: 12px; opacity: 0.8; }
+@media (prefers-reduced-motion: reduce) { .wallpaperQuickBtn { transition: none; } }

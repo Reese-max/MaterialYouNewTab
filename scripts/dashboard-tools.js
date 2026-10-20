@@ -971,6 +971,9 @@ if (typeof document !== "undefined") {
 
         const commandDefinitions = [
             { id: "shortcutsHelp", label: "commandShortcutsHelp", info: "commandShortcutsHelpInfo", run: () => openShortcutsHelp() },
+            { id: "wallpaperNext", label: "commandWallpaperNext", info: "commandWallpaperNextInfo", run: () => window.myntWallpaper?.next() },
+            { id: "wallpaperGallery", label: "commandWallpaperGallery", info: "commandWallpaperGalleryInfo", run: () => window.myntWallpaper?.open() },
+            { id: "wallpaperRandom", label: "commandWallpaperRandom", info: "commandWallpaperRandomInfo", run: () => window.myntWallpaper?.random() },
             { id: "control", label: "commandOpenControl", info: "commandOpenControlInfo", run: () => openControlCenter() },
             { id: "focus", label: "commandFocusStats", info: "commandFocusStatsInfo", run: () => openControlCenter("focusStatsSection") },
             { id: "workspaces", label: "commandWorkspaces", info: "commandWorkspacesInfo", run: () => openControlCenter("workspaceSection") },
