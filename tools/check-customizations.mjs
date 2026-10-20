@@ -227,4 +227,15 @@ const zhTW = loadLocale("locales/zh_TW.js", "zh_TW");
 assert.deepEqual(Object.keys(zhTW).sort(), Object.keys(en).sort(), "Locale keys differ");
 assert.match(read("scripts/languages.js"), /const DEFAULT_LANGUAGE = "zh_TW";/);
 
+// Study quotes: unique texts, attributed, enough to rotate without repeats.
+{
+    const studyQuotes = vm.runInNewContext(read("scripts/study-quotes.js") + "\n;MYNT_STUDY_QUOTES", {});
+    assert.ok(studyQuotes.length >= 100, "Expected at least 100 study quotes");
+    const zhTexts = studyQuotes.map(q => q.zh.trim());
+    assert.equal(new Set(zhTexts).size, zhTexts.length, "Duplicate study quote text");
+    const enTexts = studyQuotes.filter(q => q.en).map(q => q.en.trim());
+    assert.equal(new Set(enTexts).size, enTexts.length, "Duplicate English study quote text");
+    for (const q of studyQuotes) assert.ok(q.zh && q.author && q.work, "Study quote missing text/author/work: " + q.zh);
+    assert.match(read("scripts/study-companion.js"), /shuffled\(/);
+}
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);
