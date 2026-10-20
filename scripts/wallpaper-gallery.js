@@ -12,6 +12,8 @@
     const KEY_MINUTES = "myntWallpaperMinutes";
     const KEY_LAST = "myntWallpaperLastSwitch";
     const KEY_SEEDED = "myntWallpaperSeeded";
+    const KEY_HIDDEN = "myntWallpaperHiddenBuiltins";
+    const KEY_SHOW_HIDDEN = "myntWallpaperShowHidden";
     const BUNDLED_VIDEO_ID = "bundled-video-bg";
     const BUNDLED_VIDEO_SRC = "./videos/bg.mp4?v=2";
     const VIDEO_WARN_BYTES = 200 * 1024 * 1024;
@@ -51,9 +53,16 @@
         });
     }
     const reqP = req => new Promise((resolve, reject) => { req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); });
-    async function listItems() {
+    const hiddenIds = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY_HIDDEN) || "[]")); } catch (e) { return new Set(); } };
+    const saveHidden = set => localStorage.setItem(KEY_HIDDEN, JSON.stringify([...set]));
+    async function allItems() {
         const items = await tx("readonly", store => reqP(store.getAll()));
         return (items || []).sort((a, b) => a.added - b.added);
+    }
+    // Items that take part in next/random/rotate (hidden built-ins excluded).
+    async function listItems() {
+        const hidden = hiddenIds();
+        return (await allItems()).filter(i => !hidden.has(i.id));
     }
     const getItem = id => tx("readonly", store => reqP(store.get(id)));
     const putItem = item => tx("readwrite", store => { store.put(item); });
@@ -254,25 +263,97 @@
     const thumbUrls = [];
     function releaseThumbs() { while (thumbUrls.length) URL.revokeObjectURL(thumbUrls.pop()); }
 
+    const selected = new Set();
+    let selectMode = false;
+    let undoTimer = null;
+    let undoItems = [];
+
+    function displayName(item) {
+        if (item.name) return item.name;
+        return item.type === "video" ? t("wallpaperVideoBadge", "Video") : t("wallpaperImage", "Image");
+    }
+
+    async function removeItems(items) {
+        const hidden = hiddenIds();
+        const removed = [];
+        for (const item of items) {
+            if (item.source === "bundled") hidden.add(item.id);
+            else { await deleteItem(item.id); removed.push(item); }
+        }
+        saveHidden(hidden);
+        undoItems = items;
+        const wasCurrent = items.some(i => i.id === localStorage.getItem(KEY_CURRENT));
+        if (wasCurrent) { localStorage.removeItem(KEY_CURRENT); await next(1); }
+        showUndo(items.length);
+        await renderGallery();
+    }
+
+    function showUndo(count) {
+        const bar = $("wallpaperUndoBar");
+        if (!bar) return;
+        $("wallpaperUndoText").textContent = t("wallpaperDeletedCount", "Removed {count}").replace("{count}", count);
+        bar.hidden = false;
+        clearTimeout(undoTimer);
+        undoTimer = setTimeout(() => { bar.hidden = true; undoItems = []; }, 8000);
+    }
+
+    async function undoRemove() {
+        const hidden = hiddenIds();
+        for (const item of undoItems) {
+            if (item.source === "bundled") hidden.delete(item.id);
+            else await putItem(item);
+        }
+        saveHidden(hidden);
+        undoItems = [];
+        $("wallpaperUndoBar").hidden = true;
+        await renderGallery();
+    }
+
+    async function renameItem(item) {
+        const name = window.prompt(t("wallpaperRenamePrompt", "Wallpaper name"), item.name || "");
+        if (name === null) return;
+        item.name = name.trim().slice(0, 60);
+        await putItem(item);
+        await renderGallery();
+    }
+
+    function updateSelectUi() {
+        const del = $("wallpaperDeleteSelectedBtn");
+        if (del) {
+            del.hidden = !selectMode;
+            del.disabled = selected.size === 0;
+            del.textContent = t("wallpaperDeleteSelected", "Delete selected") + (selected.size ? ` (${selected.size})` : "");
+        }
+        const toggle = $("wallpaperSelectModeBtn");
+        if (toggle) toggle.textContent = selectMode ? t("wallpaperSelectDone", "Done") : t("wallpaperSelect", "Select");
+        $("wallpaperGalleryGrid")?.classList.toggle("selecting", selectMode);
+    }
+
     async function renderGallery() {
         const grid = $("wallpaperGalleryGrid");
         if (!grid) return;
         releaseThumbs();
         grid.replaceChildren();
-        const items = await listItems();
+        const hidden = hiddenIds();
+        const showHidden = localStorage.getItem(KEY_SHOW_HIDDEN) === "1";
+        const items = (await allItems()).filter(i => showHidden || !hidden.has(i.id));
         const currentId = localStorage.getItem(KEY_CURRENT);
+        for (const id of [...selected]) if (!items.some(i => i.id === id)) selected.delete(id);
         for (const item of items) {
+            const isHidden = hidden.has(item.id);
             const card = document.createElement("div");
             card.className = "wallpaperCard";
             card.dataset.id = item.id;
             card.dataset.type = item.type;
             if (item.id === currentId) card.classList.add("active");
+            if (isHidden) card.classList.add("isHidden");
+            if (selected.has(item.id)) card.classList.add("selected");
 
             const pick = document.createElement("button");
             pick.type = "button";
             pick.className = "wallpaperCardPick";
-            pick.title = item.name || item.type;
-            pick.setAttribute("aria-label", (item.type === "video" ? t("wallpaperVideoBadge", "Video") + ": " : "") + (item.name || item.type));
+            pick.title = displayName(item);
+            pick.setAttribute("aria-label", displayName(item));
             let thumbSrc = null;
             if (item.type === "image") thumbSrc = item.blob ? URL.createObjectURL(item.blob) : item.src;
             else if (item.thumb) thumbSrc = URL.createObjectURL(item.thumb);
@@ -286,33 +367,63 @@
                 v.muted = true; v.preload = "metadata"; v.src = item.src || "";
                 pick.appendChild(v);
             }
+            const badges = document.createElement("span");
+            badges.className = "wallpaperBadges";
             if (item.type === "video") {
-                const badge = document.createElement("span");
-                badge.className = "wallpaperVideoBadge";
-                badge.textContent = "▶ " + t("wallpaperVideoBadge", "Video");
-                pick.appendChild(badge);
+                const b = document.createElement("span");
+                b.className = "wallpaperBadge"; b.textContent = "▶ " + t("wallpaperVideoBadge", "Video");
+                badges.appendChild(b);
             }
-            pick.addEventListener("click", () => applyItem(item));
+            if (item.source === "bundled") {
+                const b = document.createElement("span");
+                b.className = "wallpaperBadge"; b.textContent = t("wallpaperBuiltin", "Built-in");
+                badges.appendChild(b);
+            }
+            pick.appendChild(badges);
+            pick.addEventListener("click", async () => {
+                if (selectMode) {
+                    selected.has(item.id) ? selected.delete(item.id) : selected.add(item.id);
+                    card.classList.toggle("selected", selected.has(item.id));
+                    updateSelectUi();
+                    return;
+                }
+                if (isHidden) {
+                    const h = hiddenIds(); h.delete(item.id); saveHidden(h);
+                    await renderGallery();
+                }
+                applyItem(item);
+            });
             card.appendChild(pick);
 
+            const footer = document.createElement("div");
+            footer.className = "wallpaperCardFooter";
+            const name = document.createElement("span");
+            name.className = "wallpaperCardName";
+            name.textContent = displayName(item);
+            footer.appendChild(name);
+            if (item.source !== "bundled") {
+                const ren = document.createElement("button");
+                ren.type = "button"; ren.className = "wallpaperCardIcon"; ren.textContent = "✎";
+                ren.title = t("wallpaperRename", "Rename"); ren.setAttribute("aria-label", t("wallpaperRename", "Rename"));
+                ren.addEventListener("click", () => renameItem(item));
+                footer.appendChild(ren);
+            }
             const del = document.createElement("button");
-            del.type = "button";
-            del.className = "wallpaperCardDelete";
-            del.textContent = "×";
-            del.setAttribute("aria-label", t("wallpaperDelete", "Delete"));
+            del.type = "button"; del.className = "wallpaperCardIcon wallpaperCardDelete";
+            const delLabel = item.source === "bundled" ? (isHidden ? t("wallpaperShowBuiltin", "Show again") : t("wallpaperHide", "Hide")) : t("wallpaperDelete", "Delete");
+            del.textContent = item.source === "bundled" ? (isHidden ? "↺" : "⊘") : "🗑";
+            del.title = delLabel; del.setAttribute("aria-label", delLabel);
             del.addEventListener("click", async () => {
-                await deleteItem(item.id);
-                if (localStorage.getItem(KEY_CURRENT) === item.id) {
-                    localStorage.removeItem(KEY_CURRENT);
-                    await next(1);
-                }
-                renderGallery();
+                if (isHidden) { const h = hiddenIds(); h.delete(item.id); saveHidden(h); await renderGallery(); return; }
+                await removeItems([item]);
             });
-            card.appendChild(del);
+            footer.appendChild(del);
+            card.appendChild(footer);
             grid.appendChild(card);
         }
         const empty = $("wallpaperGalleryEmpty");
         if (empty) empty.hidden = items.length > 0;
+        updateSelectUi();
     }
     function renderSelection() {
         const currentId = localStorage.getItem(KEY_CURRENT);
@@ -353,19 +464,35 @@
             wallpaperModeRotate: ["wallpaperModeRotate", "Auto-rotate"],
             wallpaperMinutesLabel: ["wallpaperMinutesLabel", "Every (minutes)"],
             wallpaperGalleryEmpty: ["wallpaperGalleryEmpty", "No wallpapers yet"],
-            wallpaperNextHint: ["wallpaperNext", "Next wallpaper (Alt+W)"],
+            wallpaperPrevBtn: ["wallpaperPrev", "Previous"],
+            wallpaperNextInnerBtn: ["wallpaperNextShort", "Next"],
+            wallpaperShowHiddenLabel: ["wallpaperShowHidden", "Show hidden built-ins"],
+            wallpaperUndoBtn: ["wallpaperUndo", "Undo"],
             wallpaperGalleryHint: ["wallpaperGalleryOpen", "Wallpaper gallery"],
             shortcutWallpaperHelp: ["wallpaperNext", "Next wallpaper"]
         };
         for (const [id, [key, fb]] of Object.entries(map)) { const el = $(id); if (el) el.textContent = t(key, fb); }
         const url = $("wallpaperUrlInput"); if (url) url.placeholder = t("wallpaperUrlPlaceholder", "https://… image or .mp4/.webm");
-        const nb = $("wallpaperNextBtn"); if (nb) nb.setAttribute("aria-label", t("wallpaperNext", "Next wallpaper (Alt+W)"));
+
         const gb = $("wallpaperGalleryBtn"); if (gb) gb.setAttribute("aria-label", t("wallpaperGalleryOpen", "Wallpaper gallery"));
         const close = $("closeWallpaperGalleryBtn"); if (close) close.setAttribute("aria-label", t("wallpaperClose", "Close"));
     }
 
     function bindUi() {
-        $("wallpaperNextBtn")?.addEventListener("click", () => next(1));
+        $("wallpaperPrevBtn")?.addEventListener("click", () => next(-1));
+        $("wallpaperNextInnerBtn")?.addEventListener("click", () => next(1));
+        $("wallpaperUndoBtn")?.addEventListener("click", undoRemove);
+        $("wallpaperSelectModeBtn")?.addEventListener("click", () => { selectMode = !selectMode; if (!selectMode) selected.clear(); renderGallery(); });
+        $("wallpaperDeleteSelectedBtn")?.addEventListener("click", async () => {
+            const items = (await allItems()).filter(i => selected.has(i.id));
+            selected.clear(); selectMode = false;
+            if (items.length) await removeItems(items);
+        });
+        const showHidden = $("wallpaperShowHiddenCheckbox");
+        if (showHidden) {
+            showHidden.checked = localStorage.getItem(KEY_SHOW_HIDDEN) === "1";
+            showHidden.addEventListener("change", () => { localStorage.setItem(KEY_SHOW_HIDDEN, showHidden.checked ? "1" : "0"); renderGallery(); });
+        }
         $("wallpaperGalleryBtn")?.addEventListener("click", openGallery);
         $("closeWallpaperGalleryBtn")?.addEventListener("click", () => $("wallpaperGalleryDialog").close());
         $("wallpaperGalleryDialog")?.addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
@@ -414,7 +541,7 @@
         }
     }
 
-    window.myntWallpaper = { next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
+    window.myntWallpaper = { remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
 
     // Run after workspace restore (dashboard-tools) so our choice wins.
     if (document.readyState === "complete") setTimeout(init, 0);

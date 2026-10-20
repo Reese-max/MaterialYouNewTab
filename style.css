@@ -8944,3 +8944,71 @@ body[data-gallery-video="on"] #videoBg { visibility: hidden; }
 .wallpaperCard:hover .wallpaperCardDelete, .wallpaperCardDelete:focus-visible { opacity: 1; }
 .wallpaperGalleryStatus { min-height: 1.2em; font-size: 12px; opacity: 0.8; }
 @media (prefers-reduced-motion: reduce) { .wallpaperQuickBtn { transition: none; } }
+
+/* === MYNT study round: calmer layout === */
+.wallpaperQuickActions { right: 80px; bottom: 22px; }
+.wallpaperQuickBtn { width: 40px; height: 40px; opacity: 0.8; }
+.wallpaperQuickBtn:hover, .wallpaperQuickBtn:focus-visible { opacity: 1; }
+/* Tooltip above the button and aligned to its right edge so it never clips at the screen edge */
+.wallpaperQuickBtn .tooltip-text {
+	top: auto;
+	bottom: calc(100% + 8px);
+	inset-inline-start: auto;
+	inset-inline-end: 0;
+	transform: none;
+	max-width: 180px;
+}
+.wallpaperQuickBtn:hover .tooltip-text, .wallpaperQuickBtn:focus-visible .tooltip-text { visibility: visible; opacity: 1; }
+
+.wallpaperToolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 10px; }
+.wallpaperToolbar .spacer { flex: 1; }
+.wallpaperToolbar button { padding: 6px 12px; border-radius: 999px; border: 0; cursor: pointer; }
+.wallpaperToolbar label { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; opacity: 0.85; }
+.wallpaperCardFooter { display: flex; align-items: center; gap: 4px; padding: 4px 6px; font-size: 12px; background: rgba(0, 0, 0, 0.04); }
+.wallpaperCardName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wallpaperCardIcon { width: 24px; height: 24px; border: 0; border-radius: 50%; cursor: pointer; background: transparent; font-size: 13px; line-height: 1; }
+.wallpaperCardIcon:hover, .wallpaperCardIcon:focus-visible { background: rgba(0, 0, 0, 0.1); }
+.wallpaperCard .wallpaperCardDelete { position: static; opacity: 1; color: inherit; background: transparent; }
+.wallpaperBadges { position: absolute; left: 6px; bottom: 6px; display: flex; gap: 4px; }
+.wallpaperBadge { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: #fff; background: rgba(0, 0, 0, 0.6); }
+.wallpaperCardPick { position: relative; }
+.wallpaperCard.isHidden { opacity: 0.45; }
+.wallpaperGalleryGrid.selecting .wallpaperCard { outline: 2px dashed rgba(127, 127, 127, 0.5); }
+.wallpaperGalleryGrid.selecting .wallpaperCard.selected { outline: 3px solid #d93025; }
+.wallpaperUndoBar { display: flex; gap: 10px; align-items: center; margin: 8px 0; font-size: 13px; }
+.wallpaperUndoBar[hidden] { display: none; }
+
+/* Encouragement line: small, low-contrast, bottom centre */
+.studyQuote {
+	position: fixed;
+	left: 50%;
+	bottom: 18px;
+	transform: translateX(-50%);
+	max-width: min(560px, 50vw);
+	display: flex;
+	gap: 10px;
+	align-items: baseline;
+	justify-content: center;
+	z-index: 5;
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.82);
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+	pointer-events: auto;
+}
+.studyQuote[hidden] { display: none; }
+.studyQuoteText { all: unset; cursor: pointer; text-align: center; opacity: 0.8; transition: opacity 0.2s; }
+.studyQuoteText:hover, .studyQuoteText:focus-visible { opacity: 1; }
+.studyQuoteText:focus-visible { outline: 1px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+.studyQuoteExam { white-space: nowrap; opacity: 0.7; font-size: 12px; }
+.studyQuoteExam::before { content: "·"; margin-inline-end: 8px; }
+body[data-bg="color"] .studyQuote { color: var(--darkerColor-blue, #333); text-shadow: none; }
+.studyQuoteToast {
+	position: fixed; left: 50%; bottom: 56px; transform: translateX(-50%);
+	max-width: min(520px, 86vw); padding: 10px 14px; border-radius: 14px;
+	display: flex; gap: 10px; align-items: center; z-index: 40;
+	font-size: 14px; color: #fff; background: rgba(20, 20, 30, 0.78); backdrop-filter: blur(8px);
+}
+.studyQuoteToast[hidden] { display: none; }
+.studyQuoteToast button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 16px; }
+@media (max-width: 900px) { .studyQuote { max-width: 70vw; bottom: 74px; } }
+@media (prefers-reduced-motion: reduce) { .studyQuoteText { transition: none; } }
