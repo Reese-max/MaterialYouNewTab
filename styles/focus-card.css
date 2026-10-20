@@ -44,3 +44,17 @@
 .focusHistoryDate { opacity: 0.6; font-variant-numeric: tabular-nums; }
 .focusHistoryMeta { grid-column: 2; font-size: 0.75rem; opacity: 0.6; }
 .focusHistoryMeta:empty { display: none; }
+
+/* Expanded panel floats beside the card so it never pushes the card into the
+   scratchpad button or covers the search bar. Narrow screens keep it inline. */
+@media (min-width: 761px) {
+    .ttteexxtt { position: relative; overflow: visible; }
+    #dailyFocusPanel {
+        position: absolute; z-index: 30; left: calc(100% + 12px); bottom: 0;
+        width: 340px; max-width: calc(100vw - 100% - 48px); margin: 0;
+        max-height: min(440px, 70vh); overflow-y: auto; overscroll-behavior: contain;
+        background: rgba(240, 244, 250, 0.82); color: #1b1f24;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    }
+    [data-theme="dark"] #dailyFocusPanel, body.dark-theme #dailyFocusPanel { background: rgba(28, 32, 38, 0.86); color: #eef1f5; }
+}
