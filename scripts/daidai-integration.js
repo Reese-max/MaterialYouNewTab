@@ -4,7 +4,8 @@ function myntPlanDaidaiAction(action, state) {
     if (!action || typeof action !== "object" || !state || typeof state !== "object") {
         return { valid: false, reason: "invalid" };
     }
-    if (action.expectedSessionId !== state.sessionId || action.expectedRevision !== state.revision) {
+    // todo.create only appends, so a batch stays valid after earlier items bump the revision.
+    if (action.expectedSessionId !== state.sessionId || (action.type !== "todo.create" && action.expectedRevision !== state.revision)) {
         return { valid: false, reason: "stale" };
     }
     const text = (value, max, allowEmpty = false) =>

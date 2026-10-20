@@ -213,6 +213,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     function setPanel(open) {
         panel.hidden = !open;
+        daidaiBtn.hidden = !window.myntDaidai?.paired?.();
         more.setAttribute("aria-expanded", String(open));
     }
 
