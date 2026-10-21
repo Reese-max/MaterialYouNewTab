@@ -661,4 +661,10 @@ const en = {
     "layoutResetConfirm": "Restore the default layout?",
     "layoutDone": "Done",
     "layoutResizeHint": "Drag to resize · double-click to reset this block",
+    "dialogOk": "OK",
+    "dialogCancel": "Cancel",
+    "dialogNotice": "Notice",
+    "dialogInput": "Input",
+    "dialogConfirm": "Please confirm",
+    "scratchpadClearConfirm": "Clear scratchpad?",
 };

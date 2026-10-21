@@ -131,6 +131,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         connectButton.disabled = ["connecting", "unavailable"].includes(state);
     }
 
+    const notify = message => (window.myntDialog ? window.myntDialog.alert(message) : alert(message));
+
     async function bridge(path, { method = "GET", body, authorized = true } = {}) {
         const headers = { "x-mynt-client": clientId };
         if (authorized) headers.authorization = `Bearer ${token}`;
@@ -246,7 +248,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if (!(await permissionCall("request"))) return setStatus("disconnected");
         try {
             const request = await bridge("/v1/mynt/pair/request", { method: "POST", body: {}, authorized: false });
-            const code = prompt(t("daidaiPairPrompt", "Enter the 6-digit code shown by DaiDai:"));
+            const pairMessage = t("daidaiPairPrompt", "Enter the 6-digit code shown by DaiDai:");
+            const code = window.myntDialog ? await window.myntDialog.prompt(pairMessage, "", { maxLength: 6 }) : prompt(pairMessage);
             if (code === null) return setStatus("disconnected");
             const paired = await bridge("/v1/mynt/pair/confirm", {
                 method: "POST",
@@ -259,7 +262,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         } catch (error) {
             await forgetToken();
             setStatus("error");
-            alert(t("daidaiPairFailed", "Pairing failed."));
+            notify(t("daidaiPairFailed", "Pairing failed."));
         }
     }
 
@@ -300,7 +303,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             }
         } catch {
             setStatus("error");
-            alert(t("daidaiPromptFailed", "DaiDai did not receive the request."));
+            notify(t("daidaiPromptFailed", "DaiDai did not receive the request."));
         }
     }
 
@@ -311,7 +314,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const button = document.getElementById(id);
         button?.addEventListener("click", () => {
             const text = scratchpadTarget();
-            if (!text) return alert(t("daidaiNoScratchpadText", "Select scratchpad text first."));
+            if (!text) return notify(t("daidaiNoScratchpadText", "Select scratchpad text first."));
             void sendPrompt({ kind, text }, button);
         });
     }
@@ -464,7 +467,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if (finalDecision === "confirmed" && action.type === "todo.create" && Date.now() < focusBreakdownUntil) {
             document.dispatchEvent(new CustomEvent("mynt:focus-steps-add", { detail: { titles: [action.title] } }));
         }
-        else if (apply) alert(t("daidaiActionFailed", "The change could not be applied."));
+        else if (apply) notify(t("daidaiActionFailed", "The change could not be applied."));
         setTimeout(() => void pollActions(), 0);
     }
 

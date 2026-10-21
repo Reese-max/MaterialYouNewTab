@@ -139,8 +139,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Clear content
     if (scratchpadClearBtn) {
-        scratchpadClearBtn.addEventListener("click", function () {
-            if (scratchpadInput.value.trim() && confirm("Clear scratchpad?")) {
+        scratchpadClearBtn.addEventListener("click", async function () {
+            if (!scratchpadInput.value.trim()) return;
+            const lang = localStorage.getItem("selectedLanguage") || "zh_TW";
+            const message = (typeof translations !== "undefined" && (translations[lang]?.scratchpadClearConfirm || translations.en?.scratchpadClearConfirm)) || "Clear scratchpad?";
+            if (window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message)) {
                 scratchpadInput.value = "";
                 localStorage.removeItem(STORAGE_KEY);
                 updateCounts();

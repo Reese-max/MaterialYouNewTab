@@ -271,4 +271,11 @@ assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([25
 assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([0, 0, 0, 255])) < 0.01);
 assert.match(read("scripts/quotes.js"), /getItem\("motivationalQuotesVisible"\) === "true"/);
 assert.match(read("styles/quote-contrast.css"), /\.studyQuote\.has-wallpaper\.is-on-bright/);
+for (const file of ["custom-text.js", "daidai-integration.js", "dashboard-tools.js", "layout-editor.js", "scratchpad.js", "wallpaper-gallery.js"]) {
+    const code = read(`scripts/${file}`);
+    const bare = code.replace(/window\.myntDialog[^\n]*/g, "");
+    assert.doesNotMatch(bare, /(^|[^\w.])(alert|confirm|prompt)\(/m, `${file} still calls a native dialog without the in-app fallback`);
+}
+assert.match(read("scripts/mynt-dialog.js"), /showModal\(\)/);
+assert.ok(read("index.html").indexOf("scripts/mynt-dialog.js") < read("index.html").indexOf("scripts/custom-text.js"));
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);

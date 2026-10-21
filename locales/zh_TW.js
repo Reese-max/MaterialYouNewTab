@@ -661,4 +661,10 @@ const zh_TW = {
     "layoutResetConfirm": "確定要還原成預設版面嗎？",
     "layoutDone": "完成",
     "layoutResizeHint": "拖曳縮放・雙擊還原此區塊",
+    "dialogOk": "確定",
+    "dialogCancel": "取消",
+    "dialogNotice": "提示",
+    "dialogInput": "請輸入",
+    "dialogConfirm": "請確認",
+    "scratchpadClearConfirm": "要清除便籤內容嗎？",
 };

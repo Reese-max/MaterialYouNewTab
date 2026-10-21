@@ -128,13 +128,14 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         localStorage.setItem("userTextVisible", userTextCheckbox.checked);
     });
 
-    userTextDiv.addEventListener("focus", () => {
+    userTextDiv.addEventListener("focus", async () => {
         if (!focus.carriedFrom || !focus.text || focus.completed || overwriteConfirmed) return;
-        if (window.confirm(t("dailyFocusOverwriteConfirm", "Yesterday’s unfinished focus was carried over. Edit or replace it?"))) {
-            overwriteConfirmed = true;
-        } else {
-            userTextDiv.blur();
-        }
+        userTextDiv.blur();
+        const message = t("dailyFocusOverwriteConfirm", "Yesterday’s unfinished focus was carried over. Edit or replace it?");
+        const accepted = window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message);
+        if (!accepted) return;
+        overwriteConfirmed = true;
+        userTextDiv.focus();
     });
 
     userTextDiv.addEventListener("click", () => {

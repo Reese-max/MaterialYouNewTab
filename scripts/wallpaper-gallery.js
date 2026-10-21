@@ -215,9 +215,8 @@
         const isImage = /^image\//.test(blob.type);
         if (!isVideo && !isImage) { setStatus(t("wallpaperUnsupported", "Unsupported file type")); return null; }
         if (isVideo && blob.size > VIDEO_WARN_BYTES) {
-            const ok = typeof confirmPrompt === "function"
-                ? await confirmPrompt(t("wallpaperVideoTooLarge", "This video is larger than 200 MB and may slow down the new tab. Add anyway?"))
-                : window.confirm(t("wallpaperVideoTooLarge", "This video is larger than 200 MB. Add anyway?"));
+            const message = t("wallpaperVideoTooLarge", "This video is larger than 200 MB and may slow down the new tab. Add anyway?");
+            const ok = window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message);
             if (!ok) return null;
         }
         const item = { id: newId(), type: isVideo ? "video" : "image", source: "upload", blob, name: name || "", added: Date.now() };
@@ -310,7 +309,8 @@
     }
 
     async function renameItem(item) {
-        const name = window.prompt(t("wallpaperRenamePrompt", "Wallpaper name"), item.name || "");
+        const message = t("wallpaperRenamePrompt", "Wallpaper name");
+        const name = window.myntDialog ? await window.myntDialog.prompt(message, item.name || "", { maxLength: 60 }) : window.prompt(message, item.name || "");
         if (name === null) return;
         item.name = name.trim().slice(0, 60);
         await putItem(item);

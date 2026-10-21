@@ -196,8 +196,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         reset.type = "button";
         reset.id = "myntLayoutReset";
         reset.textContent = t("layoutReset", "Reset layout");
-        reset.addEventListener("click", () => {
-            if (!window.confirm(t("layoutResetConfirm", "Restore the default layout?"))) return;
+        reset.addEventListener("click", async () => {
+            const message = t("layoutResetConfirm", "Restore the default layout?");
+            if (!(window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message))) return;
             layout = { ...layout, blocks: {} };
             save();
             applyAll();
@@ -245,7 +246,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.code === "KeyL") {
             e.preventDefault();
             setEditing(!editing);
-        } else if (editing && e.key === "Escape") {
+        } else if (editing && e.key === "Escape" && !document.querySelector("dialog[open]")) {
             setEditing(false);
         }
     });

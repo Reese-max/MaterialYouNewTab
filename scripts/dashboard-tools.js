@@ -430,8 +430,9 @@ if (typeof document !== "undefined") {
                     remove.className = "habitDeleteBtn";
                     remove.setAttribute("aria-label", format("habitDeleteAria", "Delete {name}", { name: habit.name }));
                     remove.textContent = "×";
-                    remove.addEventListener("click", () => {
-                        if (!confirm(format("habitDeleteConfirm", "Delete habit ‘{name}’?", { name: habit.name }))) return;
+                    remove.addEventListener("click", async () => {
+                        const message = format("habitDeleteConfirm", "Delete habit ‘{name}’?", { name: habit.name });
+                        if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
                         habits = habits.filter(item => item.id !== habit.id);
                         saveHabits();
                         renderHabits();
@@ -791,10 +792,12 @@ if (typeof document !== "undefined") {
             closeWorkspaceEditor();
             applyWorkspace(preset.id);
         });
-        document.getElementById("workspaceDeleteBtn").addEventListener("click", () => {
+        document.getElementById("workspaceDeleteBtn").addEventListener("click", async () => {
             const id = document.getElementById("workspaceEditorId").value;
             const preset = workspaces.find(item => item.id === id);
-            if (!preset || !confirm(format("workspaceDeleteConfirm", "Delete mode ‘{name}’?", { name: preset.name }))) return;
+            if (!preset) return;
+            const message = format("workspaceDeleteConfirm", "Delete mode ‘{name}’?", { name: preset.name });
+            if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
             workspaces = workspaces.filter(item => item.id !== id);
             saveWorkspaces();
             if (localStorage.getItem(KEYS.workspace) === id) localStorage.removeItem(KEYS.workspace);
