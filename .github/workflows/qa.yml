@@ -37,6 +37,13 @@ jobs:
       - name: Run customization checks
         run: node tools/check-customizations.mjs
 
+      - name: Validate manual layout and local adaptive colors
+        run: |
+          node tools/check-layout-save.cjs
+          node tools/check-manual-editor.cjs
+          node tools/check-adaptive-core.cjs
+          node tools/check-adaptive-settings.cjs
+
       - name: Run release metadata checks
         run: node tools/check-release-metadata.mjs
 
