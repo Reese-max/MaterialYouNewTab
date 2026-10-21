@@ -49,7 +49,8 @@ function myntPlanDaidaiAction(action, state) {
 
 if (typeof module !== "undefined" && module.exports) module.exports = { myntPlanDaidaiAction };
 
-if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", () => {
+// May be injected after DOMContentLoaded by lazy-loader.js, so run as soon as the DOM is ready.
+if (typeof document !== "undefined") (fn => (document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn()))(() => {
     const ENDPOINT = "http://127.0.0.1:17373";
     const ORIGIN_PERMISSION = "http://127.0.0.1/*";
     const TOKEN_KEY = "myntDaidaiScopedToken";

@@ -61,7 +61,7 @@ for (const ref of new Set(localRefs)) {
 }
 
 for (const script of ["scripts/pomodoro.js", "scripts/bongocat.js", "scripts/dashboard-tools.js", "scripts/scratchpad.js", "scripts/ambient-sound.js", "scripts/daidai-integration.js"]) {
-    assert.ok(html.includes(`src="${script}"`), `Custom script is not loaded: ${script}`);
+    assert.ok(html.includes(`src="${script}"`) || read("scripts/lazy-loader.js").includes(`"${script}"`), `Custom script is not loaded: ${script}`);
 }
 
 for (const id of [
@@ -278,4 +278,10 @@ for (const file of ["custom-text.js", "daidai-integration.js", "dashboard-tools.
 }
 assert.match(read("scripts/mynt-dialog.js"), /showModal\(\)/);
 assert.ok(read("index.html").indexOf("scripts/mynt-dialog.js") < read("index.html").indexOf("scripts/custom-text.js"));
+const lazyCode = read("scripts/lazy-loader.js");
+for (const lazy of ["scripts/daidai-integration.js", "scripts/bookmarks.js"]) {
+    assert.ok(!html.includes(`src="${lazy}"`), `${lazy} should be lazy-loaded, not eager`);
+    assert.ok(lazyCode.includes(`"${lazy}"`));
+}
+assert.match(read("scripts/daidai-integration.js"), /document\.readyState === "loading"/);
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);
