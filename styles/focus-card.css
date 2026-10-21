@@ -39,6 +39,7 @@
     font-size: 0.76rem; padding: 3px 10px; border-radius: 999px; cursor: pointer;
 }
 #dailyFocusNote { font-size: 0.74rem; opacity: 0.8; margin: 0; }
+.focusHistoryDialog { padding: 18px 22px; }
 .focusHistoryDialog ol { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 8px; }
 .focusHistoryDialog li { display: grid; grid-template-columns: 3.5em 1fr; column-gap: 8px; }
 .focusHistoryDate { opacity: 0.6; font-variant-numeric: tabular-nums; }
@@ -49,7 +50,7 @@
 .focusStats ul { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
 .focusStats li { display: grid; grid-template-columns: 5.5em 1fr 3.5em; align-items: center; gap: 8px; font-size: 0.8rem; }
 .focusStats li.focusHistoryEmpty { display: block; opacity: 0.6; }
-.focusStatsBar { height: 8px; border-radius: 4px; background: linear-gradient(var(--accentLightTint-blue, #8ab4f8), var(--accentLightTint-blue, #8ab4f8)) no-repeat left / var(--w, 0%) 100%, rgba(127, 127, 127, 0.18); }
+.focusStatsBar { height: 8px; border-radius: 4px; opacity: 0.75; background: linear-gradient(to right, currentColor var(--w, 0%), rgba(127, 127, 127, 0.22) var(--w, 0%)); }
 .focusStatsValue { text-align: right; font-variant-numeric: tabular-nums; opacity: 0.75; }
 .focusExamLink { display: inline-block; margin: 0 0 8px; font-size: 0.85rem; color: inherit; opacity: 0.8; }
 .focusExamLink:hover, .focusExamLink:focus-visible { opacity: 1; }
