@@ -109,7 +109,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         return text.replace(/\{(\w+)\}/g, (token, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : token);
     };
     const blockName = entry => t(entry[2], entry[3]);
-    const profiles = typeof MyntLayoutProfiles === "undefined" ? null : MyntLayoutProfiles.create(localStorage, myntNormalizeLayout, t);
+    let profiles=null;
+    try { if(typeof MyntLayoutProfiles!=="undefined")profiles=MyntLayoutProfiles.create(localStorage,myntNormalizeLayout,t); } catch {}
     let layout = profiles ? profiles.load() : load();
     let editing = false, dirty = false, beforeEdit = null, history = null;
     let toolbar = null, dock, status, lockStatus, selected = null, activeDrag = null;
@@ -117,6 +118,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     let guideLayer = null, resizeObserver = null, frame = null;
     let preciseFields = null, warnings = null;
     const overlays = new Map();
+    let draft=null,editScope=null;
+    try { if(typeof MyntLayoutDraft!=='undefined')draft=MyntLayoutDraft.create(sessionStorage,myntNormalizeLayout); } catch {}
+    function checkpoint(){
+        if(!editing||!dirty)return;
+        if(!draft?.save(editScope,layout))announce(t('layoutDraftUnavailable','Draft recovery is unavailable; keep this tab open until saved.'));
+    }
+    function clearDraft(){draft?.clear();document.getElementById('myntDraftRecovery')?.remove();}
+    addEventListener('beforeunload',event=>{activeDrag?.finish();if(editing&&dirty){checkpoint();event.preventDefault();event.returnValue='';}});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)checkpoint();});
 
     function load() {
         try { return myntNormalizeLayout(JSON.parse(localStorage.getItem(KEY) || "null")); }
@@ -135,6 +145,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             return false;
         }
         layout = committed;
+        clearDraft();
         dirty = false;
         closeEditor();
         announce(t("layoutSavedLocked", "Saved and locked · Stored in this browser only"));
@@ -163,6 +174,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         dirty = JSON.stringify({ ...layout, locked: beforeEdit?.locked }) !== JSON.stringify(beforeEdit);
         announce(dirty ? t("layoutUnsaved", "Unsaved changes · Save and lock when finished") : t("layoutEditingCancel", "Editing · Cancel restores your previous layout"));
         updateControls();
+        if(dirty)checkpoint();else draft?.clear();
     }
     function recordChange() { layout = myntNormalizeLayout(layout); history.record(layout); markDirty(); }
     function button(id, label, onClick) {
@@ -307,7 +319,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if (!editing || layout.locked || activeDrag || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
         const el = elementFor(id); if (!el) return;
         e.preventDefault(); e.stopPropagation(); select(id); hideGuides();
-        const b = currentBlock(id, el), step = e.shiftKey ? 32 : 8;
+        const b = currentBlock(id, el), step = e.shiftKey ? 10 : 1;
         const dx = e.key === "ArrowRight" ? step : e.key === "ArrowLeft" ? -step : 0;
         const dy = e.key === "ArrowDown" ? step : e.key === "ArrowUp" ? -step : 0;
         const r = el.getBoundingClientRect();
@@ -322,7 +334,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             overlay.setAttribute("role", "group"); overlay.setAttribute("aria-label", name);
             const handle = button("", `⠿ ${name}`);
             handle.removeAttribute("id"); handle.className = "myntLayoutMove myntLayoutLabel";
-            handle.setAttribute("aria-label", t("layoutMoveAria", "Move {name}; arrows 8px, Shift + arrows 32px", { name }));
+            handle.setAttribute("aria-label", t("layoutMoveAria", "Move {name}; arrows 1px, Shift + arrows 10px", { name }));
             handle.title = t("layoutMoveHint", "Drag to move · Arrow keys to nudge · Hold Alt to bypass snapping");
             handle.addEventListener("pointerdown", e => startDrag(e, id, "move"));
             handle.addEventListener("focus", () => select(id));
@@ -410,7 +422,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             layout.blocks = {}; applyAll(); recordChange();
         });
         const hint = document.createElement("span"); hint.className = "myntLayoutInstructions";
-        hint.textContent = t("layoutInstructions", "Drag ⠿ handles · Arrows 8px · Shift 32px · Esc cancels");
+        hint.textContent = t("layoutInstructions", "Drag ⠿ handles · Arrows 1px · Shift 10px · Esc cancels");
         bottom.append(selectedLabel, resetSelectedButton, reset, hint);
         const precise=document.createElement('details');precise.className='myntLayoutPrecision';
         const summary=document.createElement('summary');summary.textContent=t('layoutPrecision','Position, size and alignment');precise.append(summary);
@@ -441,13 +453,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
     function cancelEditing() {
         if (!editing) return;
-        activeDrag?.cancel(); layout = copy(beforeEdit); dirty = false; closeEditor();
+        activeDrag?.cancel(); layout = copy(beforeEdit); clearDraft(); dirty = false; closeEditor();
         announce(t("layoutCancelled", "Cancelled · Previous layout and lock state restored"));
     }
-    function setEditing(on) {
+    function setEditing(on, recovering=false) {
+        if(on&&!recovering&&document.getElementById("myntDraftRecovery")){announce(t("layoutDraftFound","Restore or discard the existing draft first."));return;}
         if (Boolean(on) === editing) return;
         if (!on) { cancelEditing(); return; }
         if (profiles) { if (!profiles.reload()) return; layout = profiles.load(); }
+        editScope=profiles?.context()||{profile:"legacy",size:innerWidth<=900?"narrow":"wide",revision:0,base:null};
         beforeEdit = copy(layout); layout = copy(layout); layout.locked = false;
         history = myntLayoutHistory(layout); editing = true; dirty = false;
         document.getElementById("menuCloseButton")?.click();
@@ -456,6 +470,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         editButton.setAttribute("aria-expanded", "true"); dock.hidden = true;
         guideLayer = document.createElement("div"); guideLayer.id = "myntLayoutGuides"; guideLayer.setAttribute("aria-hidden", "true"); document.body.append(guideLayer);
         buildOverlays(); buildToolbar(); placeOverlays(); updateControls();
+        const guide=document.createElement('details');guide.id='myntEditorGuide';
+        const heading=document.createElement('summary');heading.textContent=t('layoutGuideTitle','Quick editing guide');
+        const help=document.createElement('p');help.textContent=t('layoutGuideText','Drag the handles, use arrows for 1px steps (Shift: 10px), or hold Alt while dragging to bypass snapping. Undo and Cancel are safe; Save and lock commits your layout.');
+        let seen=false;try{seen=localStorage.getItem('myntLayoutGuideSeen')==='1';}catch{}guide.open=!seen;
+        const dismiss=button('myntGuideDismiss',t('layoutGuideDismiss','Got it'),()=>{guide.open=false;try{localStorage.setItem('myntLayoutGuideSeen','1');}catch{}});
+        guide.append(heading,help,dismiss);toolbar.append(guide);
         addEventListener("scroll", scheduleOverlays, true); addEventListener("resize", scheduleOverlays);
         if (typeof ResizeObserver !== "undefined") {
             resizeObserver = new ResizeObserver(scheduleOverlays);
@@ -491,4 +511,16 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
     window.myntLayout = { setEditing, isEditing: () => editing, get: () => myntNormalizeLayout(layout), applyAll, undo: () => changeHistory("undo"), redo: () => changeHistory("redo"), cancel: cancelEditing, replaceSaved: value => { if(editing)return; layout=myntNormalizeLayout(value); applyAll(); }, preview: value => { setEditing(true); layout=myntNormalizeLayout({...value,locked:false}); applyAll(); recordChange(); } };
     profiles?.mount(window.myntLayout);
+    if(draft?.read()){
+        const box=document.createElement('section');box.id='myntDraftRecovery';box.setAttribute('role','status');
+        const text=document.createElement('p');text.textContent=t('layoutDraftFound','An unsaved draft is available in this tab. Restore only if its saved profile and revision still match.');
+        const restore=button('myntDraftRestore',t('layoutDraftRestore','Restore draft'),()=>{
+            if(editing)return;if(profiles&&!profiles.reload())return;
+            const scope=profiles?.context()||{profile:'legacy',size:innerWidth<=900?'narrow':'wide',revision:0,base:null};
+            const saved=draft.matching(scope);
+            if(!saved){text.textContent=t('layoutDraftStale','This draft belongs to another size/profile or an older saved revision. It cannot replace the current layout.');return;}
+            setEditing(true,true);layout=myntNormalizeLayout({...saved.layout,locked:false});applyAll();recordChange();box.remove();
+        });
+        box.append(text,restore,button('myntDraftDiscard',t('layoutDraftDiscard','Discard draft'),()=>clearDraft()));dock.append(box);
+    }
 });

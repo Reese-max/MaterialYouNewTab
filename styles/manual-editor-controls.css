@@ -107,3 +107,8 @@ html.myntHighContrast #myntProfilesPanel,html.myntHighContrast #myntProfilesPane
 @media(max-width:480px){#myntProfilesPanel{left:16px;top:16px}}
 #myntLayoutToolbar .myntLayoutPrecision input{width:80px;min-width:80px;height:44px;min-height:44px;padding:6px;box-sizing:border-box;border:1px solid #8093a8;border-radius:8px;background:#fff;color:#213851;font:14px system-ui}
 #myntLayoutToolbar .myntLayoutPrecision .myntLayoutToolbarRow{flex-wrap:wrap}
+
+#myntEditorGuide {flex-basis:100%;font-size:.85rem;}
+#myntEditorGuide p {max-width:62ch;line-height:1.5;}
+#myntDraftRecovery {max-width:320px;font-size:.85rem;padding:8px;}
+#myntDraftRecovery button {min-height:44px;}

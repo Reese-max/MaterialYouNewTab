@@ -127,7 +127,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
         if(document.hidden)return;const token=++generation,src=source(),changed=src.key!==sourceKey;
         if(changed){sourceKey=src.key;palette=null;}
         try{
-            const next=await sample(src);if(token!==generation)return;frame=next;
+            const next=await sample(src);if(token!==generation||document.hidden)return;frame=next;
             const result=core.analyze(next.data,next.width,next.height);if(!result.valid)throw Error('pixels');
             applyPalette(result,src.kind==='video'&&!changed);measureQuote();
             const where=t('adaptiveManual','保留手動位置');
@@ -137,14 +137,20 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
             report(error.message==='not-ready'?t('adaptiveWaiting','等待背景影片就緒；暫用安全預設。'):t('adaptiveFallback','無法讀取背景像素（跨來源、解碼或 Canvas 限制）；已回退安全配色，保留排版。'));
         }
     }
-    function schedule(){clearTimeout(timer);timer=setTimeout(()=>analyze(),180);}
+    function schedule(){clearTimeout(timer);if(!document.hidden)timer=setTimeout(()=>analyze(),180);}
     let lastSource='';const checkSource=()=>{const next=source().key;if(next!==lastSource){lastSource=next;schedule();}};
     new MutationObserver(checkSource).observe(body,{attributes:true,attributeFilter:['style','data-workspace-background','data-gallery-video','data-wallpaper-id']});
     // Respect transparency changes immediately without touching its stored value or manual layout.
     new MutationObserver(()=>{if(palette&&!config.opacity)applyPalette(palette,false);}).observe(document.documentElement,{attributes:true,attributeFilter:['style']});
     document.addEventListener('loadeddata',event=>{if(['videoBg','myntGalleryVideo'].includes(event.target.id))schedule();},true);
     addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>analyze(),250);});
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();});
-    setInterval(()=>{if(!document.hidden&&source().kind==='video')analyze();},6000);
+    let videoSampleTimer=null;
+    function samplingVisibility(){
+        clearInterval(videoSampleTimer);videoSampleTimer=null;
+        if(document.hidden){generation++;clearTimeout(timer);clearTimeout(resizeTimer);return;}
+        schedule();videoSampleTimer=setInterval(()=>{const src=source();if(!document.hidden&&src.kind==='video'&&!src.el.paused)analyze();},6000);
+    }
+    document.addEventListener('visibilitychange',samplingVisibility);
+    samplingVisibility();
     window.myntAdaptive={measureQuote};persist();applyModes();schedule();
 });

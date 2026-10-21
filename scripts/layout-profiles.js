@@ -31,7 +31,13 @@
             return {id:p.id,name:p.name.trim(),layouts,previous};
         });
         if(!ids.has(raw.active))throw Error('invalid');
-        return {version:1,revision:raw.revision,active:raw.active,profiles};
+        const out={version:1,revision:raw.revision,active:raw.active,profiles};
+        if(raw.deleted!==undefined){
+            if(!plain(raw.deleted)||!Number.isInteger(raw.deleted.index)||raw.deleted.index<0||raw.deleted.index>MAX||ids.has(raw.deleted.profile?.id))throw Error('invalid');
+            const item=validate({version:1,revision:0,active:raw.deleted.profile?.id,profiles:[raw.deleted.profile]},normalize).profiles[0];
+            out.deleted={index:raw.deleted.index,profile:item};
+        }
+        return out;
     }
     function migrate(legacy,normalize){const layout=normalize(legacy);return {version:1,revision:0,active:'pdefault',profiles:[{id:'pdefault',name:'Default',layouts:{wide:clone(layout),narrow:clone(layout)},previous:{}}]};}
     function parseImport(text,normalize){if(typeof text!=='string'||text.length>LIMIT)throw Error('invalid');const v=JSON.parse(text);if(v.format!=='mynt-layouts'||v.version!==1)throw Error('invalid');return validate(v.data,normalize);}
@@ -46,9 +52,23 @@
             next=validate({...next,revision:data.revision+1},normalize);
             const value=JSON.stringify(next);storage.setItem(KEY,value);expected=value;data=next;
         }
+        function manage(action){
+            const next=clone(data),index=next.profiles.findIndex(p=>p.id===next.active);
+            if(action==='delete'){
+                if(next.profiles.length===1||next.deleted)throw Error('invalid');
+                next.deleted={index,profile:next.profiles.splice(index,1)[0]};next.active=next.profiles[Math.min(index,next.profiles.length-1)].id;
+            }else if(action==='undoDelete'){
+                if(!next.deleted||next.profiles.length>=MAX)throw Error('invalid');
+                next.profiles.splice(Math.min(next.deleted.index,next.profiles.length),0,next.deleted.profile);next.active=next.deleted.profile.id;delete next.deleted;
+            }else {const target=index+(action==='up'?-1:1);if(target<0||target>=next.profiles.length)return;[next.profiles[index],next.profiles[target]]=[next.profiles[target],next.profiles[index]];}
+            write(next);if(api)apply();
+        }
         function guarded(fn){try{fn();refresh();report('profilesSaved');}catch(e){report(e.message==='conflict'?'profilesConflict':'profilesFailure');}}
         function reload(){if(!api?.isEditing())variant=innerWidth<=900?'narrow':'wide';try{expected=storage.getItem(KEY);data=expected?validate(JSON.parse(expected),normalize):migrate(JSON.parse(storage.getItem('myntLayout')||'null'),normalize);error=null;return true;}catch{error='invalid';report('profilesFailure');return false;}}
-        function refresh(){if(!picker)return;picker.replaceChildren();for(const p of data.profiles){const o=document.createElement('option');o.value=p.id;o.textContent=p.name;picker.append(o);}picker.value=data.active;sizeLabel.textContent=t(variant==='wide'?'profilesWide':'profilesNarrow');}
+        function refresh(){if(!picker)return;picker.replaceChildren();for(const p of data.profiles){const o=document.createElement('option');o.value=p.id;o.textContent=p.name;picker.append(o);}picker.value=data.active;sizeLabel.textContent=t(variant==='wide'?'profilesWide':'profilesNarrow');
+            const index=data.profiles.findIndex(p=>p.id===data.active);
+            for(const [id,disabled] of [['myntProfileUp',index===0],['myntProfileDown',index===data.profiles.length-1],['myntProfileDelete',data.profiles.length===1||!!data.deleted],['myntProfileUndoDelete',!data.deleted]]){const b=document.getElementById(id);if(b)b.disabled=disabled;}
+        }
         function apply(){api.replaceSaved(current().layouts[variant]);refresh();}
         function idle(){if(api.isEditing()){report('profilesFinishEdit');return false;}return true;}
         const el=(tag,text)=>{const x=document.createElement(tag);if(text)x.textContent=text;return x;};
@@ -72,12 +92,16 @@
             file.addEventListener('change',async()=>{pending=null;preview.hidden=true;if(!idle()){file.value='';return;}try{const f=file.files[0];if(!f||f.size>LIMIT)throw Error('invalid');const parsed=parseImport(await f.text(),normalize);pending=parsed;desc.textContent=t('profilesImportPreview','Validated profiles (wide + narrow). Import adds copies without replacing your current layout:')+' '+parsed.profiles.map(p=>p.name).join(', ');preview.hidden=false;}catch{report('profilesInvalidImport');file.value='';}});
             const reloadButton=btn('myntProfileReload','profilesReload',()=>{if(!idle())return;if(reload()){apply();report('profilesReloaded');}});
             message=el('p');message.id='myntProfileStatus';message.setAttribute('role','status');
-            body.append(picker,sizeLabel,note,name,add,rename,restore,exp,file,preview,reloadButton,message);panel.append(body);document.body.append(panel);refresh();if(error)report('profilesFailure');
+            const up=btn('myntProfileUp','profilesMoveUp',()=>{if(idle())guarded(()=>manage('up'));});
+            const down=btn('myntProfileDown','profilesMoveDown',()=>{if(idle())guarded(()=>manage('down'));});
+            const del=btn('myntProfileDelete','profilesDelete',()=>{if(idle())guarded(()=>manage('delete'));});
+            const undo=btn('myntProfileUndoDelete','profilesUndoDelete',()=>{if(idle())guarded(()=>manage('undoDelete'));});
+            body.append(picker,sizeLabel,note,name,add,rename,up,down,del,undo,restore,exp,file,preview,reloadButton,message);panel.append(body);document.body.append(panel);refresh();if(error)report('profilesFailure');
             panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();panel.open=false;panel.querySelector('summary').focus();}});
             addEventListener('storage',e=>{if(e.key===KEY&&e.newValue!==expected)report('profilesConflict');});
             let timer;addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(()=>{const size=innerWidth<=900?'narrow':'wide';if(size===variant)return;if(api.isEditing()){report('profilesSizeEditing');return;}variant=size;apply();},150);});
         }
-        return {mount,load:()=>clone(current().layouts[variant]),save(layout){const next=clone(data),p=next.profiles.find(p=>p.id===next.active);p.previous[variant]=clone(p.layouts[variant]);p.layouts[variant]=normalize(layout);write(next);refresh();},finish(){const size=innerWidth<=900?'narrow':'wide';if(size!==variant){variant=size;apply();}},reload};
+        return {mount,manage,context:()=>({profile:data.active,size:variant,revision:data.revision,base:expected}),load:()=>clone(current().layouts[variant]),save(layout){const next=clone(data),p=next.profiles.find(p=>p.id===next.active);p.previous[variant]=clone(p.layouts[variant]);p.layouts[variant]=normalize(layout);write(next);refresh();},finish(){const size=innerWidth<=900?'narrow':'wide';if(size!==variant){variant=size;apply();}},reload};
     }
     const api={validate,migrate,parseImport,create,KEY};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.MyntLayoutProfiles=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

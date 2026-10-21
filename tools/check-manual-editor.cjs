@@ -86,7 +86,7 @@ function editor(raw) {
     const id = value => document.getElementById(value);
     const overlay = () => document.all().find(x => x.dataset?.block === 'search');
     const handle = () => overlay().querySelector('.myntLayoutMove');
-    return { ctx, document, storage, search, id, handle, overlay, writes: () => writes, blockSave: value => { blocked = value; } };
+    return { ctx, document, storage, search, id, handle, overlay, globalEvents, writes: () => writes, blockSave: value => { blocked = value; } };
 }
 const raw = '{ "version": 2, "snap": false, "locked": true, "blocks": { "search": { "x": 0.05, "y": 0.02, "s": 1 } } }';
 const app = editor(raw), original = clone(app.ctx.myntLayout.get());
@@ -128,13 +128,13 @@ assert.equal(app.id('myntLayoutUndo').disabled, true);
 handle.emit('pointerdown', { clientX: 100, clientY: 200 }); handle.emit('pointerup');
 assert.equal(app.id('myntLayoutUndo').disabled, true, 'Tap does not create an edit');
 
-// Nudges are exactly 8/32px and are never rounded to the snap grid.
+// Nudges are exactly 1/10px and are never rounded to the snap grid.
 const startX = app.search.getBoundingClientRect().left;
 handle.emit('keydown', { key: 'ArrowRight' });
-assert.equal(app.search.getBoundingClientRect().left, startX + 8);
+assert.equal(app.search.getBoundingClientRect().left, startX + 1);
 handle.emit('keydown', { key: 'ArrowRight', shiftKey: true });
-assert.equal(app.search.getBoundingClientRect().left, startX + 40);
-app.id('myntLayoutUndo').click(); assert.equal(app.search.getBoundingClientRect().left, startX + 8);
+assert.equal(app.search.getBoundingClientRect().left, startX + 11);
+app.id('myntLayoutUndo').click(); assert.equal(app.search.getBoundingClientRect().left, startX + 1);
 app.blockSave(true); app.id('myntLayoutSave').click();
 assert.equal(app.ctx.myntLayout.isEditing(), true, 'Failed save leaves the edit draft usable');
 assert.equal(app.ctx.myntLayout.get().locked, false); assert.equal(app.writes(), 0);
@@ -144,7 +144,7 @@ assert.equal(app.writes(), 1); assert.equal(app.ctx.myntLayout.isEditing(), fals
 assert.equal(JSON.parse(app.storage.get('myntLayout')).locked, true);
 assert.equal(app.document.all().filter(x => x.classList.contains('myntLayoutOverlay')).length, 0);
 const reloaded = editor(app.storage.get('myntLayout'));
-assert.equal(reloaded.search.getBoundingClientRect().left, startX + 8);
+assert.equal(reloaded.search.getBoundingClientRect().left, startX + 1);
 assert.equal(reloaded.ctx.myntLayout.isEditing(), false);
 
 // Legacy unlocked state is restored by Cancel, without automatically enabling dragging.
@@ -155,4 +155,9 @@ unlocked.id('myntLayoutEdit').click(); unlocked.handle().emit('keydown', { key: 
 assert.equal(unlocked.ctx.myntLayout.get().locked, false); assert.equal(unlocked.storage.get('myntLayout'), unlockedRaw);
 assert.equal(unlocked.writes(), 0);
 assert.equal(myntNormalizeLayout({ version: 1, blocks: {} }).version, 2);
-console.log('MANUAL_EDITOR_CHECK_OK: snapping, history, pointer cancel, exact Cancel, 8/32px keys, failed save, save/lock/reload, legacy data, and non-hijacked content');
+console.log('MANUAL_EDITOR_CHECK_OK: snapping, history, pointer cancel, exact Cancel, 1/10px keys, failed save, save/lock/reload, legacy data, and non-hijacked content');
+
+// Browser may suppress the native dialog; the handler must still checkpoint and request it.
+const warning=editor(raw);warning.id('myntLayoutEdit').click();warning.handle().emit('keydown',{key:'ArrowRight'});
+const event={preventDefault(){this.prevented=true}};for(const fn of warning.globalEvents.get('beforeunload'))fn(event);assert.equal(event.prevented,true);assert.equal(event.returnValue,'');
+warning.id('myntLayoutCancel').click();const clean={preventDefault(){this.prevented=true}};for(const fn of warning.globalEvents.get('beforeunload'))fn(clean);assert.equal(clean.prevented,undefined);
