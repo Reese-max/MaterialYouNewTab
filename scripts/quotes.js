@@ -352,7 +352,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load states from localStorage
     hideSearchWith.checked = localStorage.getItem("showShortcutSwitch") === "true";
-    motivationalQuotesCheckbox.checked = localStorage.getItem("motivationalQuotesVisible") !== "false";
+    // Off by default: the study encouragement line is the single quote line. An explicit "true" is respected.
+    motivationalQuotesCheckbox.checked = localStorage.getItem("motivationalQuotesVisible") === "true";
     newQuoteOnRefreshCheckbox.checked = localStorage.getItem("dailyQuoteEnabled") === "false";
 
     // Initialize language tracking
