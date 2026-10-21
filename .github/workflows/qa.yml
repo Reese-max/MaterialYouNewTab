@@ -4,10 +4,13 @@ on:
   pull_request:
     branches:
       - main
+      - feature/daidai-integration
   push:
     branches:
       - main
       - feature/upstream-full-integration
+      - feature/manual-layout-background-colors
+      - feature/daidai-integration
   workflow_dispatch:
 
 concurrency:
