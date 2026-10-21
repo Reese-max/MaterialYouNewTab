@@ -249,6 +249,14 @@ assert.equal(Object.keys(focusCard.myntRecordFocusLog(Object.fromEntries(Array.f
 assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed: false, steps: [{ text: "s", done: true }], rounds: 3, linked: true }, "", "2026-08-31").rounds, undefined);
 assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed: false, steps: [{ text: "s", done: true }] }, "", "2026-08-31").steps.length, 1);
 assert.match(read("index.html"), /scripts\/focus-card\.js/);
+{
+    const day = new Date(2026, 9, 21);
+    const weekly = focusCard.myntWeeklySubjectMinutes({ "2026-10-21": { t: "a", s: "db", r: 2 }, "2026-10-19": { t: "b", s: "sec", r: 1 }, "2026-10-18": { t: "c", s: "db", r: 1 }, "2026-10-10": { t: "old", s: "law", r: 9 }, "2026-10-20": { t: "d", r: 1 } }, 25, day);
+    assert.equal(JSON.stringify(weekly), JSON.stringify([["db", 75], ["sec", 25], ["other", 25]]));
+    assert.equal(focusCard.myntExamArchiveUrl(""), "https://reese-max.github.io/police-exam-archive/");
+    assert.equal(focusCard.myntExamArchiveUrl("javascript:alert(1)"), "https://reese-max.github.io/police-exam-archive/");
+    assert.match(read("index.html"), /<details id="focusStatsDetails"/);
+}
 assert.doesNotMatch(focusCardCode, /api[_-]?key|fetch\(/i);
 const layoutCode = read("scripts/layout-editor.js");
 const layoutContext = { module: { exports: {} } };

@@ -70,8 +70,30 @@ function myntRecordFocusLog(log, focus, keep = 14) {
     return next;
 }
 
+const MYNT_EXAM_ARCHIVE_URL = "https://reese-max.github.io/police-exam-archive/";
+
+function myntExamArchiveUrl(saved) {
+    return /^https:\/\/[^\s"'<>]+$/.test(String(saved || "")) ? saved : MYNT_EXAM_ARCHIVE_URL;
+}
+
+// Minutes per subject over the last 7 days (today included), from focus-log rounds.
+function myntWeeklySubjectMinutes(log, workMinutes = 25, now = new Date()) {
+    const per = Math.max(1, Number(workMinutes) || 25);
+    const totals = {};
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const entry = log?.[key];
+        const rounds = Number(entry?.r) || 0;
+        if (!entry || !rounds) continue;
+        const subject = entry.s || "other";
+        totals[subject] = (totals[subject] || 0) + rounds * per;
+    }
+    return Object.entries(totals).sort((a, b) => (a[0] === "other") - (b[0] === "other") || b[1] - a[1]);
+}
+
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { myntParseFocusSteps, myntBuildFocusPrompt, myntChatGptUrl, myntRecordFocusLog, myntDaysUntil, MYNT_FOCUS_SUBJECTS };
+    module.exports = { myntParseFocusSteps, myntBuildFocusPrompt, myntChatGptUrl, myntRecordFocusLog, myntDaysUntil, MYNT_FOCUS_SUBJECTS, myntWeeklySubjectMinutes, myntExamArchiveUrl };
 }
 
 if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", () => {
@@ -308,6 +330,39 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
         if (!dialog.open) dialog.showModal();
     }
+    function renderStats() {
+        let log = {};
+        try { log = JSON.parse(localStorage.getItem(LOG_KEY) || "{}"); } catch {}
+        const rows = myntWeeklySubjectMinutes(log, localStorage.getItem("pomodoroWorkMinutes"));
+        const list = $("focusStatsList");
+        if (!rows.length) {
+            const empty = document.createElement("li");
+            empty.className = "focusHistoryEmpty";
+            empty.textContent = t("focusStatsEmpty", "No focus rounds with a subject this week.");
+            list.replaceChildren(empty);
+            return;
+        }
+        const max = rows[0][1];
+        list.replaceChildren(...rows.map(([id, minutes]) => {
+            const row = document.createElement("li");
+            const name = document.createElement("span");
+            name.className = "focusStatsName";
+            name.textContent = id === "other" ? t("focusStatsOther", "No subject") : subjectLabel(id);
+            const bar = document.createElement("span");
+            bar.className = "focusStatsBar";
+            bar.style.setProperty("--w", `${Math.max(4, Math.round(minutes / max * 100))}%`);
+            const value = document.createElement("span");
+            value.className = "focusStatsValue";
+            value.textContent = `${(minutes / 60).toFixed(1)} h`;
+            row.append(name, bar, value);
+            row.setAttribute("aria-label", `${name.textContent} ${value.textContent}`);
+            return row;
+        }));
+    }
+    const examUrl = () => myntExamArchiveUrl(localStorage.getItem("myntExamArchiveUrl"));
+    const openExam = () => window.open(examUrl(), "_blank", "noopener");
+    $("focusStatsDetails").addEventListener("toggle", event => { if (event.target.open) renderStats(); });
+    $("focusExamLink").addEventListener("click", event => { event.preventDefault(); openExam(); });
     $("focusHistoryClose").addEventListener("click", () => dialog.close());
     dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
 
@@ -325,9 +380,16 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             infoText: t("commandFocusGptInfo", "Opens chatgpt.com with a prepared prompt"),
             group: "commandGroupTask",
             run: openGpt
+        },
+        {
+            id: "exam-today",
+            labelText: t("commandExamToday", "One past exam question today"),
+            infoText: t("commandExamTodayInfo", "Opens your police exam archive"),
+            group: "commandGroupTask",
+            run: openExam
         }
-    ].filter(command => !query || `${command.labelText} ${command.infoText} focus 焦點`.toLocaleLowerCase().includes(query));
-    window.myntFocusCard = { openHistory, openGpt, addSteps, prompt };
+    ].filter(command => !query || `${command.labelText} ${command.infoText} focus 焦點 exam 考古題`.toLocaleLowerCase().includes(query));
+    window.myntFocusCard = { openHistory, openGpt, addSteps, prompt, renderStats, examUrl };
 
     render();
 });
