@@ -1,0 +1,37 @@
+/* Palette/readability only: manual layout owns all component geometry. */
+body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) .ttteexxtt, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) .searchbar, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) .aiToolsCont .toolsCont a, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #studyQuote { background:var(--adaptive-surface,rgba(244,248,255,.96)); color:var(--adaptive-text,#213851); border-color:color-mix(in srgb,var(--adaptive-text,#213851) 12%,transparent); }
+body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #userText, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #date, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchQ, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchQ::placeholder, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #studyQuoteText { color:var(--adaptive-text,#213851); }
+body[data-adaptive-color="on"] #enterBtn { background:var(--adaptive-accent,#3569ac);color:var(--adaptive-accent-text,#fff); }
+body[data-adaptive-color="on"] .accentColor { fill:var(--adaptive-accent,#3569ac); }
+body[data-adaptive-color="on"] .micIcon, body[data-adaptive-color="on"] .aiModeIcon { color:var(--adaptive-accent,#3569ac); }
+#myntAdaptivePanel { position:fixed; z-index:2147483003; right:24px; top:100px; font:13px/1.5 system-ui; color:#213851; max-width:calc(100vw - 32px); }
+#myntAdaptivePanel summary { cursor:pointer; background:#eef5ff; border:1px solid #fff; border-radius:14px; padding:9px 14px; width:max-content; margin-left:auto; box-shadow:0 4px 20px #243c561a; }
+#myntAdaptivePanel .adaptiveContent { margin-top:8px; width:320px; max-width:calc(100vw - 32px); max-height:calc(100dvh - 200px); overflow:auto; background:#f4f8ff; padding:16px; border-radius:18px; box-sizing:border-box; box-shadow:0 12px 44px #172e4a30; }
+#myntAdaptivePanel label { display:flex; align-items:flex-start; gap:8px; padding:7px 0; cursor:pointer; }
+#myntAdaptivePanel input { flex:0 0 auto; accent-color:#3569ac; width:16px; height:16px; }
+#myntAdaptivePanel button { background:#3569ac; color:white; border:0; border-radius:12px; padding:10px 14px; font:inherit; cursor:pointer; }
+#myntAdaptivePanel p { margin:0 0 12px; }
+#myntAdaptiveStatus { margin-top:12px!important; font-weight:600; }
+#myntAdaptivePanel .adaptiveNotes { font-size:12px; opacity:.85; margin:0; }
+#myntAdaptivePanel :focus-visible { outline:3px solid #3569ac; outline-offset:3px; }
+html.myntReducedMotion #myntAdaptivePanel *, html.myntReducedMotion body[data-adaptive-color] .aiToolsCont a, html.myntReducedMotion body[data-adaptive-color] #studyQuote { transition:none!important; }
+@media (prefers-reduced-motion: reduce) {
+    #myntAdaptivePanel *, body[data-adaptive-color] .aiToolsCont a, body[data-adaptive-color] #studyQuote { transition:none!important; }
+}
+/* Project high contrast takes precedence over sampled colors and translucent cards. */
+html.myntHighContrast body {
+    --adaptive-surface: Canvas !important;
+    --adaptive-text: CanvasText !important;
+    --adaptive-accent: LinkText !important;
+    --adaptive-accent-text: Canvas !important;
+}
+html.myntHighContrast #myntAdaptivePanel,
+html.myntHighContrast #myntAdaptivePanel summary,
+html.myntHighContrast #myntAdaptivePanel .adaptiveContent {
+    background: Canvas !important; color: CanvasText !important;
+    border: 2px solid CanvasText; box-shadow: none;
+}
+html.myntHighContrast #myntAdaptivePanel :focus-visible { outline-color: Highlight; }
+html.myntHighContrast #myntAdaptivePanel input { accent-color: LinkText; }
+body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchQ::placeholder {color:var(--adaptive-text,#213851)!important;opacity:1;}
+body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchbar {background:var(--adaptive-surface);}

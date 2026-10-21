@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Improve manual layout editing with explicit edit mode, large move/resize handles, optional alignment/grid snapping, undo/redo, keyboard adjustments, cancel, and save-and-lock.
+- Add on-device wallpaper palette, contrast, and opacity controls with stable manual positions and image/video fallback. No new permissions or remote analysis.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

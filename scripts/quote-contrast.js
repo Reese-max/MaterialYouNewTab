@@ -41,6 +41,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     function measure() {
+        if (window.myntAdaptive?.measureQuote()) return;
         const video = document.getElementById("videoBg");
         const videoOn = !!video && getComputedStyle(video).display !== "none" && getComputedStyle(video).visibility !== "hidden" && !!video.currentSrc;
         const match = /url\(["']?(.*?)["']?\)/.exec(getComputedStyle(document.body).backgroundImage || "");

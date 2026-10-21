@@ -117,14 +117,18 @@
     function syncVideoPlayback() {
         if (!videoEl || document.body.dataset.galleryVideo !== "on") return;
         if (document.visibilityState !== "visible") { videoEl.pause(); return; }
-        if (reducedMotion()) {
+        if (reducedMotion() || document.documentElement.classList.contains("myntReducedMotion") || document.documentElement.classList.contains("myntHighContrast") || navigator.connection?.saveData) {
             videoEl.pause();
             if (videoEl.readyState >= 1 && videoEl.currentTime < 0.05) { try { videoEl.currentTime = 0.1; } catch (e) { /* ignore */ } }
             return;
         }
         videoEl.play().catch(() => { /* autoplay blocked: first frame stays as poster */ });
     }
-    document.addEventListener("visibilitychange", syncVideoPlayback);
+    let resumeGalleryAfterHidden=false;
+    document.addEventListener("visibilitychange",()=>{
+        if(document.hidden){resumeGalleryAfterHidden=Boolean(videoEl&&!videoEl.paused);videoEl?.pause();}
+        else if(resumeGalleryAfterHidden){resumeGalleryAfterHidden=false;syncVideoPlayback();}
+    });
 
     function stopGalleryVideo() {
         document.body.dataset.galleryVideo = "off";
