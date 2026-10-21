@@ -109,11 +109,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         return text.replace(/\{(\w+)\}/g, (token, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : token);
     };
     const blockName = entry => t(entry[2], entry[3]);
-    let layout = load();
+    const profiles = typeof MyntLayoutProfiles === "undefined" ? null : MyntLayoutProfiles.create(localStorage, myntNormalizeLayout, t);
+    let layout = profiles ? profiles.load() : load();
     let editing = false, dirty = false, beforeEdit = null, history = null;
     let toolbar = null, dock, status, lockStatus, selected = null, activeDrag = null;
     let undoButton, redoButton, snapBox, selectedLabel, resetSelectedButton, editButton;
     let guideLayer = null, resizeObserver = null, frame = null;
+    let preciseFields = null, warnings = null;
     const overlays = new Map();
 
     function load() {
@@ -124,8 +126,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function save() {
         const committed = myntNormalizeLayout({ ...layout, locked: true });
         try {
-            localStorage.setItem(KEY, JSON.stringify(committed));
-        } catch {
+            if (typeof profiles !== "undefined" && profiles) profiles.save(committed);
+            else localStorage.setItem(KEY, JSON.stringify(committed));
+        } catch (error) {
+            if (error.message === "conflict") { announce(t("profilesConflict", "Another tab changed layouts. Cancel and reload saved layouts.")); return false; }
             const fallback = "儲存失敗：儲存空間不可用。變更仍保留，請重試或取消。 / Could not save. Changes are still available; retry or cancel.";
             announce(typeof t === "function" ? t("layoutSaveError", fallback) : fallback);
             return false;
@@ -145,6 +149,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const entry = MYNT_LAYOUT_BLOCKS.find(item => item[0] === selected);
         selectedLabel.textContent = entry ? t("layoutSelected", "Selected: {name}", { name: blockName(entry) }) : t("layoutSelectHandle", "Select a drag handle");
         resetSelectedButton.disabled = !selected || !layout.blocks[selected];
+        if (preciseFields) {
+            const el = selected && elementFor(selected), r = el?.getBoundingClientRect();
+            for (const input of Object.values(preciseFields)) input.disabled = !el;
+            if (r && !Object.values(preciseFields).includes(document.activeElement)) {
+                preciseFields.x.value = Math.round(r.left); preciseFields.y.value = Math.round(r.top);
+                preciseFields.s.value = Math.round((layout.blocks[selected]?.s || 1) * 100);
+            }
+        }
+        updateWarnings();
     }
     function markDirty() {
         dirty = JSON.stringify({ ...layout, locked: beforeEdit?.locked }) !== JSON.stringify(beforeEdit);
@@ -191,7 +204,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         for (const el of elementsFor(entry[1])) {
             if (!block) {
                 el.style.removeProperty("translate"); el.style.removeProperty("scale"); el.style.removeProperty("transform-origin");
-                delete el.dataset.myntLayout;
+                delete el.dataset.myntLayout; delete el.dataset.myntLayoutConstrained;
                 continue;
             }
             el.dataset.myntLayout = id;
@@ -200,11 +213,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             const natural = el.getBoundingClientRect();
             const fit = Math.min(block.s, (innerWidth - 32) / Math.max(1, natural.width), (innerHeight - 120) / Math.max(1, natural.height));
             el.style.scale = String(Math.max(0.1, fit));
+            el.dataset.myntLayoutConstrained = fit < block.s ? "true" : "false";
             const dx = block.x * innerWidth, dy = block.y * innerHeight;
             el.style.translate = `${dx}px ${dy}px`;
             if (visible(el)) {
                 const fixed = myntClampOffset(el.getBoundingClientRect(), dx, dy, innerWidth, innerHeight);
-                if (fixed.x !== dx || fixed.y !== dy) el.style.translate = `${fixed.x}px ${fixed.y}px`;
+                if (fixed.x !== dx || fixed.y !== dy) { el.style.translate = `${fixed.x}px ${fixed.y}px`; el.dataset.myntLayoutConstrained = "true"; }
             }
         }
     }
@@ -334,6 +348,31 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         layout = history[direction](); hideGuides(); applyAll(); markDirty();
         announce(direction === "undo" ? t("layoutUndone", "Undone · Editing") : t("layoutRedone", "Redone · Editing"));
     }
+    function updateWarnings() {
+        if (!warnings) return;
+        const items = MYNT_LAYOUT_BLOCKS.map(entry => ({entry, el:elementFor(entry[0])})).filter(x=>x.el).map(x=>({...x,r:x.el.getBoundingClientRect()}));
+        const problems = [];
+        for (let i=0;i<items.length;i++) {
+            const a=items[i], r=a.r;
+            if(a.el.dataset.myntLayoutConstrained === "true" || r.left<0||r.top<0||r.right>innerWidth||r.bottom>innerHeight) problems.push(blockName(a.entry)+': '+t('layoutOutside','outside viewport'));
+            for(let j=i+1;j<items.length;j++) {
+                const b=items[j];
+                if(Math.min(r.right,b.r.right)-Math.max(r.left,b.r.left)>8 && Math.min(r.bottom,b.r.bottom)-Math.max(r.top,b.r.top)>8) problems.push(blockName(a.entry)+' / '+blockName(b.entry));
+            }
+        }
+        warnings.textContent = problems.length ? t('layoutOverlapWarning','Possible overlap/outside viewport. You decide whether to keep it: ')+problems.join('; ') : t('layoutNoOverlap','No block overlaps detected.');
+    }
+    function preciseChange(mode) {
+        if (!editing || layout.locked || !selected || activeDrag) return;
+        const el=elementFor(selected); if(!el)return;
+        const r=el.getBoundingClientRect(), b=currentBlock(selected,el);
+        let x=Number(preciseFields.x.value), y=Number(preciseFields.y.value), scale=Number(preciseFields.s.value)/100;
+        if(![x,y,scale].every(Number.isFinite)||scale<.5||scale>2)return announce(t('layoutInvalidNumbers','Use finite positions and a scale from 50 to 200%.'));
+        if(mode==='left')x=16;
+        if(mode==='center')x=(innerWidth-r.width)/2;
+        layout.blocks[selected]={x:Math.max(-1,Math.min(1,b.x+(x-r.left)/innerWidth)),y:Math.max(-1,Math.min(1,b.y+(y-r.top)/innerHeight)),s:scale};
+        applyBlock(selected);placeOverlays();recordChange();
+    }
     function buildToolbar() {
         toolbar = document.createElement("section"); toolbar.id = "myntLayoutToolbar";
         toolbar.setAttribute("aria-label", t("layoutToolbarLabel", "Layout editing tools"));
@@ -373,7 +412,16 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const hint = document.createElement("span"); hint.className = "myntLayoutInstructions";
         hint.textContent = t("layoutInstructions", "Drag ⠿ handles · Arrows 8px · Shift 32px · Esc cancels");
         bottom.append(selectedLabel, resetSelectedButton, reset, hint);
-        toolbar.append(top, bottom, status); document.body.append(toolbar);
+        const precise=document.createElement('details');precise.className='myntLayoutPrecision';
+        const summary=document.createElement('summary');summary.textContent=t('layoutPrecision','Position, size and alignment');precise.append(summary);
+        const row=document.createElement('div');row.className='myntLayoutToolbarRow';preciseFields={};
+        for(const [key,label] of [['x','X (px)'],['y','Y (px)'],['s',t('layoutScale','Size (%)')]]) {
+            const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement('input');input.type='number';input.id='myntLayoutPrecise-'+key;input.step='1';
+            if(key==='s'){input.min='50';input.max='200';}input.setAttribute('aria-label',label);preciseFields[key]=input;wrap.append(input);row.append(wrap);
+        }
+        row.append(button('myntLayoutPreciseApply',t('layoutApplyNumbers','Apply values'),()=>preciseChange()),button('myntLayoutAlignLeft',t('layoutAlignLeft','Align left'),()=>preciseChange('left')),button('myntLayoutAlignCenter',t('layoutAlignCenter','Center horizontally'),()=>preciseChange('center')));
+        warnings=document.createElement('p');warnings.id='myntLayoutWarnings';warnings.setAttribute('role','status');precise.append(row,warnings);
+        toolbar.append(top, bottom, precise, status); document.body.append(toolbar);
     }
     function closeEditor() {
         activeDrag?.cancel();
@@ -381,6 +429,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         document.body.classList.remove("mynt-layout-editing", "mynt-layout-snap");
         const box = document.getElementById("layoutEditCheckbox"); if (box) box.checked = false;
         overlays.forEach(overlay => overlay.remove()); overlays.clear();
+        preciseFields = null; warnings = null;
         toolbar?.remove(); toolbar = null; guideLayer?.remove(); guideLayer = null;
         resizeObserver?.disconnect(); resizeObserver = null;
         if (frame !== null) cancelAnimationFrame(frame); frame = null;
@@ -388,6 +437,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         editButton.setAttribute("aria-expanded", "false"); dock.hidden = false; dock.append(status);
         lockStatus.textContent = layout.locked ? t("layoutPositionsLocked", "Positions locked") : t("layoutEditOff", "Edit mode off");
         applyAll(); editButton.focus({ preventScroll: true });
+        profiles?.finish();
     }
     function cancelEditing() {
         if (!editing) return;
@@ -397,6 +447,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function setEditing(on) {
         if (Boolean(on) === editing) return;
         if (!on) { cancelEditing(); return; }
+        if (profiles) { if (!profiles.reload()) return; layout = profiles.load(); }
         beforeEdit = copy(layout); layout = copy(layout); layout.locked = false;
         history = myntLayoutHistory(layout); editing = true; dirty = false;
         document.getElementById("menuCloseButton")?.click();
@@ -438,5 +489,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     // Legacy unlocked data stays intact, but dragging still requires an explicit edit session.
     setTimeout(applyAll, 800);
     addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
-    window.myntLayout = { setEditing, isEditing: () => editing, get: () => myntNormalizeLayout(layout), applyAll, undo: () => changeHistory("undo"), redo: () => changeHistory("redo"), cancel: cancelEditing };
+    window.myntLayout = { setEditing, isEditing: () => editing, get: () => myntNormalizeLayout(layout), applyAll, undo: () => changeHistory("undo"), redo: () => changeHistory("redo"), cancel: cancelEditing, replaceSaved: value => { if(editing)return; layout=myntNormalizeLayout(value); applyAll(); }, preview: value => { setEditing(true); layout=myntNormalizeLayout({...value,locked:false}); applyAll(); recordChange(); } };
+    profiles?.mount(window.myntLayout);
 });

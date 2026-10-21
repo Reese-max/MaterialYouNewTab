@@ -39,6 +39,7 @@ jobs:
 
       - name: Validate manual layout and local adaptive colors
         run: |
+          node tools/check-layout-profiles.cjs
           node tools/check-layout-save.cjs
           node tools/check-manual-editor.cjs
           node tools/check-adaptive-core.cjs

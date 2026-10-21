@@ -154,6 +154,8 @@
         </p>
 
         <h2>背景自適應與排版儲存</h2>
+<p>myntLayoutProfiles（版本 1）只在本機保存命名組合、寬／窄螢幕位置、上一個儲存版本與修訂號。舊 myntLayout 保留，不刪除；排版專用 JSON 匯出不含便籤、帳號或 API 金鑰，匯入先驗證並確認後新增副本。不同分頁的過期寫入會拒絕，以免覆寫更新。</p>
+<p>Named layout profiles and previous versions stay in localStorage. Layout-only exports contain no notes, accounts or API keys; validated imports add copies after confirmation.</p>
 <p>背景圖片與影片像素只在本機 Canvas 進行低解析度色彩、亮度與紋理分析，不傳送到模型或伺服器。localStorage 的 myntAdaptiveBackground（版本 1）保存配色、對比、透明度開關，舊自動排版設定固定轉為關閉；myntLayout（版本 2）保存手動相對位置、縮放、格線與鎖定。背景功能不會移動元件，也不覆寫手動位置。這些設定不跨裝置同步，清除網站資料會刪除設定。無新增權限、網路服務或遙測。</p>
 <p>Adaptive background processing stays on-device. Versioned local preferences are stored in myntAdaptiveBackground and myntLayout. No pixels are uploaded and no new remote service is used.</p>
 <h2>資料收集與權限</h2>
