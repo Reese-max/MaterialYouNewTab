@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: qa-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: qa-${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -107,3 +107,4 @@ jobs:
           set -euo pipefail
           command -v xvfb-run
           xvfb-run -a node tools/smoke-chromium.mjs
+
