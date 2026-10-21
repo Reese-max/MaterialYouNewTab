@@ -318,6 +318,41 @@ async function main() {
 
     await reloadAndWait();
 
+    // Actual local wallpaper media in the installed extension, not mocked visibility events.
+    await browserClient.send("Target.activateTarget", { targetId: newTab.target.id });
+    const mediaDeadline = Date.now() + 20_000;
+    let mediaReady = false;
+    while (Date.now() < mediaDeadline) {
+        mediaReady = await evaluate(`(() => { const v=document.querySelector('#videoBg'); return !document.hidden && !!v && v.readyState>=2 && !v.paused; })()`);
+        if (mediaReady) break;
+        await delay(150);
+    }
+    assert.equal(mediaReady, true, "Local wallpaper video did not start in visible extension tab");
+    const { targetId: otherTabId } = await browserClient.send("Target.createTarget", { url: "about:blank" });
+    async function switchAndObserve(targetId, hidden) {
+        await browserClient.send("Target.activateTarget", { targetId });
+        const deadline=Date.now()+5000;
+        while(Date.now()<deadline){
+            const state=await evaluate(`({hidden:document.hidden,paused:document.querySelector('#videoBg').paused,time:document.querySelector('#videoBg').currentTime})`);
+            if(state.hidden===hidden && (!hidden || state.paused))return state;
+            await delay(100);
+        }
+        throw Error("Wallpaper visibility/paused state did not follow actual tab activation");
+    }
+    for(let cycle=0;cycle<3;cycle++){
+        const hidden=await switchAndObserve(otherTabId,true);
+        await delay(350);
+        const stopped=await evaluate(`document.querySelector('#videoBg').currentTime`);
+        assert.ok(Math.abs(stopped-hidden.time)<0.05,"Hidden video continued advancing");
+        await switchAndObserve(newTab.target.id,false);
+        await delay(150);
+        assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),false,"Previously playing video did not resume");
+    }
+    await evaluate(`document.querySelector('#videoBg').pause()`);
+    await switchAndObserve(otherTabId,true);await switchAndObserve(newTab.target.id,false);
+    assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),true,"Previously paused video unexpectedly resumed");
+    await browserClient.send("Target.closeTarget", { targetId: otherTabId });
+
     const initial = await evaluate(`(() => ({
         url: location.href,
         extensionId: globalThis.chrome?.runtime?.id || "",
@@ -405,6 +440,9 @@ async function main() {
         documentUrl: initial.url,
         title: initial.title,
         defaultShortcuts: initial.shortcutCount,
+        wallpaperVisibilityCycles: 3,
+        hiddenWallpaperTimeFrozen: true,
+        previouslyPausedWallpaperStaysPaused: true,
         safeRawSvgAccepted: true,
         unsafeSvgRejected: true,
         consoleErrors: consoleErrors.filter(Boolean).slice(0, 5),
