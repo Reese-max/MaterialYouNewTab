@@ -377,11 +377,14 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function preciseChange(mode) {
         if (!editing || layout.locked || !selected || activeDrag) return;
         const el=elementFor(selected); if(!el)return;
-        const r=el.getBoundingClientRect(), b=currentBlock(selected,el);
+        let r=el.getBoundingClientRect(),b=currentBlock(selected,el);
         let x=Number(preciseFields.x.value), y=Number(preciseFields.y.value), scale=Number(preciseFields.s.value)/100;
         if(![x,y,scale].every(Number.isFinite)||scale<.5||scale>2)return announce(t('layoutInvalidNumbers','Use finite positions and a scale from 50 to 200%.'));
         if(mode==='left')x=16;
-        if(mode==='center')x=(innerWidth-r.width)/2;
+        if(mode==='center'){
+            layout.blocks[selected]={...b,s:scale};applyBlock(selected);
+            r=el.getBoundingClientRect();b=currentBlock(selected,el);x=(innerWidth-r.width)/2;
+        }
         layout.blocks[selected]={x:Math.max(-1,Math.min(1,b.x+(x-r.left)/innerWidth)),y:Math.max(-1,Math.min(1,b.y+(y-r.top)/innerHeight)),s:scale};
         applyBlock(selected);placeOverlays();recordChange();
     }

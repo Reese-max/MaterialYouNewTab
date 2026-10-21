@@ -507,6 +507,7 @@ if (typeof document !== "undefined") {
         const networkConnection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let decorativeVideoStarted = false;
         let resumeDecorativeAfterHidden = false;
+        let startDecorativeWhenVisible = false;
         let decorativeVideoStartHandle = null;
         let decorativeVideoUsesIdleCallback = false;
 
@@ -514,6 +515,7 @@ if (typeof document !== "undefined") {
             return Boolean(decorativeVideo)
                 && document.visibilityState === "visible"
                 && document.body.dataset.workspaceBackground === "video"
+                && document.body.dataset.galleryVideo !== "on"
                 && !effectiveReducedMotion()
                 && !accessibility.highContrast
                 && networkConnection?.saveData !== true;
@@ -537,6 +539,7 @@ if (typeof document !== "undefined") {
         function syncDecorativeVideo() {
             if (!decorativeVideo) return;
 
+            startDecorativeWhenVisible = document.hidden && document.body.dataset.workspaceBackground === "video";
             if (!canPlayDecorativeVideo()) {
                 cancelDecorativeVideoStart();
                 decorativeVideo.pause();
@@ -919,8 +922,8 @@ if (typeof document !== "undefined") {
             if(document.hidden){
                 resumeDecorativeAfterHidden=Boolean(decorativeVideo&&!decorativeVideo.paused);
                 cancelDecorativeVideoStart();decorativeVideo?.pause();
-            }else if(resumeDecorativeAfterHidden){
-                resumeDecorativeAfterHidden=false;syncDecorativeVideo();
+            }else if(resumeDecorativeAfterHidden||startDecorativeWhenVisible){
+                resumeDecorativeAfterHidden=false;startDecorativeWhenVisible=false;syncDecorativeVideo();
             }
             if (document.visibilityState === "visible") renderPermissions();
         });

@@ -43,7 +43,15 @@
     function parseImport(text,normalize){if(typeof text!=='string'||text.length>LIMIT)throw Error('invalid');const v=JSON.parse(text);if(v.format!=='mynt-layouts'||v.version!==1)throw Error('invalid');return validate(v.data,normalize);}
     function create(storage,normalize,t) {
         let expected=null, data, error=null, variant=innerWidth<=900?'narrow':'wide',api,panel,message,picker,sizeLabel,pending;
-        try{expected=storage.getItem(KEY);data=expected?validate(JSON.parse(expected),normalize):migrate(JSON.parse(storage.getItem('myntLayout')||'null'),normalize);}catch(e){data=migrate(null,normalize);error='invalid';}
+        function readSaved(){
+            if(expected!==null)return validate(JSON.parse(expected),normalize);
+            // Retain the exact legacy value for recovery; malformed legacy JSON
+            // must not poison a new profile store. Storage failures still fail closed.
+            const raw=storage.getItem('myntLayout');let legacy=null;
+            try{legacy=JSON.parse(raw||'null');}catch{}
+            return migrate(legacy,normalize);
+        }
+        try{expected=storage.getItem(KEY);data=readSaved();}catch(e){data=migrate(null,normalize);error='invalid';}
         const current=()=>data.profiles.find(p=>p.id===data.active);
         const report=key=>{if(message)message.textContent=t(key,key);};
         function write(next){
@@ -64,7 +72,7 @@
             write(next);if(api)apply();
         }
         function guarded(fn){try{fn();refresh();report('profilesSaved');}catch(e){report(e.message==='conflict'?'profilesConflict':'profilesFailure');}}
-        function reload(){if(!api?.isEditing())variant=innerWidth<=900?'narrow':'wide';try{expected=storage.getItem(KEY);data=expected?validate(JSON.parse(expected),normalize):migrate(JSON.parse(storage.getItem('myntLayout')||'null'),normalize);error=null;return true;}catch{error='invalid';report('profilesFailure');return false;}}
+        function reload(){if(!api?.isEditing())variant=innerWidth<=900?'narrow':'wide';try{expected=storage.getItem(KEY);data=readSaved();error=null;return true;}catch{error='invalid';report('profilesFailure');return false;}}
         function refresh(){if(!picker)return;picker.replaceChildren();for(const p of data.profiles){const o=document.createElement('option');o.value=p.id;o.textContent=p.name;picker.append(o);}picker.value=data.active;sizeLabel.textContent=t(variant==='wide'?'profilesWide':'profilesNarrow');
             const index=data.profiles.findIndex(p=>p.id===data.active);
             for(const [id,disabled] of [['myntProfileUp',index===0],['myntProfileDown',index===data.profiles.length-1],['myntProfileDelete',data.profiles.length===1||!!data.deleted],['myntProfileUndoDelete',!data.deleted]]){const b=document.getElementById(id);if(b)b.disabled=disabled;}
@@ -101,7 +109,7 @@
             addEventListener('storage',e=>{if(e.key===KEY&&e.newValue!==expected)report('profilesConflict');});
             let timer;addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(()=>{const size=innerWidth<=900?'narrow':'wide';if(size===variant)return;if(api.isEditing()){report('profilesSizeEditing');return;}variant=size;apply();},150);});
         }
-        return {mount,manage,context:()=>({profile:data.active,size:variant,revision:data.revision,base:expected}),load:()=>clone(current().layouts[variant]),save(layout){const next=clone(data),p=next.profiles.find(p=>p.id===next.active);p.previous[variant]=clone(p.layouts[variant]);p.layouts[variant]=normalize(layout);write(next);refresh();},finish(){const size=innerWidth<=900?'narrow':'wide';if(size!==variant){variant=size;apply();}},reload};
+        return {mount,manage,context:()=>({profile:data.active,size:variant,revision:data.revision,base:expected}),load:()=>clone(current().layouts[variant]),save(layout){const next=clone(data),p=next.profiles.find(p=>p.id===next.active);const candidate=normalize(layout);if(JSON.stringify(candidate)!==JSON.stringify(p.layouts[variant]))p.previous[variant]=clone(p.layouts[variant]);p.layouts[variant]=candidate;write(next);refresh();},finish(){const size=innerWidth<=900?'narrow':'wide';if(size!==variant){variant=size;apply();}},reload};
     }
     const api={validate,migrate,parseImport,create,KEY};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.MyntLayoutProfiles=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

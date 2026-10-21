@@ -13,3 +13,18 @@ const snapshot=map.get(p.KEY);const denied=p.create({getItem:storage.getItem,set
 console.log('LAYOUT_PROFILES_OK: strict import, legacy preservation, wide/narrow isolation, previous versions, stale-tab conflict and quota rollback');
 // Opening edit immediately after resize must select the new size, before debounce.
 const race=p.create(storage,n,x=>x);global.innerWidth=500;assert.ok(race.reload());assert.deepEqual(race.load(),n({...legacy,blocks:{}}));global.innerWidth=1200;
+
+// Malformed legacy data is retained byte-for-byte but does not disable repair saves.
+for(const raw of ['{broken','null','']){
+ const values=new Map([['myntLayout',raw]]),store={getItem:k=>values.has(k)?values.get(k):null,setItem:(k,v)=>values.set(k,v)};
+ const recovered=p.create(store,n,x=>x);assert.ok(recovered.reload());recovered.save(changed);
+ assert.deepEqual(recovered.load(),changed);assert.equal(values.get('myntLayout'),raw);
+}
+// Invalid CURRENT data must never be replaced by the fallback, including empty JSON.
+for(const raw of ['{broken','']){
+ const values=new Map([[p.KEY,raw]]),store={getItem:k=>values.has(k)?values.get(k):null,setItem:(k,v)=>values.set(k,v)};
+ const blocked=p.create(store,n,x=>x);assert.throws(()=>blocked.save(changed),/invalid/);assert.equal(values.get(p.KEY),raw);
+}
+const repeated=p.create(storage,n,x=>x),beforePrevious=JSON.parse(map.get(p.KEY)).profiles[0].previous.wide;
+repeated.save(repeated.load());assert.deepEqual(JSON.parse(map.get(p.KEY)).profiles[0].previous.wide,beforePrevious);
+console.log('PROFILE_RECOVERY_OK: malformed legacy remains recoverable, invalid current record protected, no-op save preserves previous version');

@@ -33,7 +33,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     const notes=document.createElement('p');notes.className='adaptiveNotes';notes.textContent=t('adaptiveNotes','影片每 6 秒平滑更新配色，不會移動元件。位置由手動排版、儲存與鎖定控制，設定只存於此瀏覽器。');
     content.append(analyzeButton,state,notes);panel.append(summary,content);body.append(panel);
 
-    panel.addEventListener('keydown',e=>{if(e.key==='Escape'){panel.open=false;summary.focus();}});
+    panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();panel.open=false;summary.focus();}});
     function report(message) { state.textContent=message+(storageError?' '+t('adaptiveStorageError','設定未能保存，僅本次有效。'):''); }
     function persist(){ try{localStorage.setItem(KEY,JSON.stringify(config));storageError=false;}catch{storageError=true;} }
     function applyModes(){
@@ -141,7 +141,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     let lastSource='';const checkSource=()=>{const next=source().key;if(next!==lastSource){lastSource=next;schedule();}};
     new MutationObserver(checkSource).observe(body,{attributes:true,attributeFilter:['style','data-workspace-background','data-gallery-video','data-wallpaper-id']});
     // Respect transparency changes immediately without touching its stored value or manual layout.
-    new MutationObserver(()=>{if(palette&&!config.opacity)applyPalette(palette,false);}).observe(document.documentElement,{attributes:true,attributeFilter:['style']});
+    new MutationObserver(()=>{checkSource();if(palette&&!config.opacity)applyPalette(palette,false);}).observe(document.documentElement,{attributes:true,attributeFilter:['style']});
     document.addEventListener('loadeddata',event=>{if(['videoBg','myntGalleryVideo'].includes(event.target.id))schedule();},true);
     addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>analyze(),250);});
     let videoSampleTimer=null;

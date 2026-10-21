@@ -78,3 +78,6 @@ assert.match(
 console.log(
     `RELEASE_METADATA_OK version=${version} name=${JSON.stringify(productName)} repo=${repo}`
 );
+const packageWorkflow=read('.github/workflows/package-extension.yml');
+assert.ok(packageWorkflow.includes("--exclude 'docs/manual-layout-profiles.md'"),'Development validation report must not ship in extension packages');
+console.log('PACKAGE_REPORT_EXCLUSION_OK: shared Chromium/Firefox rsync excludes manual-layout validation report');

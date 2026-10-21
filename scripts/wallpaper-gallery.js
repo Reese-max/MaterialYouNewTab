@@ -96,6 +96,7 @@
 
     // ---------- Video element ----------
     let videoEl = null;
+    let startGalleryWhenVisible = false;
     let videoUrl = null;
     let imageUrl = null;
     const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
@@ -116,7 +117,8 @@
     }
     function syncVideoPlayback() {
         if (!videoEl || document.body.dataset.galleryVideo !== "on") return;
-        if (document.visibilityState !== "visible") { videoEl.pause(); return; }
+        if (document.visibilityState !== "visible") { startGalleryWhenVisible=true;videoEl.pause(); return; }
+        startGalleryWhenVisible=false;
         if (reducedMotion() || document.documentElement.classList.contains("myntReducedMotion") || document.documentElement.classList.contains("myntHighContrast") || navigator.connection?.saveData) {
             videoEl.pause();
             if (videoEl.readyState >= 1 && videoEl.currentTime < 0.05) { try { videoEl.currentTime = 0.1; } catch (e) { /* ignore */ } }
@@ -127,10 +129,11 @@
     let resumeGalleryAfterHidden=false;
     document.addEventListener("visibilitychange",()=>{
         if(document.hidden){resumeGalleryAfterHidden=Boolean(videoEl&&!videoEl.paused);videoEl?.pause();}
-        else if(resumeGalleryAfterHidden){resumeGalleryAfterHidden=false;syncVideoPlayback();}
+        else if(resumeGalleryAfterHidden||startGalleryWhenVisible){resumeGalleryAfterHidden=false;startGalleryWhenVisible=false;syncVideoPlayback();}
     });
 
     function stopGalleryVideo() {
+        startGalleryWhenVisible=false;resumeGalleryAfterHidden=false;
         document.body.dataset.galleryVideo = "off";
         if (videoEl) { videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load(); }
         if (videoUrl) { URL.revokeObjectURL(videoUrl); videoUrl = null; }

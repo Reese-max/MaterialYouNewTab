@@ -318,6 +318,31 @@ async function main() {
 
     await reloadAndWait();
 
+    // Review regressions execute in the real disposable extension document.
+    await evaluate(`localStorage.setItem('myntLayout','{malformed-review-fixture');localStorage.removeItem('myntLayoutProfiles')`);
+    await reloadAndWait();
+    const review = await evaluate(`(() => {
+        document.querySelector('#myntLayoutEdit').click();
+        const h=document.querySelector('[data-block="search"] .myntLayoutMove');
+        h.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+        const panel=document.querySelector('#myntAdaptivePanel');panel.open=true;
+        panel.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+        const escapeKeptDraft=window.myntLayout.isEditing()&&!panel.open;
+        h.focus();document.querySelector('#myntLayoutPrecise-s').value='150';
+        document.querySelector('#myntLayoutAlignCenter').click();
+        const rect=document.querySelector('.searchbar').getBoundingClientRect();
+        const centered=Math.abs(rect.left+rect.width/2-innerWidth/2)<1;
+        document.querySelector('#myntLayoutSave').click();
+        const first=JSON.parse(localStorage.getItem('myntLayoutProfiles'));
+        document.querySelector('#myntLayoutEdit').click();document.querySelector('#myntLayoutSave').click();
+        const second=JSON.parse(localStorage.getItem('myntLayoutProfiles'));
+        return {escapeKeptDraft,centered,legacyPreserved:localStorage.getItem('myntLayout')==='{malformed-review-fixture',saved:!!first,previousPreserved:JSON.stringify(first.profiles[0].previous)===JSON.stringify(second.profiles[0].previous)};
+    })()`);
+    for(const [key,value] of Object.entries(review))assert.equal(value,true,'Review regression: '+key);
+    // Reset only this disposable test's layout fixture; no user's browser data is used.
+    await evaluate(`localStorage.removeItem('myntLayout');localStorage.removeItem('myntLayoutProfiles')`);
+    await reloadAndWait();
+
     // Actual local wallpaper media in the installed extension, not mocked visibility events.
     await browserClient.send("Target.activateTarget", { targetId: newTab.target.id });
     const mediaDeadline = Date.now() + 20_000;
@@ -339,6 +364,13 @@ async function main() {
         }
         throw Error("Wallpaper visibility/paused state did not follow actual tab activation");
     }
+    await switchAndObserve(otherTabId,true);
+    await reloadAndWait();
+    assert.equal(await evaluate('document.hidden'),true,'Test must initialize in a truly hidden tab');
+    await switchAndObserve(newTab.target.id,false);
+    const pendingDeadline=Date.now()+10000;
+    while(Date.now()<pendingDeadline&&await evaluate("document.querySelector('#videoBg').paused"))await delay(100);
+    assert.equal(await evaluate("document.querySelector('#videoBg').paused"),false,'Hidden-initialized wallpaper did not start when visible');
     for(let cycle=0;cycle<3;cycle++){
         const hidden=await switchAndObserve(otherTabId,true);
         await delay(350);
@@ -441,6 +473,8 @@ async function main() {
         title: initial.title,
         defaultShortcuts: initial.shortcutCount,
         wallpaperVisibilityCycles: 3,
+        hiddenInitializedWallpaperStarts: true,
+        reviewRegressions: review,
         hiddenWallpaperTimeFrozen: true,
         previouslyPausedWallpaperStaysPaused: true,
         safeRawSvgAccepted: true,

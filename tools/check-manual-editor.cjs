@@ -161,3 +161,12 @@ console.log('MANUAL_EDITOR_CHECK_OK: snapping, history, pointer cancel, exact Ca
 const warning=editor(raw);warning.id('myntLayoutEdit').click();warning.handle().emit('keydown',{key:'ArrowRight'});
 const event={preventDefault(){this.prevented=true}};for(const fn of warning.globalEvents.get('beforeunload'))fn(event);assert.equal(event.prevented,true);assert.equal(event.returnValue,'');
 warning.id('myntLayoutCancel').click();const clean={preventDefault(){this.prevented=true}};for(const fn of warning.globalEvents.get('beforeunload'))fn(clean);assert.equal(clean.prevented,undefined);
+// Center computes the post-scale, viewport-fitted rectangle, not the old width.
+const precise=source.slice(source.indexOf('    function preciseChange(mode)'),source.indexOf('    function buildToolbar()'));
+for(const scale of [0.5,1.5,2]){
+ const layout={locked:false,blocks:{search:{x:0,y:0,s:1}}};let records=0;
+ const element={getBoundingClientRect(){return {left:100+layout.blocks.search.x*1000,top:100+layout.blocks.search.y*800,width:200*layout.blocks.search.s,height:50*layout.blocks.search.s}}};
+ const c={editing:true,layout,selected:'search',activeDrag:null,innerWidth:1000,innerHeight:800,preciseFields:{x:{value:'100'},y:{value:'100'},s:{value:String(scale*100)}},elementFor:()=>element,currentBlock:()=>({...layout.blocks.search}),applyBlock(){},placeOverlays(){},recordChange(){records++},announce(){throw Error('invalid')},t:(_,v)=>v};
+ vm.createContext(c);vm.runInContext(precise,c);c.preciseChange('center');const r=element.getBoundingClientRect();assert.equal(r.left+r.width/2,500);assert.equal(records,1);
+}
+console.log('PRECISE_CENTER_OK: resizing and centering in one action uses the new rendered width');
