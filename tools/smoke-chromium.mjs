@@ -329,11 +329,11 @@ async function main() {
     }
     assert.equal(mediaReady, true, "Local wallpaper video did not start in visible extension tab");
     const { targetId: otherTabId } = await browserClient.send("Target.createTarget", { url: "about:blank" });
-    async function switchAndObserve(targetId, hidden) {
+    async function switchAndObserve(targetId, hidden, selector="#videoBg") {
         await browserClient.send("Target.activateTarget", { targetId });
         const deadline=Date.now()+5000;
         while(Date.now()<deadline){
-            const state=await evaluate(`({hidden:document.hidden,paused:document.querySelector('#videoBg').paused,time:document.querySelector('#videoBg').currentTime})`);
+            const state=await evaluate(`({hidden:document.hidden,paused:document.querySelector(${JSON.stringify(selector)}).paused,time:document.querySelector(${JSON.stringify(selector)}).currentTime})`);
             if(state.hidden===hidden && (!hidden || state.paused))return state;
             await delay(100);
         }
@@ -351,6 +351,29 @@ async function main() {
     await evaluate(`document.querySelector('#videoBg').pause()`);
     await switchAndObserve(otherTabId,true);await switchAndObserve(newTab.target.id,false);
     assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),true,"Previously paused video unexpectedly resumed");
+    // Import a real bundled MP4 through the gallery file input to exercise Blob/IndexedDB playback.
+    await evaluate(`document.querySelector('#wallpaperGalleryBtn').click()`);
+    await pageClient.send("DOM.enable");
+    const {root:domRoot}=await pageClient.send("DOM.getDocument");
+    const {nodeId:fileNode}=await pageClient.send("DOM.querySelector",{nodeId:domRoot.nodeId,selector:"#wallpaperFileInput"});
+    await pageClient.send("DOM.setFileInputFiles",{nodeId:fileNode,files:[resolve(root,"videos/bg.mp4")]});
+    let galleryReady=false;
+    const galleryDeadline=Date.now()+20000;
+    while(Date.now()<galleryDeadline){
+        galleryReady=await evaluate(`(() => {const v=document.querySelector('#myntGalleryVideo');return document.body.dataset.galleryVideo==='on'&&!!v&&v.readyState>=2&&!v.paused&&v.currentSrc.startsWith('blob:');})()`);
+        if(galleryReady)break;await delay(150);
+    }
+    assert.equal(galleryReady,true,"Imported gallery Blob video did not play");
+    for(let cycle=0;cycle<3;cycle++){
+        const hidden=await switchAndObserve(otherTabId,true,"#myntGalleryVideo");await delay(350);
+        assert.ok(Math.abs(await evaluate(`document.querySelector('#myntGalleryVideo').currentTime`)-hidden.time)<0.05,"Hidden gallery video kept advancing");
+        await switchAndObserve(newTab.target.id,false,"#myntGalleryVideo");await delay(150);
+        assert.equal(await evaluate(`document.querySelector('#myntGalleryVideo').paused`),false,"Gallery video did not resume");
+        assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),true,"Decorative video also resumed behind gallery video");
+    }
+    await evaluate(`document.querySelector('#myntGalleryVideo').pause()`);
+    await switchAndObserve(otherTabId,true,"#myntGalleryVideo");await switchAndObserve(newTab.target.id,false,"#myntGalleryVideo");
+    assert.equal(await evaluate(`document.querySelector('#myntGalleryVideo').paused`),true,"Paused gallery video unexpectedly resumed");
     await browserClient.send("Target.closeTarget", { targetId: otherTabId });
 
     const initial = await evaluate(`(() => ({
@@ -440,6 +463,8 @@ async function main() {
         documentUrl: initial.url,
         title: initial.title,
         defaultShortcuts: initial.shortcutCount,
+        galleryBlobVisibilityCycles: 3,
+        pausedGalleryStaysPaused: true,
         wallpaperVisibilityCycles: 3,
         hiddenWallpaperTimeFrozen: true,
         previouslyPausedWallpaperStaysPaused: true,

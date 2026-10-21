@@ -10,6 +10,7 @@ on:
       - main
       - feature/upstream-full-integration
       - feature/manual-layout-background-colors
+      - feature/browser-runtime-validation
       - feature/daidai-integration
   workflow_dispatch:
 
@@ -108,3 +109,24 @@ jobs:
           command -v xvfb-run
           xvfb-run -a node tools/smoke-chromium.mjs
 
+  firefox:
+    name: Validate Firefox temporary extension
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install official Firefox and Selenium test dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 'https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US' -o "$RUNNER_TEMP/firefox.tar.xz"
+          tar -xf "$RUNNER_TEMP/firefox.tar.xz" -C "$RUNNER_TEMP"
+          echo "FIREFOX_BIN=$RUNNER_TEMP/firefox/firefox" >> "$GITHUB_ENV"
+          python3 -m venv "$RUNNER_TEMP/firefox-test-venv"
+          "$RUNNER_TEMP/firefox-test-venv/bin/pip" install selenium==4.51.0
+      - name: Run real Firefox extension smoke
+        shell: bash
+        run: xvfb-run -a "$RUNNER_TEMP/firefox-test-venv/bin/python" tools/smoke-firefox.py
