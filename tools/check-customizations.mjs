@@ -250,4 +250,17 @@ assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed:
 assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed: false, steps: [{ text: "s", done: true }] }, "", "2026-08-31").steps.length, 1);
 assert.match(read("index.html"), /scripts\/focus-card\.js/);
 assert.doesNotMatch(focusCardCode, /api[_-]?key|fetch\(/i);
+const layoutCode = read("scripts/layout-editor.js");
+const layoutContext = { module: { exports: {} } };
+vm.runInNewContext(layoutCode, layoutContext);
+const layoutApi = layoutContext.module.exports;
+const normLayout = layoutApi.myntNormalizeLayout({ snap: true, blocks: { search: { x: 0.1, y: -0.2, s: 9 }, bogus: { x: 1 }, focus: { x: 0, y: 0, s: 1 } } });
+assert.equal(normLayout.snap, true);
+assert.equal(normLayout.blocks.search.s, 2);
+assert.equal(normLayout.blocks.bogus, undefined);
+assert.equal(normLayout.blocks.focus, undefined);
+assert.equal(JSON.stringify(layoutApi.myntClampOffset({ left: 1200, right: 1400, top: -20, bottom: 30 }, 0, 0, 1280, 800)), JSON.stringify({ x: -124, y: 24 }));
+assert.match(read("index.html"), /id="layoutEditCheckbox"/);
+assert.match(read("index.html"), /scripts\/layout-editor\.js/);
+assert.match(layoutCode, /e\.code === "KeyL"/);
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);

@@ -651,4 +651,12 @@ const zh_TW = {
     "commandFocusHistoryInfo": "近 7 天的今天最重要的事",
     "commandFocusGpt": "用 GPT 拆解今日焦點",
     "commandFocusGptInfo": "開啟 chatgpt.com 並帶入預先寫好的提問",
+    "layoutEditSetting": "編輯版面",
+    "layoutEditSettingInfo": "拖曳移動、拉角落縮放各區塊（Alt+L）",
+    "layoutEditing": "編輯版面中",
+    "layoutSnap": "對齊格線",
+    "layoutReset": "還原預設版面",
+    "layoutResetConfirm": "確定要還原成預設版面嗎？",
+    "layoutDone": "完成",
+    "layoutResizeHint": "拖曳縮放・雙擊還原此區塊",
 };

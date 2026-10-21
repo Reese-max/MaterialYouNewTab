@@ -651,4 +651,12 @@ const en = {
     "commandFocusHistoryInfo": "Last 7 days of today’s focus",
     "commandFocusGpt": "Break down focus with ChatGPT",
     "commandFocusGptInfo": "Opens chatgpt.com with a prepared prompt",
+    "layoutEditSetting": "Edit layout",
+    "layoutEditSettingInfo": "Move and resize blocks (Alt+L)",
+    "layoutEditing": "Editing layout",
+    "layoutSnap": "Snap to grid",
+    "layoutReset": "Reset layout",
+    "layoutResetConfirm": "Restore the default layout?",
+    "layoutDone": "Done",
+    "layoutResizeHint": "Drag to resize · double-click to reset this block",
 };
