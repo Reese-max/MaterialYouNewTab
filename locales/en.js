@@ -327,8 +327,10 @@ const en = {
     "minMaxTempSubText": "Replace 'Feels Like' with minimum and maximum temperature",
 
     // Search
-    "micIconTitle": "Hide Microphone Icon",
+    "micIconTitle": "Hide Microphone Button",
     "micIconInfo": "If voice typing is not working",
+    "aiModeIconTitle": "Hide AI Mode Button",
+    "aiModeIconInfo": "Hide Google AI Mode search button",
     "hideSearchWith": "Hide Search Provider Row",
     "hideSearchWithInfo": "Hide the Google provider row below the search bar",
     "motivationalQuotesText": "Motivational Quotes",

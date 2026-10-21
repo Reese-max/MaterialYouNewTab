@@ -57,9 +57,31 @@ function parseSearchBang(rawQuery) {
     return query ? target.url + encodeURIComponent(query) : target.home;
 }
 
+// Validates strict URLs so they bypass the search engine (upstream #255)
+function getValidUrl(text) {
+    if (!text || text.includes(" ")) return null;
+    const lowerText = text.toLowerCase();
+    let candidate = null;
+    if (lowerText.startsWith("http://") || lowerText.startsWith("https://")) candidate = text;
+    else if (lowerText.startsWith("www.")) candidate = "https://" + text;
+    else return null;
+    try {
+        const parsed = new URL(candidate);
+        return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : null;
+    } catch {
+        return null;
+    }
+}
+
 function performSearch(query) {
     const searchTerm = (query || searchInput.value).trim();
     if (!searchTerm) return;
+
+    const directUrl = getValidUrl(searchTerm);
+    if (directUrl) {
+        window.location.href = directUrl;
+        return;
+    }
 
     const bangUrl = parseSearchBang(searchTerm);
     if (bangUrl) {
@@ -75,6 +97,40 @@ function performSearch(query) {
 }
 
 enterBTN.addEventListener("click", () => performSearch());
+
+// Google AI Mode button (upstream #247). This build always searches with Google,
+// so the button only depends on the user's hide setting.
+const aiModeIcon = document.getElementById("aiModeIcon");
+const aiModeIconCheckbox = document.getElementById("aiModeIconCheckbox");
+
+function performAISearch() {
+    const searchTerm = searchInput.value.trim();
+    window.location.href = searchTerm
+        ? "https://www.google.com/ai?q=" + encodeURIComponent(searchTerm)
+        : "https://www.google.com/ai";
+}
+
+function updateAiModeIconVisibility() {
+    if (!aiModeIcon) return;
+    const show = localStorage.getItem("aiModeIconVisible") !== "false";
+    aiModeIcon.classList.toggle("hidden", !show);
+    aiModeIcon.style.display = "";
+    if (show) aiModeIcon.removeAttribute("tabindex");
+    else aiModeIcon.setAttribute("tabindex", "-1");
+}
+
+aiModeIcon?.addEventListener("click", event => {
+    event.stopPropagation();
+    performAISearch();
+});
+if (aiModeIconCheckbox) {
+    aiModeIconCheckbox.checked = localStorage.getItem("aiModeIconVisible") === "false";
+    aiModeIconCheckbox.addEventListener("change", () => {
+        localStorage.setItem("aiModeIconVisible", String(!aiModeIconCheckbox.checked));
+        updateAiModeIconVisibility();
+    });
+}
+updateAiModeIconVisibility();
 
 function applySearchProviderVisibility(hidden) {
     searchIcons[0].style.display = hidden ? "none" : "block";

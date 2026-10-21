@@ -23,7 +23,7 @@ assert.match(background, /docs\/whats-new\.html/);
 assert.match(background, /Reese-max\/MaterialYouNewTab/);
 assert.doesNotMatch(background, /forms\.gle|prem-k-r/);
 assert.match(whatsNew, /3\.4\.0/);
-assert.match(whatsNew, /e279bb9/);
+assert.match(whatsNew, /51b8e33/);
 
 for (const pattern of [/shortcutIcon/, /uploadCustomIconButton/, /sanitizeSvg/, /setupKeyboardShortcuts/, /show-shortcut-numbers/]) {
     assert.match(shortcuts, pattern);
@@ -107,4 +107,8 @@ assert.match(languages, /sv:\s*typeof sv/);
 assert.match(privacy, /自訂捷徑圖示/);
 assert.match(privacy, /更新與解除安裝頁面/);
 
-console.log("UPSTREAM_INTEGRATION_OK upstream=e279bb9 locales=" + localeCodes.length + " version=" + manifest.version);
+const upstreamSearch = readFileSync(new URL("../scripts/search.js", import.meta.url), "utf8");
+assert.match(upstreamSearch, /function getValidUrl\(/);
+assert.match(upstreamSearch, /google\.com\/ai\?q=/);
+assert.match(readFileSync(new URL("../index.html", import.meta.url), "utf8"), /id="aiModeIcon"[^>]*type="button"/);
+console.log("UPSTREAM_INTEGRATION_OK upstream=51b8e33 locales=" + localeCodes.length + " version=" + manifest.version);

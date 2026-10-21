@@ -225,6 +225,8 @@ function applyLanguage(lang) {
         "hideWeatherBoxInfo",
         "micIconTitle",
         "micIconInfo",
+        "aiModeIconTitle",
+        "aiModeIconInfo",
         "hideSearchWith",
         "hideSearchWithInfo",
         "searchWithHint",

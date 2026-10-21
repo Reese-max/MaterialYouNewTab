@@ -329,6 +329,8 @@ const zh_TW = {
     // Search
     "micIconTitle": "隱藏麥克風圖示",
     "micIconInfo": "如果語音輸入無法使用",
+    "aiModeIconTitle": "隱藏 AI 模式按鈕",
+    "aiModeIconInfo": "隱藏搜尋列上的 Google AI 模式按鈕",
     "hideSearchWith": "隱藏搜尋服務列",
     "hideSearchWithInfo": "隱藏搜尋列下方的 Google 服務列",
     "motivationalQuotesText": "勵志語錄",
