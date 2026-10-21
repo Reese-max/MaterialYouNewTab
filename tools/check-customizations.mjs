@@ -286,6 +286,28 @@ for (const file of ["custom-text.js", "daidai-integration.js", "dashboard-tools.
 }
 assert.match(read("scripts/mynt-dialog.js"), /showModal\(\)/);
 assert.ok(read("index.html").indexOf("scripts/mynt-dialog.js") < read("index.html").indexOf("scripts/custom-text.js"));
+{
+    const examCode = read("scripts/exam-daily.js");
+    const examContext = { module: { exports: {} } };
+    vm.runInNewContext(examCode, examContext);
+    const exam = examContext.module.exports;
+    const ids = exam.myntExamIds();
+    assert.ok(ids.length > 500, "exam pool unexpectedly small");
+    let state = null;
+    const seen = new Set();
+    for (let d = 0; d < ids.length; d++) { state = exam.myntExamPick(state, `day${d}`); seen.add(state.id); }
+    assert.equal(seen.size, ids.length, "exam bag must not repeat before the pool is exhausted");
+    assert.equal(exam.myntExamPick(state, `day${ids.length - 1}`).id, state.id, "same question all day");
+    assert.ok(exam.myntExamUrl(ids[0]).startsWith("https://raw.githubusercontent.com/Reese-max/police-exam-archive/"));
+    const q = exam.myntExamExtract({ year: 110, subject: "警察法規(包括…)", questions: [{ type: "essay", stem: "x" }, { type: "choice", number: 1, stem: "a\nb", options: { A: "1", B: "2" }, answer: "B" }] }, "0.0");
+    assert.equal(q.subject, "警察法規");
+    assert.equal(q.stem, "ab");
+    assert.equal(q.answer, "B");
+    assert.equal((examCode.match(/fetch\(/g) || []).length, 1, "exam-daily must fetch from exactly one place");
+    assert.doesNotMatch(examCode, /api[_-]?key|token/i);
+    assert.match(read("index.html"), /id="examDailyCheckbox"/);
+    assert.match(layoutCode, /\["exam", "#examDaily"/);
+}
 const lazyCode = read("scripts/lazy-loader.js");
 for (const lazy of ["scripts/daidai-integration.js", "scripts/bookmarks.js"]) {
     assert.ok(!html.includes(`src="${lazy}"`), `${lazy} should be lazy-loaded, not eager`);

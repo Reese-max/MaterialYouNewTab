@@ -18,6 +18,7 @@
     <link href="styles/focus-card.css" rel="stylesheet">
     <link href="styles/layout-editor.css" rel="stylesheet">
     <link href="styles/quote-contrast.css" rel="stylesheet">
+    <link href="styles/exam-daily.css" rel="stylesheet">
     <link href="styles/mynt-dialog.css" rel="stylesheet">
     <link href="./favicon/icon48.png" id="favicon" rel="icon" type="image/png">
 
@@ -41,6 +42,7 @@
     <script defer src="scripts/weather.js"></script>
     <script defer src="scripts/custom-text.js"></script>
     <script defer src="scripts/focus-card.js"></script>
+    <script defer src="scripts/exam-daily.js"></script>
     <script defer src="scripts/layout-editor.js"></script>
     <script defer src="scripts/search.js"></script>
     <script defer src="scripts/quotes.js"></script>
@@ -1387,6 +1389,16 @@
                                     </div>
                                     <div class="ttcont">
                                         <div class="texts">
+                                            <div class="bigText" id="examDailySettingText">今日考古題</div>
+                                            <div class="infoText" id="examDailySettingInfo">新分頁左下角每天一題資管組考古題，點開作答</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="examDailyCheckbox" type="checkbox" checked>
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div>
+                                    <div class="ttcont">
+                                        <div class="texts">
                                             <div class="bigText" id="examDateText">Exam date</div>
                                             <div class="infoText" id="examDateInfo">Optional: show days left next to the encouragement line</div>
                                         </div>
@@ -2395,6 +2407,19 @@
         <button id="daidaiActionUndoBtn" type="button">Undo</button>
     </div>
 
+    <div id="examDaily" class="examDaily" hidden>
+        <button id="examDailyChip" class="examDailyChip" type="button" aria-expanded="false" aria-controls="examDailyPanel"><span aria-hidden="true">📝</span><span id="examDailyChipText">今日考古題</span></button>
+        <section id="examDailyPanel" class="examDailyPanel" hidden aria-labelledby="examDailyChipText">
+            <div id="examDailyMeta" class="examDailyMeta"></div>
+            <p id="examDailyStem" class="examDailyStem"></p>
+            <ol id="examDailyOptions" class="examDailyOptions"></ol>
+            <div class="examDailyFooter">
+                <button id="examDailyReveal" class="examDailyReveal" type="button" hidden>看答案</button>
+                <span id="examDailyAnswer" class="examDailyAnswer" role="status" hidden></span>
+                <a id="examDailySource" class="examDailySource" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener">出處：警察特考考古題 ↗</a>
+            </div>
+        </section>
+    </div>
     <div id="studyQuote" class="studyQuote" hidden>
         <button id="studyQuoteText" class="studyQuoteText" type="button"><span id="studyQuoteBody" class="studyQuoteBody"></span><span id="studyQuoteSource" class="studyQuoteSource"></span></button>
         <span id="studyQuoteExam" class="studyQuoteExam" hidden></span>

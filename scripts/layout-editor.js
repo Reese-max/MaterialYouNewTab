@@ -11,6 +11,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["aiTools", "#aiToolsCont", "AI 工具", "AI tools"],
     ["shortcuts", "#shortcutsContainer", "捷徑", "Shortcuts"],
     ["quote", "#studyQuote", "鼓勵語", "Quote"],
+    ["exam", "#examDaily", "今日考古題", "Daily exam"],
     ["pomodoro", "#pomodoroCont", "番茄鐘", "Pomodoro"],
     ["scratchpad", "#scratchpadCont", "便籤", "Scratchpad"],
     ["bookmarks", "#bookmarkButton", "書籤", "Bookmarks"],
