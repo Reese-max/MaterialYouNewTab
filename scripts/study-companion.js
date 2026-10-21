@@ -123,6 +123,7 @@
         toastTimer = setTimeout(() => { toast.hidden = true; }, 7000);
     }
     function openPomodoro() {
+        if (window.myntPomodoro) return window.myntPomodoro.open();
         const cb = $("pomodoroCheckbox");
         if (cb && !cb.checked) cb.click();
         const panel = $("pomodoroPanel");

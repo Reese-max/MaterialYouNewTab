@@ -263,4 +263,6 @@ assert.equal(JSON.stringify(layoutApi.myntClampOffset({ left: 1200, right: 1400,
 assert.match(read("index.html"), /id="layoutEditCheckbox"/);
 assert.match(read("index.html"), /scripts\/layout-editor\.js/);
 assert.match(layoutCode, /e\.code === "KeyL"/);
+assert.match(read("scripts/pomodoro.js"), /window\.myntPomodoro = \{[\s\S]*if \(!panelOpen\) openPanel\(\)/);
+assert.match(read("scripts/focus-card.js"), /dailyFocusPlayBtn"\)\.addEventListener\("click", event => \{[\s\S]{0,160}event\.stopPropagation\(\)/);
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);

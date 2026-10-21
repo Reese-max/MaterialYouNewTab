@@ -219,13 +219,14 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     more.addEventListener("click", () => setPanel(panel.hidden));
     $("dailyFocusGptBtn").addEventListener("click", openGpt);
-    $("dailyFocusPlayBtn").addEventListener("click", () => {
+    $("dailyFocusPlayBtn").addEventListener("click", event => {
+        // Stop the document-level "click outside closes Pomodoro" handler from closing the panel we open.
+        event.stopPropagation();
         const focus = api.get();
         if (!focus.text) return flash(t("dailyFocusNeedText", "Write today’s focus first."));
         api.update({ linked: true });
-        window.myntStudy?.openPomodoro?.();
-        const start = $("pomodoroStartBtn");
-        if (start && start.style.display !== "none") setTimeout(() => start.click(), 50);
+        if (window.myntPomodoro) window.myntPomodoro.start();
+        else window.myntStudy?.openPomodoro?.();
     });
     stepInput.addEventListener("keydown", event => {
         if (event.key !== "Enter" || event.isComposing) return;

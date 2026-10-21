@@ -967,5 +967,22 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
+        // Programmatic API (used by the focus card): never toggles an open panel closed.
+        window.myntPomodoro = {
+            open() {
+                if (!pomodoroCheckbox.checked) {
+                    pomodoroCheckbox.checked = true;
+                    pomodoroCheckbox.dispatchEvent(new Event("change"));
+                }
+                if (!panelOpen) openPanel();
+            },
+            start() {
+                this.open();
+                if (!pomodoroState.isRunning) startPomodoro();
+            },
+            isOpen: () => panelOpen,
+            isRunning: () => pomodoroState.isRunning === true
+        };
+
         initPomodoro();
 });
