@@ -7,11 +7,26 @@
 
 const MYNT_EXAM_BASE = "https://raw.githubusercontent.com/Reese-max/police-exam-archive/master/%E8%80%83%E5%8F%A4%E9%A1%8C%E5%BA%AB/%E8%B3%87%E8%A8%8A%E7%AE%A1%E7%90%86/";
 const MYNT_EXAM_SITE = "https://reese-max.github.io/police-exam-archive/";
-// [path under 考古題庫/資訊管理, number of multiple-choice questions]; generated from the repo tree.
-const MYNT_EXAM_INDEX = [["106年/中華民國憲法與警察專業英文", 60], ["106年/國文（作文、公文與測驗）", 10], ["106年/警察情境實務（包括警察法規、實務操作標準作業程序、人權保障與正當法律程序）", 20], ["106年/警察法規（包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法）", 25], ["107年/中華民國憲法與警察專業英文", 60], ["107年/國文（作文、公文與測驗）", 10], ["107年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["107年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25], ["108年/中華民國憲法與警察專業英文", 60], ["108年/國文（作文、公文與測驗）", 10], ["108年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["108年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25], ["109年/中華民國憲法與警察專業英文", 60], ["109年/國文（作文、公文與測驗）", 10], ["109年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["109年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25], ["110年/中華民國憲法與警察專業英文", 60], ["110年/國文(作文、公文與測驗)", 10], ["110年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["110年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25], ["111年/中華民國憲法與警察專業英文", 60], ["111年/國文（作文、公文與測驗）", 10], ["111年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["111年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25], ["112年/中華民國憲法與警察專業英文", 60], ["112年/國文(作文與測驗)", 10], ["112年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["112年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25], ["113年/中華民國憲法與警察專業英文", 60], ["113年/國文(作文與測驗)", 10], ["113年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["113年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25], ["114年/中華民國憲法與警察專業英文", 60], ["114年/國文(作文與測驗)", 10], ["114年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)", 20], ["114年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)", 25]];
+// [path under 考古題庫/資訊管理, indices of usable multiple-choice questions]; generated from the repo,
+// already excluding questions that fail myntExamNeedsContext (passage/figure/previous-question references).
+const MYNT_EXAM_INDEX = [["106年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56]],["106年/國文（作文、公文與測驗）",[0,1,2,3,4,5,6,7,8,9]],["106年/警察情境實務（包括警察法規、實務操作標準作業程序、人權保障與正當法律程序）",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["106年/警察法規（包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法）",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["107年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,52,53,55,56,57,58,59]],["107年/國文（作文、公文與測驗）",[0,1,2,3,4,5,6,7,8,9]],["107年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["107年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["108年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,58]],["108年/國文（作文、公文與測驗）",[0,1,2,4,5,6,7,8,9]],["108年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["108年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["109年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]],["109年/國文（作文、公文與測驗）",[0,1,2,3,4,5,6,7,8,9]],["109年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["109年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["110年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,58]],["110年/國文(作文、公文與測驗)",[0,1,2,3,4,5,6,7,8,9]],["110年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["110年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["111年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57]],["111年/國文（作文、公文與測驗）",[0,1,2,3,4,5,6,7,8]],["111年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["111年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["112年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,58]],["112年/國文(作文與測驗)",[0,1,2,3,4,5,6,7,8,9]],["112年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["112年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["113年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56]],["113年/國文(作文與測驗)",[0,1,2,3,4,5,6,7,8,9]],["113年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["113年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]],["114年/中華民國憲法與警察專業英文",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,56,57]],["114年/國文(作文與測驗)",[0,1,2,3,4,5,6,7,8,9]],["114年/警察情境實務(包括警察法規、實務操作標準作業程序、人權保障與正當法律程序)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]],["114年/警察法規(包括警察法、行政執行法、社會秩序維護法、警械使用條例、集會遊行法、警察職權行使法、公務人員行政中立法)",[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]]];
+
+// Rule: drop questions that only make sense with material not in the data —
+// a figure/table, a reading passage (English), a short 「依上文」 stem without the quoted text, or 「承上題」.
+function myntExamNeedsContext(q) {
+    const stem = String(q?.stem || "");
+    const all = `${stem} ${Object.values(q?.options || {}).join(" ")}`;
+    if (/如圖|附圖|下圖|上圖|右圖|左圖|如下表|附表|[上下]表(?:所|中|列|之)/.test(all)) return true;
+    if (/passage|paragraph|article|the author|the writer|the text\b|the reading|the dialogue|the conversation/i.test(all) && stem.length < 300) return true;
+    if (/承上題|承前題/.test(stem)) return true;
+    if (/上文|下文|短文/.test(stem) && stem.length < 80 && !/[「『]/.test(stem)) return true;
+    return false;
+}
+
+const myntExamChoices = data => (data?.questions || []).filter(q => q?.type === "choice" && q.options && typeof q.options === "object" && Object.keys(q.options).length >= 2 && q.stem);
 
 function myntExamIds(index = MYNT_EXAM_INDEX) {
-    return index.flatMap(([, count], f) => Array.from({ length: count }, (_, k) => `${f}.${k}`));
+    return index.flatMap(([, ks], f) => (Array.isArray(ks) ? ks : []).map(k => `${f}.${k}`));
 }
 
 function myntExamShuffle(list, random = Math.random) {
@@ -41,9 +56,8 @@ function myntExamUrl(id, index = MYNT_EXAM_INDEX) {
 
 function myntExamExtract(data, id, index = MYNT_EXAM_INDEX) {
     const [f, k] = String(id).split(".").map(Number);
-    const choices = (data?.questions || []).filter(q => q?.type === "choice" && q.options && typeof q.options === "object" && q.stem);
-    const q = choices[k];
-    if (!q) return null;
+    const q = myntExamChoices(data)[k];
+    if (!q || myntExamNeedsContext(q)) return null;
     const subject = String(data.subject || index[f]?.[0]?.split("/")[1] || "").split(/[（(]/)[0].slice(0, 30);
     const options = Object.entries(q.options).slice(0, 6).map(([key, text]) => [String(key).slice(0, 2), String(text).slice(0, 300)]);
     return {
@@ -54,7 +68,7 @@ function myntExamExtract(data, id, index = MYNT_EXAM_INDEX) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { MYNT_EXAM_BASE, MYNT_EXAM_INDEX, myntExamIds, myntExamShuffle, myntExamPick, myntExamUrl, myntExamExtract };
+    module.exports = { myntExamNeedsContext, MYNT_EXAM_BASE, MYNT_EXAM_INDEX, myntExamIds, myntExamShuffle, myntExamPick, myntExamUrl, myntExamExtract };
 }
 
 if (typeof document !== "undefined") (function () {
@@ -121,27 +135,44 @@ if (typeof document !== "undefined") (function () {
             $("examDailyReveal").hidden = true;
         }
 
+        const validIds = new Set(myntExamIds());
+        // A cached question is usable only if it is still in the (filtered) pool.
+        const usable = q => !!(q?.stem && validIds.has(q.id) && !myntExamNeedsContext({ stem: q.stem, options: Object.fromEntries(q.options || []) }));
+        function todayCache() {
+            const cached = read(CACHE_KEY);
+            if (cached?.date !== todayKey()) return null;
+            if (usable(cached)) return cached;
+            localStorage.removeItem(CACHE_KEY);
+            return null;
+        }
+
         async function load() {
             const today = todayKey();
-            const cached = read(CACHE_KEY);
-            if (cached?.date === today && cached.stem) return cached;
-            const state = myntExamPick(read(STATE_KEY), today);
-            localStorage.setItem(STATE_KEY, JSON.stringify(state));
-            const url = myntExamUrl(state.id);
-            if (!url.startsWith(MYNT_EXAM_BASE)) throw new Error("bad url");
-            const res = await fetch(url, { credentials: "omit", cache: "force-cache" });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const q = myntExamExtract(await res.json(), state.id);
-            if (!q) throw new Error("no question");
-            const value = { ...q, date: today };
-            localStorage.setItem(CACHE_KEY, JSON.stringify(value));
-            return value;
+            const cached = todayCache();
+            if (cached) return cached;
+            let state = myntExamPick(read(STATE_KEY), today);
+            for (let attempt = 0; attempt < 5; attempt++) {
+                localStorage.setItem(STATE_KEY, JSON.stringify(state));
+                const url = myntExamUrl(state.id);
+                if (!url.startsWith(MYNT_EXAM_BASE)) throw new Error("bad url");
+                const res = await fetch(url, { credentials: "omit", cache: "force-cache" });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const q = myntExamExtract(await res.json(), state.id);
+                if (q) {
+                    const value = { ...q, date: today };
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(value));
+                    return value;
+                }
+                // Excluded or changed upstream: move on to the next question in the bag.
+                state = myntExamPick({ ...state, date: "" }, today);
+            }
+            throw new Error("no question");
         }
 
         function ensure() {
             if (!loading) loading = load().then(q => { render(q); return q; }, () => {
-                const old = read(CACHE_KEY);
-                render(old?.stem ? old : null, !old?.stem);
+                const old = todayCache();
+                render(old, !old);
                 loading = null;
                 return null;
             });
@@ -152,7 +183,7 @@ if (typeof document !== "undefined") (function () {
             panel.hidden = !open;
             chip.setAttribute("aria-expanded", String(open));
             root.classList.toggle("is-open", open);
-            if (open) { render(read(CACHE_KEY)?.date === todayKey() ? read(CACHE_KEY) : null); ensure(); }
+            if (open) { render(todayCache()); ensure(); }
         }
 
         function applyVisible() {

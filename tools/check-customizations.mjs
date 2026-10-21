@@ -307,6 +307,13 @@ assert.ok(read("index.html").indexOf("scripts/mynt-dialog.js") < read("index.htm
     assert.doesNotMatch(examCode, /api[_-]?key|token/i);
     assert.match(read("index.html"), /id="examDailyCheckbox"/);
     assert.match(layoutCode, /\["exam", "#examDaily"/);
+    assert.ok(exam.MYNT_EXAM_INDEX.every(([path, ks]) => typeof path === "string" && Array.isArray(ks) && ks.length), "exam index lists usable question indices");
+    const needs = q => exam.myntExamNeedsContext({ stem: q, options: { A: "x", B: "y" } });
+    for (const q of ["According to the passage, which is true?", "What is the main idea of this paragraph?", "如圖所示，下列何者正確？", "承上題，下列敘述何者正確？", "依上文，作者的意思是："]) assert.ok(needs(q), `should exclude: ${q}`);
+    for (const q of ["依憲法本文規定，下列何者正確？", "「君子之事上也。」下列選項最合乎上文意旨的是：", "下列何者為警察職權行使法之規定？"]) assert.ok(!needs(q), `should keep: ${q}`);
+    assert.equal(exam.myntExamExtract({ questions: [{ type: "choice", stem: "According to the passage, what?", options: { A: "1", B: "2" }, answer: "A" }] }, "0.0"), null);
+    const stale = exam.myntExamPick({ date: "old", id: "999.0", bag: ["999.1", ids[3]] }, "new");
+    assert.equal(stale.id, ids[3], "ids no longer in the filtered pool are skipped");
 }
 const lazyCode = read("scripts/lazy-loader.js");
 for (const lazy of ["scripts/daidai-integration.js", "scripts/bookmarks.js"]) {
