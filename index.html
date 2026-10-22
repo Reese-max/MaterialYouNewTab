@@ -53,7 +53,14 @@
     <script defer src="scripts/search-suggestions.js"></script>
     <script defer src="scripts/ai-tools.js"></script>
     <script defer src="scripts/todo-list.js"></script>
+    <script defer src="scripts/pomodoro-timer-core.js"></script>
     <script defer src="scripts/pomodoro.js"></script>
+    <script defer src="scripts/pomodoro-float.js"></script>
+    <script defer src="scripts/pomodoro-music.js"></script>
+    <script defer src="scripts/pomodoro-studio.js"></script>
+    <link href="styles/pomodoro-studio.css" rel="stylesheet">
+    <link href="styles/pomodoro-float.css" rel="stylesheet">
+    <link href="styles/pomodoro-music.css" rel="stylesheet">
     <script defer src="scripts/bongocat.js"></script>
     <script defer src="scripts/google-apps.js"></script>
     <script defer src="scripts/voice-search.js"></script>
@@ -186,6 +193,9 @@
             </select>
             <input type="range" id="pomodoroAmbientVol" class="pomodoroAmbientVol" min="0" max="1" step="0.05" value="0.5" aria-label="Ambient Sound Volume">
         </div>
+        <div id="myntPomoFloatMount"></div>
+        <div id="myntPomoStudioMount"></div>
+        <div id="myntPomoExtras" hidden><div id="myntPomoMusicMount"></div></div>
         <div class="pomodoroSessionsToday">
             <span id="pomodoroSessionsLabel">Today</span>: <span id="pomodoroSessionsCount">0</span>
         </div>

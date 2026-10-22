@@ -88,7 +88,7 @@ const todoCode = read("scripts/todo-list.js");
 assert.match(pomodoroCode, /mynt:pomodoro-complete/);
 assert.match(
     pomodoroCode,
-    /function startPomodoro\(\) \{\s*if \(pomodoroState\.isRunning\) return;\s*pomodoroState\.isRunning = true;/,
+    /function startPomodoro\(\) \{ return timer\.start\(\); \}/,
     "Pomodoro must start without a Today task"
 );
 assert.doesNotMatch(pomodoroCode, /myntFocusTask|mynt:focus-task-required|mynt:pomodoro-start-task/);

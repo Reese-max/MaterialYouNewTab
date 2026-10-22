@@ -11,6 +11,7 @@ const BACKUP_FORMAT = "material-you-newtab";
 const BACKUP_VERSION = 2;
 const MAX_BACKUP_FILE_SIZE = 32 * 1024 * 1024;
 const SENSITIVE_LOCAL_STORAGE_KEYS = new Set(["weatherApiKey"]);
+const TRANSIENT_LOCAL_STORAGE_KEYS = new Set(["myntPomoMusicOwnerV1"]);
 const INDEXED_DB_KEYS = new Set(["backgroundImage", "lastUpdateTime", "imageType"]);
 
 const backupButton = document.getElementById("backupBtn");
@@ -38,7 +39,7 @@ function isPlainRecord(value) {
 function snapshotLocalStorage({ includeSensitive = true } = {}) {
     const snapshot = {};
     Object.keys(localStorage).forEach((key) => {
-        if (includeSensitive || !SENSITIVE_LOCAL_STORAGE_KEYS.has(key)) {
+        if (includeSensitive || (!SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key))) {
             snapshot[key] = localStorage.getItem(key);
         }
     });
@@ -271,7 +272,7 @@ async function validateAndRestoreData(event) {
 const resetButton = document.getElementById("resetsettings");
 
 resetButton.addEventListener("click", async () => {
-    if (!(await confirmPrompt(getTranslatedText("confirmRestore")))) return;
+    if (!(await confirmPrompt(getTranslatedText("confirmRestore") + "\n\n" + getTranslatedText("resetKeepsPomodoroMedia")))) return;
 
     resetButton.disabled = true;
     try {

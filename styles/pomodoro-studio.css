@@ -1,0 +1,36 @@
+/* Preserve the original timer card; advanced tools stay behind one disclosure. */
+#pomodoroPanel {min-width:min(240px,var(--pomo-viewport-width,240px));max-width:min(280px,var(--pomo-viewport-width,280px));max-height:min(calc(100dvh - 105px),var(--pomo-viewport-height,100dvh));overflow-y:auto;scrollbar-width:thin;scrollbar-color:#ffffff44 transparent;}
+#pomodoroPanel [hidden] {display:none!important;}
+#myntPomoStudioMount,#myntPomoExtras,#myntPomoFloatMount {position:relative;z-index:1;}
+#myntPomoFloatMount {margin-top:4px;overflow:visible;max-height:none;}
+#myntPomoFloatMount > button {width:100%;min-height:44px;border-radius:24px;border:1px solid #ffffff38;background:#ffffff19;color:#fff;font:inherit;font-size:12px;letter-spacing:.02em;}
+.pomoStudioRow {display:flex;gap:8px;justify-content:center;margin:8px 0 12px;}
+#myntPomoStudioMount button {flex:1;min-height:44px;border:0;border-radius:22px;background:#ffffff12;color:#fff;padding:8px 10px;font:inherit;font-size:12px;cursor:pointer;}
+#myntPomoStudioMount button:hover,#myntPomoFloatMount > button:hover {background:#ffffff29;}
+#myntPomoExtras {text-align:start;margin:12px -2px 8px;padding:8px 12px;border-radius:20px;background:rgba(12,20,27,.64);color:#fff;}
+#myntPomoExtras > details,#myntPomoExtras .pomoStudioScenarios {border-bottom:1px solid #ffffff24;}
+#myntPomoExtras summary {display:list-item;min-height:44px;box-sizing:border-box;padding:12px 0;cursor:pointer;font-size:12px;font-weight:600;}
+#myntPomoExtras details[open] {padding-bottom:12px;}
+#myntPomoExtras .mynt-pomo-music {border:0;padding:0;margin:0;border-radius:0;}
+#myntPomoExtras label {display:grid;gap:6px;font-size:12px;margin:10px 0;}
+#myntPomoExtras button,#myntPomoExtras input,#myntPomoExtras select {box-sizing:border-box;font:inherit;font-size:12px;min-height:44px;max-width:100%;color:#fff;}
+#myntPomoExtras button {border:1px solid #ffffff30;border-radius:14px;background:#ffffff12;padding:8px 10px;cursor:pointer;}
+#myntPomoExtras input:not([type=range]):not([type=checkbox]),#myntPomoExtras select {width:100%;min-width:0;border:1px solid #ffffff40;border-radius:12px;padding:8px;background:rgba(0,0,0,.18);}
+#myntPomoExtras select option {background:#25313c;color:#fff;}
+#myntPomoExtras input[type=range] {width:100%;accent-color:var(--bg-color-blue,#bbd6fd);}
+#myntPomoExtras input[type=file] {font-size:11px;}
+#myntPomoExtras .pomodoroAmbientRow {flex-wrap:wrap;margin:0;}
+#myntPomoExtras .pomodoroAmbientSelect {flex:1;}
+.pomoStudioSettings {display:grid;gap:6px;padding-top:8px;}
+.pomoStudioScenarios > button {width:100%;margin-top:8px;}
+.pomoStudioStatus,.pomoStudioNote,#myntPomoExtras > .mynt-pomo-note {font-size:11px;line-height:1.6;overflow-wrap:anywhere;color:#ffffffc9;text-shadow:0 1px 3px #0005;}
+.pomoStudioStatus:empty {display:none;}
+#pomodoroPanel :focus-visible {outline:2px solid #fff;outline-offset:3px;}
+#pomodoroPanel .pomodoroResetBtn {width:44px;height:44px;}
+#pomodoroPanel #pomodoroStatsBtn {min-height:36px;}
+@media(max-width:480px){#pomodoroPanel{min-width:0;box-sizing:border-box;width:280px;max-width:min(calc(100vw - 30px),var(--pomo-viewport-width,100vw));max-height:min(calc(100dvh - 100px),var(--pomo-viewport-height,100dvh));}}
+@media(prefers-reduced-motion:reduce){#pomodoroPanel *{animation:none!important;transition:none!important;}}
+.reduced-motion #pomodoroPanel *{animation:none!important;transition:none!important;}
+@media(forced-colors:active){#myntPomoExtras{background:Canvas;color:CanvasText;}#myntPomoExtras button,#myntPomoStudioMount button{border:1px solid ButtonText;}}
+/* The open timer is a temporary overlay, never a saved layout change. */
+body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}

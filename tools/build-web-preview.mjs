@@ -13,6 +13,7 @@ const runtimePaths = [
     "images",
     "locales",
     "scripts",
+    "styles",
     "svgs",
     "videos",
     "docs",

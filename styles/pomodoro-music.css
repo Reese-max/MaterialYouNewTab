@@ -1,0 +1,14 @@
+.mynt-pomo-music { margin-block: 10px; padding: 10px; border: 1px solid currentColor; border-radius: 14px; font-size: .85rem; text-align: start; }
+.mynt-pomo-music summary { cursor: pointer; font-weight: 600; }
+.mynt-pomo-music p { margin-block: 8px; line-height: 1.5; overflow-wrap: anywhere; }
+.mynt-pomo-music label { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-block: 8px; }
+.mynt-pomo-music input[type=file] { width: 100%; min-width: 0; font: inherit; }
+.mynt-pomo-music select { max-width: 100%; font: inherit; color: var(--textColorDark-blue, #1b3041); background: var(--bg-color-blue, #bbd6fd); border: 1px solid currentColor; border-radius: 8px; padding: 5px; }
+.mynt-pomo-music ol { padding-inline-start: 0; max-height: 180px; overflow-y: auto; list-style: none; }
+.mynt-pomo-music li, .mynt-music-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-block: 6px; }
+.mynt-pomo-music button { color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 8px; padding: 6px 8px; min-height: 32px; font: inherit; cursor: pointer; }
+.mynt-pomo-music button:disabled { opacity: .45; cursor: default; }
+.mynt-pomo-music .mynt-music-track { flex: 1 1 100%; text-align: start; overflow-wrap: anywhere; }
+.mynt-pomo-music .mynt-music-track[aria-pressed=true] { font-weight: 700; border-width: 2px; }
+.mynt-pomo-music :focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.mynt-pomo-music [hidden] { display: none !important; }
