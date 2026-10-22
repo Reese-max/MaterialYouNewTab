@@ -62,7 +62,7 @@ for(const pixel of fixtures){
   combinations++;
  }
 }
-assert.match(source,/new MutationObserver\(\(\)=>\{if\(palette&&!config\.opacity\)applyPalette\(palette,false\);\}\)\.observe\(document\.documentElement,\{attributes:true,attributeFilter:\['style'\]\}\)/,'Existing slider updates trigger a palette refresh');
+assert.match(source,/new MutationObserver\(\(\)=>\{checkSource\(\);if\(palette&&!config\.opacity\)applyPalette\(palette,false\);\}\)\.observe\(document\.documentElement,\{attributes:true,attributeFilter:\['style'\]\}\)/,'Existing slider updates trigger a palette refresh');
 const css=fs.readFileSync('styles/adaptive-background.css','utf8');
 assert.doesNotMatch(css,/\.reduced-motion|mynt-adaptive-dashboard/);
 assert.match(css,/html\.myntReducedMotion/);
@@ -71,3 +71,11 @@ const highContrast=css.match(/html\.myntHighContrast body\s*\{([^}]*)\}/)?.[1]||
 for(const [key,value] of [['surface','Canvas'],['text','CanvasText'],['accent','LinkText'],['accent-text','Canvas']])assert.match(highContrast,new RegExp(`--adaptive-${key}: ${value} !important`),'High contrast must override sampled inline custom properties');
 assert.match(css,/html\.myntHighContrast #myntAdaptivePanel \.adaptiveContent\s*\{[^}]*background: Canvas !important; color: CanvasText !important;/);
 console.log(`ADAPTIVE_APPEARANCE_OK: ${combinations} palette/toggle combinations, actual-surface contrast, manual slider, smooth updates, and accessibility CSS`);
+// Execute panel-local Escape listener and root observer rather than just matching source.
+let escape;const panel={open:true,addEventListener(type,fn){escape=fn}};let stopped=0,focused=0;
+vm.runInNewContext(source.match(/    panel.addEventListener\('keydown'.*?\n/)[0],{panel,summary:{focus(){focused++}}});
+escape({key:'Escape',stopPropagation(){stopped++}});assert.equal(panel.open,false);assert.equal(stopped,1);assert.equal(focused,1);
+let observer,checked=0,reapplied=0;
+vm.runInNewContext(source.match(/    new MutationObserver\(\(\)=>\{checkSource\(\);.*?\n/)[0],{MutationObserver:class{constructor(fn){observer=fn}observe(){}},document:{documentElement:{}},checkSource(){checked++},palette:{},config:{opacity:true},applyPalette(){reapplied++}});
+observer();assert.equal(checked,1);assert.equal(reapplied,0);
+console.log('ADAPTIVE_INTERACTIONS_OK: Escape stays inside panel and root theme changes check the source even with adaptive opacity');
