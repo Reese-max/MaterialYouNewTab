@@ -12,7 +12,7 @@ function normalizePreset(value){
  return {name:value.name.trim(),durations,appearance:safe(value.appearance),music:safe(value.music)};
 }
 function parse(raw){if(raw===null)return [];const v=JSON.parse(raw);if(!plain(v)||v.version!==1||!Array.isArray(v.presets)||v.presets.length>8)throw Error('invalid');return v.presets.map(normalizePreset);}
-const builtin=[normalizePreset({name:'25 / 5',durations:{workMinutes:25,shortBreakMinutes:5,longBreakMinutes:15,roundsBeforeLong:4},appearance:{mode:'gradient'},music:{}}),normalizePreset({name:'50 / 10',durations:{workMinutes:50,shortBreakMinutes:10,longBreakMinutes:20,roundsBeforeLong:4},appearance:{mode:'color',color:'#203146'},music:{}})];
+const builtin=[normalizePreset({name:'25 / 5',durations:{workMinutes:25,shortBreakMinutes:5,longBreakMinutes:15,roundsBeforeLong:4},appearance:{mode:'original'},music:{}}),normalizePreset({name:'50 / 10',durations:{workMinutes:50,shortBreakMinutes:10,longBreakMinutes:20,roundsBeforeLong:4},appearance:{mode:'original'},music:{}})];
 if(typeof module!=='undefined')module.exports={normalizePreset,parse,builtin};
 if(typeof document==='undefined')return;
 document.addEventListener('DOMContentLoaded',()=>{
@@ -22,9 +22,14 @@ document.addEventListener('DOMContentLoaded',()=>{
  const status=el('p');status.className='pomoStudioStatus';status.setAttribute('role','status');
  let presets=[],raw=null,invalid=false,busy=false;
  try{raw=localStorage.getItem(KEY);presets=parse(raw);}catch{invalid=true;status.textContent=t('pomoStudioStorage','設定無法讀取；原資料保留，本次仍可使用內建情境。');}
- const mode=el('button',t('pomoStudioFull','完整設定'));mode.type='button';mode.setAttribute('aria-expanded','false');
+ const mode=el('button',t('pomoStudioFull','完整設定'));mode.type='button';mode.setAttribute('aria-expanded','false');mode.setAttribute('aria-controls','myntPomoExtras');
  const extras=document.querySelector('#myntPomoExtras');let full=false;try{full=localStorage.getItem(MODE)==='full';}catch{}
- const setMode=()=>{extras.hidden=!full;mode.textContent=t(full?'pomoStudioSimple':'pomoStudioFull',full?'簡潔模式':'完整設定');mode.setAttribute('aria-expanded',String(full));};setMode();mode.onclick=()=>{full=!full;setMode();try{localStorage.setItem(MODE,full?'full':'simple');}catch{status.textContent=t('pomoStudioStorage','設定無法保存。');}};
+ const setMode=()=>{extras.hidden=!full;panel.classList.toggle('pomoStudioExpanded',full);mode.textContent=t(full?'pomoStudioSimple':'pomoStudioFull',full?'簡潔模式':'完整設定');mode.setAttribute('aria-expanded',String(full));};setMode();mode.onclick=()=>{full=!full;setMode();try{localStorage.setItem(MODE,full?'full':'simple');}catch{status.textContent=t('pomoStudioStorage','設定無法保存。');}};
+ extras.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();full=false;setMode();mode.focus();try{localStorage.setItem(MODE,'simple');}catch{}}});
+ const floatMount=document.querySelector('#myntPomoFloatMount');
+ const appearance=floatMount?.querySelector('details'),popup=floatMount?.querySelectorAll(':scope > button')[1],floatStatus=floatMount?.querySelector(':scope > .mynt-pomo-note');
+ if(appearance)extras.prepend(appearance);if(popup)extras.append(popup);if(floatStatus)extras.append(floatStatus);
+ const ambient=document.querySelector('#pomodoroAmbientRow');if(ambient){const group=el('details');group.className='pomoStudioAmbient';group.append(el('summary',t('pomoStudioAmbient','環境音')),ambient);extras.append(group);}
  const extend=el('button',t('pomoStudioExtend','＋5 分鐘'));extend.type='button';extend.onclick=()=>run(()=>root.myntPomodoro?.extend(5));
  const row=el('div');row.className='pomoStudioRow';row.append(extend,mode);mount.append(row,status);
  const settings=el('section');settings.className='pomoStudioSettings';
@@ -54,7 +59,8 @@ document.addEventListener('DOMContentLoaded',()=>{
  undo.onclick=()=>run(()=>{if(!deleted)return;if(invalid||presets.length>=8||localStorage.getItem(KEY)!==raw)throw Error('conflict');const nextPresets=[...presets];nextPresets.splice(Math.min(deleted.index,presets.length),0,deleted.preset);const next=JSON.stringify({version:1,presets:nextPresets});localStorage.setItem(KEY,next);raw=next;presets=nextPresets;deleted=null;undo.hidden=true;render();status.textContent=t('pomoStudioSaved','已保存情境（僅此瀏覽器）。');});
  const alarmLabel=el('label',t('pomoStudioAlarm','結束提示音音量'));const alarm=el('input');alarm.type='range';alarm.min='0';alarm.max='1';alarm.step='.05';try{const x=Number(localStorage.getItem('myntPomoAlarmVolume')??'.5');alarm.value=Number.isFinite(x)?String(Math.max(0,Math.min(1,x))):'.5';}catch{alarm.value='.5';}alarmLabel.append(alarm);alarm.onchange=()=>{try{localStorage.setItem('myntPomoAlarmVolume',alarm.value);}catch{status.textContent=t('pomoStudioStorage','設定無法保存。');}};
  const limits=el('p',t('pomoStudioLimit','關閉瀏覽器或裝置休眠時，不保證準時提示。小窗關閉不會取消計時；音樂與圖片只保存在此瀏覽器，不會上傳。'));limits.className='pomoStudioNote';
- settings.append(taskLabel,selectLabel,apply,name,save,remove,undo,alarmLabel,limits);extras.prepend(settings);
+ const scenarios=el('details');scenarios.className='pomoStudioScenarios';scenarios.append(el('summary',t('pomoStudioScenario','情境預設')),selectLabel,apply,name,save,remove,undo);
+ settings.append(taskLabel,scenarios,alarmLabel,limits);extras.append(settings);
  let connected=false;const connect=()=>{const api=root.myntPomodoro;if(!api||connected)return;connected=true;api.subscribe(s=>{if(document.activeElement!==task)task.value=s.task||'';if(s.safetyStatus&&s.safetyStatus!=='ready')status.textContent=t('pomoStudioSafety','跨分頁協調或儲存無法使用；為避免重複，暫停完成提示音及計數。');});};connect();document.addEventListener('mynt:pomodoro-ready',connect,{once:true});
 });
 })(typeof globalThis!=='undefined'?globalThis:this);
