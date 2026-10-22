@@ -1,0 +1,34 @@
+/* Scoped styles, also loaded into Document Picture-in-Picture. */
+.mynt-pomo-static {
+    background-color: var(--pomo-color, #243247) !important;
+    background-image: linear-gradient(#0009, #0009), var(--pomo-background, none) !important;
+    background-size: auto, var(--pomo-fit, cover) !important;
+    background-position: center, var(--pomo-position, 50% 50%) !important;
+    background-repeat: no-repeat !important;
+    color: #fff;
+}
+.mynt-pomo-static > .pomodoro-bg-video, .mynt-pomo-static > .pomodoro-bg-overlay { display: none !important; }
+.mynt-pomo-settings { text-align: start; margin-top: 12px; max-height: 45vh; overflow: auto; scrollbar-width: thin; }
+.mynt-pomo-settings button, .mynt-pomo-settings select, .mynt-pomo-settings input,
+.mynt-pomo-settings summary, .mynt-pomo-float button, .mynt-pomo-float input { min-height: 44px; box-sizing: border-box; font: inherit; }
+.mynt-pomo-settings button, .mynt-pomo-float button { border: 1px solid #ffffff66; border-radius: 16px; background: #243247; color: #fff; padding: 8px 12px; cursor: pointer; }
+.mynt-pomo-settings > button { display: block; width: 100%; margin: 6px 0; }
+.mynt-pomo-settings summary { cursor: pointer; padding: 12px 0; }
+.mynt-pomo-settings label, .mynt-pomo-float label { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.mynt-pomo-settings select, .mynt-pomo-settings input { width: 100%; min-width: 0; }
+.mynt-pomo-settings input[type=file] { font-size: 12px; }
+.mynt-pomo-settings :focus-visible, .mynt-pomo-float :focus-visible { outline: 3px solid #ffe396; outline-offset: 2px; }
+.mynt-pomo-note { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.mynt-pomo-note:empty { display: none; }
+.mynt-pomo-float { margin: 0; min-height: 100vh; font: 16px/1.45 system-ui, sans-serif; box-sizing: border-box; }
+.mynt-pomo-card { padding: 16px; text-align: center; max-width: 480px; margin: auto; }
+.mynt-pomo-card h1 { font-size: 18px; margin: 0; }
+.mynt-pomo-card p { margin: 8px 0; }
+.mynt-pomo-time { font-size: clamp(40px, 18vw, 80px); font-weight: 700; font-variant-numeric: tabular-nums; }
+.mynt-pomo-float input { width: 100%; border-radius: 12px; padding: 8px; border: 1px solid #ffffff88; background: #172334; color: white; }
+.mynt-pomo-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.mynt-pomo-float button:disabled { opacity: .5; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .mynt-pomo-float *, .mynt-pomo-settings * { animation: none !important; transition: none !important; } }
+@media (forced-colors: active) { .mynt-pomo-static { background-image: none !important; } }
+.mynt-pomo-confirm { border: 2px solid #ffe396; border-radius: 14px; padding: 10px; margin: 10px 0; background: #172334; }
+.mynt-pomo-confirm button { margin: 4px; }

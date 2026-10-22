@@ -153,6 +153,10 @@
             Pull Request 都經過仔細審查、測試和驗證，確保符合我們的標準後才會合併。
         </p>
 
+        <h2>番茄鐘小窗與本機媒體</h2>
+<p>番茄鐘的 pomodoroState（版本 2）在 localStorage 保存結束時間、暫停狀態、任務與回合。分頁使用本機鎖協調完成提示，沒有新增帳號、網路服務或瀏覽器權限；關閉瀏覽器或休眠不保證準時提醒。小窗僅由按鈕開啟，一般彈出視窗不保證置頂。</p>
+<p>myntPomoScenarios、myntPomoStudioMode、myntPomoAlarmVolume 保存情境、介面與提示音偏好。myntPomodoroAppearance.v1 保存獨立背景設定；IndexedDB MyntPomodoroAppearance 的 images 保存一張最多 8 MiB 本機圖片。myntPomodoroMusicV1 的 tracks 保存自選音樂，最多 30 首、每首 100 MiB、合計 300 MiB；myntPomoMusicSettingsV1 保存播放順序、音量與休息政策，myntPomoMusicOwnerV1 僅用於暫時跨分頁播放協調。媒體不會上傳伺服器、不含於一般設定備份；移除擴充功能或清除網站資料可能刪除。情境只保存媒體識別與偏好，不複製音樂檔。</p>
+<p>Timer, scenarios, images and music remain browser-local. No media is uploaded. IndexedDB audio and timer background images are not included in general settings backups. Browser shutdown, sleep and autoplay restrictions can prevent timely alarms or playback. Floating windows require the original tab; ordinary popup windows are not guaranteed to remain on top.</p>
         <h2>背景自適應與排版儲存</h2>
 <p>myntLayoutProfiles（版本 1）只在本機保存命名組合、寬／窄螢幕位置、上一個儲存版本與修訂號。舊 myntLayout 保留，不刪除；排版專用 JSON 匯出不含便籤、帳號或 API 金鑰，匯入先驗證並確認後新增副本。不同分頁的過期寫入會拒絕，以免覆寫更新。</p>
 <p>Named layout profiles and previous versions stay in localStorage. Layout-only exports contain no notes, accounts or API keys; validated imports add copies after confirmation.</p>

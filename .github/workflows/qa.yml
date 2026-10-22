@@ -50,6 +50,13 @@ jobs:
           node tools/check-adaptive-core.cjs
           node tools/check-adaptive-settings.cjs
 
+      - name: Validate local Pomodoro studio
+        run: |
+          node tools/check-pomodoro-timer.cjs
+          node tools/check-pomodoro-float.cjs
+          node tools/check-pomodoro-music.cjs
+          node tools/check-pomodoro-studio.cjs
+
       - name: Run release metadata checks
         run: node tools/check-release-metadata.mjs
 

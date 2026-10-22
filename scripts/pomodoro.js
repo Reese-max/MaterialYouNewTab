@@ -9,6 +9,14 @@
 // ----------------------------------- Pomodoro Timer ----------------------------------------
 
 document.addEventListener("DOMContentLoaded", function () {
+    // Storage denial/quota must not prevent the rest of the new-tab page from loading.
+    let browserStorage;
+    try { browserStorage = window.localStorage; } catch { /* Private mode restriction. */ }
+    const localStorage = {
+        getItem(key) { try { return browserStorage?.getItem(key) ?? null; } catch { return null; } },
+        setItem(key, value) { try { browserStorage?.setItem(key, value); } catch { /* Keep the UI usable. */ } },
+        removeItem(key) { try { browserStorage?.removeItem(key); } catch { /* Keep the UI usable. */ } }
+    };
     // --- DOM Elements ---
     const pomodoroCheckbox = document.getElementById("pomodoroCheckbox");
     const pomodoroCont = document.getElementById("pomodoroCont");
@@ -91,16 +99,19 @@ document.addEventListener("DOMContentLoaded", function () {
         return translations[currentLanguage]?.[key] || translations["en"]?.[key] || fallback;
     }
 
-    // --- State ---
-    let pomodoroState = {
-        phase: "work", // "work" | "shortBreak" | "longBreak"
-        timeRemaining: DEFAULTS.workMinutes * 60,
-        totalTime: DEFAULTS.workMinutes * 60,
-        currentRound: 1,
-        isRunning: false,
-        lastTick: null,
-    };
-    let timerInterval = null;
+    let pomodoroState;
+    const timer = window.MyntPomodoroTimer.create({
+        storage: browserStorage,
+        locks: navigator.locks,
+        onComplete(completed, next) {
+            pomodoroState = next;
+            stopAmbient();
+            if (completed.phase === "work") incrementSessionsToday(completed.totalTime / 60, completed.sessionId);
+            if (getPomodoroBool(KEYS.sound, true)) playPomodoroSound();
+            if (getPomodoroBool(KEYS.notif, true)) sendPomodoroNotification();
+        }
+    });
+    pomodoroState = timer.getState();
 
     // --- Helpers ---
     function getPomodoroSetting(key, defaultVal) {
@@ -117,38 +128,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getWorkMinutes() {
-        return getPomodoroSetting(KEYS.work, DEFAULTS.workMinutes);
+        return timer.getState().durations.workMinutes;
     }
     function getShortBreakMinutes() {
-        return getPomodoroSetting(KEYS.shortBreak, DEFAULTS.shortBreakMinutes);
+        return timer.getState().durations.shortBreakMinutes;
     }
     function getLongBreakMinutes() {
-        return getPomodoroSetting(KEYS.longBreak, DEFAULTS.longBreakMinutes);
+        return timer.getState().durations.longBreakMinutes;
     }
     function getRoundsBeforeLong() {
-        return getPomodoroSetting(KEYS.rounds, DEFAULTS.roundsBeforeLong);
-    }
-
-    // --- State persistence ---
-    function savePomodoroState() {
-        localStorage.setItem(KEYS.state, JSON.stringify(pomodoroState));
-    }
-
-    function loadPomodoroState() {
-        const raw = localStorage.getItem(KEYS.state);
-        if (!raw) return false;
-        try {
-            const saved = JSON.parse(raw);
-            pomodoroState.phase = saved.phase || "work";
-            pomodoroState.timeRemaining = saved.timeRemaining ?? DEFAULTS.workMinutes * 60;
-            pomodoroState.totalTime = saved.totalTime ?? DEFAULTS.workMinutes * 60;
-            pomodoroState.currentRound = saved.currentRound ?? 1;
-            pomodoroState.isRunning = saved.isRunning ?? false;
-            pomodoroState.lastTick = saved.lastTick ?? null;
-            return true;
-        } catch {
-            return false;
-        }
+        return timer.getState().durations.roundsBeforeLong;
     }
 
     // --- Sessions today ---
@@ -159,25 +148,24 @@ document.addEventListener("DOMContentLoaded", function () {
     function getSessionsToday() {
         const savedDate = localStorage.getItem(KEYS.sessionsDate);
         if (savedDate !== getTodayStr()) {
-            localStorage.setItem(KEYS.sessionsToday, "0");
-            localStorage.setItem(KEYS.sessionsDate, getTodayStr());
             return 0;
         }
-        return getPomodoroSetting(KEYS.sessionsToday, 0);
+        return Math.max(0, Math.min(1000000, getPomodoroSetting(KEYS.sessionsToday, 0)));
     }
 
-    function incrementSessionsToday() {
+    function incrementSessionsToday(minutes, sessionId) {
         const count = getSessionsToday() + 1;
         localStorage.setItem(KEYS.sessionsToday, String(count));
         localStorage.setItem(KEYS.sessionsDate, getTodayStr());
         pomodoroSessionsCount.textContent = count;
         document.dispatchEvent(new CustomEvent("mynt:pomodoro-complete", {
-            detail: { minutes: getWorkMinutes(), sessionsToday: count }
+            detail: { minutes, sessionsToday: count, sessionId }
         }));
     }
 
     // --- UI update ---
     function updatePomodoroUI() {
+        pomodoroRingFg.classList.toggle("running", pomodoroState.isRunning);
         // Time display
         const mins = Math.floor(pomodoroState.timeRemaining / 60);
         const secs = pomodoroState.timeRemaining % 60;
@@ -224,139 +212,30 @@ document.addEventListener("DOMContentLoaded", function () {
         pomodoroSessionsCount.textContent = getSessionsToday();
     }
 
-    // --- Timer controls ---
-    function startPomodoro() {
-        if (pomodoroState.isRunning) return;
-        pomodoroState.isRunning = true;
-        pomodoroRingFg.classList.add("running");
-        pomodoroState.lastTick = Date.now();
-        savePomodoroState();
-        updatePomodoroUI();
-
-        timerInterval = setInterval(function () {
-            const now = Date.now();
-            const elapsed = Math.floor((now - pomodoroState.lastTick) / 1000);
-            if (elapsed < 1) return;
-
-            pomodoroState.lastTick = now;
-            pomodoroState.timeRemaining -= elapsed;
-
-            if (pomodoroState.timeRemaining <= 0) {
-                pomodoroState.timeRemaining = 0;
-                onPhaseComplete();
-            }
-
-            savePomodoroState();
-            updatePomodoroUI();
-        }, TICK_INTERVAL);
+    // --- Timer controls: one shared wall-clock source for every view. ---
+    function stopAmbient() {
+        if (globalThis.myntAmbientAudio?.isPlaying()) globalThis.myntAmbientAudio.stop();
     }
-
-    function pausePomodoro() {
-        if (globalThis.myntAmbientAudio && globalThis.myntAmbientAudio.isPlaying()) {
-            globalThis.myntAmbientAudio.stop();
-        }
-        pomodoroState.isRunning = false;
-        pomodoroRingFg.classList.remove("running");
-        pomodoroState.lastTick = null;
-        clearInterval(timerInterval);
-        timerInterval = null;
-        savePomodoroState();
-        updatePomodoroUI();
-    }
-
-    function resetPomodoro() {
-        if (globalThis.myntAmbientAudio && globalThis.myntAmbientAudio.isPlaying()) {
-            globalThis.myntAmbientAudio.stop();
-        }
-        clearInterval(timerInterval);
-        timerInterval = null;
-        const workSec = getWorkMinutes() * 60;
-        pomodoroState = {
-            phase: "work",
-            timeRemaining: workSec,
-            totalTime: workSec,
-            currentRound: 1,
-            isRunning: false,
-            lastTick: null,
-        };
-        pomodoroRingFg.classList.remove("running");
-        savePomodoroState();
-        updatePomodoroUI();
-    }
-
-    // --- Phase completion ---
-    function onPhaseComplete() {
-        if (globalThis.myntAmbientAudio && globalThis.myntAmbientAudio.isPlaying()) {
-            globalThis.myntAmbientAudio.stop();
-        }
-        clearInterval(timerInterval);
-        timerInterval = null;
-        pomodoroState.isRunning = false;
-        pomodoroRingFg.classList.remove("running");
-        pomodoroState.lastTick = null;
-
-        const autoStart = getPomodoroBool(KEYS.autoStart, false);
-
-        if (pomodoroState.phase === "work") {
-            // Completed a work session
-            incrementSessionsToday();
-
-            if (pomodoroState.currentRound >= getRoundsBeforeLong()) {
-                // Switch to long break
-                const longSec = getLongBreakMinutes() * 60;
-                pomodoroState.phase = "longBreak";
-                pomodoroState.timeRemaining = longSec;
-                pomodoroState.totalTime = longSec;
-            } else {
-                // Switch to short break
-                const shortSec = getShortBreakMinutes() * 60;
-                pomodoroState.phase = "shortBreak";
-                pomodoroState.timeRemaining = shortSec;
-                pomodoroState.totalTime = shortSec;
-            }
-        } else {
-            // Break completed, switch to work
-            if (pomodoroState.phase === "longBreak") {
-                pomodoroState.currentRound = 1;
-            } else {
-                pomodoroState.currentRound += 1;
-            }
-            const workSec = getWorkMinutes() * 60;
-            pomodoroState.phase = "work";
-            pomodoroState.timeRemaining = workSec;
-            pomodoroState.totalTime = workSec;
-        }
-
-        // Sound
-        if (getPomodoroBool(KEYS.sound, true)) {
-            playPomodoroSound();
-        }
-
-        // Notification
-        if (getPomodoroBool(KEYS.notif, true)) {
-            sendPomodoroNotification();
-        }
-
-        savePomodoroState();
-        updatePomodoroUI();
-
-        // Auto start
-        if (autoStart) {
-            startPomodoro();
-        }
-    }
+    function startPomodoro() { return timer.start(); }
+    function pausePomodoro() { stopAmbient(); return timer.pause(); }
+    function resetPomodoro() { stopAmbient(); return timer.reset(); }
 
     // --- Sound (Web Audio API) ---
     function playPomodoroSound() {
         try {
+            const rawVolume = localStorage.getItem("myntPomoAlarmVolume");
+            const savedVolume = rawVolume === null ? 1 : Number(rawVolume);
+            const volume = Number.isFinite(savedVolume) ? Math.min(1, Math.max(0, savedVolume)) : 1;
+            if (volume === 0) return;
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            setTimeout(() => ctx.close().catch(() => {}), 1500);
             const notes = [523.25, 622.25, 739.99]; // C5, D#5, F#5
             notes.forEach(function (freq, i) {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = "sine";
                 osc.frequency.value = freq;
-                gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.2);
+                gain.gain.setValueAtTime(Math.max(0.001, 0.3 * volume), ctx.currentTime + i * 0.2);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.2 + 0.3);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
@@ -385,12 +264,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (Notification.permission === "granted") {
             new Notification(title, { body: body });
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(function (perm) {
-                if (perm === "granted") {
-                    new Notification(title, { body: body });
-                }
-            });
         }
     }
 
@@ -663,30 +536,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     pomodoroResetBtn.addEventListener("click", function () {
+        const state = timer.getState();
+        if ((state.isRunning || state.timeRemaining !== state.totalTime || state.phase !== "work" || state.currentRound !== 1) &&
+            !window.confirm(getPomodoroText("pomodoroResetConfirm", "Reset this timer and discard its progress?"))) return;
         resetPomodoro();
     });
 
-    // --- Visibility change (compensate offline time) ---
-    document.addEventListener("visibilitychange", function () {
-        if (document.visibilityState === "visible" && pomodoroState.isRunning && pomodoroState.lastTick) {
-            const now = Date.now();
-            const elapsed = Math.floor((now - pomodoroState.lastTick) / 1000);
-            if (elapsed > 0) {
-                pomodoroState.lastTick = now;
-                pomodoroState.timeRemaining -= elapsed;
-
-                // Process multiple phase completions if away for a long time
-                while (pomodoroState.timeRemaining <= 0 && pomodoroState.isRunning) {
-                    pomodoroState.timeRemaining = 0;
-                    onPhaseComplete();
-                    // After onPhaseComplete, if autoStart is off, isRunning becomes false
-                    // If autoStart is on, we need to subtract remaining overflow from next phase
-                }
-
-                savePomodoroState();
-                updatePomodoroUI();
-            }
-        }
+    // A resumed page reconciles one elapsed phase, not imaginary completed work rounds.
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) timer.tick(); });
+    window.addEventListener("storage", event => {
+        if (event.key === KEYS.state || event.key === null) timer.tick();
+        if (event.key === KEYS.sessionsToday || event.key === KEYS.sessionsDate) updatePomodoroUI();
     });
 
     // --- Main toggle (checkbox) ---
@@ -744,7 +604,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!cfg) return;
         val = Math.max(cfg.min, Math.min(cfg.max, val));
         document.getElementById(targetId).value = val;
-        localStorage.setItem(cfg.key, String(val));
+        if (targetId === "pomodoroIconSizeInput" || targetId === "pomodoroPanelScaleInput") localStorage.setItem(cfg.key, String(val));
 
         // Icon size
         if (targetId === "pomodoroIconSizeInput") {
@@ -758,21 +618,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // If timer is not running, update time display
-        if (!pomodoroState.isRunning && pomodoroState.timeRemaining === pomodoroState.totalTime) {
-            if (pomodoroState.phase === "work" && targetId === "pomodoroWorkInput") {
-                pomodoroState.timeRemaining = val * 60;
-                pomodoroState.totalTime = val * 60;
-            } else if (pomodoroState.phase === "shortBreak" && targetId === "pomodoroShortBreakInput") {
-                pomodoroState.timeRemaining = val * 60;
-                pomodoroState.totalTime = val * 60;
-            } else if (pomodoroState.phase === "longBreak" && targetId === "pomodoroLongBreakInput") {
-                pomodoroState.timeRemaining = val * 60;
-                pomodoroState.totalTime = val * 60;
-            }
-            savePomodoroState();
-            updatePomodoroUI();
-        }
+        const key = { pomodoroWorkInput: "workMinutes", pomodoroShortBreakInput: "shortBreakMinutes", pomodoroLongBreakInput: "longBreakMinutes", pomodoroRoundsInput: "roundsBeforeLong" }[targetId];
+        timer.setDurations({ [key]: val }).then(() => {
+            document.getElementById(targetId).value = timer.getState().durations[key];
+        });
     }
 
     // +/- buttons
@@ -894,36 +743,8 @@ document.addEventListener("DOMContentLoaded", function () {
         pomodoroSoundCheckbox.checked = getPomodoroBool(KEYS.sound, true);
         pomodoroNotifCheckbox.checked = getPomodoroBool(KEYS.notif, true);
 
-        // Restore timer state
-        const hasState = loadPomodoroState();
-        if (hasState && pomodoroState.isRunning && pomodoroState.lastTick) {
-            // Compensate for time elapsed while page was closed
-            const now = Date.now();
-            const elapsed = Math.floor((now - pomodoroState.lastTick) / 1000);
-            pomodoroState.timeRemaining -= elapsed;
-            pomodoroState.lastTick = now;
-
-            if (pomodoroState.timeRemaining <= 0) {
-                pomodoroState.timeRemaining = 0;
-                pomodoroState.isRunning = false;
-                savePomodoroState();
-                updatePomodoroUI();
-                onPhaseComplete();
-            } else {
-                savePomodoroState();
-                updatePomodoroUI();
-                pomodoroState.isRunning = false;
-                startPomodoro();
-            }
-        } else {
-            if (!hasState) {
-                // Set defaults
-                const workSec = getWorkMinutes() * 60;
-                pomodoroState.timeRemaining = workSec;
-                pomodoroState.totalTime = workSec;
-            }
-            updatePomodoroUI();
-        }
+        pomodoroState = timer.getState();
+        updatePomodoroUI();
 
         // Start clock if pomodoro is enabled
         if (pomodoroCheckbox.checked) {
@@ -978,11 +799,30 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             start() {
                 this.open();
-                if (!pomodoroState.isRunning) startPomodoro();
+                return startPomodoro();
             },
+            getState: timer.getState,
+            subscribe: timer.subscribe,
+            pause: pausePomodoro,
+            reset: resetPomodoro,
+            extend: timer.extend,
+            setDurations: timer.setDurations,
+            setTask: timer.setTask,
             isOpen: () => panelOpen,
             isRunning: () => pomodoroState.isRunning === true
         };
 
         initPomodoro();
+        timer.subscribe(state => {
+            pomodoroState = state;
+            updatePomodoroUI();
+            pomodoroWorkInput.value = state.durations.workMinutes;
+            pomodoroShortBreakInput.value = state.durations.shortBreakMinutes;
+            pomodoroLongBreakInput.value = state.durations.longBreakMinutes;
+            pomodoroRoundsInput.value = state.durations.roundsBeforeLong;
+            document.dispatchEvent(new CustomEvent("mynt:pomodoro-state", { detail: state }));
+        });
+        setInterval(() => { timer.tick().catch(() => {}); }, TICK_INTERVAL);
+        timer.tick().catch(() => {});
+        document.dispatchEvent(new CustomEvent("mynt:pomodoro-ready"));
 });
