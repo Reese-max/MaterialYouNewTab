@@ -180,5 +180,11 @@ async function browserFixture({ locked = false, playError = null, shared = share
     f.events.pageshow({ persisted: true }); f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(20);
     assert.equal(f.audios.length, 2); assert.equal(f.audios[1].paused, false);
     f.events.pagehide(); count++; console.log('✓ Returning from pagehide rebuilds unloaded audio before manual play');
+    const resetShared=sharedLibrary();resetShared.values.set('myntPomoMusicSettingsV1',JSON.stringify({volume:.1,mode:'all'}));
+    resetShared.values.clear(); // Settings reset does not touch the independent media database.
+    const afterReset=await browserFixture({shared:resetShared});
+    assert.equal(afterReset.api.getTracks().length,2);assert.equal(afterReset.api.getSettings().volume,.5);assert.equal(afterReset.audios.length,0);
+    afterReset.buttons.find(x=>x.textContent==='Play').emit('click');await until(()=>afterReset.audios[0]?.paused===false);afterReset.events.pagehide();
+    count++;console.log('✓ After settings reset, imported tracks remain listed and playable with default settings');
     console.log(`${count} Pomodoro music checks passed.`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

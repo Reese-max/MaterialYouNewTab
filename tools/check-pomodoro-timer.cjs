@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
 const { create, normalize, durations, KEY } = require('../scripts/pomodoro-timer-core.js');
 const defaults = durations();
 const store = () => { const data = new Map(); return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, v), removeItem: k => data.delete(k) }; };
@@ -40,7 +42,13 @@ function lockManager() { let queue = Promise.resolve(); return { request(name, f
     assert.equal(reloaded.getState().task, '測試任務：讀完第三章', 'reload reconciliation preserves task');
     await first.setTask('Write the introduction');
     await first.start();
-    assert.equal(await first.setDurations({ workMinutes: 4 }), false);
+    const beforeFutureChange = first.getState();
+    assert.equal(await first.setDurations({ workMinutes: 4 }), true, 'running timer accepts future workspace durations');
+    for (const key of ['isRunning', 'totalTime', 'timeRemaining', 'endAt', 'sessionId', 'phase', 'currentRound']) {
+        assert.equal(first.getState()[key], beforeFutureChange[key], `future duration edit preserves active ${key}`);
+    }
+    assert.equal(first.getState().durations.workMinutes, 4);
+    assert.equal(storage.getItem('pomodoroWorkMinutes'), '4');
     second.sync();
     assert.equal(second.getState().endAt, now + 60000);
     assert.equal(second.getState().task, 'Write the introduction');
@@ -65,7 +73,7 @@ function lockManager() { let queue = Promise.resolve(); return { request(name, f
     unsubscribe();
     await first.reset();
     assert.equal(firstUpdates, count);
-    assert.equal(first.getState().timeRemaining, 60);
+    assert.equal(first.getState().timeRemaining, 240, 'reset adopts the future work duration');
     storage.setItem('pomodoroAutoStart', 'true');
     await first.start();
     now += 86400000;
@@ -95,5 +103,48 @@ function lockManager() { let queue = Promise.resolve(); return { request(name, f
     const denied = create({ storage: { getItem: () => { throw new Error('SecurityError'); }, setItem: () => { throw new Error('SecurityError'); } }, locks });
     await denied.start(); await denied.pause(); await denied.reset();
     assert.equal(denied.getState().isRunning, false);
-    console.log('Pomodoro timer checks passed: migration, malformed storage, quota, wall clock, pause, sync, duplicate completion, settings, sleep.');
+    const futureStorage = store();
+    const future = create({ storage: futureStorage, locks: lockManager(), now: () => now });
+    await future.setDurations({ workMinutes: 1 }); await future.start(); now += 12000;
+    const before = future.getState();
+    assert.equal(await future.setDurations({ workMinutes: 7, shortBreakMinutes: 3, longBreakMinutes: 8, roundsBeforeLong: 2 }), true);
+    for (const key of ['isRunning', 'totalTime', 'timeRemaining', 'endAt', 'sessionId', 'phase', 'currentRound']) assert.equal(future.getState()[key], before[key]);
+    const restoredFuture = create({ storage: futureStorage, locks: lockManager(), now: () => now });
+    assert.equal(restoredFuture.getState().endAt, before.endAt);
+    assert.equal(restoredFuture.getState().durations.workMinutes, 7);
+    for (const bad of [null, [], undefined, { workMinutes: 9, shortBreakMinutes: 61 }, { workMinutes: 9, longBreakMinutes: 121 }, { workMinutes: 121 }, { workMinutes: 1.5 }, { roundsBeforeLong: 0 }, { workMinutes: NaN }, { workMinutes: '30' }, { workMinutes: 9, unknown: 1 }]) {
+        const stateBefore = future.getState();
+        const storedBefore = [KEY, 'pomodoroWorkMinutes', 'pomodoroShortBreakMinutes', 'pomodoroLongBreakMinutes', 'pomodoroRoundsBeforeLong'].map(key => futureStorage.getItem(key));
+        assert.equal(await future.setDurations(bad), false);
+        assert.deepEqual(future.getState(), stateBefore, 'invalid duration update must not partially modify live state');
+        assert.deepEqual([KEY, 'pomodoroWorkMinutes', 'pomodoroShortBreakMinutes', 'pomodoroLongBreakMinutes', 'pomodoroRoundsBeforeLong'].map(key => futureStorage.getItem(key)), storedBefore, 'invalid duration update must not partially persist settings');
+    }
+    now = before.endAt + 1; await future.tick();
+    assert.equal(future.getState().phase, 'shortBreak');
+    assert.equal(future.getState().totalTime, 180, 'next phase adopts the changed break duration');
+    await future.start(); now += 10000; await future.pause();
+    const pausedBefore = future.getState();
+    assert.equal(await future.setDurations({ shortBreakMinutes: 4 }), true);
+    assert.equal(future.getState().timeRemaining, pausedBefore.timeRemaining);
+    assert.equal(future.getState().totalTime, pausedBefore.totalTime, 'partial paused phase preserves its original duration');
+    await future.reset(); assert.equal(future.getState().totalTime, 420);
+
+    // Execute the actual alarm function against a minimal Web Audio stub.
+    const alarmSource = fs.readFileSync(require.resolve('../scripts/pomodoro.js'), 'utf8').match(/function playPomodoroSound\(\) \{[\s\S]*?(?=\s*\/\/ --- Notification ---)/)[0];
+    const alarmGains = raw => {
+        const gains = [];
+        class AudioContext {
+            constructor() { this.currentTime = 0; this.destination = {}; }
+            createOscillator() { return { frequency: {}, connect() {}, start() {}, stop() {} }; }
+            createGain() { return { gain: { setValueAtTime: value => gains.push(value), exponentialRampToValueAtTime() {} }, connect() {} }; }
+            close() { return Promise.resolve(); }
+        }
+        vm.runInNewContext(alarmSource + '\nplayPomodoroSound();', { localStorage: { getItem: () => raw }, window: { AudioContext }, setTimeout() {} });
+        return gains;
+    };
+    assert.deepEqual(alarmGains(null), [.15, .15, .15], 'absent alarm preference matches the 50% slider default');
+    assert.deepEqual(alarmGains('invalid'), [.15, .15, .15]);
+    assert.deepEqual(alarmGains('0'), [], 'explicit mute remains silent');
+    assert.deepEqual(alarmGains('1'), [.3, .3, .3], 'explicit maximum volume remains supported');
+    console.log('Pomodoro timer checks passed: migration, malformed storage, quota, wall clock, pause, sync, duplicate completion, future workspace durations, atomic validation, next-phase settings, sleep, alarm defaults.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

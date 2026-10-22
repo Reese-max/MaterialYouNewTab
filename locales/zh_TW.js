@@ -1,5 +1,6 @@
 // Chinese (Traditional)
 const zh_TW = {
+    "resetKeepsPomodoroMedia": "重設設定不會刪除已匯入的番茄鐘音樂與圖片。重設後仍可重新使用，或在音樂／背景設定中個別刪除。",
     "pomoStudioDeleted": "情境已刪除；重新整理前可復原。",
     "pomoStudioUndo": "復原刪除",
     "pomoStudioDelete": "刪除所選自訂情境",

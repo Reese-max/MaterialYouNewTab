@@ -101,9 +101,13 @@
             extend: (minutes = 5) => run(() => { if (!valid(minutes, 1, 120)) return; const seconds = Math.min(Math.floor(minutes * 60), 86400 - state.totalTime); state.timeRemaining = snapshot().timeRemaining + seconds; state.totalTime += seconds; if (state.isRunning) state.endAt = now() + state.timeRemaining * 1000; persist(); }),
             setTask: label => run(() => { state.task = String(label ?? '').slice(0, 200); persist(); }),
             setDurations: input => run(() => {
-                if (state.isRunning) return false;
+                if (!input || typeof input !== 'object' || Array.isArray(input)) return false;
+                const entries = Object.entries(input);
+                if (entries.some(([key, value]) => !Object.hasOwn(DEFAULTS, key) || !Number.isInteger(value) || !valid(value, 1, LIMITS[key]))) return false;
                 const settings = { ...state.settings };
-                for (const k of Object.keys(DEFAULTS)) if (valid(input?.[k], 1, LIMITS[k])) settings[k] = Math.floor(input[k]);
+                for (const [key, value] of entries) settings[key] = value;
+                // Workspaces may change future durations mid-session. Preserve the
+                // current countdown/endAt; apply new durations at the next phase/reset.
                 if (!state.isRunning && state.timeRemaining === state.totalTime) state.timeRemaining = state.totalTime = settings[state.phase === 'work' ? 'workMinutes' : state.phase === 'shortBreak' ? 'shortBreakMinutes' : 'longBreakMinutes'] * 60;
                 state.settings = settings;
                 Object.entries(SETTING_KEYS).forEach(([k, key]) => write(key, String(settings[k])));

@@ -272,7 +272,7 @@ async function validateAndRestoreData(event) {
 const resetButton = document.getElementById("resetsettings");
 
 resetButton.addEventListener("click", async () => {
-    if (!(await confirmPrompt(getTranslatedText("confirmRestore")))) return;
+    if (!(await confirmPrompt(getTranslatedText("confirmRestore") + "\n\n" + getTranslatedText("resetKeepsPomodoroMedia")))) return;
 
     resetButton.disabled = true;
     try {

@@ -224,8 +224,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function playPomodoroSound() {
         try {
             const rawVolume = localStorage.getItem("myntPomoAlarmVolume");
-            const savedVolume = rawVolume === null ? 1 : Number(rawVolume);
-            const volume = Number.isFinite(savedVolume) ? Math.min(1, Math.max(0, savedVolume)) : 1;
+            const savedVolume = rawVolume === null ? 0.5 : Number(rawVolume);
+            const volume = Number.isFinite(savedVolume) ? Math.min(1, Math.max(0, savedVolume)) : 0.5;
             if (volume === 0) return;
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             setTimeout(() => ctx.close().catch(() => {}), 1500);

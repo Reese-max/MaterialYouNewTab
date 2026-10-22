@@ -1,5 +1,6 @@
 // English (Default)
 const en = {
+    "resetKeepsPomodoroMedia": "Resetting settings keeps your imported Pomodoro music and timer images on this browser. You can reuse them afterward or remove them individually from the music/background controls.",
     "pomoStudioDeleted": "Scenario deleted. Undo is available until reload.",
     "pomoStudioUndo": "Undo deletion",
     "pomoStudioDelete": "Delete selected custom scenario",

@@ -6,7 +6,7 @@ const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
 function normalizePreset(value){
  if(!plain(value)||typeof value.name!=='string'||!value.name.trim()||value.name.length>40)throw Error('invalid');
  const d=value.durations;if(!plain(d))throw Error('invalid');
- const durations={};for(const [k,max] of [['workMinutes',180],['shortBreakMinutes',60],['longBreakMinutes',120],['roundsBeforeLong',12]]){if(!Number.isInteger(d[k])||d[k]<1||d[k]>max)throw Error('invalid');durations[k]=d[k];}
+ const durations={};for(const [k,max] of [['workMinutes',120],['shortBreakMinutes',60],['longBreakMinutes',60],['roundsBeforeLong',12]]){if(!Number.isInteger(d[k])||d[k]<1||d[k]>max)throw Error('invalid');durations[k]=d[k];}
  // Modules validate their own settings again; cap the JSON record and reject prototype keys.
  const safe=v=>{const text=JSON.stringify(v??{});if(text.length>4000||/"(?:__proto__|constructor|prototype)"\s*:/.test(text))throw Error('invalid');const x=JSON.parse(text);if(!plain(x))throw Error('invalid');return x;};
  return {name:value.name.trim(),durations,appearance:safe(value.appearance),music:safe(value.music)};
