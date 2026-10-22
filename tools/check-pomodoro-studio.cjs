@@ -14,3 +14,10 @@ assert.match(source,/if\(appearance\)extras\.prepend\(appearance\)/);
 assert.match(source,/if\(popup\)extras\.append\(popup\)/);
 assert.match(source,/pomoStudioScenarios/);
 console.log('POMODORO_DISCLOSURE_OK: explicit controls relationship, Escape recovery, advanced grouping, original appearance defaults');
+
+const {fitPanel}=require('../scripts/pomodoro-studio.js');
+assert.deepEqual(fitPanel({left:15,top:500,width:288,height:650},1180,757),{left:15,top:107});
+assert.deepEqual(fitPanel({left:15,top:85,width:280,height:195},472,303),{left:15,top:85});
+assert.match(source,/new ResizeObserver\(keepVisible\)\.observe\(panel\)/);
+assert.ok(!source.includes("localStorage.setItem('pomodoroPanelPosition'"));
+console.log('POMODORO_VIEWPORT_OK: expanded panel stays in bounds without rewriting saved coordinates');

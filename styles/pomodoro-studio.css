@@ -1,5 +1,5 @@
 /* Preserve the original timer card; advanced tools stay behind one disclosure. */
-#pomodoroPanel {max-height:calc(100dvh - 105px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#ffffff44 transparent;}
+#pomodoroPanel {min-width:min(240px,var(--pomo-viewport-width,240px));max-width:min(280px,var(--pomo-viewport-width,280px));max-height:min(calc(100dvh - 105px),var(--pomo-viewport-height,100dvh));overflow-y:auto;scrollbar-width:thin;scrollbar-color:#ffffff44 transparent;}
 #pomodoroPanel [hidden] {display:none!important;}
 #myntPomoStudioMount,#myntPomoExtras,#myntPomoFloatMount {position:relative;z-index:1;}
 #myntPomoFloatMount {margin-top:4px;overflow:visible;max-height:none;}
@@ -28,7 +28,7 @@
 #pomodoroPanel :focus-visible {outline:2px solid #fff;outline-offset:3px;}
 #pomodoroPanel .pomodoroResetBtn {width:44px;height:44px;}
 #pomodoroPanel #pomodoroStatsBtn {min-height:36px;}
-@media(max-width:480px){#pomodoroPanel{min-width:0;box-sizing:border-box;width:280px;max-width:calc(100vw - 30px);max-height:calc(100dvh - 100px);}}
+@media(max-width:480px){#pomodoroPanel{min-width:0;box-sizing:border-box;width:280px;max-width:min(calc(100vw - 30px),var(--pomo-viewport-width,100vw));max-height:min(calc(100dvh - 100px),var(--pomo-viewport-height,100dvh));}}
 @media(prefers-reduced-motion:reduce){#pomodoroPanel *{animation:none!important;transition:none!important;}}
 .reduced-motion #pomodoroPanel *{animation:none!important;transition:none!important;}
 @media(forced-colors:active){#myntPomoExtras{background:Canvas;color:CanvasText;}#myntPomoExtras button,#myntPomoStudioMount button{border:1px solid ButtonText;}}

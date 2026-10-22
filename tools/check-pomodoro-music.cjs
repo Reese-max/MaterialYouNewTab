@@ -51,25 +51,65 @@ class Element {
     emit(name, detail = {}) { for (const fn of this.listeners[name] || []) fn({ currentTarget: this, ...detail }); }
 }
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-async function browserFixture({ locked = false, playError = null } = {}) {
-    const host = new Element('div'), events = {}, audios = [], values = new Map(); let revoked = 0, lockReleased = 0;
-    const records = [{ id: 'a', name: '<script>safe.mp3', blob: file() }, { id: 'b', name: 'second.mp3', blob: file() }];
-    const db = { transaction() {
-        const tx = { objectStore() { return { getAll() { const req = { result: records }; setTimeout(() => tx.oncomplete(), 0); return req; } }; } }; return tx;
+async function until(predicate) {
+    for (let i = 0; i < 200; i++) { if (predicate()) return; await sleep(5); }
+    assert.ok(predicate(), 'asynchronous fixture reached expected state');
+}
+function sharedLibrary(initial = [{ id: 'a', name: '<script>safe.mp3', blob: file() }, { id: 'b', name: 'second.mp3', blob: file() }], notify = false) {
+    const shared = { records: new Map(initial.map(record => [record.id, record])), values: new Map(), tabs: new Set(), channels: new Set(), notify, nextId: 0 };
+    let queue = Promise.resolve();
+    // Model transaction serialization and rollback, not just individual requests.
+    shared.db = { transaction(_store, mode) {
+        const operations = []; let aborted = false;
+        const enqueue = (operation, value) => { const req = {}; operations.push({ operation, value, req }); return req; };
+        const tx = {
+            objectStore: () => ({ getAll: () => enqueue('getAll'), put: value => enqueue('put', value), delete: value => enqueue('delete', value) }),
+            abort: () => { aborted = true; }
+        };
+        queue = queue.then(() => new Promise(resolve => {
+            const working = new Map(shared.records);
+            const step = () => {
+                if (aborted) { tx.onabort?.(); resolve(); return; }
+                const next = operations.shift();
+                if (!next) { if (mode === 'readwrite') shared.records = working; tx.oncomplete?.(); resolve(); return; }
+                const { operation, value, req } = next;
+                if (operation === 'getAll') req.result = [...working.values()];
+                else if (operation === 'put') { working.set(value.id, value); req.result = value.id; }
+                else working.delete(value);
+                req.onsuccess?.({ target: req });
+                setTimeout(step, 0);
+            };
+            setTimeout(step, 0);
+        }));
+        return tx;
     } };
+    shared.BroadcastChannel = class {
+        constructor(name) { this.name = name; shared.channels.add(this); }
+        postMessage(data) { for (const other of shared.channels) if (other !== this && other.name === this.name) setTimeout(() => other.onmessage?.({ data }), 0); }
+        close() { shared.channels.delete(this); }
+    };
+    return shared;
+}
+async function browserFixture({ locked = false, playError = null, shared = sharedLibrary() } = {}) {
+    const host = new Element('div'), events = {}, audios = [], values = shared.values; let revoked = 0, lockReleased = 0;
+    const db = shared.db;
     class Audio extends Element {
         constructor() { super('audio'); this.paused = true; this.volume = 1; this.currentTime = 0; this.duration = 30; audios.push(this); }
-        async play() { if (playError) throw Object.assign(new Error(), { name: playError }); this.paused = false; }
+        async play() { this.playCalls = (this.playCalls || 0) + 1; if (playError) throw Object.assign(new Error(), { name: playError }); this.paused = false; }
         pause() { this.paused = true; }
         removeAttribute() {} load() {}
+        set src(value) { this._src = value; queueMicrotask(() => this.onloadedmetadata?.()); }
+        get src() { return this._src; }
     }
-    const window = { document: null, crypto: { randomUUID: () => 'owner' }, confirm: () => true, addEventListener(name, fn) { events[name] = fn; } };
+    const window = { document: null, crypto: { randomUUID: () => `track-${++shared.nextId}` }, confirm: () => true, addEventListener(name, fn) { events[name] = fn; } };
+    if (shared.notify) window.BroadcastChannel = shared.BroadcastChannel;
     const document = { addEventListener(name, fn) { events[name] = fn; }, readyState: 'complete', getElementById: () => host, createElement: tag => new Element(tag) }; window.document = document;
     const navigator = { locks: { request: async (_name, _options, fn) => { await fn(locked ? null : {}); lockReleased++; } } };
-    const context = { window, document, navigator, currentLanguage: 'en', localStorage: { getItem: key => values.get(key) || null, setItem: (k, v) => values.set(k, v), removeItem: k => values.delete(k) }, indexedDB: { open() { const req = { result: db }; setTimeout(() => req.onsuccess(), 0); return req; } }, Audio, URL: { createObjectURL: () => 'blob:local', revokeObjectURL: () => revoked++ }, setTimeout, clearTimeout, setInterval, clearInterval, console };
+    shared.tabs.add(events);
+    const context = { window, document, navigator, currentLanguage: 'en', localStorage: { getItem: key => values.get(key) || null, setItem(k, v) { const oldValue = values.get(k); values.set(k, v); if (shared.notify && oldValue !== v) for (const other of shared.tabs) if (other !== events) setTimeout(() => other.storage?.({ key: k, newValue: v }), 0); }, removeItem: k => values.delete(k) }, indexedDB: { open() { const req = { result: db }; setTimeout(() => req.onsuccess(), 0); return req; } }, Audio, URL: { createObjectURL: () => 'blob:local', revokeObjectURL: () => revoked++ }, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask, console };
     vm.runInNewContext(source, context); await sleep(25);
     const flat = el => [el, ...el.children.flatMap(flat)];
-    return { api: window.myntPomoMusic, events, audios, get revoked() { return revoked; }, get lockReleased() { return lockReleased; }, get buttons() { return flat(host).filter(x => x.tag === 'button'); }, get status() { return flat(host).find(x => x.role === 'status')?.textContent; }, host };
+    return { api: window.myntPomoMusic, events, audios, shared, get revoked() { return revoked; }, get lockReleased() { return lockReleased; }, get buttons() { return flat(host).filter(x => x.tag === 'button'); }, get input() { return flat(host).find(x => x.type === 'file'); }, get status() { return flat(host).find(x => x.role === 'status')?.textContent; }, host };
 }
 (async () => {
     const f = await browserFixture();
@@ -82,6 +122,9 @@ async function browserFixture({ locked = false, playError = null } = {}) {
     f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
     f.events['mynt:pomodoro-state']({ detail: { phase: 'shortBreak', isRunning: true } }); await sleep(290);
     assert.equal(f.audios[0].paused, true); count++; console.log('✓ Break policy pauses without automatic resume');
+    f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    f.events['mynt:pomodoro-state']({ detail: { phase: 'shortBreak', isRunning: true, timeRemaining: 100 } }); await sleep(290);
+    assert.equal(f.audios[0].paused, false); count++; console.log('✓ Manual resume during a running break survives subsequent timer ticks');
     f.api.applySettings({ ...f.api.getSettings(), restPolicy: 'continue' });
     f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
     f.events['mynt:pomodoro-state']({ detail: { phase: 'shortBreak', isRunning: true } }); await sleep(10);
@@ -91,5 +134,51 @@ async function browserFixture({ locked = false, playError = null } = {}) {
     assert.equal(busy.audios.length, 0); assert.match(busy.status, /another tab/); count++; console.log('✓ Cross-tab lock conflict does not start audio');
     const blocked = await browserFixture({ playError: 'NotAllowedError' }); blocked.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
     assert.match(blocked.status, /Press Play again/); assert.equal(blocked.audios[0].paused, true); count++; console.log('✓ Autoplay rejection is explained and releases playback');
+    const importAudio = (fixture, files) => { fixture.input.files = files; fixture.input.emit('change'); };
+    const records = count => Array.from({ length: count }, (_, i) => ({ id: `seed-${i}`, name: `seed-${i}.mp3`, blob: file() }));
+    const capped = sharedLibrary(records(29)), capA = await browserFixture({ shared: capped }), capB = await browserFixture({ shared: capped });
+    importAudio(capA, [file({ name: 'from-a.mp3' })]); importAudio(capB, [file({ name: 'from-b.mp3' })]);
+    await until(() => !capA.input.disabled && !capB.input.disabled);
+    assert.equal(capped.records.size, 30); assert.ok([capA.status, capB.status].some(status => status.includes('Library limit')));
+    count++; console.log('✓ Concurrent stale tabs cannot import beyond 30 tracks');
+    const large = sharedLibrary(records(2).map(record => ({ ...record, blob: file({ size: 100 * 1024 * 1024 }) })));
+    const largeA = await browserFixture({ shared: large }), largeB = await browserFixture({ shared: large });
+    importAudio(largeA, [file({ size: 75 * 1024 * 1024 })]); importAudio(largeB, [file({ size: 75 * 1024 * 1024 })]);
+    await until(() => !largeA.input.disabled && !largeB.input.disabled);
+    assert.equal([...large.records.values()].reduce((sum, record) => sum + record.blob.size, 0), 275 * 1024 * 1024);
+    count++; console.log('✓ Atomic transaction also enforces shared total-byte cap');
+    const undoShared = sharedLibrary(records(29)), undoA = await browserFixture({ shared: undoShared }), undoB = await browserFixture({ shared: undoShared });
+    undoA.buttons.find(x => x.textContent === 'Delete track').emit('click');
+    await until(() => undoShared.records.size === 28 && undoA.status.includes('deleted'));
+    importAudio(undoB, [file({ name: 'new-1.mp3' }), file({ name: 'new-2.mp3' })]);
+    await until(() => !undoB.input.disabled); assert.equal(undoShared.records.size, 30);
+    undoA.buttons.find(x => x.textContent === 'Undo deletion').emit('click');
+    await until(() => undoA.status.includes('Library limit'));
+    assert.equal(undoShared.records.size, 30); assert.ok(!undoShared.records.has('seed-0'));
+    assert.equal(undoA.buttons.find(x => x.textContent === 'Undo deletion').hidden, false);
+    count++; console.log('✓ Stale-tab undo cannot exceed shared cap and remains recoverable');
+    const undoBytes = sharedLibrary(records(3).map(record => ({ ...record, blob: file({ size: 100 * 1024 * 1024 }) })));
+    const undoBytesA = await browserFixture({ shared: undoBytes }), undoBytesB = await browserFixture({ shared: undoBytes });
+    undoBytesA.buttons.find(x => x.textContent === 'Delete track').emit('click');
+    await until(() => undoBytes.records.size === 2 && undoBytesA.status.includes('deleted'));
+    importAudio(undoBytesB, [file({ name: 'replacement.mp3', size: 50 * 1024 * 1024 })]);
+    await until(() => !undoBytesB.input.disabled);
+    undoBytesA.buttons.find(x => x.textContent === 'Undo deletion').emit('click');
+    await until(() => undoBytesA.status.includes('Library limit'));
+    assert.equal([...undoBytes.records.values()].reduce((sum, record) => sum + record.blob.size, 0), 250 * 1024 * 1024);
+    assert.ok(!undoBytes.records.has('seed-0')); count++; console.log('✓ Stale-tab undo also observes the shared byte cap');
+    const live = sharedLibrary(undefined, true), liveA = await browserFixture({ shared: live }), liveB = await browserFixture({ shared: live });
+    liveA.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(20);
+    const playing = liveA.audios[0]; assert.equal(playing.paused, false);
+    liveB.api.applySettings({ ...liveB.api.getSettings(), selectedId: 'a', volume: .2 });
+    await until(() => playing.volume === .2); assert.equal(playing.playCalls, 1);
+    liveB.buttons.find(x => x.textContent === 'Delete track').emit('click');
+    await until(() => playing.paused && liveA.api.getTracks().length === 1);
+    assert.equal(liveA.revoked, 1); assert.equal(playing.playCalls, 1); assert.equal(liveB.audios.length, 0);
+    count++; console.log('✓ Remote settings do not restart audio; remote deletion stops and unloads stale playback');
+    liveA.events.pagehide(); liveB.events.pagehide();
+    f.events.pageshow({ persisted: true }); f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(20);
+    assert.equal(f.audios.length, 2); assert.equal(f.audios[1].paused, false);
+    f.events.pagehide(); count++; console.log('✓ Returning from pagehide rebuilds unloaded audio before manual play');
     console.log(`${count} Pomodoro music checks passed.`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

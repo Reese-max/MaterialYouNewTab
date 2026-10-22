@@ -385,6 +385,47 @@ async function main() {
     assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),true,"Previously paused video unexpectedly resumed");
     await browserClient.send("Target.closeTarget", { targetId: otherTabId });
 
+    // Pomodoro behavior in the actual disposable extension profile, not a DOM mock.
+    const pomoStarted = await evaluate(`(async () => {
+        await myntPomodoro.setTask('CI focus task');
+        await myntPomodoro.start();
+        return myntPomodoro.getState().isRunning;
+    })()`);
+    assert.equal(pomoStarted, true, 'Pomodoro did not start in extension');
+    await delay(1100);
+    const pomoPaused = await evaluate(`(async () => { await myntPomodoro.pause(); return myntPomodoro.getState(); })()`);
+    assert.equal(pomoPaused.isRunning, false);
+    assert.equal(pomoPaused.task, 'CI focus task');
+    assert.ok(pomoPaused.timeRemaining < pomoPaused.totalTime, 'Wall clock did not advance');
+    await reloadAndWait();
+    const pomoReload = await evaluate('myntPomodoro.getState()');
+    assert.equal(pomoReload.timeRemaining, pomoPaused.timeRemaining, 'Paused duration changed on reload');
+    assert.equal(pomoReload.task, 'CI focus task');
+    await evaluate(`localStorage.setItem('myntPomoStudioMode','full');localStorage.setItem('pomodoroPanelScale','150');localStorage.removeItem('pomodoroPanelPosition')`);
+    await reloadAndWait();
+    await evaluate('myntPomodoro.open()');
+    await delay(600);
+    assert.equal(await evaluate(`(() => {const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();return r.bottom<=innerHeight+1&&r.right<=innerWidth+1&&Math.abs(r.width/p.offsetWidth-1.5)<.02;})()`),true,'Animated full panel at saved 150% scale must fit');
+    await evaluate(`(() => {
+        myntPomodoro.open();
+        const p=document.querySelector('#pomodoroPanel');
+        p.style.animation='none';p.style.transform='scale(1.5)';p.style.top=(innerHeight-180)+'px';
+        localStorage.setItem('pomodoroPanelPosition',JSON.stringify({top:innerHeight-180,left:15}));
+        const b=document.querySelector('[aria-controls="myntPomoExtras"]');
+        if(b.getAttribute('aria-expanded')!=='true')b.click();
+    })()`);
+    await delay(200);
+    const pomoGeometry = await evaluate(`(() => {
+        const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();
+        const inBounds=r.top>=-1&&r.bottom<=innerHeight+1&&r.left>=-1&&r.right<=innerWidth+1;
+        const savedUnchanged=JSON.parse(localStorage.getItem('pomodoroPanelPosition')).top===innerHeight-180;
+        const scalePreserved=p.style.transform==='scale(1.5)';
+        document.querySelector('#myntPomoExtras').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+        const collapsed=document.querySelector('#myntPomoExtras').hidden;
+        return {inBounds,savedUnchanged,collapsed,scalePreserved};
+    })()`);
+    for(const [key,value] of Object.entries(pomoGeometry))assert.equal(value,true,'Pomodoro panel: '+key);
+
     const initial = await evaluate(`(() => ({
         url: location.href,
         extensionId: globalThis.chrome?.runtime?.id || "",
@@ -472,6 +513,8 @@ async function main() {
         documentUrl: initial.url,
         title: initial.title,
         defaultShortcuts: initial.shortcutCount,
+        pomodoroTimerReload: true,
+        pomodoroPanelGeometry: pomoGeometry,
         wallpaperVisibilityCycles: 3,
         hiddenInitializedWallpaperStarts: true,
         reviewRegressions: review,

@@ -13,10 +13,22 @@ function normalizePreset(value){
 }
 function parse(raw){if(raw===null)return [];const v=JSON.parse(raw);if(!plain(v)||v.version!==1||!Array.isArray(v.presets)||v.presets.length>8)throw Error('invalid');return v.presets.map(normalizePreset);}
 const builtin=[normalizePreset({name:'25 / 5',durations:{workMinutes:25,shortBreakMinutes:5,longBreakMinutes:15,roundsBeforeLong:4},appearance:{mode:'original'},music:{}}),normalizePreset({name:'50 / 10',durations:{workMinutes:50,shortBreakMinutes:10,longBreakMinutes:20,roundsBeforeLong:4},appearance:{mode:'original'},music:{}})];
-if(typeof module!=='undefined')module.exports={normalizePreset,parse,builtin};
+function fitPanel(rect,width,height){return {left:Math.max(0,Math.min(rect.left,width-rect.width)),top:Math.max(0,Math.min(rect.top,height-rect.height))};}
+if(typeof module!=='undefined')module.exports={normalizePreset,parse,builtin,fitPanel};
 if(typeof document==='undefined')return;
 document.addEventListener('DOMContentLoaded',()=>{
  const panel=document.querySelector('#pomodoroPanel'),mount=document.querySelector('#myntPomoStudioMount');if(!panel||!mount)return;
+ // Transient viewport safety after disclosure growth; never changes saved drag coordinates.
+ let fitFrame=0;const keepVisible=()=>{if(fitFrame)return;fitFrame=requestAnimationFrame(()=>{
+  fitFrame=0;if(!panel.offsetWidth||!panel.offsetHeight)return;
+  const css=getComputedStyle(panel),before=panel.getBoundingClientRect(),scale=before.width/panel.offsetWidth||1;
+  const extra=keys=>css.boxSizing==='border-box'?0:keys.reduce((sum,k)=>sum+(parseFloat(css[k])||0),0);
+  for(const [key,value] of [['--pomo-viewport-height',Math.floor((innerHeight-12)/scale-extra(['paddingTop','paddingBottom','borderTopWidth','borderBottomWidth']))],['--pomo-viewport-width',Math.floor((innerWidth-12)/scale-extra(['paddingLeft','paddingRight','borderLeftWidth','borderRightWidth']))]]){const next=Math.max(0,value)+'px';if(panel.style.getPropertyValue(key)!==next)panel.style.setProperty(key,next);}
+  const r=panel.getBoundingClientRect(),p=fitPanel(r,innerWidth,innerHeight);
+  if(Math.abs(p.top-r.top)>.5)panel.style.top=(parseFloat(css.top)+p.top-r.top)+'px';
+  if(Math.abs(p.left-r.left)>.5)panel.style.left=(parseFloat(css.left)+p.left-r.left)+'px';
+ });};
+ if(typeof ResizeObserver==='function')new ResizeObserver(keepVisible).observe(panel);root.addEventListener('resize',keepVisible);panel.addEventListener('animationend',keepVisible);panel.addEventListener('transitionend',keepVisible);new MutationObserver(keepVisible).observe(panel,{attributes:true,attributeFilter:['style','class']});
  const t=(k,f)=>{try{return translations[currentLanguage]?.[k]||translations.en?.[k]||f;}catch{return f;}};
  const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
  const status=el('p');status.className='pomoStudioStatus';status.setAttribute('role','status');

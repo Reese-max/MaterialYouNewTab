@@ -38,7 +38,7 @@
         }
         return i + 1 < ids.length ? ids[i + 1] : mode === 'all' ? ids[0] : null;
     }
-    function errorKey(error) { return error?.name === 'QuotaExceededError' ? 'quota' : 'storageError'; }
+    function errorKey(error) { return error?.issue || (error?.name === 'QuotaExceededError' ? 'quota' : 'storageError'); }
     function fadeVolume(start, elapsed, duration = 250) { return Math.max(0, start * (1 - Math.min(1, elapsed / duration))); }
     const core = { normalize, validate, ordered, nextId, errorKey, fadeVolume, MAX_FILE, MAX_TOTAL, MAX_TRACKS };
     if (typeof module !== 'undefined' && module.exports) module.exports = core;
@@ -59,7 +59,7 @@
     let settings = normalize(defaults);
     try { settings = normalize(JSON.parse(localStorage.getItem(SETTINGS_KEY))); } catch (_) { /* safe defaults */ }
     let dbPromise, tracks = [], audio, objectUrl, releaseLock, fadeTimer, generation = 0, undoRecord, mounted = false, importBusy = false;
-    let played = new Set(), lastState, ui = {};
+    let played = new Set(), lastState, ui = {}, libraryRevision = 0, libraryChannel;
     const owner = root.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
     let ownsFallback = false;
     function status(key) { if (ui.status) ui.status.textContent = t(key); }
@@ -78,11 +78,55 @@
         const db = await database();
         return new Promise((resolve, reject) => {
             const tx = db.transaction('tracks', operation === 'getAll' ? 'readonly' : 'readwrite');
-            const req = tx.objectStore('tracks')[operation](...(value === undefined ? [] : [value]));
-            tx.oncomplete = () => resolve(req.result);
-            tx.onerror = tx.onabort = () => reject(tx.error || req.error || new Error('Storage failed'));
+            const store = tx.objectStore('tracks');
+            let req, result, failure;
+            tx.oncomplete = () => resolve(operation === 'put' ? result : req.result);
+            tx.onerror = tx.onabort = () => reject(failure || tx.error || req?.error || new Error('Storage failed'));
+            if (operation === 'put') {
+                // IDB serializes readwrite transactions across tabs. Validate and write
+                // in the same transaction, never against a tab's cached library.
+                req = store.getAll();
+                req.onsuccess = () => {
+                    const others = req.result.filter(track => track.id !== value.id);
+                    const issue = validate(value.blob, others.reduce((sum, track) => sum + track.blob.size, 0), others.length);
+                    if (issue) { failure = Object.assign(new Error(issue), { issue }); tx.abort(); return; }
+                    store.put(value); result = [...others, value];
+                };
+            } else {
+                if (operation === 'delete') store.delete(value);
+                req = store.getAll();
+            }
         });
     }
+    function syncControls() {
+        if (!ui.volume) return;
+        ui.volume.value = settings.volume; ui.mode.value = settings.mode;
+        ui.restPolicy.value = settings.restPolicy; ui.shuffle.checked = settings.shuffle;
+        if (audio && !fadeTimer) audio.volume = settings.volume;
+    }
+    async function refreshShared() {
+        const revision = ++libraryRevision;
+        try {
+            const latest = await transact('getAll');
+            if (revision !== libraryRevision) return;
+            tracks = latest;
+            try { settings = normalize(JSON.parse(localStorage.getItem(SETTINGS_KEY))); } catch (_) { /* keep usable preferences */ }
+            if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || '';
+            const removed = audio && !tracks.some(track => track.id === audio.dataset.track);
+            if (removed || (audio && audio.dataset.track !== settings.selectedId)) { pause(true); unloadAudio(); }
+            syncControls(); renderList();
+            if (removed) status('deleted');
+        } catch (e) { status(errorKey(e)); }
+    }
+    function publishLibraryChange() {
+        libraryRevision++;
+        try { libraryChannel?.postMessage('changed'); } catch (_) { /* storage/visibility listeners remain available */ }
+    }
+    function connectLibraryChannel() {
+        if (libraryChannel || !root.BroadcastChannel) return;
+        try { libraryChannel = new root.BroadcastChannel('mynt-pomodoro-music-library'); libraryChannel.onmessage = () => void refreshShared(); } catch (_) { /* optional coordination */ }
+    }
+    connectLibraryChannel();
     function release() {
         if (releaseLock) { releaseLock(); releaseLock = null; }
         if (ownsFallback) { try { if (localStorage.getItem(OWNER_KEY) === owner) localStorage.removeItem(OWNER_KEY); } catch (_) { /* unavailable storage */ } ownsFallback = false; }
@@ -114,7 +158,7 @@
             return localStorage.getItem(OWNER_KEY) === owner;
         } catch (_) { status('storageError'); return false; }
     }
-    function unloadAudio() { if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); } if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null; }
+    function unloadAudio() { if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); } if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null; audio = null; }
     async function play(id = settings.selectedId, continuation = false) {
         const track = tracks.find(x => x.id === id);
         if (!track) { status('empty'); return; }
@@ -128,7 +172,8 @@
             objectUrl = URL.createObjectURL(track.blob); audio.src = objectUrl;
             audio.addEventListener('ended', advance);
             audio.addEventListener('error', event => { if (event.currentTarget === audio) { pause(true); status('decode'); } });
-            audio.addEventListener('timeupdate', () => {
+            audio.addEventListener('timeupdate', event => {
+                if (!audio || event.currentTarget !== audio) return;
                 if (!fadeTimer && Number.isFinite(audio.duration) && audio.duration - audio.currentTime < 0.3) audio.volume = settings.volume * Math.max(0, (audio.duration - audio.currentTime) / 0.3);
             });
         }
@@ -166,13 +211,13 @@
         let failed = false;
         try {
             for (const file of [...files].slice(0, MAX_TRACKS + 1)) {
-                const issue = validate(file, tracks.reduce((sum, x) => sum + x.blob.size, 0), tracks.length);
+                const issue = validate(file, 0, 0); // Shared capacity is checked atomically with the write below.
                 if (issue) { status(issue); failed = true; break; }
                 try { await playable(file); } catch (_) { status('decode'); failed = true; break; }
                 const record = { id: root.crypto.randomUUID(), name: file.name.slice(0, 160), blob: file };
-                await transact('put', record); tracks.push(record); settings.order.push(record.id);
+                tracks = await transact('put', record); settings.order.push(record.id);
                 if (!settings.selectedId) settings.selectedId = record.id;
-                save(); renderList();
+                save(); publishLibraryChange(); renderList();
             }
             if (!failed) status('ready');
         } catch (e) { status(errorKey(e)); }
@@ -195,11 +240,11 @@
             button('remove', item, async () => {
                 if (importBusy || !root.confirm(`${t('confirm')}\n${track.name}`)) return;
                 try {
-                    await transact('delete', track.id); undoRecord = { track, index };
+                    tracks = await transact('delete', track.id); undoRecord = { track, index };
                     if (audio?.dataset.track === track.id) { pause(true); unloadAudio(); }
-                    tracks = tracks.filter(x => x.id !== track.id); settings.order = settings.order.filter(id => id !== track.id);
+                    settings.order = settings.order.filter(id => id !== track.id);
                     if (settings.selectedId === track.id) settings.selectedId = tracks[0]?.id || '';
-                    save(); renderList(); ui.undo.hidden = false; status('deleted');
+                    save(); publishLibraryChange(); renderList(); ui.undo.hidden = false; status('deleted');
                 } catch (e) { status(errorKey(e)); }
             });
         });
@@ -219,9 +264,9 @@
         ui.undo = button('undo', controls, async () => {
             if (!undoRecord || importBusy) return;
             const { track, index } = undoRecord;
-            const issue = validate(track.blob, tracks.reduce((sum, x) => sum + x.blob.size, 0), tracks.length);
+            const issue = validate(track.blob, 0, 0);
             if (issue) { status(issue); return; }
-            try { await transact('put', track); tracks.push(track); settings.order.splice(index, 0, track.id); if (!settings.selectedId) settings.selectedId = track.id; undoRecord = null; ui.undo.hidden = true; save(); renderList(); status('ready'); } catch (e) { status(errorKey(e)); }
+            try { tracks = await transact('put', track); settings.order = settings.order.filter(id => id !== track.id); settings.order.splice(index, 0, track.id); if (!settings.selectedId) settings.selectedId = track.id; undoRecord = null; ui.undo.hidden = true; save(); publishLibraryChange(); renderList(); status('ready'); } catch (e) { status(errorKey(e)); }
         }); ui.undo.hidden = true;
         function select(key, field, choices) {
             const label = node('label', t(key), details), input = node('select', '', label);
@@ -239,18 +284,23 @@
     }
     root.myntPomoMusic = {
         getSettings: () => normalize(settings),
-        applySettings(value) { pause(true); settings = normalize(value); if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || ''; save(); if (ui.volume) { ui.volume.value = settings.volume; ui.mode.value = settings.mode; ui.restPolicy.value = settings.restPolicy; ui.shuffle.checked = settings.shuffle; renderList(); } },
+        applySettings(value) { pause(true); settings = normalize(value); if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || ''; save(); syncControls(); renderList(); },
         pause: () => pause(),
         // Track IDs/settings only. Audio data is intentionally excluded from backup APIs.
         getTracks: () => ordered(tracks, settings.order).map(({ id, name }) => ({ id, name }))
     };
-    root.addEventListener('storage', event => { if (event.key === OWNER_KEY && ownsFallback && event.newValue !== owner) { pause(true); status('busy'); } });
+    root.addEventListener('storage', event => {
+        if (event.key === OWNER_KEY && ownsFallback && event.newValue !== owner) { pause(true); status('busy'); }
+        if (event.key === SETTINGS_KEY || event.key === null) void refreshShared();
+    });
     document.addEventListener('mynt:pomodoro-state', event => {
         const state = event.detail?.sharedstate || event.detail?.state || event.detail;
         if (!state) return;
-        if ((settings.restPolicy === 'pause' && state.phase !== 'work') || (lastState?.isRunning && !state.isRunning && lastState.phase === state.phase)) pause();
+        if ((settings.restPolicy === 'pause' && state.phase !== 'work' && lastState?.phase !== state.phase) || (lastState?.isRunning && !state.isRunning && lastState.phase === state.phase)) pause();
         lastState = state;
     });
-    root.addEventListener('pagehide', () => { pause(true); unloadAudio(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) void refreshShared(); });
+    root.addEventListener('pagehide', () => { pause(true); unloadAudio(); libraryChannel?.close(); libraryChannel = null; });
+    root.addEventListener('pageshow', event => { if (event.persisted) { connectLibraryChannel(); void refreshShared(); } });
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(mount, 0), { once: true }); else setTimeout(mount, 0);
 })(typeof window !== 'undefined' ? window : null);
