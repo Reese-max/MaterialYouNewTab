@@ -322,3 +322,56 @@ for (const lazy of ["scripts/daidai-integration.js", "scripts/bookmarks.js"]) {
 }
 assert.match(read("scripts/daidai-integration.js"), /document\.readyState === "loading"/);
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);
+
+// Settings cleanup: keep every setting while removing non-setting project links.
+const menuSource = read('scripts/menu-shortcut-page.js');
+assert.doesNotMatch(html.slice(html.indexOf('id="menuBar"'), html.indexOf('<!-- ------end of Menu-bar')), /id="(?:github|feedback)"/);
+assert.match(html, /<button id="menuCloseButton" type="button" aria-label=/);
+assert.ok(html.indexOf('id="menuCloseButton"') < html.indexOf('id="optCont"'));
+assert.match(html, /<details id="settingsHelp"/);
+assert.match(html, /id="tips"/); assert.match(html, /id="dontShowTips"/);
+assert.match(menuSource, /closedDetails\.querySelector\('summary'\) === el/);
+assert.match(read('style.css'), /#settingsHelp:has\(\.tips-hidden\)/);
+{
+ const nodes = new Map(), timers = [], document = { activeElement: null, querySelector: () => null };
+ const get = id => { if (!nodes.has(id)) nodes.set(id, { id, style:{}, attributes:{}, listeners:{}, tabIndex:0,
+  setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];},
+  addEventListener(k,v){this.listeners[k]=v;},focus(){document.activeElement=this;},
+  contains(el){return el && el.id!=='menuButton';},closest(){return null;},getClientRects(){return [{}];},
+  querySelectorAll(){return [get('menuCloseButton'),get('settingsHelpTitle')];},click(){this.clicked=true;this.onclick?.();}
+ }); return nodes.get(id); };
+ document.getElementById=get;
+ const context={document, localStorage:{getItem:()=> 'en'},rtlLanguages:[],getComputedStyle:()=>({visibility:'visible'}),
+  setTimeout(fn,delay=0){timers.push({fn,delay});},requestAnimationFrame:fn=>fn()};
+ vm.createContext(context);
+ vm.runInContext(menuSource.split('// Toggle expand/collapse sections')[0],context);
+ const run=code=>vm.runInContext(code,context),flush=()=>{while(timers.length)timers.splice(0).sort((a,b)=>a.delay-b.delay).forEach(t=>t.fn());};
+ run('openMenuBar()');flush();assert.equal(get('menuBar').style.display,'block');assert.equal(document.activeElement.id,'menuCloseButton');
+ run('closeMenuBar(); openMenuBar()');flush();assert.equal(get('menuBar').style.display,'block','stale close callback cannot hide reopened settings');
+ const event={key:'Escape',preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
+ get('menuCont').listeners.keydown(event);flush();assert.equal(event.stopped,true);assert.equal(get('menuBar').style.display,'none');assert.equal(document.activeElement.id,'menuButton');
+ run('openMenuBar()');flush();document.querySelector=()=>({open:true});get('menuCont').listeners.keydown({...event,stopped:false});flush();assert.equal(get('menuBar').style.display,'block','native dialogs own Escape');document.querySelector=()=>null;
+ get('shortcutEditPage').style.display='block';get('menuCont').listeners.keydown({...event});assert.equal(get('backButton').clicked,true,'Escape returns from shortcut editing');get('shortcutEditPage').style.display='none';
+ document.activeElement=get('menuCloseButton');get('menuCont').listeners.keydown({...event,key:'Tab',shiftKey:true});assert.equal(document.activeElement.id,'settingsHelpTitle');
+ get('menuCont').listeners.keydown({...event,key:'Tab',shiftKey:false});assert.equal(document.activeElement.id,'menuCloseButton');
+ vm.runInContext(menuSource.slice(menuSource.indexOf('/* ------ Shortcut Page Transitions')),context);
+ get('shortcutEditButton').onclick();run('closeMenuBar(); openMenuBar()');flush();
+ assert.equal(get('overviewPage').style.display,'block','stale shortcut animation cannot blank reopened settings');assert.equal(document.activeElement.id,'menuCloseButton');
+ get('shortcutEditButton').onclick();timers.filter(t=>t.delay===0).forEach(t=>t.fn());
+ get('menuCont').listeners.keydown({...event});flush();
+ assert.equal(get('overviewPage').style.display,'block');assert.equal(get('shortcutEditPage').style.display,'none','immediate Escape cancels outgoing shortcut transition');assert.equal(document.activeElement.id,'shortcutEditButton');
+
+}
+console.log('SETTINGS_PANEL_OK: links removed, help retained, header close, rapid reopen, dialog-aware Escape/back and keyboard focus wrapping');
+assert.doesNotMatch(read('scripts/languages.js'), /scale:\s*\$\{widthh\}/, 'Settings text must reflow rather than shrink at narrow widths');
+assert.match(read('style.css'), /#menuBar #menuCont \{ max-width:100%; \}/);
+
+execFileSync(process.execPath, [resolve(root, "tools/regress-panel-interactions.cjs"), root], {stdio:"inherit"});
+
+execFileSync(process.execPath, [resolve(root, "tools/regress-gallery-delete.cjs"), root], {stdio:"inherit"});
+
+execFileSync(process.execPath, [resolve(root, "tools/regress-backup-completion.cjs"), root], {stdio:"inherit"});
+
+execFileSync(process.execPath, [resolve(root, "tools/regress-bookmark-completion.cjs"), root], {stdio:"inherit"});
+
+execFileSync(process.execPath, [resolve(root, "tools/regress-focus-completion.cjs"), root], {stdio:"inherit"});

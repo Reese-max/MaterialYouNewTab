@@ -240,6 +240,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     more.addEventListener("click", () => setPanel(panel.hidden));
+    const dismissPanel = event => {
+        if (event.key !== "Escape" || event.isComposing || panel.hidden) return;
+        event.preventDefault();
+        event.stopPropagation();
+        setPanel(false);
+        more.focus({ preventScroll: true });
+    };
+    panel.addEventListener("keydown", dismissPanel);
+    more.addEventListener("keydown", dismissPanel);
     $("dailyFocusGptBtn").addEventListener("click", openGpt);
     $("dailyFocusPlayBtn").addEventListener("click", event => {
         // Stop the document-level "click outside closes Pomodoro" handler from closing the panel we open.

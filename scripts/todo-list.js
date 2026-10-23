@@ -157,7 +157,8 @@ todoulList.addEventListener("click", (event) => {
             function saveEdit() {
                 const newTitle = input.value.trim();
                 todo.title = (newTitle !== "") ? newTitle : previousTitle; // Check for empty title
-                setTodoDaidaiLabel(daidaiButton, todo.title);
+                const daidaiButton = li.querySelector(".todoDaidaiBtn");
+                if (daidaiButton) setTodoDaidaiLabel(daidaiButton, todo.title);
                 const textNode = document.createTextNode(todo.title);
                 li.insertBefore(textNode, input);
                 li.removeChild(input);

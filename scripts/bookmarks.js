@@ -45,11 +45,34 @@ let bookmarkTree = [];
 let recentBookmarks = [];
 let bookmarkNodeMap = new Map();
 let currentBookmarkId = null;
-let currentSortMethod = localStorage.getItem("bookmarkSortMethod") || "title";
+let currentSortMethod = readBookmarkSetting("bookmarkSortMethod") || "title";
 let bookmarkStatusTimer = null;
 let bookmarkSearchTimer = null;
 let bookmarkUndoTimer = null;
 let pendingBookmarkUndo = null;
+let bookmarkDataAvailable = false;
+let bookmarkLoadGeneration = 0;
+let bookmarkPermissionPending = false;
+let bookmarkMutationPending = false;
+let bookmarkEditorSaving = false;
+let bookmarkRefreshTimer = null;
+let observedBookmarkAPI = null;
+
+function readBookmarkSetting(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch {
+        return null;
+    }
+}
+
+function bookmarkLocale() {
+    try {
+        return Intl.getCanonicalLocales(String(currentLanguage || "en").replace(/_/gu, "-"))[0] || "en";
+    } catch {
+        return "en";
+    }
+}
 
 function bookmarkText(key, replacements = {}) {
     let value = translations[currentLanguage]?.[key] || translations.en?.[key] || key;
@@ -61,7 +84,7 @@ function bookmarkText(key, replacements = {}) {
 
 function readStoredArray(key) {
     try {
-        const value = JSON.parse(localStorage.getItem(key) || "[]");
+        const value = JSON.parse(readBookmarkSetting(key) || "[]");
         return Array.isArray(value) ? value.map(String) : [];
     } catch {
         return [];
@@ -69,7 +92,13 @@ function readStoredArray(key) {
 }
 
 function writeStoredArray(key, value) {
-    localStorage.setItem(key, JSON.stringify([...new Set(value.map(String))]));
+    try {
+        localStorage.setItem(key, JSON.stringify([...new Set(value.map(String))]));
+        return true;
+    } catch {
+        setBookmarkStatus("bookmarkLocalSaveError", {}, 5000);
+        return false;
+    }
 }
 
 function getFavoriteIds() {
@@ -97,9 +126,16 @@ function getPermissionNamespace() {
 }
 
 function callBookmarkApi(method, ...args) {
-    if (!bookmarksAPI?.[method]) return Promise.reject(new Error(`Bookmarks API method unavailable: ${method}`));
-    if (bookmarkApiUsesPromises) return bookmarksAPI[method](...args);
     return new Promise((resolve, reject) => {
+        if (typeof bookmarksAPI?.[method] !== "function") {
+            reject(new Error(`Bookmarks API method unavailable: ${method}`));
+            return;
+        }
+        // The executor also catches synchronous throws from either API flavor.
+        if (bookmarkApiUsesPromises) {
+            resolve(bookmarksAPI[method](...args));
+            return;
+        }
         bookmarksAPI[method](...args, result => {
             const error = globalThis.chrome?.runtime?.lastError;
             if (error) reject(new Error(error.message));
@@ -109,20 +145,45 @@ function callBookmarkApi(method, ...args) {
 }
 
 function callPermissionApi(method, details) {
-    const permissionAPI = getPermissionNamespace();
-    if (!permissionAPI?.[method]) return Promise.resolve(false);
-    if (globalThis.browser?.permissions === permissionAPI) return permissionAPI[method](details);
-    return new Promise(resolve => permissionAPI[method](details, resolve));
+    return new Promise((resolve, reject) => {
+        const permissionAPI = getPermissionNamespace();
+        if (typeof permissionAPI?.[method] !== "function") {
+            reject(new Error(`Permissions API method unavailable: ${method}`));
+            return;
+        }
+        if (globalThis.browser?.permissions === permissionAPI) {
+            resolve(permissionAPI[method](details));
+            return;
+        }
+        permissionAPI[method](details, result => {
+            const error = globalThis.chrome?.runtime?.lastError;
+            if (error) reject(new Error(error.message));
+            else resolve(result);
+        });
+    });
 }
 
 function requiredBookmarkPermissions() {
     return { permissions: (isFirefox || isOpera) ? ["bookmarks"] : ["bookmarks", "favicon"] };
 }
 
+function observeBookmarkChanges() {
+    if (!bookmarksAPI || observedBookmarkAPI === bookmarksAPI) return;
+    observedBookmarkAPI = bookmarksAPI;
+    for (const event of [bookmarksAPI.onCreated, bookmarksAPI.onChanged, bookmarksAPI.onRemoved, bookmarksAPI.onMoved, bookmarksAPI.onChildrenReordered]) {
+        event?.addListener(() => {
+            clearTimeout(bookmarkRefreshTimer);
+            bookmarkRefreshTimer = setTimeout(() => {
+                if (bookmarkSidebar.classList.contains("open") && !bookmarkMutationPending) refreshBookmarkAvailability();
+            }, 120);
+        });
+    }
+}
+
 function configureStateButton(button, label, action) {
     button.hidden = !label;
     button.textContent = label || "";
-    button.onclick = action || null;
+    button.onclick = action ? () => action() : null;
 }
 
 function renderBookmarkState(kind) {
@@ -137,6 +198,7 @@ function renderBookmarkState(kind) {
         error: ["bookmarkStateErrorTitle", "bookmarkStateErrorDescription", "bookmarkRetryAction", refreshBookmarkAvailability]
     };
     const state = states[kind] || states.error;
+    if (!["empty", "search-empty"].includes(kind)) bookmarkDataAvailable = false;
     bookmarkState.dataset.state = kind;
     bookmarkStateTitle.textContent = bookmarkText(state[0]);
     bookmarkStateDescription.textContent = bookmarkText(state[1]);
@@ -145,7 +207,7 @@ function renderBookmarkState(kind) {
     bookmarkState.hidden = false;
     bookmarkContent.hidden = true;
     bookmarkSearch.disabled = !["empty", "search-empty"].includes(kind);
-    bookmarkAddButton.disabled = kind !== "empty";
+    bookmarkAddButton.disabled = !["empty", "search-empty"].includes(kind);
 }
 
 function showBookmarkContent() {
@@ -164,30 +226,61 @@ function setBookmarkStatus(key, replacements = {}, duration = 3200) {
 }
 
 async function requestBookmarkPermission() {
-    const granted = await callPermissionApi("request", requiredBookmarkPermissions());
-    if (!granted) {
-        renderBookmarkState("denied");
-        bookmarkStatePrimary.focus();
+    if (bookmarkPermissionPending) return false;
+    bookmarkPermissionPending = true;
+    const generation = ++bookmarkLoadGeneration;
+    renderBookmarkState("loading");
+    try {
+        // Invoke directly in the user's click, before any asynchronous work.
+        const granted = await callPermissionApi("request", requiredBookmarkPermissions());
+        if (generation !== bookmarkLoadGeneration) return false;
+        if (!granted) {
+            renderBookmarkState("denied");
+            if (bookmarkSidebar.classList.contains("open")) bookmarkStatePrimary.focus();
+            return false;
+        }
+        bookmarksAPI = getBookmarkNamespace();
+        observeBookmarkChanges();
+        const loaded = await loadBookmarks();
+        if (loaded && bookmarkSidebar.classList.contains("open")) bookmarkSearch.focus();
+        return loaded;
+    } catch (error) {
+        console.error("Error requesting bookmark access:", error);
+        if (generation === bookmarkLoadGeneration) renderBookmarkState("error");
         return false;
+    } finally {
+        bookmarkPermissionPending = false;
     }
-    bookmarksAPI = getBookmarkNamespace();
-    await loadBookmarks();
-    bookmarkSearch.focus();
-    return true;
 }
 
 async function refreshBookmarkAvailability() {
+    const generation = ++bookmarkLoadGeneration;
     renderBookmarkState("loading");
     bookmarksAPI = getBookmarkNamespace();
-    if (!bookmarksAPI) {
+    const permissionAPI = getPermissionNamespace();
+    // Optional APIs may be hidden until access is granted. Check permissions first.
+    if (!bookmarksAPI && !permissionAPI?.contains) {
         renderBookmarkState(["http:", "https:", "file:"].includes(location.protocol) ? "preview" : "unsupported");
-        return;
+        return false;
     }
-    if (!await callPermissionApi("contains", requiredBookmarkPermissions())) {
-        renderBookmarkState("permission");
-        return;
+    try {
+        if (permissionAPI?.contains) {
+            // Missing favicon access must not block otherwise-authorized bookmarks.
+            const granted = await callPermissionApi("contains", { permissions: ["bookmarks"] });
+            if (generation !== bookmarkLoadGeneration) return false;
+            if (!granted) {
+                renderBookmarkState(permissionAPI.request ? "permission" : "unsupported");
+                return false;
+            }
+        }
+        bookmarksAPI = getBookmarkNamespace();
+        observeBookmarkChanges();
+        return await loadBookmarks();
+    } catch (error) {
+        console.error("Error checking bookmark access:", error);
+        if (generation === bookmarkLoadGeneration) renderBookmarkState("error");
+        return false;
     }
-    await loadBookmarks();
 }
 
 function openBookmarkSidebar() {
@@ -198,8 +291,10 @@ function openBookmarkSidebar() {
     bookmarkButton.classList.add("rotate");
     bookmarkButton.setAttribute("aria-expanded", "true");
     refreshBookmarkAvailability().then(() => {
+        if (!bookmarkSidebar.classList.contains("open")) return;
         const target = bookmarkSearch.disabled ? bookmarkStatePrimary : bookmarkSearch;
-        if (target && !target.hidden) target.focus();
+        if (target && !target.hidden && !target.disabled) target.focus();
+        else bookmarkCloseButton.focus();
     });
 }
 
@@ -236,11 +331,11 @@ function bookmarkComparableUrl(url) {
 }
 
 function seedFavoritesFromShortcuts(allNodes) {
-    if (localStorage.getItem(BOOKMARK_FAVORITES_KEY) !== null) return;
-    const count = Number.parseInt(localStorage.getItem("shortcutAmount") || "0", 10);
+    if (readBookmarkSetting(BOOKMARK_FAVORITES_KEY) !== null) return;
+    const count = Number.parseInt(readBookmarkSetting("shortcutAmount") || "0", 10);
     const shortcutUrls = new Set();
     for (let index = 0; index < count; index += 1) {
-        const url = bookmarkComparableUrl(localStorage.getItem(`shortcutURL${index}`));
+        const url = bookmarkComparableUrl(readBookmarkSetting(`shortcutURL${index}`));
         if (url) shortcutUrls.add(url);
     }
     const matches = allNodes
@@ -250,16 +345,23 @@ function seedFavoritesFromShortcuts(allNodes) {
     writeStoredArray(BOOKMARK_FAVORITES_KEY, matches);
 }
 
+function hasBookmarkContent() {
+    const rootIds = new Set(bookmarkTree.map(root => String(root.id)));
+    return [...bookmarkNodeMap.values()].some(node => node.url ||
+        (Array.isArray(node.children) && node.parentId != null && !rootIds.has(String(node.parentId))));
+}
+
 function sortBookmarkNodes(nodes) {
     const sorted = [...nodes];
     if (currentSortMethod === "date") return sorted.sort((a, b) => (a.dateAdded || 0) - (b.dateAdded || 0));
-    return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || "", currentLanguage));
+    return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || "", bookmarkLocale()));
 }
 
 async function loadBookmarks() {
+    const generation = ++bookmarkLoadGeneration;
     if (!bookmarksAPI?.getTree) {
         renderBookmarkState("unsupported");
-        return;
+        return false;
     }
     renderBookmarkState("loading");
     try {
@@ -267,30 +369,36 @@ async function loadBookmarks() {
             callBookmarkApi("getTree"),
             bookmarksAPI.getRecent ? callBookmarkApi("getRecent", 4).catch(() => []) : Promise.resolve([])
         ]);
-        bookmarkTree = tree || [];
-        recentBookmarks = (recent || []).filter(node => node.url).slice(0, 4);
+        if (generation !== bookmarkLoadGeneration) return false;
+        if (!Array.isArray(tree)) throw new Error("Invalid bookmark tree response");
+        bookmarkTree = tree;
+        recentBookmarks = (Array.isArray(recent) ? recent : []).filter(node => node.url).slice(0, 4);
         const allNodes = flattenBookmarkNodes(bookmarkTree);
         bookmarkNodeMap = new Map(allNodes.map(node => [String(node.id), node]));
         seedFavoritesFromShortcuts(allNodes);
-        if (!allNodes.some(node => node.url)) {
+        bookmarkDataAvailable = true;
+        if (!hasBookmarkContent()) {
             bookmarkList.replaceChildren();
             renderBookmarkState("empty");
-            return;
+            return true;
         }
         renderBookmarks();
+        return true;
     } catch (error) {
         console.error("Error loading bookmarks:", error);
-        renderBookmarkState("error");
+        if (generation === bookmarkLoadGeneration) renderBookmarkState("error");
+        return false;
     }
 }
 
 function renderBookmarks() {
-    const query = bookmarkSearch.value.trim().toLocaleLowerCase(currentLanguage);
+    if (!bookmarkDataAvailable) return;
+    const query = bookmarkSearch.value.trim().toLocaleLowerCase(bookmarkLocale());
     bookmarkSearchClearButton.hidden = !query;
     bookmarkList.replaceChildren();
     if (query) {
         const matches = [...bookmarkNodeMap.values()].filter(node =>
-            `${node.title || ""} ${node.url || ""}`.toLocaleLowerCase(currentLanguage).includes(query)
+            `${node.title || ""} ${node.url || ""}`.toLocaleLowerCase(bookmarkLocale()).includes(query)
         );
         if (!matches.length) {
             renderBookmarkState("search-empty");
@@ -298,6 +406,10 @@ function renderBookmarks() {
         }
         bookmarkList.append(createBookmarkSection("bookmarkSectionSearch", matches, "bookmarkSectionSearchEmpty"));
         showBookmarkContent();
+        return;
+    }
+    if (!hasBookmarkContent()) {
+        renderBookmarkState("empty");
         return;
     }
     const favorites = getFavoriteIds().map(id => bookmarkNodeMap.get(id)).filter(Boolean);
@@ -390,19 +502,25 @@ function setBookmarkFavicon(image, pageUrl) {
         image.src = "./svgs/offline.svg";
     };
     try {
-        const hostname = new URL(pageUrl).hostname;
-        const googleFallback = () => {
-            image.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`;
+        const url = new URL(pageUrl);
+        // Never send private bookmark domains to a third-party favicon service.
+        if (["http:", "https:"].includes(url.protocol) && !isFirefox && !isOpera && globalThis.chrome?.runtime?.id) {
             image.onerror = offlineFallback;
-        };
-        if (!isFirefox && !isOpera && globalThis.chrome?.runtime?.id) {
-            image.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=32`;
-            image.onerror = googleFallback;
+            image.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url.href)}&size=32`;
         } else {
-            googleFallback();
+            offlineFallback();
         }
     } catch {
         offlineFallback();
+    }
+}
+
+function safeBookmarkLink(value) {
+    try {
+        const url = new URL(value);
+        return ["javascript:", "data:", "vbscript:", "blob:"].includes(url.protocol) ? null : url.href;
+    } catch {
+        return null;
     }
 }
 
@@ -420,7 +538,16 @@ function createBookmarkItem(node) {
     item.dataset.id = node.id;
     item.dataset.url = node.url;
     const link = document.createElement("a");
-    link.href = node.url;
+    const safeUrl = safeBookmarkLink(node.url);
+    if (safeUrl) link.href = safeUrl;
+    else {
+        link.setAttribute("aria-disabled", "true");
+        link.title = bookmarkText("bookmarkInvalidUrl");
+        link.addEventListener("click", event => {
+            event.preventDefault();
+            setBookmarkStatus("bookmarkInvalidUrl");
+        });
+    }
     const favicon = document.createElement("img");
     favicon.className = "favicon";
     favicon.alt = "";
@@ -446,7 +573,8 @@ function createActionButton(label, className, action, disabled = false) {
     button.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
-        button.closest("details").open = false;
+        const menu = button.closest("details");
+        if (menu) menu.open = false;
         action();
     });
     return button;
@@ -526,13 +654,14 @@ function normalizeBookmarkUrl(value) {
     const candidate = /^[a-z][a-z\d+.-]*:/iu.test(trimmed) ? trimmed : `https://${trimmed}`;
     try {
         const parsed = new URL(candidate);
-        return ["javascript:", "data:", "vbscript:"].includes(parsed.protocol) ? null : parsed.href;
+        return safeBookmarkLink(parsed.href);
     } catch {
         return null;
     }
 }
 
 function openBookmarkEditor(node = null) {
+    if (!bookmarkDataAvailable || bookmarkMutationPending || editBookmarkModal.open) return;
     currentBookmarkId = node?.id ? String(node.id) : null;
     editBookmarkHeading.textContent = bookmarkText(node ? "editBookmarkHeading" : "addBookmarkHeading");
     editBookmarkName.value = node?.title || "";
@@ -546,49 +675,67 @@ function openBookmarkEditor(node = null) {
 }
 
 function closeBookmarkEditor() {
+    // A browser API write cannot be cancelled after dispatch. Keep that state explicit.
+    if (bookmarkEditorSaving) return;
     currentBookmarkId = null;
     if (editBookmarkModal.open) editBookmarkModal.close();
     bookmarkAddButton.focus();
 }
 
+function setBookmarkEditorSaving(saving) {
+    bookmarkEditorSaving = saving;
+    saveBookmarkChanges.disabled = saving;
+    cancelBookmarkEdit.disabled = saving;
+    editBookmarkName.disabled = saving;
+    editBookmarkURL.disabled = saving;
+    editBookmarkModal.setAttribute("aria-busy", String(saving));
+}
+
 async function saveBookmarkEditor() {
+    if (!editBookmarkModal.open || bookmarkMutationPending) return false;
     const title = editBookmarkName.value.trim();
     const url = normalizeBookmarkUrl(editBookmarkURL.value);
     if (!url) {
         bookmarkEditorError.textContent = bookmarkText("bookmarkInvalidUrl");
         editBookmarkURL.focus();
-        return;
+        return false;
     }
-    saveBookmarkChanges.disabled = true;
+    const id = currentBookmarkId;
+    bookmarkMutationPending = true;
+    setBookmarkEditorSaving(true);
     bookmarkEditorError.textContent = "";
     try {
-        if (currentBookmarkId) {
-            await callBookmarkApi("update", currentBookmarkId, { title, url });
+        if (id) {
+            await callBookmarkApi("update", id, { title, url });
             setBookmarkStatus("bookmarkUpdated");
         } else {
             await callBookmarkApi("create", { title, url });
             setBookmarkStatus("bookmarkCreated");
         }
+        setBookmarkEditorSaving(false);
         closeBookmarkEditor();
         await loadBookmarks();
+        return true;
     } catch (error) {
         console.error("Error saving bookmark:", error);
         bookmarkEditorError.textContent = bookmarkText("bookmarkSaveError");
-        saveBookmarkChanges.disabled = false;
+        return false;
+    } finally {
+        setBookmarkEditorSaving(false);
+        bookmarkMutationPending = false;
     }
 }
 
 async function deleteBookmark(node) {
-    const message = bookmarkText("deleteBookmark", { title: node.title || node.url });
-    if (!await confirmPrompt(message)) return;
-    const favorites = getFavoriteIds();
-    const favoriteIndex = favorites.indexOf(String(node.id));
+    if (bookmarkMutationPending || !node?.url) return false;
+    bookmarkMutationPending = true;
     try {
+        const message = bookmarkText("deleteBookmark", { title: node.title || node.url });
+        if (!await confirmPrompt(message)) return false;
+        const favorites = getFavoriteIds();
+        const favoriteIndex = favorites.indexOf(String(node.id));
         await callBookmarkApi("remove", node.id);
-        if (favoriteIndex >= 0) {
-            favorites.splice(favoriteIndex, 1);
-            writeStoredArray(BOOKMARK_FAVORITES_KEY, favorites);
-        }
+        // Capture recovery data immediately, before any fallible preference write.
         pendingBookmarkUndo = {
             title: node.title || "",
             url: node.url,
@@ -596,19 +743,30 @@ async function deleteBookmark(node) {
             index: node.index,
             favoriteIndex
         };
-        showBookmarkUndo();
+        showBookmarkUndo(false);
+        if (favoriteIndex >= 0) {
+            favorites.splice(favoriteIndex, 1);
+            writeStoredArray(BOOKMARK_FAVORITES_KEY, favorites);
+        }
         await loadBookmarks();
+        // Give the user the full undo window after refresh stops blocking mutations.
+        showBookmarkUndo();
+        return true;
     } catch (error) {
         console.error("Error removing bookmark:", error);
         setBookmarkStatus("bookmarkDeleteError");
+        return false;
+    } finally {
+        bookmarkMutationPending = false;
     }
 }
 
-function showBookmarkUndo() {
+function showBookmarkUndo(startTimer = true) {
     clearTimeout(bookmarkUndoTimer);
     bookmarkUndoMessage.textContent = bookmarkText("bookmarkDeletedWithUndo");
     bookmarkUndoBar.hidden = false;
-    bookmarkUndoTimer = setTimeout(clearBookmarkUndo, BOOKMARK_UNDO_MS);
+    bookmarkUndoButton.disabled = !startTimer;
+    if (startTimer) bookmarkUndoTimer = setTimeout(clearBookmarkUndo, BOOKMARK_UNDO_MS);
 }
 
 function clearBookmarkUndo() {
@@ -619,28 +777,40 @@ function clearBookmarkUndo() {
 
 async function undoBookmarkDelete() {
     const pending = pendingBookmarkUndo;
-    if (!pending) return;
-    clearBookmarkUndo();
+    if (!pending || bookmarkMutationPending) return false;
+    bookmarkMutationPending = true;
+    bookmarkUndoButton.disabled = true;
+    // Keep the only recovery copy until the browser confirms creation.
+    clearTimeout(bookmarkUndoTimer);
     try {
         const details = { title: pending.title, url: pending.url };
-        if (pending.parentId) details.parentId = pending.parentId;
-        if (Number.isInteger(pending.index)) details.index = pending.index;
-        let restored;
-        try {
-            restored = await callBookmarkApi("create", details);
-        } catch {
-            restored = await callBookmarkApi("create", { title: pending.title, url: pending.url });
+        const tree = await callBookmarkApi("getTree");
+        if (!Array.isArray(tree)) throw new Error("Invalid bookmark tree response");
+        const parent = flattenBookmarkNodes(tree).find(node => String(node.id) === String(pending.parentId));
+        if (parent && Array.isArray(parent.children) && !parent.unmodifiable) {
+            details.parentId = String(parent.id);
+            if (Number.isInteger(pending.index)) details.index = Math.max(0, Math.min(pending.index, parent.children.length));
         }
+        // Exactly one create attempt. A failed write is not blindly retried elsewhere.
+        const restored = await callBookmarkApi("create", details);
+        clearBookmarkUndo();
+        let savedPreferences = true;
         if (pending.favoriteIndex >= 0 && restored?.id) {
             const favorites = getFavoriteIds();
             favorites.splice(Math.min(pending.favoriteIndex, favorites.length), 0, String(restored.id));
-            writeStoredArray(BOOKMARK_FAVORITES_KEY, favorites);
+            savedPreferences = writeStoredArray(BOOKMARK_FAVORITES_KEY, favorites);
         }
-        setBookmarkStatus("bookmarkRestored");
+        if (savedPreferences) setBookmarkStatus("bookmarkRestored");
         await loadBookmarks();
+        return true;
     } catch (error) {
         console.error("Error restoring bookmark:", error);
+        bookmarkUndoMessage.textContent = bookmarkText("bookmarkRestoreError");
         setBookmarkStatus("bookmarkRestoreError", {}, 5000);
+        return false;
+    } finally {
+        bookmarkUndoButton.disabled = false;
+        bookmarkMutationPending = false;
     }
 }
 
@@ -708,13 +878,21 @@ bookmarkViewList.addEventListener("click", () => {
 });
 sortAlphabetical.addEventListener("click", () => {
     currentSortMethod = "title";
-    localStorage.setItem("bookmarkSortMethod", currentSortMethod);
+    try {
+        localStorage.setItem("bookmarkSortMethod", currentSortMethod);
+    } catch {
+        setBookmarkStatus("bookmarkLocalSaveError", {}, 5000);
+    }
     updateSortButtons();
     renderBookmarks();
 });
 sortTimeAdded.addEventListener("click", () => {
     currentSortMethod = "date";
-    localStorage.setItem("bookmarkSortMethod", currentSortMethod);
+    try {
+        localStorage.setItem("bookmarkSortMethod", currentSortMethod);
+    } catch {
+        setBookmarkStatus("bookmarkLocalSaveError", {}, 5000);
+    }
     updateSortButtons();
     renderBookmarks();
 });
@@ -758,6 +936,14 @@ document.addEventListener("click", event => {
     if (!bookmarkSidebar.contains(event.target) && !bookmarkButton.contains(event.target)) closeBookmarkSidebar();
 });
 
+bookmarkSidebar.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !event.isComposing && !editBookmarkModal.open) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeBookmarkSidebar();
+    }
+});
+
 document.addEventListener("keydown", event => {
     trapBookmarkFocus(event);
     if (event.key === "Escape" && bookmarkSidebar.classList.contains("open") && !editBookmarkModal.open) {
@@ -789,8 +975,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const permissionAPI = getPermissionNamespace();
     for (const permissionEvent of [permissionAPI?.onAdded, permissionAPI?.onRemoved]) {
-        permissionEvent?.addListener(() => {
-            if (bookmarkSidebar.classList.contains("open")) refreshBookmarkAvailability();
+        permissionEvent?.addListener(change => {
+            if (change?.permissions && !change.permissions.includes("bookmarks") && !change.permissions.includes("favicon")) return;
+            if (bookmarkSidebar.classList.contains("open") && !bookmarkPermissionPending) refreshBookmarkAvailability();
         });
     }
 });

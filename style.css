@@ -9113,3 +9113,95 @@ body[data-bg="color"] .studyQuote { color: var(--darkerColor-blue, #333); text-s
 .studyQuoteBody { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .studyQuoteSource { flex: none; font-size: 11.5px; opacity: 0.75; white-space: nowrap; }
 @media (max-width: 900px) { .studyQuote { max-width: 80vw; } .studyQuoteSource { display: none; } }
+
+/* Settings stays about settings; homepage tools return unchanged when it closes. */
+body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayoutSaveDock, #myntProfilesPanel, #myntAdaptivePanel, #myntLayoutToolbar, #myntLayoutGuides, .myntLayoutOverlay, #wallpaperGalleryBtn) {
+ visibility: hidden !important; pointer-events: none !important;
+}
+#menuCont > .topDiv { height:88px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 20px; box-sizing:border-box; }
+#menuCont > .topDiv h1 { position:static; transform:none; margin:0; font-size:1.25rem; line-height:1.3; }
+#menuCont > .optCont { height:calc(100% - 88px); }
+#menuCont #menuCloseButton { position:static; width:44px; height:44px; min-width:44px; max-width:44px; flex:0 0 44px; margin:0; padding:0; border:0; justify-content:center; }
+#menuCont #menuCloseButton::after { display:none; }
+#menuCont #menuCloseButton .icon { position:static; transform:none; }
+#menuCont #menuCloseButton:focus-visible, #settingsHelp > summary:focus-visible { outline:2px solid var(--darkColor-blue); outline-offset:3px; }
+#settingsHelp { margin-top:20px; border-top:1px solid color-mix(in srgb,var(--textColorDark-blue) 15%,transparent); color:var(--textColorDark-blue); }
+#settingsHelp > summary { min-height:44px; box-sizing:border-box; padding:12px 4px; font-size:.875rem; line-height:1.4; cursor:pointer; }
+#settingsHelp .tips { margin-top:12px; }
+@media (prefers-reduced-motion: reduce) { #menuBar, #menuCont, #optCont { transition:none; } }
+
+#settingsHelp:has(.tips-hidden) { display:none; }
+
+#menuBar #menuCont { max-width:100%; }
+@media (max-width:500px) { #menuBar { --gap:16px; } #menuCont > .topDiv { padding-inline:16px; } }
+
+/* The gallery keeps its header reachable while its own content scrolls. */
+#wallpaperGalleryDialog { overflow:auto; overscroll-behavior:contain; }
+#wallpaperGalleryDialog > .controlCenterHeader { position:sticky; top:0; z-index:2; }
+#wallpaperGalleryDialog > :not(.controlCenterHeader) { margin-inline:20px; }
+#wallpaperGalleryDialog .wallpaperGalleryGrid { margin-bottom:20px; max-height:none; overflow:visible; }
+#wallpaperGalleryDialog .wallpaperGalleryControls select,
+#wallpaperGalleryDialog input[type="url"] { min-height:40px; max-width:100%; box-sizing:border-box; border:1px solid color-mix(in srgb,currentColor 24%,transparent); border-radius:10px; padding:6px 10px; font:inherit; color:inherit; background:var(--whitishColor-blue); }
+@media (max-height:500px) { #wallpaperGalleryDialog > .controlCenterHeader { padding:12px 20px; } #wallpaperGalleryDialog .controlCenterHeader h2 { font-size:1.25rem; } }
+
+/* Bookmark fallback and toolbar share the panel's existing Material palette. */
+#bookmarkSidebar { color:var(--textColorDark-blue); overflow-y:auto; }
+.bookmark-header-actions { display:flex; gap:8px; flex-shrink:0; }
+.bookmark-header-actions button { display:grid; place-items:center; width:40px; height:40px; flex:0 0 40px; padding:8px; border:0; border-radius:50%; background:var(--whitishColor-blue); color:var(--textColorDark-blue); }
+.bookmark-header-actions button svg { width:22px; height:22px; fill:currentColor; }
+.bookmark-header-actions button:disabled { opacity:.45; }
+.bookmark-header-actions button:focus-visible { outline:2px solid currentColor; outline-offset:2px; }
+#bookmarkState:not([hidden]) { display:grid; justify-items:start; gap:16px; padding:28px 24px; }
+.bookmark-state-icon { width:48px; height:48px; fill:currentColor; opacity:.7; }
+.bookmark-state-copy h3 { margin:0 0 8px; font-size:1rem; line-height:1.5; }
+.bookmark-state-copy p { margin:0; font-size:.875rem; line-height:1.65; overflow-wrap:anywhere; }
+.bookmark-state-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.bookmark-state-actions button:not([hidden]) { min-height:40px; padding:8px 14px; border:0; border-radius:20px; color:var(--textColorDark-blue); background:var(--whitishColor-blue); font:inherit; }
+
+/* Gallery source, playback and selection controls form separate quiet rows. */
+#wallpaperGalleryDialog > .controlCenterHeader { padding:18px 24px; align-items:center; }
+#wallpaperGalleryDialog .controlCenterHeader h2 { font-size:1.4rem; line-height:1.3; }
+#wallpaperGalleryDialog .controlCenterEyebrow { font-size:.7rem; margin-bottom:3px; }
+#wallpaperGalleryDialog .wallpaperGalleryImport { display:grid; grid-template-columns:auto minmax(120px,1fr) auto; gap:10px; margin-block:20px 16px; }
+#wallpaperGalleryDialog .wallpaperGalleryImport :is(.settingsActionBtn,input[type="url"]) { min-height:44px; font-size:.875rem; display:flex; align-items:center; justify-content:center; }
+#wallpaperGalleryDialog #wallpaperAddUrlBtn { background:var(--whitishColor-blue); color:var(--textColorDark-blue); }
+#wallpaperGalleryDialog .wallpaperGalleryPlayback { display:flex; align-items:center; flex-wrap:wrap; gap:12px 16px; padding-block:16px; border-block:1px solid color-mix(in srgb,currentColor 10%,transparent); }
+#wallpaperGalleryDialog .wallpaperModeGroup:not([hidden]) { display:flex; align-items:center; gap:10px; min-width:0; }
+#wallpaperGalleryDialog .wallpaperModeGroup label { font-size:.8125rem; white-space:nowrap; }
+#wallpaperGalleryDialog .wallpaperModeGroup select { min-height:44px; min-width:0; max-width:100%; padding:8px 12px; border:1px solid color-mix(in srgb,currentColor 18%,transparent); border-radius:14px; font:inherit; font-size:.875rem; color:inherit; background:var(--whitishColor-blue); }
+#wallpaperGalleryDialog .wallpaperNavigation { display:flex; gap:2px; margin-inline-start:auto; border-radius:22px; background:var(--whitishColor-blue); padding:2px; }
+#wallpaperGalleryDialog .wallpaperNavigation button { min-height:40px; padding:8px 12px; font-size:.8125rem; color:var(--textColorDark-blue); background:transparent; }
+#wallpaperGalleryDialog .wallpaperToolbar { align-items:center; gap:10px; padding-block:10px; margin-block:0 8px; }
+#wallpaperGalleryDialog .wallpaperToolbar label { display:flex; align-items:center; gap:7px; min-height:44px; font-size:.8125rem; }
+#wallpaperGalleryDialog .wallpaperToolbar label input { width:16px; height:16px; margin:0; }
+#wallpaperGalleryDialog .wallpaperToolbar button { min-height:40px; padding:8px 14px; border:0; border-radius:20px; font:inherit; font-size:.8125rem; background:var(--whitishColor-blue); color:var(--textColorDark-blue); }
+#wallpaperGalleryDialog #wallpaperDeleteSelectedBtn:not(:disabled) { color:#a92727; }
+#wallpaperGalleryDialog :is(button,select,input,.wallpaperFileLabel):focus-visible { outline:2px solid currentColor; outline-offset:2px; }
+#wallpaperGalleryDialog .wallpaperGalleryStatus:empty { display:none; }
+@media (max-width:600px) {
+ #wallpaperGalleryDialog .wallpaperGalleryImport { grid-template-columns:minmax(0,1fr) auto; }
+ #wallpaperGalleryDialog .wallpaperFileLabel { grid-column:1 / -1; justify-self:start; }
+ #wallpaperGalleryDialog .wallpaperModeGroup { flex-wrap:wrap; }
+ #wallpaperGalleryDialog .wallpaperNavigation { margin-inline-start:0; }
+ #wallpaperGalleryDialog .wallpaperToolbar .spacer { display:none; }
+ #wallpaperGalleryDialog .wallpaperToolbar { justify-content:space-between; }
+}
+@media (max-height:500px) { #wallpaperGalleryDialog > .controlCenterHeader { padding:10px 20px; } }
+
+/* Keep each gallery item's name readable and its removal action explicit. */
+#wallpaperGalleryDialog .wallpaperCardFooter { flex-wrap:wrap; gap:4px; padding:6px; }
+#wallpaperGalleryDialog .wallpaperCardName { flex-basis:100%; }
+#wallpaperGalleryDialog .wallpaperCardDelete { width:auto; min-width:44px; min-height:36px; height:auto; padding:8px 10px; margin-inline-start:auto; border-radius:18px; font-size:12px; white-space:normal; }
+#wallpaperGalleryDialog .wallpaperCardIcon:focus-visible { outline:2px solid currentColor; outline-offset:1px; }
+#wallpaperGalleryDialog .wallpaperUndoBar { flex-wrap:wrap; gap:8px; }
+
+/* Compact local-media status and opt-in recovery list. */
+#wallpaperGalleryDialog .wallpaperStorageUsage { font-size:12px; line-height:1.5; margin:8px 20px; }
+#wallpaperGalleryDialog .wallpaperRecovery { margin:8px 20px 12px; font-size:13px; }
+#wallpaperGalleryDialog .wallpaperRecovery summary { cursor:pointer; padding-block:10px; }
+#wallpaperGalleryDialog .wallpaperRecoveryRow { display:flex; align-items:center; gap:10px; padding:6px 0; }
+#wallpaperGalleryDialog .wallpaperRecoveryRow span { flex:1; min-width:0; overflow-wrap:anywhere; }
+#wallpaperGalleryDialog .wallpaperRecoveryRow button { border:0; padding:10px 14px; border-radius:18px; background:var(--whitishColor-blue); color:var(--textColor); cursor:pointer; }
+#wallpaperGalleryDialog .wallpaperCurrentBadge[hidden] { display:none; }
+#wallpaperGalleryDialog .wallpaperRecoveryRow small { white-space:nowrap; }
+#clearImage { width:auto; min-height:44px; padding:8px 12px; border-radius:22px; }

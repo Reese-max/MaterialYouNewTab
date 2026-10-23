@@ -280,6 +280,7 @@ function applyLanguage(lang) {
         "todoListHover",
         "uploadWallpaperText",
         "backupText",
+        "backupScopeText",
         "restoreText",
         "rangColor",
         "bookmarksText",
@@ -308,6 +309,7 @@ function applyLanguage(lang) {
         "adjustOpacityDesc",
         "footerToastTitle",
         "footerToastMessage",
+        "settingsHelpTitle",
         "settingsGroupPersonal",
         "settingsGroupWork",
         "settingsGroupAdvanced",
@@ -430,25 +432,15 @@ function applyLanguage(lang) {
     if (menuCloseButton) {
         const hoverText = translations[lang]?.menuCloseText || translations["en"].menuCloseText;
         menuCloseButton.setAttribute("data-lang", hoverText);
+        menuCloseButton.setAttribute("aria-label", hoverText);
     }
 
     // Update the width of the menu container based on the language
     const menuCont = document.querySelector(".menuBar .menuCont");
     if (menuCont) {
         menuCont.style.width = menuWidths[lang] || menuWidths["en"];
-        let widthh = window.innerWidth / parseInt(menuWidths[lang] || menuWidths["en"]);
-        if (window.innerWidth < 522) {
-            let menuStyle = document.getElementById("menuStyle") || document.createElement("style");
-            menuStyle.id = "menuStyle";
-            menuStyle.textContent = `
-                .menuCont {
-                    scale: ${widthh} !important;
-                    height: ${(100 / widthh).toString()}dvh !important;
-                    transform-origin: top right !important;
-                }
-            `;
-            document.head.append(menuStyle);
-        }
+        // The panel now reflows to the viewport instead of scaling text and controls.
+        document.getElementById("menuStyle")?.remove();
     }
 
     // Dynamically update the font family based on the language

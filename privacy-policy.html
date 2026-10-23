@@ -155,8 +155,8 @@
 
         <h2>番茄鐘小窗與本機媒體</h2>
 <p>番茄鐘的 pomodoroState（版本 2）在 localStorage 保存結束時間、暫停狀態、任務與回合。分頁使用本機鎖協調完成提示，沒有新增帳號、網路服務或瀏覽器權限；關閉瀏覽器或休眠不保證準時提醒。小窗僅由按鈕開啟，一般彈出視窗不保證置頂。</p>
-<p>myntPomoScenarios、myntPomoStudioMode、myntPomoAlarmVolume 保存情境、介面與提示音偏好。myntPomodoroAppearance.v1 保存獨立背景設定；IndexedDB MyntPomodoroAppearance 的 images 保存一張最多 8 MiB 本機圖片。myntPomodoroMusicV1 的 tracks 保存自選音樂，最多 30 首、每首 100 MiB、合計 300 MiB；myntPomoMusicSettingsV1 保存播放順序、音量與休息政策，myntPomoMusicOwnerV1 僅用於暫時跨分頁播放協調。媒體不會上傳伺服器、不含於一般設定備份；移除擴充功能或清除網站資料可能刪除。情境只保存媒體識別與偏好，不複製音樂檔。</p>
-<p>Timer, scenarios, images and music remain browser-local. No media is uploaded. IndexedDB audio and timer background images are not included in general settings backups. Browser shutdown, sleep and autoplay restrictions can prevent timely alarms or playback. Floating windows require the original tab; ordinary popup windows are not guaranteed to remain on top.</p>
+<p>myntPomoScenarios、myntPomoStudioMode、myntPomoAlarmVolume 保存情境、介面與提示音偏好。myntPomodoroAppearance.v1 保存獨立背景設定；IndexedDB MyntPomodoroAppearance 的 images 保存一張最多 8 MiB 本機圖片。myntPomodoroMusicV1 的 tracks 保存自選音樂，最多 30 首、每首 100 MiB、合計 300 MiB；myntPomoMusicSettingsV1 保存播放順序、音量與休息政策，myntPomoMusicOwnerV1 僅用於暫時跨分頁播放協調。媒體不會上傳伺服器；第 3 版本機備份包含媒體（含編碼資料上限 32 MiB），舊版備份不含完整媒體庫；移除擴充功能或清除網站資料可能刪除。情境只保存媒體識別與偏好，不複製音樂檔。</p>
+<p>Timer, scenarios, images and music remain browser-local. No media is uploaded. Version 3 local backups include IndexedDB audio and timer images within a 32 MiB encoded-file limit; older backups do not contain complete media libraries. Browser shutdown, sleep and autoplay restrictions can prevent timely alarms or playback. Floating windows require the original tab; ordinary popup windows are not guaranteed to remain on top.</p>
         <h2>背景自適應與排版儲存</h2>
 <p>myntLayoutProfiles（版本 1）只在本機保存命名組合、寬／窄螢幕位置、上一個儲存版本與修訂號。舊 myntLayout 保留，不刪除；排版專用 JSON 匯出不含便籤、帳號或 API 金鑰，匯入先驗證並確認後新增副本。不同分頁的過期寫入會拒絕，以免覆寫更新。</p>
 <p>Named layout profiles and previous versions stay in localStorage. Layout-only exports contain no notes, accounts or API keys; validated imports add copies after confirmation.</p>
@@ -170,7 +170,7 @@
 
         <ul>
             <li><strong>書籤：</strong>只在您啟用書籤功能後請求。此權限可讀取、新增、修改與刪除瀏覽器書籤。</li>
-            <li><strong>網站圖示</strong>（Chrome 選用）：用於從瀏覽器快取讀取書籤圖示。若快取沒有圖示，程式會改用 Google Favicon API。</li>
+            <li><strong>網站圖示</strong>（Chrome 選用）：用於從瀏覽器快取讀取書籤圖示。若快取沒有圖示，書籤會改用內建替代圖示，不傳送書籤網域。</li>
             <li><strong>Google 網域</strong>（選用）：只在您啟用 Google 搜尋建議後請求。</li>
             <li><strong>擴充功能儲存空間：</strong>在瀏覽器的 extension storage 中保存呆呆的受限本機配對權杖與已處理操作 ID；不會保存呆呆主權杖。</li>
             <li><strong>本機呆呆橋接</strong>（選用）：只有按下「連接呆呆」後，才請求連線至 <code>http://127.0.0.1/*</code>。此位址只代表目前電腦，不會連到區域網路或專案營運者的伺服器。</li>
@@ -231,10 +231,13 @@
                     <li><code>https://s2.googleusercontent.com/s2/favicons*</code></li>
                     <li><code>https://www.google.com/s2/favicons*</code></li>
                 </ul>
-                這些服務會收到捷徑或書籤的網站網域，用於擷取網站圖示。
+                這些服務會收到捷徑的網站網域，用於擷取捷徑圖示；書籤改用瀏覽器本機快取或內建替代圖示。
             </li>
         </ul>
 
+        <h3>考古題與主動開啟 ChatGPT</h3>
+        <p>「今日考古題」預設顯示，啟用時會在閒置後從 raw.githubusercontent.com 的 Reese-max/police-exam-archive 公開題庫下載並快取當日題目。GitHub 會收到一般網路請求資訊（例如 IP），請求不含待辦、便籤或書籤。可在設定停用此卡片，停止後續自動題庫請求。</p>
+        <p>只有按下每日焦點的「問 GPT 拆解步驟」時，才會透過 chatgpt.com/?q= 開啟已填入的提示，包含目前焦點文字、選擇的科目及距考試天數。這些內容會傳至 OpenAI，並可能留在瀏覽器歷史；請勿填入不想分享的私人資料。MYNT 不會自動替您送出聊天訊息。</p>
         <h3>本機儲存</h3>
         <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、首頁稱呼、每日焦點文字／完成狀態／延續日期、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。首頁稱呼只會顯示在本機問候語中；每日焦點也不會自動分享給呆呆。兩者都會包含在您主動匯出的 MYNT 備份檔。呆呆受限配對權杖與最近已確認／拒絕的操作 ID 存在 extension storage，不會進入 MYNT 一般備份檔；重設 MYNT 或解除連動時會清除。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
         <p>控制中心的服務狀態只會在 localStorage 記錄服務識別名稱、成功或失敗結果、HTTP 狀態碼及時間；不會記錄完整網址、搜尋文字、位置、API 金鑰，也不會傳送至專案營運者。</p>
@@ -266,6 +269,9 @@
 
     <script src="scripts/privacy-policy.js"></script>
 <p>Layout draft recovery uses sessionStorage (myntLayoutDraft) only in the current tab and survives reload, not guaranteed tab closure. The dismissible guide preference uses localStorage (myntLayoutGuideSeen). Deleted layout profiles remain recoverable locally; no data is uploaded.</p>
+<p>Wallpaper gallery removal is recoverable: removed custom images and videos stay in this browser’s local IndexedDB so Undo remains available after reload. They are excluded from gallery playback but still use local storage. Original files on your device are not modified or uploaded.</p>
+<p>本機備份第 3 版包含設定、排版、待辦、便籤、圖庫（含回收項目）、番茄鐘圖片和音樂，含編碼媒體上限 32 MiB。超過時不會匯出不完整備份。WeatherAPI 金鑰、瀏覽器書籤與權限、DaiDai 配對不包含在內。備份檔含私人內容，請自行妥善保存；本功能不會上傳。網址媒體僅保留連結。還原前會顯示取代範圍，已知寫入失敗會嘗試恢復原資料，但不能保證關閉分頁或系統中斷時跨資料庫原子性。</p>
+<p>取消套用背景不刪圖庫檔案。回收區可逐張復原；顯示容量僅計算圖庫本機媒體和縮圖 Blob，不是瀏覽器整站儲存用量，也不包含遠端網址內容。書籤圖示只使用瀏覽器本機快取或內建替代圖示，不將書籤網域送往 Google 圖示服務。</p>
 </body>
 
 </html>

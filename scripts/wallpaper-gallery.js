@@ -55,9 +55,9 @@
     const reqP = req => new Promise((resolve, reject) => { req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); });
     const hiddenIds = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY_HIDDEN) || "[]")); } catch (e) { return new Set(); } };
     const saveHidden = set => localStorage.setItem(KEY_HIDDEN, JSON.stringify([...set]));
-    async function allItems() {
+    async function allItems(includeRemoved = false) {
         const items = await tx("readonly", store => reqP(store.getAll()));
-        return (items || []).sort((a, b) => a.added - b.added);
+        return (items || []).filter(item => includeRemoved || !item.removedAt).sort((a, b) => a.added - b.added);
     }
     // Items that take part in next/random/rotate (hidden built-ins excluded).
     async function listItems() {
@@ -66,7 +66,6 @@
     }
     const getItem = id => tx("readonly", store => reqP(store.get(id)));
     const putItem = item => tx("readwrite", store => { store.put(item); });
-    const deleteItem = id => tx("readwrite", store => { store.delete(id); });
 
     const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
 
@@ -140,8 +139,39 @@
     }
 
     // ---------- Apply ----------
+    function clearGalleryBackground() {
+        stopGalleryVideo();
+        document.body.style.removeProperty("--bg-image");
+        document.body.dataset.workspaceBackground = "color";
+        document.body.dataset.bg = "color";
+        delete document.body.dataset.wallpaperId;
+    }
+    async function cancelApply() {
+        try {
+            localStorage.setItem(KEY_CURRENT, "none");
+            localStorage.setItem(KEY_MODE, "fixed");
+            scheduleRotate();
+            clearGalleryBackground();
+            $("videoBg")?.pause();
+            const modeSelect = $("wallpaperModeSelect");
+            if (modeSelect) modeSelect.value = "fixed";
+            const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
+            const minutesSelect = $("wallpaperMinutesSelect"); if (minutesSelect) minutesSelect.disabled = true;
+            await renderGallery();
+            setStatus(t("wallpaperUnapplied", "Background removed from the home page. Gallery files are kept; rotation is stopped."));
+        } catch (error) { setStatus(t("wallpaperActionError", "Could not save this change. Your media are unchanged.")); }
+    }
+    function useLegacy() {
+        localStorage.removeItem(KEY_CURRENT);
+        localStorage.setItem(KEY_MODE, "fixed");
+        scheduleRotate(); stopGalleryVideo();
+        document.body.dataset.workspaceBackground = "wallpaper";
+        document.body.dataset.bg = "wallpaper";
+        delete document.body.dataset.wallpaperId;
+        renderSelection();
+    }
     async function applyItem(item, { persist = true } = {}) {
-        if (!item) return false;
+        if (!item || item.removedAt) return false;
         if (item.type === "video") {
             const v = ensureVideo();
             const src = item.blob ? URL.createObjectURL(item.blob) : item.src;
@@ -180,11 +210,11 @@
 
     async function next(direction = 1) {
         const items = await listItems();
-        if (!items.length) return;
+        if (!items.length) return false;
         const currentId = localStorage.getItem(KEY_CURRENT);
         const idx = items.findIndex(i => i.id === currentId);
         const target = items[(idx + direction + items.length) % items.length];
-        await applyItem(target);
+        return await applyItem(target);
     }
     async function random() {
         const items = await listItems();
@@ -271,7 +301,7 @@
 
     const selected = new Set();
     let selectMode = false;
-    let undoTimer = null;
+    let removing = false;
     let undoItems = [];
 
     function displayName(item) {
@@ -280,39 +310,74 @@
     }
 
     async function removeItems(items) {
-        const hidden = hiddenIds();
-        const removed = [];
-        for (const item of items) {
-            if (item.source === "bundled") hidden.add(item.id);
-            else { await deleteItem(item.id); removed.push(item); }
-        }
-        saveHidden(hidden);
-        undoItems = items;
-        const wasCurrent = items.some(i => i.id === localStorage.getItem(KEY_CURRENT));
-        if (wasCurrent) { localStorage.removeItem(KEY_CURRENT); await next(1); }
-        showUndo(items.length);
-        await renderGallery();
+        if (removing || !items.length) return;
+        removing = true;
+        try {
+            const custom = items.filter(item => item.source !== "bundled");
+            if (custom.length) {
+                const message = t("wallpaperDeleteConfirm", 'Remove {name} from the gallery? You can restore removed items, including after reload. Your original files are unchanged.')
+                    .replace("{name}", custom.length === 1 ? displayName(custom[0]) : String(custom.length));
+                const ok = window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message);
+                if (!ok) return;
+                // Keep the original blobs in the same local database. No permanent
+                // deletion or time-limited recovery; no schema upgrade is needed.
+                await tx("readwrite", store => {
+                    for (const item of custom) store.put({ ...item, removedAt: Date.now() });
+                });
+            }
+            const bundled = items.filter(item => item.source === "bundled");
+            if (bundled.length) {
+                const hidden = hiddenIds();
+                for (const item of bundled) hidden.add(item.id);
+                saveHidden(hidden);
+                undoItems = [...new Map([...undoItems, ...bundled].map(item => [item.id, item])).values()];
+            }
+            const wasCurrent = items.some(item => item.id === localStorage.getItem(KEY_CURRENT));
+            if (wasCurrent) {
+                localStorage.removeItem(KEY_CURRENT);
+                if (!(await next(1))) {
+                    localStorage.setItem(KEY_CURRENT, "none");
+                    clearGalleryBackground();
+                }
+            }
+            await renderGallery();
+            if (!$("wallpaperUndoBar")?.hidden) $("wallpaperUndoBtn")?.focus();
+        } catch (error) {
+            setStatus(t("wallpaperActionError", "The change could not be completed. Your stored media have not been permanently deleted. Please try again."));
+        } finally { removing = false; }
     }
 
-    function showUndo(count) {
+    function showUndo(removed) {
         const bar = $("wallpaperUndoBar");
         if (!bar) return;
-        $("wallpaperUndoText").textContent = t("wallpaperDeletedCount", "Removed {count}").replace("{count}", count);
-        bar.hidden = false;
-        clearTimeout(undoTimer);
-        undoTimer = setTimeout(() => { bar.hidden = true; undoItems = []; }, 8000);
+        undoItems = undoItems.filter(item => hiddenIds().has(item.id));
+        const count = removed.length + undoItems.length;
+        bar.hidden = count === 0;
+        $("wallpaperUndoText").textContent = t("wallpaperRecoverableCount", "{count} removed; recoverable media still use local storage.").replace("{count}", count);
     }
 
-    async function undoRemove() {
-        const hidden = hiddenIds();
-        for (const item of undoItems) {
-            if (item.source === "bundled") hidden.delete(item.id);
-            else await putItem(item);
+    async function undoRemove(onlyId = null) {
+        try {
+            const removed = (await allItems(true)).filter(item => item.removedAt && (!onlyId || item.id === onlyId));
+            const restoredIds = new Set([...removed, ...undoItems].map(item => item.id));
+            await tx("readwrite", store => {
+                for (const item of removed) {
+                    const restored = { ...item }; delete restored.removedAt; store.put(restored);
+                }
+            });
+            if (!onlyId && undoItems.length) {
+                const hidden = hiddenIds();
+                for (const item of undoItems) hidden.delete(item.id);
+                saveHidden(hidden);
+                undoItems = [];
+            }
+            await renderGallery();
+            const card = [...($("wallpaperGalleryGrid")?.children || [])].find(node => restoredIds.has(node.dataset.id));
+            const target = card?.querySelector(".wallpaperCardPick") || $("closeWallpaperGalleryBtn");
+            target?.focus();
+        } catch (error) {
+            setStatus(t("wallpaperActionError", "The change could not be completed. Your stored media have not been permanently deleted. Please try again."));
         }
-        saveHidden(hidden);
-        undoItems = [];
-        $("wallpaperUndoBar").hidden = true;
-        await renderGallery();
     }
 
     async function renameItem(item) {
@@ -336,14 +401,43 @@
         $("wallpaperGalleryGrid")?.classList.toggle("selecting", selectMode);
     }
 
+    function mediaBytes(item) { return (item.blob?.size || 0) + (item.thumb?.size || 0); }
+    function sizeLabel(bytes) { return bytes < 1048576 ? `${(bytes / 1024).toFixed(1)} KiB` : `${(bytes / 1048576).toFixed(2)} MiB`; }
+    function renderRecovery(records) {
+        const usage = $("wallpaperStorageUsage");
+        const removed = records.filter(item => item.removedAt);
+        if (usage) usage.textContent = t("wallpaperStorageUsage", "Gallery media: {used}; recoverable: {removed}. Remote URL media are not counted.")
+            .replace("{used}", sizeLabel(records.reduce((n,item) => n + mediaBytes(item), 0)))
+            .replace("{removed}", sizeLabel(removed.reduce((n,item) => n + mediaBytes(item), 0)));
+        const list = $("wallpaperRecoveryList"), title = $("wallpaperRecoveryTitle");
+        if (title) title.textContent = t("wallpaperRecoveryTitle", "Recovery") + ` (${removed.length})`;
+        if (!list) return;
+        list.replaceChildren();
+        for (const item of removed) {
+            const row = document.createElement("div"); row.className = "wallpaperRecoveryRow";
+            const name = document.createElement("span"); name.textContent = displayName(item); name.title = name.textContent;
+            const size = document.createElement("small"); size.textContent = sizeLabel(mediaBytes(item));
+            const restore = document.createElement("button"); restore.type = "button";
+            restore.textContent = t("wallpaperUndo", "Restore"); restore.setAttribute("aria-label", `${restore.textContent} ${displayName(item)}`);
+            restore.addEventListener("click", () => undoRemove(item.id));
+            row.appendChild(name); row.appendChild(size); row.appendChild(restore); list.appendChild(row);
+        }
+        const empty = $("wallpaperRecoveryEmpty"); if (empty) empty.hidden = removed.length > 0;
+    }
+    let galleryRenderRevision = 0;
     async function renderGallery() {
+        const revision = ++galleryRenderRevision;
         const grid = $("wallpaperGalleryGrid");
         if (!grid) return;
-        releaseThumbs();
-        grid.replaceChildren();
         const hidden = hiddenIds();
         const showHidden = localStorage.getItem(KEY_SHOW_HIDDEN) === "1";
-        const items = (await allItems()).filter(i => showHidden || !hidden.has(i.id));
+        const records = await allItems(true);
+        const items = records.filter(i => !i.removedAt && (showHidden || !hidden.has(i.id)));
+        if (revision !== galleryRenderRevision) return;
+        showUndo(records.filter(item => item.removedAt));
+        renderRecovery(records);
+        releaseThumbs();
+        grid.replaceChildren();
         const currentId = localStorage.getItem(KEY_CURRENT);
         for (const id of [...selected]) if (!items.some(i => i.id === id)) selected.delete(id);
         for (const item of items) {
@@ -386,6 +480,10 @@
                 b.className = "wallpaperBadge"; b.textContent = t("wallpaperBuiltin", "Built-in");
                 badges.appendChild(b);
             }
+            const currentBadge = document.createElement("span");
+            currentBadge.className = "wallpaperBadge wallpaperCurrentBadge";
+            currentBadge.textContent = t("wallpaperCurrent", "In use"); currentBadge.hidden = item.id !== currentId;
+            badges.appendChild(currentBadge);
             pick.appendChild(badges);
             pick.addEventListener("click", async () => {
                 if (selectMode) {
@@ -418,8 +516,8 @@
             const del = document.createElement("button");
             del.type = "button"; del.className = "wallpaperCardIcon wallpaperCardDelete";
             const delLabel = item.source === "bundled" ? (isHidden ? t("wallpaperShowBuiltin", "Show again") : t("wallpaperHide", "Hide")) : t("wallpaperDelete", "Delete");
-            del.textContent = item.source === "bundled" ? (isHidden ? "↺" : "⊘") : "🗑";
-            del.title = delLabel; del.setAttribute("aria-label", delLabel);
+            del.textContent = delLabel;
+            del.title = delLabel; del.setAttribute("aria-label", `${delLabel} ${displayName(item)}`);
             del.addEventListener("click", async () => {
                 if (isHidden) { const h = hiddenIds(); h.delete(item.id); saveHidden(h); await renderGallery(); return; }
                 await removeItems([item]);
@@ -435,7 +533,9 @@
     function renderSelection() {
         const currentId = localStorage.getItem(KEY_CURRENT);
         document.querySelectorAll("#wallpaperGalleryGrid .wallpaperCard").forEach(card => {
-            card.classList.toggle("active", card.dataset.id === currentId);
+            const active = card.dataset.id === currentId;
+            card.classList.toggle("active", active);
+            const badge = card.querySelector(".wallpaperCurrentBadge"); if (badge) badge.hidden = !active;
         });
     }
 
@@ -453,7 +553,7 @@
     function scheduleRotate() {
         clearInterval(rotateTimer);
         rotateTimer = null;
-        if (mode() !== "rotate") return;
+        if (mode() !== "rotate" || localStorage.getItem(KEY_CURRENT) === "none") return;
         rotateTimer = setInterval(() => {
             if (document.visibilityState === "visible") next(1);
         }, minutes() * 60 * 1000);
@@ -464,6 +564,9 @@
             wallpaperGalleryTitle: ["wallpaperGalleryTitle", "Wallpapers"],
             wallpaperGalleryEyebrow: ["wallpaperGalleryEyebrow", "Background"],
             wallpaperAddFilesLabel: ["wallpaperAddFiles", "Add images / videos"],
+            wallpaperClearLabel: ["wallpaperUnapply", "Stop using background"],
+            wallpaperUnapplyBtn: ["wallpaperUnapply", "Stop using background"],
+            wallpaperRecoveryEmpty: ["wallpaperRecoveryEmpty", "No removed wallpapers."],
             wallpaperAddUrlBtn: ["wallpaperAddUrl", "Add URL"],
             wallpaperModeLabel: ["wallpaperModeLabel", "Mode"],
             wallpaperModeFixed: ["wallpaperModeFixed", "Fixed"],
@@ -474,7 +577,7 @@
             wallpaperPrevBtn: ["wallpaperPrev", "Previous"],
             wallpaperNextInnerBtn: ["wallpaperNextShort", "Next"],
             wallpaperShowHiddenLabel: ["wallpaperShowHidden", "Show hidden built-ins"],
-            wallpaperUndoBtn: ["wallpaperUndo", "Undo"],
+            wallpaperUndoBtn: ["wallpaperRestoreAll", "Restore all"],
             wallpaperGalleryHint: ["wallpaperGalleryOpen", "Wallpaper gallery"],
             shortcutWallpaperHelp: ["wallpaperNext", "Next wallpaper"]
         };
@@ -488,7 +591,8 @@
     function bindUi() {
         $("wallpaperPrevBtn")?.addEventListener("click", () => next(-1));
         $("wallpaperNextInnerBtn")?.addEventListener("click", () => next(1));
-        $("wallpaperUndoBtn")?.addEventListener("click", undoRemove);
+        $("wallpaperUndoBtn")?.addEventListener("click", () => undoRemove());
+        $("wallpaperUnapplyBtn")?.addEventListener("click", cancelApply);
         $("wallpaperSelectModeBtn")?.addEventListener("click", () => { selectMode = !selectMode; if (!selectMode) selected.clear(); renderGallery(); });
         $("wallpaperDeleteSelectedBtn")?.addEventListener("click", async () => {
             const items = (await allItems()).filter(i => selected.has(i.id));
@@ -503,18 +607,25 @@
         $("wallpaperGalleryBtn")?.addEventListener("click", openGallery);
         $("closeWallpaperGalleryBtn")?.addEventListener("click", () => $("wallpaperGalleryDialog").close());
         $("wallpaperGalleryDialog")?.addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+        $("wallpaperAddFilesBtn")?.addEventListener("click", () => $("wallpaperFileInput")?.click());
         $("wallpaperFileInput")?.addEventListener("change", async e => { await addFiles(e.target.files); e.target.value = ""; });
         $("wallpaperAddUrlBtn")?.addEventListener("click", async () => { const i = $("wallpaperUrlInput"); await addUrl(i.value); i.value = ""; });
         $("wallpaperUrlInput")?.addEventListener("keydown", async e => { if (e.key === "Enter") { e.preventDefault(); await addUrl(e.target.value); e.target.value = ""; } });
         const modeSel = $("wallpaperModeSelect");
         const minSel = $("wallpaperMinutesSelect");
+        const updateRotationControls = () => {
+            const rotating = modeSel?.value === "rotate";
+            if (minSel) minSel.disabled = !rotating;
+            const interval = $("wallpaperIntervalGroup");
+            if (interval) interval.hidden = !rotating;
+        };
         if (modeSel) {
             modeSel.value = mode();
-            modeSel.addEventListener("change", () => { localStorage.setItem(KEY_MODE, modeSel.value); minSel.disabled = modeSel.value !== "rotate"; scheduleRotate(); });
+            modeSel.addEventListener("change", () => { localStorage.setItem(KEY_MODE, modeSel.value); updateRotationControls(); scheduleRotate(); });
         }
         if (minSel) {
             minSel.value = String(minutes());
-            minSel.disabled = mode() !== "rotate";
+            updateRotationControls();
             minSel.addEventListener("change", () => { localStorage.setItem(KEY_MINUTES, minSel.value); scheduleRotate(); });
         }
         document.addEventListener("keydown", e => {
@@ -534,13 +645,14 @@
             await seedDefaults();
             const currentId = localStorage.getItem(KEY_CURRENT);
             const m = mode();
-            if (m === "random" && currentId) {
+            if (currentId === "none") { clearGalleryBackground(); }
+            else if (m === "random" && currentId) {
                 await random();
             } else if (m === "rotate" && currentId && Date.now() - Number(localStorage.getItem(KEY_LAST) || 0) > minutes() * 60000) {
                 await next(1);
             } else if (currentId) {
                 // Only take over when the user has chosen something from the gallery.
-                await applyItem(await getItem(currentId), { persist: false });
+                if (!(await applyItem(await getItem(currentId), { persist: false }))) clearGalleryBackground();
             }
             scheduleRotate();
         } catch (e) {
@@ -548,7 +660,7 @@
         }
     }
 
-    window.myntWallpaper = { remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
+    window.myntWallpaper = { cancelApply, useLegacy, restore: undoRemove, remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
 
     // Run after workspace restore (dashboard-tools) so our choice wins.
     if (document.readyState === "complete") setTimeout(init, 0);

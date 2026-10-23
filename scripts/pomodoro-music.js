@@ -1,4 +1,4 @@
-/* Local-only Pomodoro audio library. No network requests; blobs never enter backups. */
+/* Local-only Pomodoro audio library. No network requests; full local backups may include media within the backup size limit. */
 (function (root) {
     'use strict';
     const MAX_FILE = 100 * 1024 * 1024;
@@ -40,13 +40,30 @@
     }
     function errorKey(error) { return error?.issue || (error?.name === 'QuotaExceededError' ? 'quota' : 'storageError'); }
     function fadeVolume(start, elapsed, duration = 250) { return Math.max(0, start * (1 - Math.min(1, elapsed / duration))); }
-    const core = { normalize, validate, ordered, nextId, errorKey, fadeVolume, MAX_FILE, MAX_TOTAL, MAX_TRACKS };
+    function formatTime(value) {
+        const seconds = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+        const minutes = Math.floor(seconds / 60), tail = String(seconds % 60).padStart(2, '0');
+        return minutes >= 60 ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}:${tail}` : `${minutes}:${tail}`;
+    }
+    function seekTarget(value, duration) {
+        if (!Number.isFinite(duration) || duration <= 0 || value == null || (typeof value === 'string' && !value.trim())) return null;
+        const target = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+        return Number.isFinite(target) ? Math.min(duration, Math.max(0, target)) : null;
+    }
+    function timeline(media, selectedId, ownsPlayback) {
+        const matches = Boolean(media && media.dataset.track === selectedId);
+        const duration = matches && media.readyState >= 1 && Number.isFinite(media.duration) && media.duration > 0 ? media.duration : 0;
+        const current = duration ? seekTarget(media.currentTime, duration) ?? 0 : 0;
+        return { duration, current, disabled: !matches || !duration || Boolean(media.error) || (!media.paused && !ownsPlayback) };
+    }
+    const core = { normalize, validate, ordered, nextId, errorKey, fadeVolume, formatTime, seekTarget, timeline, MAX_FILE, MAX_TOTAL, MAX_TRACKS };
     if (typeof module !== 'undefined' && module.exports) module.exports = core;
     if (!root?.document) return;
     const words = {
-        title: ['My focus music', '我的專注音樂'], local: ['Audio stays on this device. Up to 30 tracks, 100 MB each, 300 MB total. Music files are not included in backups.', '音樂只儲存在本機。最多 30 首，每首 100 MB，合計 300 MB；備份不含音樂檔。'],
+        title: ['My focus music', '我的專注音樂'], local: ['Audio stays on this device. Up to 30 tracks, 100 MiB each, 300 MiB total. Full backups include music when the complete backup fits the 32 MiB limit.', '音樂只儲存在本機。最多 30 首，每首 100 MiB，合計 300 MiB；完整備份未超過 32 MiB 上限時會包含音樂。'],
         import: ['Import audio', '匯入音樂'], play: ['Play', '播放'], pause: ['Pause', '暫停'], up: ['Move up', '上移'], down: ['Move down', '下移'], remove: ['Delete track', '刪除曲目'], undo: ['Undo deletion', '復原刪除'],
         volume: ['Volume', '音量'], mode: ['Repeat', '重複播放'], off: ['Off', '關閉'], one: ['One track', '單曲'], all: ['All tracks', '全部曲目'], shuffle: ['Shuffle', '隨機播放'], rest: ['During breaks', '休息時'], continue: ['Keep playing', '繼續播放'], restPause: ['Pause (resume manually)', '暫停（手動恢復）'],
+        library: ['Playlist & settings', '播放清單與設定'], noTrack: ['No track selected', '尚未選擇曲目'], seek: ['Playback position', '播放進度'], select: ['Select track', '選擇曲目'],
         empty: ['Import a song to start.', '匯入歌曲即可開始。'], ready: ['Ready. Press Play to listen.', '已就緒，按播放開始聆聽。'], playing: ['Playing', '播放中'], paused: ['Paused', '已暫停'], importing: ['Importing audio…', '正在匯入音樂…'],
         fileSize: ['Each file must be nonempty and at most 100 MB.', '檔案不可為空且不得超過 100 MB。'], format: ['Choose MP3, M4A, AAC, Ogg, Opus, WAV, FLAC or WebM audio.', '請選擇 MP3、M4A、AAC、Ogg、Opus、WAV、FLAC 或 WebM 音訊。'], libraryFull: ['Library limit reached (30 tracks / 300 MB). Delete a track first.', '已達音樂庫上限（30 首／300 MB），請先刪除曲目。'], quota: ['Device storage is full. Free space or delete a track, then retry.', '本機儲存空間不足，請釋放空間或刪除曲目後重試。'], storageError: ['Local storage is unavailable. Check browser storage permissions and retry.', '無法存取本機儲存空間，請檢查瀏覽器儲存權限後重試。'], decode: ['This browser cannot play this file. Try another audio format.', '瀏覽器無法播放此檔案，請改用其他音訊格式。'], gesture: ['Playback was blocked. Press Play again to allow audio.', '播放被瀏覽器阻擋，請再次按播放。'], busy: ['Music is playing in another tab. Pause it there first.', '另一個分頁正在播放音樂，請先在該分頁暫停。'], fallback: ['Playing. Tab coordination is best-effort in this browser.', '播放中；此瀏覽器的跨分頁協調無法保證完全互斥。'], deleted: ['Track deleted. You can undo until the next deletion or reload.', '曲目已刪除；可在下一次刪除或重新載入前復原。'], confirm: ['Delete this local track?', '要刪除此本機曲目嗎？']
     };
@@ -59,10 +76,49 @@
     let settings = normalize(defaults);
     try { settings = normalize(JSON.parse(localStorage.getItem(SETTINGS_KEY))); } catch (_) { /* safe defaults */ }
     let dbPromise, tracks = [], audio, objectUrl, releaseLock, fadeTimer, generation = 0, undoRecord, mounted = false, importBusy = false;
-    let played = new Set(), lastState, ui = {}, libraryRevision = 0, libraryChannel;
+    let played = new Set(), lastState, ui = {}, libraryRevision = 0, libraryChannel, transportFocus;
     const owner = root.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
     let ownsFallback = false;
-    function status(key) { if (ui.status) ui.status.textContent = t(key); }
+    function status(key) { if (ui.status) { ui.status.textContent = t(key); ui.status.dataset.state = key; } updateNowPlaying(); }
+    function updatePlaybackVolume() {
+        if (!audio || fadeTimer) return;
+        const remaining = audio.duration - audio.currentTime;
+        // Metadata can grow after a partial decode, and seeking/returning from the
+        // background can move away from the tail. Always restore normal volume.
+        audio.volume = settings.volume * (Number.isFinite(remaining) && remaining < 0.3 ? Math.max(0, remaining / 0.3) : 1);
+    }
+    function updateTimeline() {
+        if (!ui.seek) return;
+        const state = timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback));
+        ui.seek.disabled = state.disabled; ui.seek.max = String(state.duration || 1); ui.seek.value = String(state.current);
+        ui.seek.setAttribute('aria-valuetext', `${formatTime(state.current)} / ${formatTime(state.duration)}`);
+        ui.seek.style.setProperty('--music-progress', `${state.duration ? state.current / state.duration * 100 : 0}%`);
+        ui.elapsed.textContent = formatTime(state.current); ui.duration.textContent = formatTime(state.duration);
+    }
+    function updateNowPlaying() {
+        if (!ui.trackName) return;
+        const track = tracks.find(item => item.id === settings.selectedId);
+        const active = Boolean(track && audio?.dataset.track === track.id && !audio.paused);
+        // Disabling the focused button can send focus to body. Only an explicit
+        // transport action may hand it to its counterpart, never a background event.
+        const focusRequest = transportFocus;
+        const retainFocus = focusRequest && document.activeElement === focusRequest.from;
+        ui.trackName.textContent = track?.name || t('noTrack'); ui.trackName.title = track?.name || '';
+        ui.play.disabled = !track || active; ui.pause.disabled = !active;
+        if (focusRequest && (!retainFocus || focusRequest.from.disabled)) {
+            transportFocus = null;
+            if (retainFocus && !focusRequest.to.disabled) focusRequest.to.focus({ preventScroll: true });
+        }
+        ui.play.setAttribute('aria-label', track ? `${t('play')}: ${track.name}` : t('play'));
+        ui.pause.setAttribute('aria-label', track ? `${t('pause')}: ${track.name}` : t('pause'));
+        ui.root.dataset.playing = String(active);
+        ui.count.textContent = String(tracks.length);
+        updateTimeline();
+    }
+    function requestTransportFocus(from, to) {
+        transportFocus = document.activeElement === from ? { from, to } : null;
+        return transportFocus;
+    }
     function save() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { status(errorKey(e)); } }
     function database() {
         if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
@@ -102,7 +158,12 @@
         if (!ui.volume) return;
         ui.volume.value = settings.volume; ui.mode.value = settings.mode;
         ui.restPolicy.value = settings.restPolicy; ui.shuffle.checked = settings.shuffle;
+        updateVolume();
         if (audio && !fadeTimer) audio.volume = settings.volume;
+    }
+    function updateVolume() {
+        ui.volume.style.setProperty('--music-progress', `${settings.volume * 100}%`);
+        ui.volume.setAttribute('aria-valuetext', `${Math.round(settings.volume * 100)}%`);
     }
     async function refreshShared() {
         const revision = ++libraryRevision;
@@ -158,7 +219,12 @@
             return localStorage.getItem(OWNER_KEY) === owner;
         } catch (_) { status('storageError'); return false; }
     }
-    function unloadAudio() { if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); } if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null; audio = null; }
+    function unloadAudio() {
+        const previous = audio; audio = null;
+        if (previous) { previous.pause(); previous.removeAttribute('src'); previous.load(); }
+        if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null;
+        updateNowPlaying();
+    }
     async function play(id = settings.selectedId, continuation = false) {
         const track = tracks.find(x => x.id === id);
         if (!track) { status('empty'); return; }
@@ -170,11 +236,21 @@
             unloadAudio();
             audio = new Audio(); audio.dataset.track = id;
             objectUrl = URL.createObjectURL(track.blob); audio.src = objectUrl;
-            audio.addEventListener('ended', advance);
+            audio.addEventListener('ended', event => {
+                // A queued end event must not cancel a manual pause or reclaim
+                // playback after this tab has released its ownership.
+                if (event.currentTarget === audio && !fadeTimer && (releaseLock || ownsFallback)) advance();
+            });
             audio.addEventListener('error', event => { if (event.currentTarget === audio) { pause(true); status('decode'); } });
+            for (const eventName of ['loadedmetadata', 'durationchange', 'seeked', 'emptied']) {
+                audio.addEventListener(eventName, event => { if (event.currentTarget === audio) { updatePlaybackVolume(); updateNowPlaying(); } });
+            }
+            audio.addEventListener('playing', event => { if (event.currentTarget === audio) status(navigator.locks?.request ? 'playing' : 'fallback'); });
+            audio.addEventListener('pause', event => { if (event.currentTarget === audio) status('paused'); });
             audio.addEventListener('timeupdate', event => {
                 if (!audio || event.currentTarget !== audio) return;
-                if (!fadeTimer && Number.isFinite(audio.duration) && audio.duration - audio.currentTime < 0.3) audio.volume = settings.volume * Math.max(0, (audio.duration - audio.currentTime) / 0.3);
+                updatePlaybackVolume();
+                updateTimeline();
             });
         }
         settings.selectedId = id; played.add(id); if (!continuation) played = new Set([id]); save(); renderList();
@@ -200,10 +276,14 @@
         const probe = new Audio(); probe.preload = 'metadata';
         try { await new Promise((resolve, reject) => {
             const timer = setTimeout(() => reject(new Error('decode')), 10000);
-            probe.onloadedmetadata = () => { clearTimeout(timer); Number.isFinite(probe.duration) && probe.duration > 0 ? resolve() : reject(new Error('decode')); };
+            // Some local long-form files report Infinity/NaN before their final
+            // duration. Wait for a valid metadata update within the same bound.
+            probe.onloadedmetadata = probe.ondurationchange = () => {
+                if (probe.readyState >= 1 && Number.isFinite(probe.duration) && probe.duration > 0) { clearTimeout(timer); resolve(); }
+            };
             probe.onerror = () => { clearTimeout(timer); reject(new Error('decode')); };
             probe.src = url;
-        }); } finally { probe.onloadedmetadata = probe.onerror = null; probe.removeAttribute('src'); probe.load(); URL.revokeObjectURL(url); }
+        }); } finally { probe.onloadedmetadata = probe.ondurationchange = probe.onerror = null; probe.removeAttribute('src'); probe.load(); URL.revokeObjectURL(url); }
     }
     async function importFiles(files) {
         if (importBusy) return;
@@ -231,13 +311,14 @@
         const list = ordered(tracks, settings.order);
         list.forEach((track, index) => {
             const item = node('li', '', ui.list);
-            const select = button('play', item, () => { pause(true); settings.selectedId = track.id; save(); renderList(); status('ready'); });
-            select.textContent = track.name; select.className = 'mynt-music-track'; select.setAttribute('aria-pressed', String(settings.selectedId === track.id));
+            const select = button('select', item, () => { pause(true); if (audio?.dataset.track !== track.id) unloadAudio(); settings.selectedId = track.id; save(); renderList(); status('ready'); });
+            select.textContent = track.name; select.title = track.name; select.className = 'mynt-music-track'; select.setAttribute('aria-pressed', String(settings.selectedId === track.id)); select.setAttribute('aria-label', `${t('select')}: ${track.name}`);
             for (const [key, delta] of [['up', -1], ['down', 1]]) {
                 const b = button(key, item, () => { const ids = list.map(x => x.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; settings.order = ids; save(); renderList(); });
+                b.textContent = delta < 0 ? '↑' : '↓'; b.className = 'mynt-music-order'; b.title = t(key);
                 b.disabled = index + delta < 0 || index + delta >= list.length; b.setAttribute('aria-label', `${t(key)}: ${track.name}`);
             }
-            button('remove', item, async () => {
+            const remove = button('remove', item, async () => {
                 if (importBusy || !root.confirm(`${t('confirm')}\n${track.name}`)) return;
                 try {
                     tracks = await transact('delete', track.id); undoRecord = { track, index };
@@ -247,46 +328,76 @@
                     save(); publishLibraryChange(); renderList(); ui.undo.hidden = false; status('deleted');
                 } catch (e) { status(errorKey(e)); }
             });
+            remove.className = 'mynt-music-delete'; remove.title = t('remove'); remove.setAttribute('aria-label', `${t('remove')}: ${track.name}`);
         });
-        ui.play.disabled = !tracks.length;
+        updateNowPlaying();
     }
     async function mount() {
         const host = document.getElementById('myntPomoMusicMount');
         if (!host || mounted) return; mounted = true;
-        const details = node('details', '', host); details.className = 'mynt-pomo-music';
-        node('summary', t('title'), details); node('p', t('local'), details);
-        const label = node('label', t('import'), details);
-        ui.input = node('input', '', label); ui.input.type = 'file'; ui.input.multiple = true; ui.input.accept = '.mp3,.m4a,.aac,.ogg,.oga,.opus,.wav,.flac,.webm';
+        ui.root = node('section', '', host); ui.root.className = 'mynt-pomo-music'; ui.root.setAttribute('aria-label', t('title'));
+        node('div', t('title'), ui.root).className = 'mynt-music-heading';
+        const now = node('div', '', ui.root); now.className = 'mynt-music-now';
+        const artwork = node('span', '♪', now); artwork.className = 'mynt-music-artwork'; artwork.setAttribute('aria-hidden', 'true');
+        const information = node('div', '', now); information.className = 'mynt-music-information';
+        ui.trackName = node('div', '', information); ui.trackName.className = 'mynt-music-current';
+        ui.status = node('p', '', information); ui.status.className = 'mynt-music-status'; ui.status.setAttribute('role', 'status'); ui.status.setAttribute('aria-live', 'polite'); ui.status.setAttribute('aria-atomic', 'true');
+        const progress = node('div', '', ui.root); progress.className = 'mynt-music-progress';
+        ui.seek = node('input', '', progress); Object.assign(ui.seek, { type: 'range', min: '0', max: '1', step: '0.1', value: '0', disabled: true }); ui.seek.setAttribute('aria-label', t('seek'));
+        ui.seek.addEventListener('input', () => {
+            const state = timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback));
+            const target = seekTarget(ui.seek.value, state.duration);
+            if (state.disabled || target === null) { updateTimeline(); return; }
+            try { audio.currentTime = target; if (!fadeTimer) audio.volume = settings.volume; } catch (_) { /* Metadata may have become unavailable. Never start playback to seek. */ }
+            updateTimeline();
+        });
+        const time = node('div', '', progress); time.className = 'mynt-music-time'; time.setAttribute('aria-hidden', 'true');
+        ui.elapsed = node('span', '0:00', time); ui.duration = node('span', '0:00', time);
+        const controls = node('div', '', ui.root); controls.className = 'mynt-music-controls';
+        ui.play = button('play', controls, () => {
+            const request = requestTransportFocus(ui.play, ui.pause);
+            void play().finally(() => { if (transportFocus === request) transportFocus = null; });
+        }); ui.play.className = 'mynt-music-play';
+        ui.pause = button('pause', controls, () => { requestTransportFocus(ui.pause, ui.play); pause(); });
+        document.addEventListener('focusin', event => { if (transportFocus && event.target !== transportFocus.from) transportFocus = null; });
+        const volume = node('label', '', controls); volume.className = 'mynt-music-volume';
+        node('span', t('volume'), volume);
+        ui.volume = node('input', '', volume); Object.assign(ui.volume, { type: 'range', min: '0', max: '1', step: '0.05', value: String(settings.volume) });
+        ui.volume.setAttribute('aria-label', t('volume'));
+        ui.volume.addEventListener('input', () => { settings.volume = Number(ui.volume.value); if (audio && !fadeTimer) audio.volume = settings.volume; updateVolume(); save(); });
+        updateVolume();
+        const details = node('details', '', ui.root); details.className = 'mynt-music-library';
+        const summary = node('summary', '', details); node('span', t('library'), summary); ui.count = node('span', '0', summary); ui.count.className = 'mynt-music-count';
+        const privacy = node('p', t('local'), details); privacy.className = 'mynt-music-local'; privacy.id = 'myntMusicLocalNotice';
+        const label = node('label', t('import'), details); label.className = 'mynt-music-import';
+        ui.input = node('input', '', label); ui.input.type = 'file'; ui.input.multiple = true; ui.input.accept = '.mp3,.m4a,.aac,.ogg,.oga,.opus,.wav,.flac,.webm'; ui.input.setAttribute('aria-describedby', privacy.id);
         ui.input.addEventListener('change', () => void importFiles(ui.input.files));
-        ui.list = node('ol', '', details);
-        const controls = node('div', '', details); controls.className = 'mynt-music-controls';
-        ui.play = button('play', controls, () => void play()); button('pause', controls, () => pause());
-        ui.undo = button('undo', controls, async () => {
+        ui.list = node('ol', '', details); ui.list.setAttribute('aria-label', t('library'));
+        ui.undo = button('undo', ui.root, async () => {
             if (!undoRecord || importBusy) return;
             const { track, index } = undoRecord;
             const issue = validate(track.blob, 0, 0);
             if (issue) { status(issue); return; }
             try { tracks = await transact('put', track); settings.order = settings.order.filter(id => id !== track.id); settings.order.splice(index, 0, track.id); if (!settings.selectedId) settings.selectedId = track.id; undoRecord = null; ui.undo.hidden = true; save(); publishLibraryChange(); renderList(); status('ready'); } catch (e) { status(errorKey(e)); }
         }); ui.undo.hidden = true;
+        const preferences = node('div', '', details); preferences.className = 'mynt-music-preferences';
         function select(key, field, choices) {
-            const label = node('label', t(key), details), input = node('select', '', label);
+            const label = node('label', t(key), preferences), input = node('select', '', label);
             for (const [value, title] of choices) { const option = node('option', t(title), input); option.value = value; }
             input.value = settings[field]; input.addEventListener('change', () => { settings[field] = input.value; played = new Set([settings.selectedId]); save(); }); ui[field] = input;
         }
         select('mode', 'mode', [['off', 'off'], ['one', 'one'], ['all', 'all']]);
         select('rest', 'restPolicy', [['pause', 'restPause'], ['continue', 'continue']]);
-        const shuffle = node('label', t('shuffle'), details); ui.shuffle = node('input', '', shuffle); ui.shuffle.type = 'checkbox'; ui.shuffle.checked = settings.shuffle;
+        const shuffle = node('label', t('shuffle'), preferences); shuffle.className = 'mynt-music-shuffle'; ui.shuffle = node('input', '', shuffle); ui.shuffle.type = 'checkbox'; ui.shuffle.checked = settings.shuffle;
         ui.shuffle.addEventListener('change', () => { settings.shuffle = ui.shuffle.checked; played = new Set([settings.selectedId]); save(); });
-        const volume = node('label', t('volume'), details); ui.volume = node('input', '', volume); Object.assign(ui.volume, { type: 'range', min: '0', max: '1', step: '0.05', value: String(settings.volume) });
-        ui.volume.addEventListener('input', () => { settings.volume = Number(ui.volume.value); if (audio && !fadeTimer) audio.volume = settings.volume; save(); });
-        ui.status = node('p', '', details); ui.status.setAttribute('role', 'status');
+        updateNowPlaying();
         try { tracks = await transact('getAll'); if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || ''; renderList(); status(tracks.length ? 'ready' : 'empty'); } catch (e) { status(errorKey(e)); }
     }
     root.myntPomoMusic = {
         getSettings: () => normalize(settings),
         applySettings(value) { pause(true); settings = normalize(value); if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || ''; save(); syncControls(); renderList(); },
         pause: () => pause(),
-        // Track IDs/settings only. Audio data is intentionally excluded from backup APIs.
+        // Track IDs/settings only. The full-backup module reads audio blobs separately; scenarios only use settings.
         getTracks: () => ordered(tracks, settings.order).map(({ id, name }) => ({ id, name }))
     };
     root.addEventListener('storage', event => {
@@ -300,7 +411,7 @@
         lastState = state;
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) void refreshShared(); });
-    root.addEventListener('pagehide', () => { pause(true); unloadAudio(); libraryChannel?.close(); libraryChannel = null; });
+    root.addEventListener('pagehide', () => { transportFocus = null; pause(true); unloadAudio(); libraryChannel?.close(); libraryChannel = null; });
     root.addEventListener('pageshow', event => { if (event.persisted) { connectLibraryChannel(); void refreshShared(); } });
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(mount, 0), { once: true }); else setTimeout(mount, 0);
 })(typeof window !== 'undefined' ? window : null);

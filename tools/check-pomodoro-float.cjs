@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { validate, validImage, progressOffset } = require('../scripts/pomodoro-float.js');
+const { validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow } = require('../scripts/pomodoro-float.js');
 const settings = validate({ mode: 'gradient', color: '#abcdef' });
 assert.equal(settings.version, 1); assert.equal(settings.color, '#abcdef');
 assert.deepEqual(Object.keys(settings).sort(), ['version','mode','color','color2','fit','position'].sort());
@@ -13,7 +13,37 @@ const circumference = 2 * Math.PI * 70;
 assert.equal(progressOffset(1500, 1500), 0);
 assert.equal(progressOffset(750, 1500), circumference / 2);
 for (const [remaining, total, expected] of [[-5, 1500, circumference], [2000, 1500, 0], [0, 0, circumference], [NaN, 100, circumference]]) assert.equal(progressOffset(remaining, total), expected);
-console.log('Pomodoro appearance and progress validators passed');
+const lightPalette = paletteFor([rgb('#ffffff')]), darkPalette = paletteFor([rgb('#000000')]);
+assert.equal(lightPalette['--pomo-fg'], '#17243b'); assert.equal(darkPalette['--pomo-fg'], '#f6f8ff');
+assert.equal(lightPalette['--pomo-overlay'], 'none', 'solid light color never receives a blanket dark overlay');
+assert.equal(darkPalette['--pomo-overlay'], 'none', 'solid dark color needs no overlay either');
+assert.match(paletteFor([rgb('#ffffff'), rgb('#000000')])['--pomo-overlay'], /linear-gradient/, 'mixed bright and dark gradients get a soft scrim');
+assert.match(paletteFor([], true)['--pomo-overlay'], /linear-gradient/, 'unreadable imagery uses a subtle gradient and readable local surfaces');
+assert.equal(paletteFor([rgb('#ffffff')], true)['--pomo-scheme'], 'light', 'sampled bright local images use dark text and light surfaces');
+for (const palette of [lightPalette, darkPalette, paletteFor([], true), paletteFor([rgb('#ff00ff'), rgb('#00ff00')])]) {
+    const surface = palette['--pomo-surface'].match(/[\d.]+/g).map(Number);
+    for (const backdrop of [[0, 0, 0], [255, 255, 255], [255, 0, 255], [0, 255, 0]]) {
+        const composite = backdrop.map((channel, index) => surface[index] * surface[3] + channel * (1 - surface[3]));
+        for (const token of ['--pomo-fg', '--pomo-muted', '--pomo-accent']) assert.ok(contrast(rgb(palette[token]), composite) >= 4.5, `${token} remains readable on its surface over any supported background`);
+    }
+    assert.ok(contrast(rgb(palette['--pomo-accent']), rgb(palette['--pomo-on-accent'])) >= 4.5, 'primary controls meet text contrast');
+}
+for (const color of ['#abcde0', '#777777', '#cc7722', '#00ffff', '#ee44cc', '#243247']) {
+    const palette = paletteFor([rgb(color)]);
+    if (palette['--pomo-overlay'] === 'none') assert.ok(contrast(rgb(palette['--pomo-fg']), rgb(color)) >= 4.5, 'unfiltered solid background has readable primary text');
+}
+assert.equal(paletteFor([], true, ['#ddb7e8'])['--pomo-accent'], '#ddb7e8', 'readable selected Material hue is preserved, not replaced with blue');
+assert.equal(paletteFor([rgb('#ffffff')], false, ['#ddb7e8', '#703b7d'])['--pomo-accent'], '#703b7d', 'light backgrounds select a readable dark token from the same theme');
+const adjustedTheme = paletteFor([rgb('#ffffff')], false, ['#eeaaff']);
+assert.ok(rgb(adjustedTheme['--pomo-accent'])[0] > rgb(adjustedTheme['--pomo-accent'])[1], 'contrast correction retains warm theme hue');
+assert.deepEqual(rgb('#abc'), [170, 187, 204]); assert.deepEqual(rgb('rgb(170, 187, 204)'), [170, 187, 204]);
+assert.equal(rgb('url(https://example.test)'), null); assert.equal(rgb('rgb(300, 0, 0)'), null);
+assert.deepEqual(pipOptions(), { width: 320, height: 420, preferInitialWindowPlacement: true });
+assert.deepEqual(compactWindowSize({ innerWidth: 1083, innerHeight: 781, outerWidth: 1091, outerHeight: 819 }), { width: 328, height: 458 }, 'resizeTo accounts for measured native window chrome');
+assert.deepEqual(compactWindowSize({}), { width: 320, height: 420 }, 'missing geometry has a safe compact request');
+assert.equal(isCompactWindow({ innerWidth: 320, innerHeight: 420 }), true);
+assert.equal(isCompactWindow({ innerWidth: 1083, innerHeight: 781 }), false);
+console.log('Pomodoro appearance, contrast palette, PiP request, and progress validators passed');
 
 // Dependency-free DOM harness checks real module interactions, without browser geometry claims.
 const vm = require('node:vm');
@@ -41,7 +71,7 @@ class Node {
     append(...nodes) { for (const node of nodes) node.parent = this; this.children.push(...nodes); }
     after(node) { node.parent = this.parent; this.parent.children.splice(this.parent.children.indexOf(this) + 1, 0, node); }
     remove() { this.parent.children = this.parent.children.filter(node => node !== this); }
-    focus() { if (this.ownerDocument) this.ownerDocument.activeElement = this; }
+    focus(options) { this.lastFocusOptions = options; if (this.ownerDocument) this.ownerDocument.activeElement = this; }
     replaceChildren(...nodes) { this._text = ''; this.children = []; this.append(...nodes); }
     addEventListener(name, fn, options) { (this.listeners[name] ||= []).push({ fn, once: options?.once }); }
     removeEventListener(name, fn) { this.listeners[name] = (this.listeners[name] || []).filter(entry => entry.fn !== fn); }
@@ -59,17 +89,27 @@ class Node {
         return event;
     }
 }
+let videoSnapshotDraws = 0;
 function doc() {
     const document = new Node('#document');
     document.title = ''; document.baseURI = 'https://example.test/'; document.readyState = 'complete';
     document.documentElement = new Node('html', document); document.documentElement.lang = 'en';
     document.head = new Node('head', document); document.body = new Node('body', document);
     document.documentElement.append(document.head, document.body); document.append(document.documentElement);
-    document.createElement = tag => new Node(tag, document); document.createElementNS = (_, tag) => document.createElement(tag);
+    document.createElement = tag => {
+        const node = new Node(tag, document);
+        if (tag === 'canvas') {
+            node.getContext = () => ({ fillRect() {}, drawImage(source) { if (source.tagName === 'video') videoSnapshotDraws++; }, getImageData: () => ({ data: new Uint8ClampedArray(12 * 12 * 4).fill(255) }) });
+            node.toDataURL = () => 'data:image/jpeg;base64,dGVzdA==';
+        }
+        return node;
+    };
+    document.createElementNS = (_, tag) => document.createElement(tag);
     document.getElementById = id => document.querySelector('#' + id);
     return document;
 }
-function win() { const window = new Node(); window.document = doc(); window.focus = () => {}; window.close = () => { window.closed = true; return window.emit('pagehide'); }; return window; }
+const resizeChecks = [];
+function win() { const window = new Node(); window.document = doc(); window.focus = () => {}; window.close = () => { window.closed = true; return window.emit('pagehide'); }; window.setTimeout = callback => { resizeChecks.push(callback); }; window.scrollTo = (x, y) => { window.lastScroll = [x, y]; }; return window; }
 (async () => {
     const document = doc(), mount = document.createElement('div'), panel = document.createElement('div');
     mount.id = 'myntPomoFloatMount'; panel.id = 'pomodoroPanel'; document.body.append(mount, panel);
@@ -107,15 +147,50 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     const find = (root, label) => root.querySelectorAll('button').find(node => node.textContent === label || node.getAttribute('aria-label') === label);
     const ordinaryButton = mount.querySelector('.mynt-pomo-open-popup'), floatButton = mount.querySelector('.mynt-pomo-open-float');
     const status = mount.querySelector('.mynt-pomo-note');
+    const appearanceForm = mount.querySelector('form'), choices = mount.querySelectorAll('.mynt-pomo-background-choice');
+    const modeInput = mode => choices.find(tile => tile.querySelector('input').value === mode).querySelector('input');
+    assert.equal(choices.length, 5, 'five keyboard-accessible native radio thumbnail choices');
+    const originalChoice = choices.find(tile => tile.querySelector('input').value === 'original');
+    assert.equal(originalChoice.querySelector('.mynt-pomo-preview-fallback').hidden, false, 'unavailable video preview is honestly labelled');
+    originalVideo.readyState = 2; originalVideo.videoWidth = 160; originalVideo.src = 'videos/pomodoro-bg.mp4';
+    await originalVideo.emit('loadeddata');
+    assert.equal(videoSnapshotDraws, 1, 'only one snapshot from the existing decoded video');
+    assert.equal(originalChoice.querySelector('.mynt-pomo-preview-fallback').hidden, true);
+    assert.match(originalChoice.querySelector('.mynt-pomo-background-preview').style.getPropertyValue('background-image'), /data:image\/jpeg/);
+    assert.equal(originalVideo.playCalls, 0, 'thumbnail never starts original video playback');
+    assert.equal(modeInput('original').checked, true);
+    assert.equal(modeInput('original').type, 'radio');
+    assert.equal(modeInput('original').name, 'mode');
+    assert.equal(appearanceForm.elements.namedItem('color').parent.hidden, true, 'irrelevant color fields stay hidden');
+    assert.equal(mount.querySelector('.mynt-pomo-image-controls').hidden, true, 'upload is revealed only in image mode');
+    assert.ok(!mount.querySelector('.mynt-pomo-image-framing').open, 'advanced image framing starts collapsed');
+    await appearanceForm.emit('change', { target: modeInput('gradient') });
+    assert.equal(modeInput('gradient').checked, true); assert.equal(modeInput('original').checked, false);
+    assert.equal(appearanceForm.elements.namedItem('color').parent.hidden, false);
+    assert.equal(appearanceForm.elements.namedItem('color2').parent.hidden, false);
+    await appearanceForm.emit('change', { target: modeInput('image') });
+    assert.equal(mount.querySelector('.mynt-pomo-image-controls').hidden, false);
+    assert.equal(mount.querySelector('.mynt-pomo-image-framing').hidden, false);
+    assert.equal(appearanceForm.elements.namedItem('color').parent.hidden, true);
+    assert.match(status.textContent, /Choose a local image/);
+    await appearanceForm.emit('change', { target: modeInput('original') });
+    const appearanceDetails = mount.querySelector('.mynt-pomo-appearance'); appearanceDetails.open = true;
+    const appearanceEscape = await appearanceDetails.emit('keydown', { key: 'Escape' });
+    assert.equal(appearanceDetails.open, false); assert.equal(appearanceEscape.stopped, true);
+    assert.equal(document.activeElement, appearanceDetails.querySelector('summary'));
     await ordinaryButton.emit('click');
-    assert.equal(opened, 1); assert.equal(subscribed, 1); assert.equal(popupFeatures, 'popup,width=320,height=380');
+    assert.equal(opened, 1); assert.equal(subscribed, 1); assert.equal(popupFeatures, 'popup,width=320,height=420');
     assert.equal(last.document.documentElement.style.getPropertyValue('--accentLightTint-blue'), '#ffe7e7');
+    assert.equal(last.document.querySelector('.mynt-pomo-card').style.getPropertyValue('--pomo-accent'), '#ffe7e7', 'PiP respects the actual selected Material hue');
     assert.equal(last.document.documentElement.style.getPropertyValue('--mynt-font-scale'), '1.2');
     assert.equal(last.document.querySelector('.pomodoroCircleWrap').children.length, 2, 'circle has decorative SVG and readable timer');
     assert.equal(last.document.querySelector('.pomodoroProgressRing').getAttribute('aria-hidden'), 'true');
     assert.equal(last.document.querySelector('.pomodoroTimeDisplay').textContent, '25:00');
     assert.equal(last.document.querySelector('.pomodoroRoundDisplay').textContent, 'Round 1 / 4');
+    const cardChildren = last.document.querySelector('.mynt-pomo-context').children;
+    assert.ok(cardChildren.indexOf(last.document.querySelector('.mynt-pomo-task-preview')) < cardChildren.indexOf(last.document.querySelector('.pomodoroRoundDisplay')), 'task is secondary to timer and comes before tertiary round statistics');
     assert.ok(!last.document.querySelector('.mynt-pomo-options').open, 'advanced controls start collapsed');
+    assert.ok(!last.document.querySelector('.mynt-pomo-compact'), 'DocumentPiP sizing action is not shown in ordinary popup');
     assert.ok(last.document.querySelector('video').playCalls > 0, 'original mode plays packaged background in the miniwindow');
     assert.match(last.document.querySelector('video').src, /^https:\/\/example\.test\/videos\/pomodoro-bg\.mp4$/);
     await ordinaryButton.emit('click'); assert.equal(opened, 1, 'reuse existing window');
@@ -134,7 +209,32 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     const pending = floatButton.emit('click');
     await floatButton.emit('click'); assert.equal(pipCalls, 1, 'one pending PiP request');
     const pip = win(); resolvePip(pip); await pending;
-    assert.equal(requestedSize.width, 320); assert.equal(requestedSize.height, 380);
+    assert.equal(requestedSize.width, 320); assert.equal(requestedSize.height, 420);
+    assert.equal(requestedSize.preferInitialWindowPlacement, true, 'ask for initial compact placement rather than reusing a previously enlarged PiP');
+    const compactButton = find(pip.document, 'Compact window'), pipNote = pip.document.querySelector('.mynt-pomo-card').querySelectorAll('.mynt-pomo-note').at(-1);
+    const compactOptions = pip.document.querySelector('.mynt-pomo-options'); compactOptions.open = true;
+    let resizedTo, resizeCalls = 0;
+    Object.assign(pip, { innerWidth: 1083, innerHeight: 781, outerWidth: 1091, outerHeight: 819 });
+    pip.resizeTo = (width, height) => { resizeCalls++; resizedTo = { width, height }; };
+    assert.equal(resizeCalls, 0, 'never resize PiP automatically');
+    await compactButton.emit('click');
+    assert.deepEqual(resizedTo, { width: 328, height: 458 }); assert.equal(compactButton.disabled, true);
+    assert.match(pipNote.textContent, /Requesting/);
+    assert.equal(pipNote.classList.contains('mynt-pomo-sr-only'), true, 'pending announcement never adds visible card height');
+    await compactButton.emit('click'); assert.equal(resizeCalls, 1, 'ignore repeated requests while the single result check is pending');
+    resizeChecks.shift()(); assert.match(pipNote.textContent, /did not apply/, 'ignored requests disclose browser limit'); assert.equal(compactButton.disabled, false);
+    assert.equal(pipNote.classList.contains('mynt-pomo-sr-only'), false, 'limitation stays visibly useful');
+    assert.equal(compactOptions.open, true, 'unsuccessful sizing preserves the open options');
+    assert.equal(resizeChecks.length, 0, 'no resize retry or polling loop');
+    pip.resizeTo = () => { throw new Error('Browser refuses resizing'); };
+    await compactButton.emit('click'); assert.match(pipNote.textContent, /Drag the window edges/); assert.equal(compactButton.disabled, false);
+    pip.resizeTo = (width, height) => { pip.innerWidth = width - 8; pip.innerHeight = height - 38; pip.outerWidth = width; pip.outerHeight = height; };
+    await compactButton.emit('click'); resizeChecks.shift()(); assert.match(pipNote.textContent, /size applied/, 'success requires verified compact viewport');
+    assert.equal(pipNote.classList.contains('mynt-pomo-sr-only'), true, 'success announcement does not grow the compact card');
+    assert.equal(compactOptions.open, false, 'successful compact request collapses options');
+    assert.equal(pip.document.activeElement, compactOptions.querySelector('summary'), 'focus returns to the options disclosure');
+    assert.equal(compactOptions.querySelector('summary').lastFocusOptions.preventScroll, true);
+    assert.deepEqual(pip.lastScroll, [0, 0], 'compact window returns to the timer instead of staying scrolled down');
     await find(pip.document, 'Start').emit('click'); assert.equal(started, 1);
     state = { ...state, isRunning: true, timeRemaining: 750, task: 'Read chapter three' }; renderState(state);
     assert.equal(pip.document.querySelector('.pomodoroTimeDisplay').textContent, '12:30');
@@ -160,6 +260,14 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     const appearance = window.myntPomoAppearance;
     appearance.applySettings({ mode: 'color', color: '#123456' });
     assert.equal(panel.style.getPropertyValue('--pomo-color'), '#123456');
+    for (const token of ['--pomo-fg', '--pomo-accent', '--pomo-surface', '--pomo-overlay', '--pomo-muted', '--pomo-border', '--pomo-on-accent', '--pomo-scheme']) {
+        assert.equal(panel.style.getPropertyValue(token), pip.document.querySelector('.mynt-pomo-card').style.getPropertyValue(token), `${token} stays identical in the main panel and PiP`);
+    }
+    appearance.applySettings({ mode: 'color', color: '#fffafa' });
+    assert.equal(panel.style.getPropertyValue('--pomo-scheme'), 'light');
+    assert.equal(panel.style.getPropertyValue('--pomo-overlay'), 'none');
+    assert.equal(pip.document.querySelector('.mynt-pomo-card').style.getPropertyValue('--pomo-fg'), '#17243b');
+    appearance.applySettings({ mode: 'color', color: '#123456' });
     assert.ok(panel.classList.contains('mynt-pomo-static'));
     assert.ok(pip.document.querySelector('.mynt-pomo-card').classList.contains('mynt-pomo-static'));
     assert.ok(!pip.document.body.classList.contains('mynt-pomo-static'), 'custom appearance stays inside the compact card');
@@ -202,5 +310,16 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     assert.equal(find(mount, 'Undo image deletion').hidden, true);
     appearance.applySettings({ mode: 'image' }); assert.match(panel.style.getPropertyValue('--pomo-background'), /^url\("blob:/, 'restored image still paints');
     assert.equal(originalVideo.pauseCalls, 0, 'all appearance switches leave original panel video lifecycle untouched');
-    console.log('Pomodoro float lifecycle, compact controls, appearance, accessibility, and recoverable deletion tests passed');
+    assert.equal(originalVideo.playCalls, 0, 'appearance and previews never start the original video');
+    assert.equal(videoSnapshotDraws, 1, 'theme and mode changes reuse the thumbnail rather than doing per-frame work');
+    assert.equal(panel.style.getPropertyValue('--pomo-scheme'), 'light', 'local image sampling derives a light palette from the decoded bright image');
+    const css = fs.readFileSync(require.resolve('../styles/pomodoro-float.css'), 'utf8');
+    assert.match(css, /font-variant-numeric: tabular-nums/);
+    assert.match(css, /forced-colors: active/); assert.match(css, /prefers-reduced-motion: reduce/);
+    assert.ok(!css.includes('linear-gradient(#0006, #0006)'), 'independent backgrounds no longer get a blanket dark filter');
+    assert.ok(!css.includes('myntPomoPulse'), 'PiP ring does not pulse distractingly');
+    assert.match(css, /\.mynt-pomo-float \.pomodoroTimeDisplay\s*\{[^}]*background:\s*transparent/, 'digits have no separate opaque pill');
+    assert.match(css, /\.mynt-pomo-options\s*\{[^}]*border:\s*0[^}]*background:\s*transparent/, 'closed options are an unobtrusive text entry');
+    assert.ok(css.indexOf('.mynt-pomo-float .mynt-pomo-static { background-image: var(--pomo-background') < css.indexOf('@media (forced-colors: active)'), 'single-scrim override cannot supersede forced-colors accessibility');
+    console.log('Pomodoro float lifecycle, progressive thumbnail choices, synchronized palette, accessibility, and recoverable deletion tests passed');
 })().catch(error => { console.error(error); process.exitCode = 1; });
