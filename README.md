@@ -209,7 +209,7 @@ Then open a Pull Request against `Reese-max/MaterialYouNewTab:main`.
 
 ## Integrated upstream baseline
 
-This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through commit `e279bb9` (2026-08-24), plus conflict reconciliation that preserves the Reese-max productivity layer. Upstream custom shortcut icons, Daily Quote, `Alt+1`–`Alt+9`, AI Tools context-menu settings, update notes, UI fixes, and all 32 locales are included.
+This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through commit `51b8e33` (2026-10, incl. direct-URL search #255 and Google AI Mode button #247), plus conflict reconciliation that preserves the Reese-max productivity layer. Upstream custom shortcut icons, Daily Quote, `Alt+1`–`Alt+9`, AI Tools context-menu settings, update notes, UI fixes, and all 32 locales are included.
 
 ## Feedback
 

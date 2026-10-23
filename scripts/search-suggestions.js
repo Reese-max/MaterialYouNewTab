@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ---------------------------- Search Suggestions ----------------------------
 
+let suggestionRevision = 0;
 let lastInteractionBy = null;
 let originalSearchText = ""; // Store the original search text
 const resultBox = document.getElementById("resultBox");
@@ -64,6 +65,7 @@ function showResultBox() {
 
 // Hide the result box
 function hideResultBox() {
+    suggestionRevision++;
     resultBox.classList.remove("show");
     //resultBox.style.display = "none";
 }
@@ -91,6 +93,9 @@ function getBangSuggestions(query) {
 }
 
 searchInput.addEventListener("input", async function () {
+    hideResultBox();
+    const request = suggestionRevision;
+    originalSearchText = this.value;
     const searchsuggestionscheckbox = document.getElementById("searchsuggestionscheckbox");
     if (searchsuggestionscheckbox.checked) {
         const query = this.value;
@@ -131,6 +136,8 @@ searchInput.addEventListener("input", async function () {
 
         if (query.length > 0) {
             const suggestions = await getAutocompleteSuggestions(query);
+            if (request !== suggestionRevision || searchInput.value !== query
+                || !searchsuggestionscheckbox.checked || document.activeElement !== searchInput) return;
             resultBox.replaceChildren();
 
             if (suggestions.length === 0) {
@@ -164,6 +171,14 @@ searchInput.addEventListener("input", async function () {
 
 searchInput.addEventListener("keydown", function (e) {
     const activeItem = resultBox.querySelector(".active");
+    if (e.key === "Escape" && !e.isComposing) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.value = originalSearchText;
+        activeItem?.classList.remove("active");
+        hideResultBox();
+        return;
+    }
     let currentIndex = activeItem ? parseInt(activeItem.getAttribute("data-index")) : -1;
 
     if (resultBox.children.length > 0 && resultBox.classList.contains("show")) {
@@ -213,14 +228,7 @@ searchInput.addEventListener("keydown", function (e) {
                 performSearch(this.value);
             }
 
-        } else if (e.key === "Escape") {
-            e.preventDefault();
-            // Restore original search text
-            this.value = originalSearchText;
-            // Remove any active highlights
-            if (activeItem) {
-                activeItem.classList.remove("active");
-            }
+
         }
     } else if (e.key === "Enter") {
         // No suggestions available, search with current input

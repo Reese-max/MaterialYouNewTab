@@ -31,25 +31,38 @@ function pageReset() {
     shortcutEditPage.style.display = "none";
 }
 
+// Invalidate delayed animation callbacks when the user quickly changes direction.
+let menuRevision = 0;
+const queueMenu = (callback, delay = 0) => {
+    const revision = menuRevision;
+    setTimeout(() => { if (revision === menuRevision) callback(); }, delay);
+};
+const frameMenu = callback => {
+    const revision = menuRevision;
+    requestAnimationFrame(() => { if (revision === menuRevision) callback(); });
+};
+
 const closeMenuBar = () => {
+    ++menuRevision;
+    if (menuCont.contains(document.activeElement)) menuButton.focus({ preventScroll: true });
     menuButton.setAttribute("aria-expanded", "false");
-    requestAnimationFrame(() => {
+    frameMenu(() => {
         optCont.style.opacity = "0"
         optCont.style.transform = "translateX(100%)"
     });
-    setTimeout(() => {
-        requestAnimationFrame(() => {
+    queueMenu(() => {
+        frameMenu(() => {
             menuBar.style.opacity = "0"
             menuCont.style.transform = "translateX(100%)"
         });
     }, 14);
-    setTimeout(() => {
+    queueMenu(() => {
         // Disable smooth scroll temporarily
         menuCont.style.scrollBehavior = "auto";
         menuCont.scrollTop = 0;
 
         // Restore smooth scroll
-        requestAnimationFrame(() => {
+        frameMenu(() => {
             menuCont.style.scrollBehavior = "smooth";
         });
 
@@ -58,27 +71,29 @@ const closeMenuBar = () => {
 }
 
 const openMenuBar = () => {
+    ++menuRevision;
     menuButton.setAttribute("aria-expanded", "true");
-    setTimeout(() => {
+    queueMenu(() => {
         menuBar.style.display = "block";
         pageReset();
     });
-    setTimeout(() => {
-        requestAnimationFrame(() => {
+    queueMenu(() => {
+        frameMenu(() => {
             menuBar.style.opacity = "1"
             menuCont.style.transform = "translateX(0px)"
         });
     }, 7);
-    setTimeout(() => {
-        requestAnimationFrame(() => {
+    queueMenu(() => {
+        frameMenu(() => {
             optCont.style.opacity = "1"
             optCont.style.transform = "translateX(0px)"
+            document.getElementById("menuCloseButton").focus({ preventScroll: true });
         });
     }, 11);
 }
 
 menuButton.addEventListener("click", () => {
-    if (menuBar.style.display === "none" || menuBar.style.display === "") {
+    if (menuButton.getAttribute("aria-expanded") !== "true") {
         openMenuBar();
     } else {
         closeMenuBar();
@@ -98,6 +113,30 @@ document.getElementById("menuCloseButton").onclick = () => {
 }
 
 
+// Escape is scoped to this panel, so editing and other dialogs keep their own shortcuts.
+menuCont.addEventListener("keydown", event => {
+    if (event.defaultPrevented || document.querySelector("dialog[open]")) return;
+    if (event.key === "Tab") {
+        const items = [...menuCont.querySelectorAll('button, input, select, textarea, a[href], summary, [tabindex]')]
+            .filter(el => {
+                const closedDetails = el.closest('details:not([open])');
+                return el.tabIndex >= 0 && !el.disabled && !el.closest('[inert], [hidden]') &&
+                    (!closedDetails || closedDetails.querySelector('summary') === el) &&
+                    el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden';
+            });
+        const first = items[0], last = items[items.length - 1];
+        if (first && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+            event.preventDefault(); (event.shiftKey ? last : first).focus();
+        }
+        return;
+    }
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (shortcutEditPage.style.display === "block") backButton.click();
+    else closeMenuBar();
+});
+
 // Toggle expand/collapse sections
 document.querySelectorAll(".sectionHeader").forEach(header => {
     const section = header.closest(".section");
@@ -116,45 +155,94 @@ document.querySelectorAll(".sectionHeader").forEach(header => {
     });
 });
 
+// Keep the large settings menu scannable without moving its existing controls.
+const settingsGroupButtons = [...document.querySelectorAll("[data-settings-group-button]")];
+const settingsGroupSections = [...document.querySelectorAll("#overviewPage .section[data-settings-group]")];
+
+function selectSettingsGroup(group) {
+    settingsGroupButtons.forEach(button => {
+        const selected = button.dataset.settingsGroupButton === group;
+        button.setAttribute("aria-selected", String(selected));
+        button.tabIndex = selected ? 0 : -1;
+    });
+    settingsGroupSections.forEach(section => {
+        const hidden = section.dataset.settingsGroup !== group;
+        section.hidden = hidden;
+        section.toggleAttribute("inert", hidden);
+    });
+    optCont.scrollTop = 0;
+}
+
+settingsGroupButtons.forEach((button, index) => {
+    button.addEventListener("click", () => selectSettingsGroup(button.dataset.settingsGroupButton));
+    button.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        event.preventDefault();
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const next = settingsGroupButtons[(index + direction + settingsGroupButtons.length) % settingsGroupButtons.length];
+        next.focus();
+        selectSettingsGroup(next.dataset.settingsGroupButton);
+    });
+});
+selectSettingsGroup("personal");
+
+// Explain the two unlabeled floating actions on the first three visits, then simplify them.
+const HOME_HINT_KEY = "myntHomeActionHintViews";
+const hintViews = Math.max(0, Number(localStorage.getItem(HOME_HINT_KEY)) || 0);
+if (hintViews < 3) {
+    document.documentElement.classList.add("showHomeActionHints");
+    localStorage.setItem(HOME_HINT_KEY, String(hintViews + 1));
+}
+
+document.addEventListener("click", event => {
+    if (!event.target.closest("#menuButton, #bookmarkButton")) return;
+    document.documentElement.classList.remove("showHomeActionHints");
+    localStorage.setItem(HOME_HINT_KEY, "3");
+}, true);
+
 
 /* ------ Shortcut Page Transitions & Animations ------ */
 
 // When clicked, open new page by sliding it in from the right.
 shortcutEditButton.onclick = () => {
-    setTimeout(() => {
+    menuRevision++;
+    queueMenu(() => {
         shortcutEditPage.style.display = "block"
     });
-    requestAnimationFrame(() => {
+    frameMenu(() => {
         overviewPage.style.transform = "translateX(-120%)"
         overviewPage.style.opacity = "0"
     });
-    setTimeout(() => {
-        requestAnimationFrame(() => {
+    queueMenu(() => {
+        frameMenu(() => {
             shortcutEditPage.style.transform = "translateX(0)"
             shortcutEditPage.style.opacity = "1"
         });
     }, 50);
-    setTimeout(() => {
+    queueMenu(() => {
         overviewPage.style.display = "none";
+        backButton.focus({ preventScroll: true });
     }, 650);
 }
 
 // Close page by sliding it away to the right.
 backButton.onclick = () => {
-    setTimeout(() => {
+    menuRevision++;
+    queueMenu(() => {
         overviewPage.style.display = "block"
     });
-    requestAnimationFrame(() => {
+    frameMenu(() => {
         shortcutEditPage.style.transform = "translateX(120%)";
         shortcutEditPage.style.opacity = "0";
     });
-    setTimeout(() => {
-        requestAnimationFrame(() => {
+    queueMenu(() => {
+        frameMenu(() => {
             overviewPage.style.transform = "translateX(0)";
             overviewPage.style.opacity = "1";
         });
     }, 50);
-    setTimeout(() => {
+    queueMenu(() => {
         shortcutEditPage.style.display = "none";
+        shortcutEditButton.focus({ preventScroll: true });
     }, 650);
 }

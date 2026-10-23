@@ -1,0 +1,16 @@
+# Normalize line endings: text stored as LF in the repo.
+* text=auto
+
+# Upstream files that already contain mixed line endings; left as-is to avoid churn and merge conflicts.
+docs/Get_WeatherAPI_Key.html -text
+scripts/bongocat.js -text
+scripts/pomodoro.js -text
+scripts/todo-list.js -text
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.woff2 binary
+*.mp4 binary
+*.webm binary

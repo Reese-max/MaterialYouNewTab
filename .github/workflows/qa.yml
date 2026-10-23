@@ -4,14 +4,17 @@ on:
   pull_request:
     branches:
       - main
+      - feature/daidai-integration
   push:
     branches:
       - main
       - feature/upstream-full-integration
+      - feature/manual-layout-background-colors
+      - feature/daidai-integration
   workflow_dispatch:
 
 concurrency:
-  group: qa-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: qa-${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -36,6 +39,23 @@ jobs:
 
       - name: Run customization checks
         run: node tools/check-customizations.mjs
+
+      - name: Validate manual layout and local adaptive colors
+        run: |
+          node tools/check-layout-profiles.cjs
+          node tools/check-layout-stability.cjs
+          node tools/check-background-power.cjs
+          node tools/check-layout-save.cjs
+          node tools/check-manual-editor.cjs
+          node tools/check-adaptive-core.cjs
+          node tools/check-adaptive-settings.cjs
+
+      - name: Validate local Pomodoro studio
+        run: |
+          node tools/check-pomodoro-timer.cjs
+          node tools/check-pomodoro-float.cjs
+          node tools/check-pomodoro-music.cjs
+          node tools/check-pomodoro-studio.cjs
 
       - name: Run release metadata checks
         run: node tools/check-release-metadata.mjs
@@ -94,3 +114,4 @@ jobs:
           set -euo pipefail
           command -v xvfb-run
           xvfb-run -a node tools/smoke-chromium.mjs
+

@@ -74,7 +74,7 @@
         const copy = document.createElement("span");
         copy.className = "mynt-preview-copy";
         const title = document.createElement("strong");
-        title.textContent = "MYNT 網頁預覽";
+        title.textContent = "Reese 新分頁預覽";
         const detail = document.createElement("small");
         const shortCommit = String(meta.commit || "unknown").slice(0, 7);
         detail.textContent = `v${meta.version || "?"} · ${meta.branch || "?"} · ${shortCommit}`;
@@ -87,14 +87,22 @@
         const collapseButton = document.createElement("button");
         collapseButton.type = "button";
         collapseButton.setAttribute("aria-label", "收合或展開預覽狀態");
+        collapseButton.setAttribute("aria-expanded", "true");
         collapseButton.textContent = "—";
         collapseButton.addEventListener("click", () => {
             badge.classList.toggle("is-collapsed");
-            collapseButton.textContent = badge.classList.contains("is-collapsed") ? "+" : "—";
+            const expanded = !badge.classList.contains("is-collapsed");
+            collapseButton.setAttribute("aria-expanded", String(expanded));
+            collapseButton.textContent = expanded ? "—" : "+";
         });
 
         badge.append(dot, copy, verifyLink, collapseButton);
         document.body.appendChild(badge);
+        if (matchMedia("(max-width: 640px)").matches) {
+            badge.classList.add("is-collapsed");
+            collapseButton.setAttribute("aria-expanded", "false");
+            collapseButton.textContent = "+";
+        }
         return badge;
     }
 

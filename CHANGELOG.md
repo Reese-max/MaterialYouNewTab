@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Improve manual layout editing with explicit edit mode, large move/resize handles, optional alignment/grid snapping, undo/redo, keyboard adjustments, cancel, and save-and-lock.
+- Add on-device wallpaper palette, contrast, and opacity controls with stable manual positions and image/video fallback. No new permissions or remote analysis.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -21,6 +27,8 @@ and this project partially follows [Semantic Versioning](https://semver.org/spec
 - Added support for custom shortcut icons via upload, URL, or pasted SVG ([@smurf11k](https://github.com/smurf11k)), ([@prem-k-r](https://github.com/prem-k-r)) ([#187](https://github.com/prem-k-r/MaterialYouNewTab/pull/187/)), ([#199](https://github.com/prem-k-r/MaterialYouNewTab/pull/199/))
 - Added Daily Quote option to show one quote per day instead of refreshing on every new tab ([@KomeshBathula](https://github.com/KomeshBathula)) ([#141](https://github.com/prem-k-r/MaterialYouNewTab/pull/141))
 - Added keyboard shortcuts (`Alt + 1`–`9`) to quickly open the first nine shortcuts ([@smurf11k](https://github.com/smurf11k)) ([#237](https://github.com/prem-k-r/MaterialYouNewTab/pull/237))
+- Added Google AI Mode search button to the search bar when using Google as the search engine ([@KomeshBathula](https://github.com/KomeshBathula))
+- Updated the search bar to bypass search engines and navigate directly to webpages when the input contains no spaces and begins strictly with `http://`, `https://`, or `www.` ([@prem-k-r](https://github.com/prem-k-r)) ([#255](https://github.com/prem-k-r/MaterialYouNewTab/pull/255))
 
 ### Improved
 
@@ -65,6 +73,7 @@ and this project partially follows [Semantic Versioning](https://semver.org/spec
 ### Other
 
 - Miscellaneous improvements ([@prem-k-r](https://github.com/prem-k-r))
+- Docs: Fixed broken star history chart link in README ([@FaintFlower](https://github.com/FaintFlower)) ([#248](https://github.com/prem-k-r/MaterialYouNewTab/pull/248))
 
 ## [v3.3](https://github.com/prem-k-r/MaterialYouNewTab/compare/v3.2...v3.3) - Nov 23, 2025
 

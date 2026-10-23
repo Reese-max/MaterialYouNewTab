@@ -10,49 +10,49 @@
 const DEFAULT_LANGUAGE = "zh_TW";
 
 const localeSources = {
-    en: en,
-    pt: pt,
-    ne: ne,
-    es: es,
-    hi: hi,
-    hu: hu,
-    zh: zh,
-    zh_TW: zh_TW,
-    cs: cs,
-    it: it,
-    tr: tr,
-    bn: bn,
-    vi: vi,
-    ru: ru,
-    uz: uz,
-    ja: ja,
-    ko: ko,
-    idn: idn,
-    mr: mr,
-    fr: fr,
-    az: az,
-    sl: sl,
-    ur: ur,
-    de: de,
-    fa: fa,
-    ar_SA: ar_SA,
-    el: el,
-    ta: ta,
-    th: th,
-    pl: pl,
-    uk: uk,
-    sv: sv,
+    en: typeof en !== "undefined" ? en : undefined,
+    pt: typeof pt !== "undefined" ? pt : undefined,
+    ne: typeof ne !== "undefined" ? ne : undefined,
+    es: typeof es !== "undefined" ? es : undefined,
+    hi: typeof hi !== "undefined" ? hi : undefined,
+    hu: typeof hu !== "undefined" ? hu : undefined,
+    zh: typeof zh !== "undefined" ? zh : undefined,
+    zh_TW: typeof zh_TW !== "undefined" ? zh_TW : undefined,
+    cs: typeof cs !== "undefined" ? cs : undefined,
+    it: typeof it !== "undefined" ? it : undefined,
+    tr: typeof tr !== "undefined" ? tr : undefined,
+    bn: typeof bn !== "undefined" ? bn : undefined,
+    vi: typeof vi !== "undefined" ? vi : undefined,
+    ru: typeof ru !== "undefined" ? ru : undefined,
+    uz: typeof uz !== "undefined" ? uz : undefined,
+    ja: typeof ja !== "undefined" ? ja : undefined,
+    ko: typeof ko !== "undefined" ? ko : undefined,
+    idn: typeof idn !== "undefined" ? idn : undefined,
+    mr: typeof mr !== "undefined" ? mr : undefined,
+    fr: typeof fr !== "undefined" ? fr : undefined,
+    az: typeof az !== "undefined" ? az : undefined,
+    sl: typeof sl !== "undefined" ? sl : undefined,
+    ur: typeof ur !== "undefined" ? ur : undefined,
+    de: typeof de !== "undefined" ? de : undefined,
+    fa: typeof fa !== "undefined" ? fa : undefined,
+    ar_SA: typeof ar_SA !== "undefined" ? ar_SA : undefined,
+    el: typeof el !== "undefined" ? el : undefined,
+    ta: typeof ta !== "undefined" ? ta : undefined,
+    th: typeof th !== "undefined" ? th : undefined,
+    pl: typeof pl !== "undefined" ? pl : undefined,
+    uk: typeof uk !== "undefined" ? uk : undefined,
+    sv: typeof sv !== "undefined" ? sv : undefined,
 };
 
 const translations = Object.fromEntries(
-    Object.entries(localeSources).map(([code, strings]) => [
+    Object.entries(localeSources).filter(([, strings]) => strings).map(([code, strings]) => [
         code,
         code === "en" ? strings : { ...en, ...strings }
     ])
 );
 
 const savedLanguage = localStorage.getItem("selectedLanguage");
-if (!savedLanguage || !translations[savedLanguage]) {
+if (!savedLanguage || !(window.MYNT_LOCALE_CODES || Object.keys(translations)).includes(savedLanguage)) {
     localStorage.setItem("selectedLanguage", DEFAULT_LANGUAGE);
 }
 
@@ -121,6 +121,7 @@ function applyLanguage(lang) {
 
     // Mapping of text elements and their translation keys
     const translationMap = [
+        "menuTitle",
         "feedback",
         "resetsettings",
         "shortcutsText",
@@ -162,8 +163,25 @@ function applyLanguage(lang) {
         "scratchpadInfo",
         "scratchpadCopyBtn",
         "scratchpadToTaskBtn",
+        "scratchpadAskDaidaiBtn",
+        "scratchpadOrganizeDaidaiBtn",
         "scratchpadClearBtn",
         "scratchpadDownloadBtn",
+        "daidaiIntegrationTitle",
+        "daidaiIntegrationInfo",
+        "daidaiConnectionTitle",
+        "daidaiConnectionInfo",
+        "daidaiConnectBtn",
+        "daidaiDisclosureSummary",
+        "daidaiDisclosurePrivate",
+        "daidaiDisclosureApproval",
+        "daidaiActionEyebrow",
+        "daidaiActionTitle",
+        "daidaiActionBeforeLabel",
+        "daidaiActionAfterLabel",
+        "daidaiActionWarning",
+        "daidaiActionRejectBtn",
+        "daidaiActionConfirmBtn",
         "shortcutsHelpEyebrow",
         "shortcutsHelpTitle",
         "shortcutSearchHelp",
@@ -207,6 +225,8 @@ function applyLanguage(lang) {
         "hideWeatherBoxInfo",
         "micIconTitle",
         "micIconInfo",
+        "aiModeIconTitle",
+        "aiModeIconInfo",
         "hideSearchWith",
         "hideSearchWithInfo",
         "searchWithHint",
@@ -224,6 +244,8 @@ function applyLanguage(lang) {
         "timeformatinfo",
         "greetingtitle",
         "greetinginfo",
+        "greetingNameTitle",
+        "greetingNameInfo",
         "userTextTitle",
         "userTextInfo",
         "useproxytitletext",
@@ -258,6 +280,7 @@ function applyLanguage(lang) {
         "todoListHover",
         "uploadWallpaperText",
         "backupText",
+        "backupScopeText",
         "restoreText",
         "rangColor",
         "bookmarksText",
@@ -286,6 +309,10 @@ function applyLanguage(lang) {
         "adjustOpacityDesc",
         "footerToastTitle",
         "footerToastMessage",
+        "settingsHelpTitle",
+        "settingsGroupPersonal",
+        "settingsGroupWork",
+        "settingsGroupAdvanced",
         "personalizationSectionTitle",
         "clockSectionTitle",
         "searchSectionTitle",
@@ -304,7 +331,8 @@ function applyLanguage(lang) {
         { id: "todoInput", key: "todoPlaceholder" },
         { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "editBookmarkName", key: "editBookmarkName" },
-        { id: "editBookmarkURL", key: "editBookmarkURL" }
+        { id: "editBookmarkURL", key: "editBookmarkURL" },
+        { id: "greetingNameInput", key: "greetingNamePlaceholder" }
     ];
 
     // Mapping of elements and their different translation keys
@@ -317,8 +345,11 @@ function applyLanguage(lang) {
         { id: "saveLoc", key: "saveAPI" },
         { id: "saveBookmarkChanges", key: "saveAPI" },
         { id: "cancelBookmarkEdit", key: "cancelText" },
+        { id: "bookmarkDisplayOptionsSummary", key: "bookmarkDisplayOptions" },
+        { id: "bookmarkUndoButton", key: "bookmarkUndoAction" },
         { id: "aiSettingsHeader", key: "aiToolsSettingsText" },
         { id: "saveAISettingsBtn", key: "saveAPI" },
+        { id: "settingsHintText", key: "openSettingsLabel" },
         { id: "editBookmarkNameLabel", key: "editBookmarkName" },
         { id: "editBookmarkURLLabel", key: "editBookmarkURL" },
         { id: "shortcutsSectionTitle", key: "shortcutsText" },
@@ -354,10 +385,14 @@ function applyLanguage(lang) {
         { id: "todoListCont", key: "todoListText" },
         { id: "pomodoroCont", key: "pomodoroText" },
         { id: "bookmarkButton", key: "bookmarksText" },
+        { id: "bookmarkAddButton", key: "bookmarkAddLabel", title: true },
+        { id: "bookmarkCloseButton", key: "bookmarkCloseLabel", title: true },
+        { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "googleAppsCont", key: "googleAppsMenuText" },
         { id: "aiToolsIcon", key: "ai_tools_button" },
         { id: "micIcon", key: "voiceSearchLabel" },
         { id: "menuButton", key: "openSettingsLabel" },
+        { id: "settingsGroupTabs", key: "settingsGroupLabel" },
         { id: "clearSearchButton", key: "clearBookmarkSearchLabel", title: true },
         { id: "newShortcutButton", key: "addShortcutLabel", title: true },
         { id: "resetButton", key: "resetShortcutsLabel", title: true }
@@ -370,23 +405,7 @@ function applyLanguage(lang) {
         if (title) element.title = label;
     });
 
-    const pinLabel = translations[lang]?.bookmarkPinToShortcuts || translations.en?.bookmarkPinToShortcuts;
-    const pinnedLabel = translations[lang]?.bookmarkPinnedLabel || translations.en?.bookmarkPinnedLabel;
-    document.querySelectorAll(".bookmark-pin-button").forEach(button => {
-        const label = button.disabled ? pinnedLabel : pinLabel;
-        const bookmarkTitle = button.closest("li")?.querySelector("a span")?.textContent?.trim();
-        button.title = label;
-        button.setAttribute("aria-label", bookmarkTitle ? `${label}: ${bookmarkTitle}` : label);
-        const text = button.querySelector(".bookmark-pin-label");
-        if (text) text.textContent = label;
-    });
-
-    const deleteLabel = translations[lang]?.bookmarkDeleteLabel || translations.en?.bookmarkDeleteLabel;
-    document.querySelectorAll(".bookmark-delete-button").forEach(button => {
-        const bookmarkTitle = button.closest("li")?.querySelector("a span")?.textContent?.trim();
-        button.title = deleteLabel;
-        button.setAttribute("aria-label", bookmarkTitle ? `${deleteLabel}: ${bookmarkTitle}` : deleteLabel);
-    });
+    if (typeof renderBookmarks === "function" && bookmarkNodeMap?.size) renderBookmarks();
 
     // For userText
     const userTextDiv = document.getElementById("userText");
@@ -398,6 +417,7 @@ function applyLanguage(lang) {
             userTextDiv.innerText = placeholder;
         }
     }
+    userTextDiv.setAttribute("aria-label", translations[lang]?.userTextTitle || translations["en"].userTextTitle);
 
     // Update placeholders on already-rendered shortcut inputs
     document.querySelectorAll(".shortcutSettingsEntry .shortcutName")
@@ -412,25 +432,15 @@ function applyLanguage(lang) {
     if (menuCloseButton) {
         const hoverText = translations[lang]?.menuCloseText || translations["en"].menuCloseText;
         menuCloseButton.setAttribute("data-lang", hoverText);
+        menuCloseButton.setAttribute("aria-label", hoverText);
     }
 
     // Update the width of the menu container based on the language
     const menuCont = document.querySelector(".menuBar .menuCont");
     if (menuCont) {
         menuCont.style.width = menuWidths[lang] || menuWidths["en"];
-        let widthh = window.innerWidth / parseInt(menuWidths[lang] || menuWidths["en"]);
-        if (window.innerWidth < 522) {
-            let menuStyle = document.getElementById("menuStyle") || document.createElement("style");
-            menuStyle.id = "menuStyle";
-            menuStyle.textContent = `
-                .menuCont {
-                    scale: ${widthh} !important;
-                    height: ${(100 / widthh).toString()}dvh !important;
-                    transform-origin: top right !important;
-                }
-            `;
-            document.head.append(menuStyle);
-        }
+        // The panel now reflows to the viewport instead of scaling text and controls.
+        document.getElementById("menuStyle")?.remove();
     }
 
     // Dynamically update the font family based on the language
@@ -442,7 +452,8 @@ function applyLanguage(lang) {
     const isRTL = rtlLanguages.includes(lang);
     const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont", ".resultBox", ".quotesCont",
         ".leftDiv", ".shortcutsContainer", ".page", "#prompt-modal-box", ".todo-container",
-        ".bookmark-search-container", ".bookmark-controls-container", "#editBookmarkModal", ".liquidGlass-toast"];
+        ".bookmark-sidebar", ".bookmark-search-container", ".bookmark-controls-container", ".bookmark-state",
+        ".bookmark-section", ".bookmark-action-popover", "#editBookmarkModal", ".liquidGlass-toast"];
 
     rtlSelectors.forEach(selector => {
         document.querySelectorAll(selector).forEach(el => {
@@ -468,7 +479,7 @@ function applyLanguage(lang) {
 
 // Detect language from navigator.language
 document.getElementById("languageSelector").addEventListener("change", (event) => {
-    applyLanguage(event.target.value);
+    saveLanguageStatus("selectedLanguage", event.target.value);
     location.reload();
 });
 

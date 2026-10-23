@@ -318,6 +318,114 @@ async function main() {
 
     await reloadAndWait();
 
+    // Review regressions execute in the real disposable extension document.
+    await evaluate(`localStorage.setItem('myntLayout','{malformed-review-fixture');localStorage.removeItem('myntLayoutProfiles')`);
+    await reloadAndWait();
+    const review = await evaluate(`(() => {
+        document.querySelector('#myntLayoutEdit').click();
+        const h=document.querySelector('[data-block="search"] .myntLayoutMove');
+        h.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+        const panel=document.querySelector('#myntAdaptivePanel');panel.open=true;
+        panel.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+        const escapeKeptDraft=window.myntLayout.isEditing()&&!panel.open;
+        h.focus();document.querySelector('#myntLayoutPrecise-s').value='150';
+        document.querySelector('#myntLayoutAlignCenter').click();
+        const rect=document.querySelector('.searchbar').getBoundingClientRect();
+        const centered=Math.abs(rect.left+rect.width/2-innerWidth/2)<1;
+        document.querySelector('#myntLayoutSave').click();
+        const first=JSON.parse(localStorage.getItem('myntLayoutProfiles'));
+        document.querySelector('#myntLayoutEdit').click();document.querySelector('#myntLayoutSave').click();
+        const second=JSON.parse(localStorage.getItem('myntLayoutProfiles'));
+        return {escapeKeptDraft,centered,legacyPreserved:localStorage.getItem('myntLayout')==='{malformed-review-fixture',saved:!!first,previousPreserved:JSON.stringify(first.profiles[0].previous)===JSON.stringify(second.profiles[0].previous)};
+    })()`);
+    for(const [key,value] of Object.entries(review))assert.equal(value,true,'Review regression: '+key);
+    // Reset only this disposable test's layout fixture; no user's browser data is used.
+    await evaluate(`localStorage.removeItem('myntLayout');localStorage.removeItem('myntLayoutProfiles')`);
+    await reloadAndWait();
+
+    // Actual local wallpaper media in the installed extension, not mocked visibility events.
+    await browserClient.send("Target.activateTarget", { targetId: newTab.target.id });
+    const mediaDeadline = Date.now() + 20_000;
+    let mediaReady = false;
+    while (Date.now() < mediaDeadline) {
+        mediaReady = await evaluate(`(() => { const v=document.querySelector('#videoBg'); return !document.hidden && !!v && v.readyState>=2 && !v.paused; })()`);
+        if (mediaReady) break;
+        await delay(150);
+    }
+    assert.equal(mediaReady, true, "Local wallpaper video did not start in visible extension tab");
+    const { targetId: otherTabId } = await browserClient.send("Target.createTarget", { url: "about:blank" });
+    async function switchAndObserve(targetId, hidden) {
+        await browserClient.send("Target.activateTarget", { targetId });
+        const deadline=Date.now()+5000;
+        while(Date.now()<deadline){
+            const state=await evaluate(`({hidden:document.hidden,paused:document.querySelector('#videoBg').paused,time:document.querySelector('#videoBg').currentTime})`);
+            if(state.hidden===hidden && (!hidden || state.paused))return state;
+            await delay(100);
+        }
+        throw Error("Wallpaper visibility/paused state did not follow actual tab activation");
+    }
+    await switchAndObserve(otherTabId,true);
+    await reloadAndWait();
+    assert.equal(await evaluate('document.hidden'),true,'Test must initialize in a truly hidden tab');
+    await switchAndObserve(newTab.target.id,false);
+    const pendingDeadline=Date.now()+10000;
+    while(Date.now()<pendingDeadline&&await evaluate("document.querySelector('#videoBg').paused"))await delay(100);
+    assert.equal(await evaluate("document.querySelector('#videoBg').paused"),false,'Hidden-initialized wallpaper did not start when visible');
+    for(let cycle=0;cycle<3;cycle++){
+        const hidden=await switchAndObserve(otherTabId,true);
+        await delay(350);
+        const stopped=await evaluate(`document.querySelector('#videoBg').currentTime`);
+        assert.ok(Math.abs(stopped-hidden.time)<0.05,"Hidden video continued advancing");
+        await switchAndObserve(newTab.target.id,false);
+        await delay(150);
+        assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),false,"Previously playing video did not resume");
+    }
+    await evaluate(`document.querySelector('#videoBg').pause()`);
+    await switchAndObserve(otherTabId,true);await switchAndObserve(newTab.target.id,false);
+    assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),true,"Previously paused video unexpectedly resumed");
+    await browserClient.send("Target.closeTarget", { targetId: otherTabId });
+
+    // Pomodoro behavior in the actual disposable extension profile, not a DOM mock.
+    const pomoStarted = await evaluate(`(async () => {
+        await myntPomodoro.setTask('CI focus task');
+        await myntPomodoro.start();
+        return myntPomodoro.getState().isRunning;
+    })()`);
+    assert.equal(pomoStarted, true, 'Pomodoro did not start in extension');
+    await delay(1100);
+    const pomoPaused = await evaluate(`(async () => { await myntPomodoro.pause(); return myntPomodoro.getState(); })()`);
+    assert.equal(pomoPaused.isRunning, false);
+    assert.equal(pomoPaused.task, 'CI focus task');
+    assert.ok(pomoPaused.timeRemaining < pomoPaused.totalTime, 'Wall clock did not advance');
+    await reloadAndWait();
+    const pomoReload = await evaluate('myntPomodoro.getState()');
+    assert.equal(pomoReload.timeRemaining, pomoPaused.timeRemaining, 'Paused duration changed on reload');
+    assert.equal(pomoReload.task, 'CI focus task');
+    await evaluate(`localStorage.setItem('myntPomoStudioMode','full');localStorage.setItem('pomodoroPanelScale','150');localStorage.removeItem('pomodoroPanelPosition')`);
+    await reloadAndWait();
+    await evaluate('myntPomodoro.open()');
+    await delay(600);
+    assert.equal(await evaluate(`(() => {const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();return r.bottom<=innerHeight+1&&r.right<=innerWidth+1&&Math.abs(r.width/p.offsetWidth-1.5)<.02;})()`),true,'Animated full panel at saved 150% scale must fit');
+    await evaluate(`(() => {
+        myntPomodoro.open();
+        const p=document.querySelector('#pomodoroPanel');
+        p.style.animation='none';p.style.transform='scale(1.5)';p.style.top=(innerHeight-180)+'px';
+        localStorage.setItem('pomodoroPanelPosition',JSON.stringify({top:innerHeight-180,left:15}));
+        const b=document.querySelector('[aria-controls="myntPomoExtras"]');
+        if(b.getAttribute('aria-expanded')!=='true')b.click();
+    })()`);
+    await delay(200);
+    const pomoGeometry = await evaluate(`(() => {
+        const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();
+        const inBounds=r.top>=-1&&r.bottom<=innerHeight+1&&r.left>=-1&&r.right<=innerWidth+1;
+        const savedUnchanged=JSON.parse(localStorage.getItem('pomodoroPanelPosition')).top===innerHeight-180;
+        const scalePreserved=p.style.transform==='scale(1.5)';
+        document.querySelector('#myntPomoExtras').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+        const collapsed=document.querySelector('#myntPomoExtras').hidden;
+        return {inBounds,savedUnchanged,collapsed,scalePreserved};
+    })()`);
+    for(const [key,value] of Object.entries(pomoGeometry))assert.equal(value,true,'Pomodoro panel: '+key);
+
     const initial = await evaluate(`(() => ({
         url: location.href,
         extensionId: globalThis.chrome?.runtime?.id || "",
@@ -405,6 +513,13 @@ async function main() {
         documentUrl: initial.url,
         title: initial.title,
         defaultShortcuts: initial.shortcutCount,
+        pomodoroTimerReload: true,
+        pomodoroPanelGeometry: pomoGeometry,
+        wallpaperVisibilityCycles: 3,
+        hiddenInitializedWallpaperStarts: true,
+        reviewRegressions: review,
+        hiddenWallpaperTimeFrozen: true,
+        previouslyPausedWallpaperStaysPaused: true,
         safeRawSvgAccepted: true,
         unsafeSvgRejected: true,
         consoleErrors: consoleErrors.filter(Boolean).slice(0, 5),

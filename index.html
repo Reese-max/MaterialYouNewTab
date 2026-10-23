@@ -15,10 +15,16 @@
     <meta name="google-site-verification" content="j8K161R-W9yVVDoylaoPd2twGbjToAC3EzAFfZU1YOY" />
     <title>新分頁</title>
     <link href="style.css" rel="stylesheet">
+    <link href="styles/focus-card.css" rel="stylesheet">
+    <link href="styles/layout-editor.css" rel="stylesheet">
+    <link href="styles/quote-contrast.css" rel="stylesheet">
+    <link href="styles/exam-daily.css" rel="stylesheet">
+    <link href="styles/mynt-dialog.css" rel="stylesheet">
     <link href="./favicon/icon48.png" id="favicon" rel="icon" type="image/png">
 
     <!-- SCRIPTS -->
     <script src="scripts/preload.js"></script>
+    <script defer src="scripts/mynt-dialog.js"></script>
     <script defer src="scripts/languages.js"></script>
     <script defer src="scripts/save-load-states.js"></script>
     <script defer src="scripts/menu-shortcut-page.js"></script>
@@ -27,66 +33,56 @@
     <script defer src="scripts/dashboard-tools.js"></script>
     <script defer src="scripts/alert-modal.js"></script>
     <script defer src="scripts/wallpaper.js"></script>
+    <script defer src="scripts/wallpaper-gallery.js"></script>
+    <script defer src="scripts/study-quotes.js"></script>
+    <script defer src="scripts/study-companion.js"></script>
+    <script defer src="scripts/quote-contrast.js"></script>
     <script defer src="scripts/widgets-transparency.js"></script>
     <script defer src="scripts/clock.js"></script>
     <script defer src="scripts/weather.js"></script>
     <script defer src="scripts/custom-text.js"></script>
+    <script defer src="scripts/focus-card.js"></script>
+    <script defer src="scripts/exam-daily.js"></script>
+    <script defer src="scripts/layout-profiles.js"></script>
+    <script defer src="scripts/layout-draft.js"></script>
+    <script defer src="scripts/layout-editor.js"></script>
     <script defer src="scripts/search.js"></script>
     <script defer src="scripts/quotes.js"></script>
     <script defer src="scripts/shortcuts.js"></script>
     <script defer src="scripts/script.js"></script>
     <script defer src="scripts/search-suggestions.js"></script>
     <script defer src="scripts/ai-tools.js"></script>
-    <script defer src="scripts/bookmarks.js"></script>
     <script defer src="scripts/todo-list.js"></script>
+    <script defer src="scripts/pomodoro-timer-core.js"></script>
     <script defer src="scripts/pomodoro.js"></script>
+    <script defer src="scripts/pomodoro-float.js"></script>
+    <script defer src="scripts/pomodoro-music.js"></script>
+    <script defer src="scripts/pomodoro-studio.js"></script>
+    <link href="styles/pomodoro-studio.css" rel="stylesheet">
+    <link href="styles/pomodoro-float.css" rel="stylesheet">
+    <link href="styles/pomodoro-music.css" rel="stylesheet">
     <script defer src="scripts/bongocat.js"></script>
     <script defer src="scripts/google-apps.js"></script>
     <script defer src="scripts/voice-search.js"></script>
     <script defer src="scripts/backup-restore.js"></script>
     <script defer src="scripts/scratchpad.js"></script>
     <script defer src="scripts/ambient-sound.js"></script>
+    <script defer src="scripts/lazy-loader.js"></script>
 
     <!-- LANGUAGES SCRIPTS -->
-    <script src="locales/en.js"></script>
-    <script src="locales/pt.js"></script>
-    <script src="locales/ne.js"></script>
-    <script src="locales/es.js"></script>
-    <script src="locales/hi.js"></script>
-    <script src="locales/hu.js"></script>
-    <script src="locales/zh.js"></script>
-    <script src="locales/zh_TW.js"></script>
-    <script src="locales/cs.js"></script>
-    <script src="locales/it.js"></script>
-    <script src="locales/tr.js"></script>
-    <script src="locales/bn.js"></script>
-    <script src="locales/vi.js"></script>
-    <script src="locales/ru.js"></script>
-    <script src="locales/uz.js"></script>
-    <script src="locales/ja.js"></script>
-    <script src="locales/ko.js"></script>
-    <script src="locales/idn.js"></script>
-    <script src="locales/mr.js"></script>
-    <script src="locales/fr.js"></script>
-    <script src="locales/az.js"></script>
-    <script src="locales/sl.js"></script>
-    <script src="locales/ur.js"></script>
-    <script src="locales/de.js"></script>
-    <script src="locales/fa.js"></script>
-    <script src="locales/ar_SA.js"></script>
-    <script src="locales/el.js"></script>
-    <script src="locales/ta.js"></script>
-    <script src="locales/th.js"></script>
-    <script src="locales/pl.js"></script>
-    <script src="locales/uk.js"></script>
-    <script src="locales/sv.js"></script>
+    <script src="scripts/locale-loader.js"></script>
+    <link href="styles/manual-workspace.css" rel="stylesheet">
+    <link href="styles/adaptive-background.css" rel="stylesheet">
+    <link href="styles/manual-editor-controls.css" rel="stylesheet">
+    <script defer src="scripts/adaptive-core.js"></script>
+    <script defer src="scripts/adaptive-background.js"></script>
 </head>
 
 <body data-bg="wallpaper" data-workspace-background="video">
     <!-- --------------------- Video Background --------------------- -->
-    <video id="videoBg" muted loop playsinline preload="metadata" aria-hidden="true"
+    <video id="videoBg" muted loop playsinline preload="none" aria-hidden="true"
         style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;">
-        <source src="./videos/bg.mp4?v=2" type="video/mp4">
+        <source data-src="./videos/bg.mp4?v=2" type="video/mp4">
     </video>
 
     <!-- --------------------- Loading Screen Starting --------------------- -->
@@ -131,6 +127,8 @@
         <div class="scratchpadHeader">
             <h2 id="scratchpadHeading">Scratchpad</h2>
             <div class="scratchpadHeaderActions">
+                <button id="scratchpadAskDaidaiBtn" class="scratchpadActionBtn" type="button">Ask DaiDai</button>
+                <button id="scratchpadOrganizeDaidaiBtn" class="scratchpadActionBtn" type="button">DaiDai → Tasks</button>
                 <button id="scratchpadToTaskBtn" class="scratchpadActionBtn" type="button" title="Convert to Task">➔ Task</button>
                 <button id="scratchpadCopyBtn" class="scratchpadActionBtn" type="button" title="Copy all">Copy</button>
                 <button id="scratchpadDownloadBtn" class="scratchpadActionBtn" type="button" title="Download .md">↓ .md</button>
@@ -195,6 +193,9 @@
             </select>
             <input type="range" id="pomodoroAmbientVol" class="pomodoroAmbientVol" min="0" max="1" step="0.05" value="0.5" aria-label="Ambient Sound Volume">
         </div>
+        <div id="myntPomoFloatMount"></div>
+        <div id="myntPomoStudioMount"></div>
+        <div id="myntPomoExtras" hidden><div id="myntPomoMusicMount"></div></div>
         <div class="pomodoroSessionsToday">
             <span id="pomodoroSessionsLabel">Today</span>: <span id="pomodoroSessionsCount">0</span>
         </div>
@@ -221,10 +222,11 @@
                 clip-rule="evenodd" />
         </svg>
         <!-- Text to appear on hover -->
-        <span class="tooltip-text" id="bookmarksHover">書籤</span>
+        <span class="tooltip-text homeActionHint" id="bookmarksHover">書籤</span>
     </button>
     <div id="bookmarksContainer">
-        <div id="bookmarkSidebar" class="bookmark-sidebar">
+        <div id="bookmarkSidebar" class="bookmark-sidebar" role="dialog" aria-modal="true"
+            aria-labelledby="bookmarksHeading" aria-hidden="true" inert>
 
             <div class="topOutRoundCorner">
                 <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
@@ -235,62 +237,96 @@
             <div class="bookmark-sidebar-header">
                 <div class="bookmark-heading-copy">
                     <h2 id="bookmarksHeading">書籤</h2>
-                    <p id="bookmarksSubtitle">搜尋、整理，或加入捷徑</p>
+                    <p id="bookmarksSubtitle">常用優先，快速找到最近與資料夾</p>
+                </div>
+                <div class="bookmark-header-actions">
+                    <button id="bookmarkAddButton" type="button" aria-label="新增書籤" title="新增書籤">
+                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                    </button>
+                    <button id="bookmarkCloseButton" type="button" aria-label="關閉書籤" title="關閉書籤">
+                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
+                    </button>
                 </div>
             </div>
             <div class="bookmark-search-container">
-                <input type="text" id="bookmarkSearch" placeholder="搜尋書籤" />
+                <input type="text" id="bookmarkSearch" placeholder="搜尋書籤" aria-label="搜尋書籤" />
                 <button id="clearSearchButton" type="button" aria-label="清除書籤搜尋" title="清除書籤搜尋">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
                 </button>
             </div>
             <p id="bookmarkShortcutStatus" class="bookmark-shortcut-status" role="status" aria-live="polite"></p>
-            <!-- Adding Sorting buttons along with View Container -->
-            <div class="bookmark-controls-container">
-                <div class="bookmark-control-group">
-                    <h3 id="bookmarkSortBy">排序方式</h3>
-                    <div class="button-group">
-                        <button id="sortAlphabetical" class="bookmark-sort-button active">A-Z</button>
-                        <button id="sortTimeAdded" class="bookmark-sort-button">由舊到新</button>
-                    </div>
-                </div>
 
-                <div class="bookmark-control-group">
-                    <h3 id="bookmarkViewAs">檢視方式</h3>
-                    <div class="button-group">
-                        <input type="checkbox" id="bookmarkGridCheckbox" hidden />
-                        <button id="bookmarkViewGrid" class="bookmark-view-as-button">網格</button>
-                        <button id="bookmarkViewList" class="bookmark-view-as-button">列表</button>
-                    </div>
+            <div id="bookmarkState" class="bookmark-state" role="status" aria-live="polite" hidden>
+                <svg class="bookmark-state-icon" aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14.1l-6.5-3.7-6.5 3.7V5A1.5 1.5 0 0 1 7 3.5Z"/>
+                </svg>
+                <div class="bookmark-state-copy">
+                    <h3 id="bookmarkStateTitle"></h3>
+                    <p id="bookmarkStateDescription"></p>
+                </div>
+                <div class="bookmark-state-actions">
+                    <button id="bookmarkStatePrimary" type="button" hidden></button>
+                    <button id="bookmarkStateSecondary" type="button" hidden></button>
                 </div>
             </div>
-            <ul id="bookmarkList"></ul>
+
+            <div id="bookmarkUndoBar" class="bookmark-undo-bar" role="status" aria-live="polite" hidden>
+                <span id="bookmarkUndoMessage"></span>
+                <button id="bookmarkUndoButton" type="button">復原</button>
+            </div>
+
+            <div id="bookmarkContent" class="bookmark-content" hidden>
+                <details id="bookmarkDisplayOptions" class="bookmark-display-options">
+                    <summary id="bookmarkDisplayOptionsSummary">顯示選項</summary>
+                    <div class="bookmark-controls-container">
+                        <div class="bookmark-control-group">
+                            <h3 id="bookmarkSortBy">排序方式</h3>
+                            <div class="button-group">
+                                <button id="sortAlphabetical" class="bookmark-sort-button active" type="button" aria-pressed="true">A-Z</button>
+                                <button id="sortTimeAdded" class="bookmark-sort-button" type="button" aria-pressed="false">由舊到新</button>
+                            </div>
+                        </div>
+
+                        <div class="bookmark-control-group">
+                            <h3 id="bookmarkViewAs">檢視方式</h3>
+                            <div class="button-group">
+                                <input type="checkbox" id="bookmarkGridCheckbox" hidden />
+                                <button id="bookmarkViewGrid" class="bookmark-view-as-button" type="button" aria-pressed="false">網格</button>
+                                <button id="bookmarkViewList" class="bookmark-view-as-button" type="button" aria-pressed="true">列表</button>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+                <ul id="bookmarkList" aria-labelledby="bookmarksHeading"></ul>
+            </div>
         </div>
     </div>
 
     <!-- Edit Bookmark Modal -->
-    <div id="editBookmarkModal">
+    <dialog id="editBookmarkModal" aria-labelledby="editBookmarkHeading">
         <div class="modal-content">
             <h2 id="editBookmarkHeading">編輯書籤</h2>
 
             <img id="editBookmarkFavicon" src="./svgs/offline.svg" alt="">
 
             <div class="floating-label-field">
-                <input type="text" id="editBookmarkName" autocomplete="off" />
+                <input type="text" id="editBookmarkName" autocomplete="off" placeholder=" " />
                 <label for="editBookmarkName" id="editBookmarkNameLabel">書籤名稱</label>
             </div>
 
             <div class="floating-label-field">
-                <input type="url" id="editBookmarkURL" autocomplete="off" />
+                <input type="url" id="editBookmarkURL" autocomplete="off" placeholder=" " />
                 <label for="editBookmarkURL" id="editBookmarkURLLabel">書籤網址</label>
             </div>
 
+            <p id="bookmarkEditorError" class="bookmark-editor-error" role="alert"></p>
+
             <div class="modal-buttons">
-                <button id="saveBookmarkChanges">儲存</button>
-                <button id="cancelBookmarkEdit">取消</button>
+                <button id="saveBookmarkChanges" type="button">儲存</button>
+                <button id="cancelBookmarkEdit" type="button">取消</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
     <!----------------------- End of Bookmark System ----------------------->
 
@@ -718,7 +754,33 @@
             <!-- ____________end of clock______________ -->
 
             <div class="ttteexxtt">
-                <div id="userText" contenteditable="true" spellcheck="false">Click here to edit</div>
+                <div id="userText" contenteditable="true" spellcheck="false" role="textbox"
+                    aria-label="Editable home heading">What matters most today?</div>
+                <div id="dailyFocusActions" class="dailyFocusActions">
+                    <span id="dailyFocusStatus" role="status" aria-live="polite">Today’s focus</span>
+                    <span id="dailyFocusSubjectBadge" hidden></span>
+                    <span id="dailyFocusCounter" hidden>0/160</span>
+                    <button id="dailyFocusToggle" type="button" aria-pressed="false">Done</button>
+                    <span id="dailyFocusTools">
+                        <button id="dailyFocusPlayBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusPlay|Start a Pomodoro for this focus" data-focus-attr="title">▶</button>
+                        <button id="dailyFocusGptBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusGpt|Break down with ChatGPT" data-focus-attr="title">✦</button>
+                        <button id="dailyFocusMoreBtn" class="dailyFocusIcon" type="button" aria-expanded="false" aria-controls="dailyFocusPanel" data-focus-title data-focus-i18n="dailyFocusMore|Steps and subject" data-focus-attr="title">⋯</button>
+                    </span>
+                </div>
+                <div id="dailyFocusPanel" hidden>
+                    <div id="dailyFocusSubjects" role="group"></div>
+                    <ul id="dailyFocusSteps"></ul>
+                    <input id="dailyFocusStepInput" type="text" maxlength="80" autocomplete="off">
+                    <div class="dailyFocusRow">
+                        <button id="dailyFocusPasteToggle" type="button" data-focus-i18n="dailyFocusPasteToggle|Paste GPT answer">Paste GPT answer</button>
+                        <button id="dailyFocusDaidaiBtn" type="button" hidden data-focus-i18n="dailyFocusDaidai|Break down with DaiDai">Break down with DaiDai</button>
+                    </div>
+                    <div id="dailyFocusPasteWrap" hidden>
+                        <textarea id="dailyFocusPaste" data-focus-i18n="dailyFocusPastePlaceholder|Paste a numbered list (1. 2. 3.)" data-focus-attr="placeholder"></textarea>
+                        <div class="dailyFocusRow"><button id="dailyFocusPasteApply" type="button" data-focus-i18n="dailyFocusPasteApply|Turn into steps">Turn into steps</button></div>
+                    </div>
+                    <p id="dailyFocusNote" role="status" aria-live="polite" hidden></p>
+                </div>
                 <div id="date"></div>
             </div>
         </div>
@@ -811,6 +873,12 @@
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -1 24 24" height="100%" width="100%">
                                 <path id="micIconPath" class="accentColor"
                                     d="M12 14q-1.25 0-2.125-.875T9 11V5q0-1.25.875-2.125T12 2t2.125.875T15 5v6q0 1.25-.875 2.125T12 14m-1 7v-3.075q-2.6-.35-4.3-2.325T5 11h2q0 2.075 1.463 3.538T12 16t3.538-1.463T17 11h2q0 2.625-1.7 4.6T13 17.925V21z" />
+                            </svg>
+                        </button>
+                        <!-- AI Mode Icon (upstream #247) -->
+                        <button class="aiModeIcon hidden" id="aiModeIcon" type="button" tabindex="-1" aria-label="Google AI Mode" title="Google AI Mode">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="100%" width="100%" aria-hidden="true">
+                                <path class="accentColor" d="M17.518 1a.254.254 0 0 0-.245.201 5.75 5.75 0 0 1-1.56 2.86 5.75 5.75 0 0 1-2.902 1.57.24.24 0 0 0-.196.236.246.246 0 0 0 .196.237 5.75 5.75 0 0 1 2.902 1.568 5.75 5.75 0 0 1 1.568 2.902.246.246 0 0 0 .237.196.246.246 0 0 0 .236-.196 5.75 5.75 0 0 1 1.57-2.902 5.75 5.75 0 0 1 2.86-1.56.254.254 0 0 0 .2-.245.254.254 0 0 0-.2-.246 5.75 5.75 0 0 1-2.862-1.56 5.75 5.75 0 0 1-1.558-2.86.25.25 0 0 0-.246-.201M9.5 2.8c-3.754 0-6.7 2.946-6.7 6.7s2.946 6.7 6.7 6.7c.556 0 2.22-.081 3.771-1.249l6.188 6.19a.2.2 0 0 0 .281 0l1.4-1.4a.2.2 0 0 0 0-.282l-6.185-6.184a6.2 6.2 0 0 0 .883-1.627 6.1 6.1 0 0 0 .322-1.634.2.2 0 0 0-.2-.213h-2a.2.2 0 0 0-.198.18 4.06 4.06 0 0 1-1.213 2.566c-.847.837-1.846 1.254-3.049 1.254-2.366 0-4.3-1.836-4.3-4.301 0-2.366 1.835-4.3 4.3-4.3.437 0 .848.075 1.244.19a.2.2 0 0 0 .197-.05L12.5 3.78a.2.2 0 0 0-.053-.32A6.6 6.6 0 0 0 9.5 2.8" />
                             </svg>
                         </button>
                         <!-- Search Button -->
@@ -1017,43 +1085,35 @@
             </div>
             <!-- ---end of rounder--- -->
             <div class="topDiv">
-                <h1>Material You New Tab</h1>
+                <h1 id="menuTitle">My New Tab</h1>
+                    <button id="menuCloseButton" type="button" aria-label="Close settings">
+                        <div class="icon">
+                            <svg id="closeBtnX" height="30px" viewBox="0 0 34 34" width="30px"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path id="menuCloseBtnIcon" class="accentColor"
+                                    d="m19.404 17 4.81-4.808a1.7 1.7 0 1 0-2.406-2.405L17 14.597l-4.808-4.81a1.7 1.7 0 1 0-2.405 2.405L14.597 17l-4.81 4.808a1.7 1.7 0 1 0 2.405 2.405L17 19.403l4.808 4.81a1.7 1.7 0 1 0 2.405-2.405L19.403 17ZM17 34C7.61 34 0 26.39 0 17S7.61 0 17 0s17 7.61 17 17-7.61 17-17 17Z" />
+                            </svg>
+                        </div>
+                        <!-- <span>Close</span> -->
+                    </button>
+
             </div>
             <div class="optCont" id="optCont">
                 <div class="page" id="overviewPage">
-                    <div class="tilesCont">
 
-                        <!-- ----tiles----------- -->
-                        <a class="tiles" href="https://github.com/prem-k-r/MaterialYouNewTab">
-                            <div class="icon">
-                                <svg height="100%" viewBox="0 0 20 20" width="100%" xmlns="http://www.w3.org/2000/svg">
-                                    <path id="githab" class="bgLightTint notTargeted"
-                                        d="M10 0C4.475 0 0 4.588 0 10.253c0 4.537 2.862 8.369 6.838 9.727.5.09.687-.218.687-.487 0-.243-.013-1.05-.013-1.91C5 18.059 4.35 16.957 4.15 16.38c-.113-.295-.6-1.205-1.025-1.448-.35-.192-.85-.667-.012-.68.787-.012 1.35.744 1.537 1.052.9 1.55 2.337 1.115 2.913.845.087-.666.35-1.115.637-1.371-2.225-.256-4.55-1.14-4.55-5.062 0-1.115.387-2.038 1.025-2.756-.1-.256-.45-1.307.1-2.717 0 0 .837-.269 2.75 1.051.8-.23 1.65-.346 2.5-.346.85 0 1.7.115 2.5.346 1.912-1.333 2.75-1.05 2.75-1.05.55 1.409.2 2.46.1 2.716.637.718 1.025 1.628 1.025 2.756 0 3.934-2.337 4.806-4.563 5.062.363.32.675.936.675 1.897 0 1.371-.012 2.473-.012 2.82 0 .269.188.589.688.486a10.037 10.037 0 0 0 4.932-3.74A10.445 10.445 0 0 0 20 10.253C20 4.588 15.525 0 10 0Z" />
-                                </svg>
 
-                            </div>
-                            <span id="github">Github</span>
-                        </a>
-                        <!-- -----end of tiles-------- -->
-                        <!-- ----tiles----------- -->
-                        <a class="tiles" href="https://prem-k-r.github.io/MaterialYouNewTab/docs/feedback.html">
-                            <div class="icon">
-                                <svg height="100%" viewBox="0 0 18 17" width="100%" xmlns="http://www.w3.org/2000/svg">
-                                    <path id="sujhaw" class="bgLightTint notTargeted" clip-rule="evenodd"
-                                        d="M10.35 0c2.029 0 3.975.801 5.41 2.228A7.583 7.583 0 0 1 18 7.605a7.583 7.583 0 0 1-2.24 5.378 7.673 7.673 0 0 1-5.41 2.227H9.9v.886a.899.899 0 0 1-.562.835.915.915 0 0 1-.348.069c-2.214-.002-4.457-.736-6.159-2.24C1.114 13.24.001 10.983 0 8.06v-.455c0-2.017.806-3.951 2.24-5.377A7.673 7.673 0 0 1 7.65 0h2.7Zm-4.5 6.263c-.358 0-.701.142-.955.393a1.338 1.338 0 0 0 0 1.898 1.354 1.354 0 0 0 1.91 0 1.338 1.338 0 0 0 0-1.898 1.354 1.354 0 0 0-.955-.393Zm6.3 0c-.358 0-.701.142-.955.393a1.338 1.338 0 0 0 0 1.898 1.354 1.354 0 0 0 1.91 0 1.338 1.338 0 0 0 0-1.898 1.354 1.354 0 0 0-.955-.393Z"
-                                        fill-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <span id="feedback">Feedback</span>
-                        </a>
-                        <!-- -----end of tiles-------- -->
-
+                    <div id="settingsGroupTabs" class="settingsGroupTabs" role="tablist" aria-label="Settings categories">
+                        <button id="settingsGroupPersonal" type="button" role="tab" aria-selected="true"
+                            data-settings-group-button="personal">Personalization</button>
+                        <button id="settingsGroupWork" type="button" role="tab" aria-selected="false"
+                            data-settings-group-button="work">Work tools</button>
+                        <button id="settingsGroupAdvanced" type="button" role="tab" aria-selected="false"
+                            data-settings-group-button="advanced">Advanced</button>
                     </div>
-                    <!-- end of tilesCont -->
 
                     <div class="toggleTextsCont">
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="shortcutsSectionContent">
                                     <span class="sectionTitle" id="shortcutsSectionTitle">Shortcuts</span>
@@ -1108,7 +1168,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="personalizationSectionContent">
                                     <span class="sectionTitle" id="personalizationSectionTitle">Personalization</span>
@@ -1316,6 +1376,35 @@
                                         </label>
                                     </div>
 
+                                    <!-- Study encouragement -->
+                                    <div class="ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="studyQuoteSettingText">Study encouragement</div>
+                                            <div class="infoText" id="studyQuoteSettingInfo">Show a gentle line at the bottom; click it for another</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="studyQuoteCheckbox" type="checkbox" checked>
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div>
+                                    <div class="ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="examDailySettingText">今日考古題</div>
+                                            <div class="infoText" id="examDailySettingInfo">新分頁左下角每天一題資管組考古題，點開作答</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="examDailyCheckbox" type="checkbox" checked>
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div>
+                                    <div class="ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="examDateText">Exam date</div>
+                                            <div class="infoText" id="examDateInfo">Optional: show days left next to the encouragement line</div>
+                                        </div>
+                                        <input id="examDateInput" type="date" aria-labelledby="examDateText">
+                                    </div>
+
                                     <div class="ttcont">
                                         <div class="texts">
                                             <div class="bigText" id="bongoCatText">Bongo Cat</div>
@@ -1369,7 +1458,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="personal">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="clockSectionContent">
                                     <span class="sectionTitle" id="clockSectionTitle">Clock</span>
@@ -1425,6 +1514,15 @@
                                             </label>
                                         </div>
 
+                                        <div class="ttcont unflex" id="greetingNameField">
+                                            <div class="texts">
+                                                <label class="bigText" id="greetingNameTitle" for="greetingNameInput">Your name</label>
+                                                <div class="infoText" id="greetingNameInfo">Used only for your local greeting</div>
+                                            </div>
+                                            <input id="greetingNameInput" maxlength="30" autocomplete="off" spellcheck="false"
+                                                placeholder="What should this page call you?">
+                                        </div>
+
                                         <div class="ttcont">
                                             <div class="texts">
                                                 <div class="bigText" id="userTextTitle">Customizable Text</div>
@@ -1436,6 +1534,17 @@
                                                 <span class="toggle"></span>
                                             </label>
                                         </div>
+
+                                        <div class="ttcont">
+                                            <div class="texts">
+                                                <div class="bigText" id="layoutEditTitle">Edit layout</div>
+                                                <div class="infoText" id="layoutEditInfo">Move and resize blocks (Alt+L)</div>
+                                            </div>
+                                            <label class="switch">
+                                                <input id="layoutEditCheckbox" type="checkbox">
+                                                <span class="toggle"></span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1443,7 +1552,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section expanded" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="searchSectionContent">
                                     <span class="sectionTitle" id="searchSectionTitle">Search</span>
@@ -1453,11 +1562,22 @@
                                 <div class="sectionInner" id="searchSectionContent">
                                     <div class="ttcont">
                                         <div class="texts">
-                                            <div class="bigText" id="micIconTitle">Hide Microphone Icon</div>
+                                            <div class="bigText" id="micIconTitle">Hide Microphone Button</div>
                                             <div class="infoText" id="micIconInfo">If voice typing is not working</div>
                                         </div>
                                         <label class="switch">
                                             <input id="micIconCheckbox" type="checkbox">
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="aiModeIconTitle">Hide AI Mode Button</div>
+                                            <div class="infoText" id="aiModeIconInfo">Hide Google AI Mode search button</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="aiModeIconCheckbox" type="checkbox">
                                             <span class="toggle"></span>
                                         </label>
                                     </div>
@@ -1545,9 +1665,9 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded">
+                        <div class="section" data-settings-group="advanced">
                             <div class="sectionOuter">
-                                <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="weatherSectionContent">
+                                <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="weatherSectionContent">
                                     <span class="sectionTitle" id="weatherSectionTitle">Weather</span>
                                     <span class="sectionChevron"></span>
                                 </button>
@@ -1657,7 +1777,7 @@
 
                     <div class="divider"></div>
 
-                    <div class="section expanded appearanceSection">
+                    <div class="section expanded appearanceSection" data-settings-group="personal">
                         <div class="sectionOuter">
                             <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="appearanceSectionContent">
                                 <span class="sectionTitle" id="appearanceSectionTitle">Appearance</span>
@@ -1742,13 +1862,7 @@
                                         </button>
 
                                         <!-- Clear Background Button -->
-                                        <button class="clearButton" id="clearImage">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24">
-                                                <path fill="currentColor"
-                                                    d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6z" />
-                                            </svg>
-                                        </button>
+                                        <button class="clearButton" id="clearImage" type="button"><span id="wallpaperClearLabel">Stop using background</span></button>
 
                                         <!-- Hidden File Input -->
                                         <input type="file" id="imageUpload" accept="image/*" />
@@ -1778,9 +1892,9 @@
                     </div>
                     <!-- end of themingStuff -->
 
-                    <div class="section expanded">
+                    <div class="section" data-settings-group="advanced">
                         <div class="sectionOuter">
-                            <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="settingsSectionContent">
+                            <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="settingsSectionContent">
                                 <span class="sectionTitle" id="settingsSectionTitle">Settings</span>
                                 <span class="sectionChevron"></span>
                             </button>
@@ -1866,6 +1980,8 @@
                                         <span id="restoreText">Restore</span>
                                     </button>
                                 </div>
+                                <p id="backupScopeText" class="infoText"></p>
+                                <p id="backupStatus" class="infoText" role="status" aria-live="polite"></p>
 
                                 <input type="file" id="fileInput" accept=".json" style="display: none;">
 
@@ -1874,6 +1990,9 @@
                             </div>
                         </div>
                     </div>
+
+                    <details id="settingsHelp" class="settingsHelp">
+                        <summary id="settingsHelpTitle">Quick help</summary>
 
                     <!-- ----------Tips---------- -->
                     <div class="tips" id="tips">
@@ -1918,17 +2037,8 @@
                     </div>
 
                     <!-- ----------end of tips----- -->
+                    </details>
 
-                    <div id="menuCloseButton">
-                        <div class="icon">
-                            <svg id="closeBtnX" height="30px" viewBox="0 0 34 34" width="30px"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path id="menuCloseBtnIcon" class="accentColor"
-                                    d="m19.404 17 4.81-4.808a1.7 1.7 0 1 0-2.406-2.405L17 14.597l-4.808-4.81a1.7 1.7 0 1 0-2.405 2.405L14.597 17l-4.81 4.808a1.7 1.7 0 1 0 2.405 2.405L17 19.403l4.808 4.81a1.7 1.7 0 1 0 2.405-2.405L19.403 17ZM17 34C7.61 34 0 26.39 0 17S7.61 0 17 0s17 7.61 17 17-7.61 17-17 17Z" />
-                            </svg>
-                        </div>
-                        <!-- <span>Close</span> -->
-                    </div>
                     <!-- ------------------ -->
 
 
@@ -1993,6 +2103,65 @@
         <p id="commandPaletteEmpty" class="dialogEmptyState" hidden>No matching commands</p>
     </dialog>
 
+    <dialog id="wallpaperGalleryDialog" class="myntDialog wallpaperGalleryDialog" aria-labelledby="wallpaperGalleryTitle">
+        <header class="controlCenterHeader">
+            <div>
+                <span class="controlCenterEyebrow" id="wallpaperGalleryEyebrow">Background</span>
+                <h2 id="wallpaperGalleryTitle">Wallpapers</h2>
+            </div>
+            <button id="closeWallpaperGalleryBtn" class="dialogIconBtn" type="button" aria-label="Close">&times;</button>
+        </header>
+        <div class="wallpaperGalleryControls wallpaperGalleryImport">
+            <button type="button" id="wallpaperAddFilesBtn" class="settingsActionBtn wallpaperFileLabel"><span id="wallpaperAddFilesLabel">Add images / videos</span></button>
+            <input id="wallpaperFileInput" type="file" accept="image/*,video/mp4,video/webm" multiple hidden>
+            <input id="wallpaperUrlInput" type="url" placeholder="https://… image or .mp4/.webm" aria-label="Wallpaper URL">
+            <button id="wallpaperAddUrlBtn" class="settingsActionBtn" type="button">Add URL</button>
+        </div>
+        <div class="wallpaperGalleryPlayback">
+            <div class="wallpaperModeGroup">
+                <label for="wallpaperModeSelect"><span id="wallpaperModeLabel">Mode</span></label>
+                <select id="wallpaperModeSelect">
+                    <option id="wallpaperModeFixed" value="fixed">Fixed</option>
+                    <option id="wallpaperModeRandom" value="random">Random on each new tab</option>
+                    <option id="wallpaperModeRotate" value="rotate">Auto-rotate</option>
+                </select>
+            </div>
+            <div id="wallpaperIntervalGroup" class="wallpaperModeGroup" hidden>
+                <label for="wallpaperMinutesSelect"><span id="wallpaperMinutesLabel">Every (minutes)</span></label>
+                <select id="wallpaperMinutesSelect">
+                    <option value="5">5</option>
+                    <option value="15">15</option>
+                    <option value="30">30</option>
+                    <option value="60">60</option>
+                </select>
+            </div>
+            <div class="wallpaperNavigation">
+                <button id="wallpaperPrevBtn" class="settingsActionBtn" type="button">Previous</button>
+                <button id="wallpaperNextInnerBtn" class="settingsActionBtn" type="button">Next</button>
+            </div>
+        </div>
+        <div class="wallpaperToolbar">
+            <label for="wallpaperShowHiddenCheckbox"><input id="wallpaperShowHiddenCheckbox" type="checkbox"><span id="wallpaperShowHiddenLabel">Show hidden built-ins</span></label>
+            <button id="wallpaperUnapplyBtn" type="button">Stop using background</button>
+            <span class="spacer"></span>
+            <button id="wallpaperSelectModeBtn" type="button">Select</button>
+            <button id="wallpaperDeleteSelectedBtn" type="button" hidden disabled>Delete selected</button>
+        </div>
+        <div id="wallpaperUndoBar" class="wallpaperUndoBar" role="status" aria-live="polite" hidden>
+            <span id="wallpaperUndoText">Removed</span>
+            <button id="wallpaperUndoBtn" class="settingsActionBtn" type="button">Restore all</button>
+        </div>
+        <p id="wallpaperStorageUsage" class="wallpaperStorageUsage"></p>
+        <details id="wallpaperRecovery" class="wallpaperRecovery">
+            <summary id="wallpaperRecoveryTitle">Recovery</summary>
+            <div id="wallpaperRecoveryList"></div>
+            <p id="wallpaperRecoveryEmpty">No removed wallpapers.</p>
+        </details>
+        <p id="wallpaperGalleryStatus" class="wallpaperGalleryStatus" role="status" aria-live="polite"></p>
+        <div id="wallpaperGalleryGrid" class="wallpaperGalleryGrid"></div>
+        <p id="wallpaperGalleryEmpty" class="dialogEmptyState" hidden>No wallpapers yet</p>
+    </dialog>
+
     <dialog id="shortcutsHelpDialog" class="myntDialog shortcutsHelpDialog" aria-labelledby="shortcutsHelpTitle">
         <header class="controlCenterHeader">
             <div>
@@ -2005,6 +2174,8 @@
             <div class="shortcutItem"><kbd>/</kbd><span id="shortcutSearchHelp">Focus search bar</span></div>
             <div class="shortcutItem"><kbd>Ctrl</kbd> + <kbd>K</kbd><span id="shortcutCmdHelp">Command Palette</span></div>
             <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>S</kbd><span id="shortcutScratchpadHelp">Toggle Scratchpad</span></div>
+            <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>P</kbd><span id="shortcutPomodoroHelp">Open Pomodoro timer</span></div>
+            <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>W</kbd><span id="shortcutWallpaperHelp">Next wallpaper</span></div>
             <div class="shortcutItem"><kbd>?</kbd><span id="shortcutHelpHelp">Shortcuts Guide</span></div>
             <div class="shortcutItem"><kbd>Esc</kbd><span id="shortcutEscHelp">Close open dialog</span></div>
             <div class="shortcutItem"><kbd>!bang</kbd><span id="shortcutBangHelp">Search bangs (!yt, !gh, !gpt...)</span></div>
@@ -2108,6 +2279,28 @@
                 <ul id="habitList" class="habitList"></ul>
             </section>
 
+            <section class="controlSection" id="daidaiIntegrationSection" aria-labelledby="daidaiIntegrationTitle">
+                <div class="controlSectionHeading">
+                    <div>
+                        <h3 id="daidaiIntegrationTitle">DaiDai integration</h3>
+                        <p id="daidaiIntegrationInfo">Let DaiDai read today's summary and propose changes for your approval.</p>
+                    </div>
+                    <span id="daidaiConnectionStatus" class="daidaiConnectionStatus" aria-live="polite">Disconnected</span>
+                </div>
+                <div class="daidaiConnectRow">
+                    <span>
+                        <strong id="daidaiConnectionTitle">Local connection</strong>
+                        <small id="daidaiConnectionInfo">Connects only to DaiDai on this computer.</small>
+                    </span>
+                    <button id="daidaiConnectBtn" class="settingsActionBtn" type="button">Connect DaiDai</button>
+                </div>
+                <ul class="privacyDisclosureList daidaiDisclosureList">
+                    <li id="daidaiDisclosureSummary">Shares today's task titles and status, focus minutes, and habits.</li>
+                    <li id="daidaiDisclosurePrivate">Scratchpad text is sent only when you press a DaiDai button; bookmarks and searches are never shared.</li>
+                    <li id="daidaiDisclosureApproval">Every proposed task or scratchpad change requires a preview and explicit confirmation.</li>
+                </ul>
+            </section>
+
             <section class="controlSection" id="accessibilitySection" aria-labelledby="accessibilityTitle">
                 <div class="controlSectionHeading">
                     <div>
@@ -2180,7 +2373,75 @@
         </div>
     </dialog>
 
-    <button id="menuButton" type="button" aria-controls="menuBar" aria-expanded="false"></button>
+    <dialog id="focusHistoryDialog" class="myntDialog focusHistoryDialog" aria-labelledby="focusHistoryTitle">
+        <h2 id="focusHistoryTitle" data-focus-i18n="focusHistoryTitle|Focus history">Focus history</h2>
+        <ol id="focusHistoryList"></ol>
+        <details id="focusStatsDetails" class="focusStats">
+            <summary data-focus-i18n="focusSubjectHoursTitle|Weekly hours by subject">Weekly hours by subject</summary>
+            <ul id="focusStatsList"></ul>
+        </details>
+        <a id="focusExamLink" class="focusExamLink" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener" data-focus-i18n="focusExamLink|One past exam question today ↗">One past exam question today ↗</a>
+        <button id="focusHistoryClose" type="button" data-focus-i18n="focusHistoryClose|Close">Close</button>
+    </dialog>
+    <dialog id="daidaiActionDialog" class="myntDialog daidaiActionDialog" aria-labelledby="daidaiActionTitle" aria-describedby="daidaiActionWarning">
+        <header class="controlCenterHeader">
+            <div>
+                <span class="controlCenterEyebrow" id="daidaiActionEyebrow">DaiDai proposal</span>
+                <h2 id="daidaiActionTitle">Preview change</h2>
+            </div>
+        </header>
+        <div class="daidaiActionContent">
+            <h3 id="daidaiActionSummary"></h3>
+            <div class="daidaiActionDiff">
+                <div><span id="daidaiActionBeforeLabel">Current</span><pre id="daidaiActionBefore"></pre></div>
+                <div><span id="daidaiActionAfterLabel">After confirmation</span><pre id="daidaiActionAfter"></pre></div>
+            </div>
+            <p id="daidaiActionStale" class="daidaiActionStale" hidden></p>
+            <p id="daidaiActionWarning">Nothing changes until you confirm.</p>
+        </div>
+        <footer class="daidaiActionFooter">
+            <button id="daidaiActionRejectBtn" type="button">Reject</button>
+            <button id="daidaiActionConfirmBtn" class="settingsActionBtn" type="button">Confirm change</button>
+        </footer>
+    </dialog>
+
+    <div id="daidaiActionToast" class="daidaiActionToast" role="status" aria-live="polite" hidden>
+        <span id="daidaiActionToastText">Change applied.</span>
+        <button id="daidaiActionUndoBtn" type="button">Undo</button>
+    </div>
+
+    <div id="examDaily" class="examDaily" hidden>
+        <button id="examDailyChip" class="examDailyChip" type="button" aria-expanded="false" aria-controls="examDailyPanel"><span aria-hidden="true">📝</span><span id="examDailyChipText">今日考古題</span></button>
+        <section id="examDailyPanel" class="examDailyPanel" hidden aria-labelledby="examDailyChipText">
+            <div id="examDailyMeta" class="examDailyMeta"></div>
+            <p id="examDailyStem" class="examDailyStem"></p>
+            <ol id="examDailyOptions" class="examDailyOptions"></ol>
+            <div class="examDailyFooter">
+                <button id="examDailyReveal" class="examDailyReveal" type="button" hidden>看答案</button>
+                <span id="examDailyAnswer" class="examDailyAnswer" role="status" hidden></span>
+                <a id="examDailySource" class="examDailySource" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener">出處：警察特考考古題 ↗</a>
+            </div>
+        </section>
+    </div>
+    <div id="studyQuote" class="studyQuote" hidden>
+        <button id="studyQuoteText" class="studyQuoteText" type="button"><span id="studyQuoteBody" class="studyQuoteBody"></span><span id="studyQuoteSource" class="studyQuoteSource"></span></button>
+        <span id="studyQuoteExam" class="studyQuoteExam" hidden></span>
+    </div>
+    <div id="studyQuoteToast" class="studyQuoteToast" role="status" aria-live="polite" hidden>
+        <span id="studyQuoteToastText"></span>
+        <button id="studyQuoteToastClose" type="button" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="wallpaperQuickActions" id="wallpaperQuickActions">
+        <button id="wallpaperGalleryBtn" class="wallpaperQuickBtn" type="button" aria-controls="wallpaperGalleryDialog" aria-label="Wallpaper gallery">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/></svg>
+            <span class="tooltip-text" id="wallpaperGalleryHint">Wallpaper gallery</span>
+        </button>
+    </div>
+
+    <button id="menuButton" type="button" aria-controls="menuBar" aria-expanded="false">
+        <span class="tooltip-text homeActionHint" id="settingsHintText">Settings</span>
+    </button>
     <!-- ending-of-body -->
 
 </body>

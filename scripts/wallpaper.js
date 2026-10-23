@@ -117,6 +117,10 @@ async function clearImageFromIndexedDB() {
 
 // Handle file input and save image as upload
 document.getElementById("imageUpload").addEventListener("change", function (event) {
+    if (window.myntWallpaper?.addFiles) {
+        window.myntWallpaper.addFiles(event.target.files).finally(() => { event.target.value = ""; });
+        return;
+    }
     const file = event.target.files[0];
     if (file) {
         const imageUrl = URL.createObjectURL(file); // Create temporary Blob URL
@@ -155,6 +159,7 @@ async function applyRandomImage(showConfirmation = true) {
 
         applyBlobBackground(blob);
         await saveImageToIndexedDB(blob, true);
+        window.myntWallpaper?.useLegacy?.();
         toggleBackgroundType(true);
     } catch (error) {
         console.error("Error fetching random image:", error);
@@ -168,6 +173,7 @@ function toggleBackgroundType(hasWallpaper) {
 
 // Check and update image on page load
 function checkAndUpdateImage() {
+    if (localStorage.getItem("myntWallpaperCurrent")) return;
     loadImageAndDetails()
         .then(([blob, savedTimestamp, imageType]) => {
             const now = new Date();
@@ -204,31 +210,7 @@ document.getElementById("uploadTrigger").addEventListener("click", () =>
 );
 
 document.getElementById("clearImage").addEventListener("click", async function () {
-    try {
-        const [blob] = await loadImageAndDetails();
-        if (!blob) {
-            await alertPrompt(translations[currentLanguage]?.Nobackgroundset || translations["en"].Nobackgroundset);
-            return;
-        }
-
-        const confirmationMessage = translations[currentLanguage]?.clearbackgroundimage || translations["en"].clearbackgroundimage;
-        if (await confirmPrompt(confirmationMessage)) {
-            try {
-                await clearImageFromIndexedDB();
-                if (currentBgUrl) {
-                    URL.revokeObjectURL(currentBgUrl);
-                    currentBgUrl = null;
-                }
-                document.body.style.removeProperty("--bg-image");
-                releaseBackgroundObjectUrl();
-                toggleBackgroundType(false);
-            } catch (error) {
-                console.error(error);
-            }
-        }
-    } catch (error) {
-        console.error(error);
-    }
+    if (window.myntWallpaper?.cancelApply) await window.myntWallpaper.cancelApply();
 });
 
 document.getElementById("randomImageTrigger").addEventListener("click", applyRandomImage);

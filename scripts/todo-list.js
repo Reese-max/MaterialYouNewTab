@@ -44,6 +44,16 @@ function createTodo(title) {
     return id;
 }
 
+function setTodoDaidaiLabel(button, title) {
+    const language = localStorage.getItem("selectedLanguage") || "zh_TW";
+    const template = typeof translations === "undefined"
+        ? "Ask DaiDai about {title}"
+        : translations[language]?.todoAskDaidaiLabel || translations.en.todoAskDaidaiLabel;
+    const label = template.replace("{title}", title);
+    button.title = label;
+    button.setAttribute("aria-label", label);
+}
+
 function createTodoItemDOM(id, title, status, pinned) {
     let li = document.createElement("li");
     li.textContent = title;
@@ -58,6 +68,21 @@ function createTodoItemDOM(id, title, status, pinned) {
     removebtn.setAttribute("class", "todoremovebtn");
     removebtn.textContent = "\u00d7";
     li.appendChild(removebtn);
+
+    const daidaiButton = document.createElement("button");
+    daidaiButton.type = "button";
+    daidaiButton.className = "todoDaidaiBtn";
+    daidaiButton.textContent = "呆";
+    setTodoDaidaiLabel(daidaiButton, title);
+    daidaiButton.addEventListener("click", event => {
+        event.stopPropagation();
+        const current = todoList[id];
+        if (!current) return;
+        document.dispatchEvent(new CustomEvent("mynt:daidai-prompt", {
+            detail: { kind: "todo", item: { id, title: current.title, status: current.status } }
+        }));
+    });
+    li.appendChild(daidaiButton);
 
     // Set base class and status
     li.setAttribute("class", "todolistitem");
@@ -132,6 +157,8 @@ todoulList.addEventListener("click", (event) => {
             function saveEdit() {
                 const newTitle = input.value.trim();
                 todo.title = (newTitle !== "") ? newTitle : previousTitle; // Check for empty title
+                const daidaiButton = li.querySelector(".todoDaidaiBtn");
+                if (daidaiButton) setTodoDaidaiLabel(daidaiButton, todo.title);
                 const textNode = document.createTextNode(todo.title);
                 li.insertBefore(textNode, input);
                 li.removeChild(input);
@@ -190,11 +217,56 @@ function SaveToDoData() {
 }
 
 document.addEventListener("mynt:todo-create", event => createTodo(event.detail?.title));
+document.addEventListener("mynt:todo-action", event => {
+    const action = event.detail?.action;
+    if (!action || typeof action !== "object") return;
+    if (action.type === "todo.create") {
+        const id = createTodo(action.title);
+        event.detail.applied = Boolean(id);
+        if (id) event.detail.undo = () => {
+            const created = todoList[id];
+            if (!created || created.title !== String(action.title || "").trim().slice(0, 120)
+                || created.status !== "pending" || created.pinned !== false) return false;
+            delete todoList[id];
+            SaveToDoData();
+            ShowToDoList();
+            return true;
+        };
+        return;
+    }
+    const todo = todoList[action.todoId];
+    if (!todo) return;
+    const previous = { ...todo };
+    let expected;
+    if (action.type === "todo.update") {
+        const title = typeof action.title === "string" ? action.title.trim().slice(0, 120) : "";
+        if (!title) return;
+        todo.title = title;
+        expected = { title };
+    } else if (action.type === "todo.complete" && typeof action.completed === "boolean") {
+        todo.status = action.completed ? "completed" : "pending";
+        expected = { status: todo.status };
+    } else {
+        return;
+    }
+    SaveToDoData();
+    ShowToDoList();
+    event.detail.applied = true;
+    event.detail.undo = () => {
+        const current = todoList[action.todoId];
+        if (!current || Object.entries(expected).some(([key, value]) => current[key] !== value)) return false;
+        todoList[action.todoId] = previous;
+        SaveToDoData();
+        ShowToDoList();
+        return true;
+    };
+});
 
 // Fetch saved JSON and create list items using it
 function ShowToDoList() {
     try {
         todoList = JSON.parse(localStorage.getItem("todoList")) || {}; // Parse stored data or initialize empty
+        todoulList.replaceChildren();
         const fragment = document.createDocumentFragment(); // Create a DocumentFragment
 
         for (let id in todoList) {
