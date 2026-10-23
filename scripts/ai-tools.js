@@ -71,6 +71,51 @@ const saveAISettingsBtn = document.getElementById("saveAISettingsBtn");
 const aiToolsEditButton = document.getElementById("aiToolsEditButton");
 const aiToolsCont = document.getElementById("aiToolsCont");
 const aiToolsEditField = document.getElementById("aiToolsEditField");
+const mobileAIToolsQuery = matchMedia("(max-width: 500px)");
+const aiToolsMoreButton = document.createElement("button");
+const aiToolsOverflowMenu = document.createElement("div");
+
+aiToolsMoreButton.id = "aiToolsMoreButton";
+aiToolsMoreButton.type = "button";
+aiToolsMoreButton.hidden = true;
+aiToolsMoreButton.setAttribute("aria-expanded", "false");
+aiToolsMoreButton.setAttribute("aria-controls", "aiToolsOverflowMenu");
+aiToolsMoreButton.innerHTML = `
+    <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+    <span>${translations[currentLanguage]?.aiToolsMore || translations.en.aiToolsMore}</span>
+`;
+aiToolsOverflowMenu.id = "aiToolsOverflowMenu";
+aiToolsOverflowMenu.className = "aiToolsOverflowMenu";
+aiToolsOverflowMenu.hidden = true;
+aiToolsOverflowMenu.setAttribute("aria-hidden", "true");
+aiToolsCont.appendChild(aiToolsOverflowMenu);
+
+function closeMobileAIToolsOverflow() {
+    aiToolsOverflowMenu.hidden = true;
+    aiToolsOverflowMenu.setAttribute("aria-hidden", "true");
+    aiToolsMoreButton.setAttribute("aria-expanded", "false");
+}
+
+function layoutAIToolsForViewport() {
+    [...aiToolsOverflowMenu.querySelectorAll("a")].forEach(link => aiToolName.appendChild(link));
+    aiToolsMoreButton.remove();
+    aiToolName.classList.remove("mobilePinnedTools");
+    aiToolName.classList.toggle("mobileToolsLayout", mobileAIToolsQuery.matches);
+    closeMobileAIToolsOverflow();
+
+    const visibleLinks = [...aiToolName.querySelectorAll("a")].filter(link => link.style.display !== "none");
+    aiToolName.style.setProperty("--mobile-tool-columns", String(Math.max(1, Math.min(4, visibleLinks.length))));
+    if (!mobileAIToolsQuery.matches || visibleLinks.length <= 3) {
+        aiToolsMoreButton.hidden = true;
+        return;
+    }
+
+    visibleLinks.slice(3).forEach(link => aiToolsOverflowMenu.appendChild(link));
+    aiToolsMoreButton.hidden = false;
+    aiToolName.appendChild(aiToolsMoreButton);
+    aiToolName.classList.add("mobilePinnedTools");
+    aiToolName.style.setProperty("--mobile-tool-columns", "4");
+}
 
 // Animation helper function
 function animateReorder(element1, element2, direction) {
@@ -139,7 +184,7 @@ function applyAIToolsSettings() {
 
     // Create a map of current tool elements for quick lookup
     const toolElements = new Map();
-    const allToolLinks = aiToolName.querySelectorAll("a");
+    const allToolLinks = aiToolsCont.querySelectorAll("a");
     allToolLinks.forEach(link => {
         const toolId = [...link.children].find(el => aiToolsRaw.some(t => t.id === el.id))?.id;
         if (toolId) toolElements.set(toolId, link);
@@ -159,6 +204,7 @@ function applyAIToolsSettings() {
             aiToolName.appendChild(toolElement);
         }
     });
+    layoutAIToolsForViewport();
 }
 
 // Function to generate the AI Tools settings form elements
@@ -325,6 +371,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // AI Tools icon click handler
     aiToolsIcon.addEventListener("click", toggleAITools);
 
+    aiToolsMoreButton.addEventListener("click", event => {
+        event.stopPropagation();
+        const open = aiToolsOverflowMenu.hidden;
+        aiToolsOverflowMenu.hidden = !open;
+        aiToolsOverflowMenu.setAttribute("aria-hidden", String(!open));
+        aiToolsMoreButton.setAttribute("aria-expanded", String(open));
+    });
+    mobileAIToolsQuery.addEventListener?.("change", layoutAIToolsForViewport);
+
     // AI Tools icon right-click handler
     aiToolsIcon.addEventListener("contextmenu", function (e) {
         e.preventDefault();
@@ -460,8 +515,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // Collapse when clicking outside toolsCont (but not if settings modal is open)
     document.addEventListener("click", (event) => {
         const isSettingsModalOpen = aiToolsSettingsModal.style.display === "block";
-        if (!aiToolName.contains(event.target) && aiToolName.style.display === "flex" && !isSettingsModalOpen) {
+        if (!aiToolsCont.contains(event.target)) closeMobileAIToolsOverflow();
+        if (!aiToolsCont.contains(event.target) && aiToolName.style.display === "flex" && !isSettingsModalOpen) {
             toggleAITools();
         }
+    });
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") closeMobileAIToolsOverflow();
     });
 });

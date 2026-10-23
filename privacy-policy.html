@@ -141,7 +141,7 @@
 
     <div class="container" id="mainContainer">
         <h1>MYNT: Material You New Tab 隱私權政策</h1>
-        <p><small>最後更新：2026 年 8 月 26 日</small></p>
+        <p><small>最後更新：2026 年 8 月 31 日</small></p>
 
         <h2>簡介</h2>
         <p>「MYNT: Material You New Tab」是一款開源擴充功能，旨在美化瀏覽器的預設首頁和新分頁。它最初是使用 HTML、CSS 和
@@ -153,7 +153,16 @@
             Pull Request 都經過仔細審查、測試和驗證，確保符合我們的標準後才會合併。
         </p>
 
-        <h2>資料收集與權限</h2>
+        <h2>番茄鐘小窗與本機媒體</h2>
+<p>番茄鐘的 pomodoroState（版本 2）在 localStorage 保存結束時間、暫停狀態、任務與回合。分頁使用本機鎖協調完成提示，沒有新增帳號、網路服務或瀏覽器權限；關閉瀏覽器或休眠不保證準時提醒。小窗僅由按鈕開啟，一般彈出視窗不保證置頂。</p>
+<p>myntPomoScenarios、myntPomoStudioMode、myntPomoAlarmVolume 保存情境、介面與提示音偏好。myntPomodoroAppearance.v1 保存獨立背景設定；IndexedDB MyntPomodoroAppearance 的 images 保存一張最多 8 MiB 本機圖片。myntPomodoroMusicV1 的 tracks 保存自選音樂，最多 30 首、每首 100 MiB、合計 300 MiB；myntPomoMusicSettingsV1 保存播放順序、音量與休息政策，myntPomoMusicOwnerV1 僅用於暫時跨分頁播放協調。媒體不會上傳伺服器；第 3 版本機備份包含媒體（含編碼資料上限 32 MiB），舊版備份不含完整媒體庫；移除擴充功能或清除網站資料可能刪除。情境只保存媒體識別與偏好，不複製音樂檔。</p>
+<p>Timer, scenarios, images and music remain browser-local. No media is uploaded. Version 3 local backups include IndexedDB audio and timer images within a 32 MiB encoded-file limit; older backups do not contain complete media libraries. Browser shutdown, sleep and autoplay restrictions can prevent timely alarms or playback. Floating windows require the original tab; ordinary popup windows are not guaranteed to remain on top.</p>
+        <h2>背景自適應與排版儲存</h2>
+<p>myntLayoutProfiles（版本 1）只在本機保存命名組合、寬／窄螢幕位置、上一個儲存版本與修訂號。舊 myntLayout 保留，不刪除；排版專用 JSON 匯出不含便籤、帳號或 API 金鑰，匯入先驗證並確認後新增副本。不同分頁的過期寫入會拒絕，以免覆寫更新。</p>
+<p>Named layout profiles and previous versions stay in localStorage. Layout-only exports contain no notes, accounts or API keys; validated imports add copies after confirmation.</p>
+<p>背景圖片與影片像素只在本機 Canvas 進行低解析度色彩、亮度與紋理分析，不傳送到模型或伺服器。localStorage 的 myntAdaptiveBackground（版本 1）保存配色、對比、透明度開關，舊自動排版設定固定轉為關閉；myntLayout（版本 2）保存手動相對位置、縮放、格線與鎖定。背景功能不會移動元件，也不覆寫手動位置。這些設定不跨裝置同步，清除網站資料會刪除設定。無新增權限、網路服務或遙測。</p>
+<p>Adaptive background processing stays on-device. Versioned local preferences are stored in myntAdaptiveBackground and myntLayout. No pixels are uploaded and no new remote service is used.</p>
+<h2>資料收集與權限</h2>
         <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用搜尋建議、天氣、語音辨識、隨機桌布、語錄或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
 
         <h3>權限</h3>
@@ -161,8 +170,10 @@
 
         <ul>
             <li><strong>書籤：</strong>只在您啟用書籤功能後請求。此權限可讀取、新增、修改與刪除瀏覽器書籤。</li>
-            <li><strong>網站圖示</strong>（Chrome 選用）：用於從瀏覽器快取讀取書籤圖示。若快取沒有圖示，程式會改用 Google Favicon API。</li>
+            <li><strong>網站圖示</strong>（Chrome 選用）：用於從瀏覽器快取讀取書籤圖示。若快取沒有圖示，書籤會改用內建替代圖示，不傳送書籤網域。</li>
             <li><strong>Google 網域</strong>（選用）：只在您啟用 Google 搜尋建議後請求。</li>
+            <li><strong>擴充功能儲存空間：</strong>在瀏覽器的 extension storage 中保存呆呆的受限本機配對權杖與已處理操作 ID；不會保存呆呆主權杖。</li>
+            <li><strong>本機呆呆橋接</strong>（選用）：只有按下「連接呆呆」後，才請求連線至 <code>http://127.0.0.1/*</code>。此位址只代表目前電腦，不會連到區域網路或專案營運者的伺服器。</li>
         </ul>
 
         <h3>瀏覽器 API</h3>
@@ -170,6 +181,12 @@
             <li><strong>語音辨識（Web Speech API）：</strong>僅在您點擊麥克風圖示後啟動。音訊處理由瀏覽器提供者控制，依瀏覽器實作可能傳送至其語音服務；MYNT 不另行儲存音訊。</li>
             <li><strong>地理位置：</strong>僅在您確認啟用 GPS 天氣後請求。取得的經緯度會傳送至 WeatherAPI 以查詢天氣。</li>
         </ul>
+
+        <h3>呆呆連動（選用）</h3>
+        <p>呆呆連動預設未配對。配對時，呆呆會顯示一次性 6 位數配對碼；成功後 MYNT 只取得無法存取一般呆呆橋接 API 的受限權杖。解除連動會撤銷該權杖並移除本機主機權限。</p>
+        <p>連動後，MYNT 會將今日待辦的標題與完成狀態、今日專注分鐘／階段／連續天數，以及習慣名稱與今日狀態送至本機呆呆橋接。便籤全文不會自動分享；只有按下「問呆呆」或「呆呆整理待辦」時，才會送出目前選取文字或游標所在行。書籤、捷徑網址、搜尋紀錄與首頁稱呼不會透過此連動分享。</p>
+        <p>只有在您向呆呆提出 MYNT、待辦、便籤、專注、習慣或今日工作相關要求時，相關摘要或您主動送出的便籤文字才會隨該次訊息交給呆呆目前設定的 AI 後端／模型供應商處理。資料處理由該供應商的政策約束；MYNT 專案本身不接收副本。</p>
+        <p>呆呆提出的新增、修改、完成待辦或便籤操作只會排入本機預覽。您在 MYNT 明確按下「確認套用」前不會寫入；拒絕、過期、資料版本不符或關閉配對時都不會套用。</p>
 
         <h3>外部 API</h3>
         <p>只有相關功能啟用或觸發時，MYNT 才會使用下列服務：</p>
@@ -214,12 +231,15 @@
                     <li><code>https://s2.googleusercontent.com/s2/favicons*</code></li>
                     <li><code>https://www.google.com/s2/favicons*</code></li>
                 </ul>
-                這些服務會收到捷徑或書籤的網站網域，用於擷取網站圖示。
+                這些服務會收到捷徑的網站網域，用於擷取捷徑圖示；書籤改用瀏覽器本機快取或內建替代圖示。
             </li>
         </ul>
 
+        <h3>考古題與主動開啟 ChatGPT</h3>
+        <p>「今日考古題」預設顯示，啟用時會在閒置後從 raw.githubusercontent.com 的 Reese-max/police-exam-archive 公開題庫下載並快取當日題目。GitHub 會收到一般網路請求資訊（例如 IP），請求不含待辦、便籤或書籤。可在設定停用此卡片，停止後續自動題庫請求。</p>
+        <p>只有按下每日焦點的「問 GPT 拆解步驟」時，才會透過 chatgpt.com/?q= 開啟已填入的提示，包含目前焦點文字、選擇的科目及距考試天數。這些內容會傳至 OpenAI，並可能留在瀏覽器歷史；請勿填入不想分享的私人資料。MYNT 不會自動替您送出聊天訊息。</p>
         <h3>本機儲存</h3>
-        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
+        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、首頁稱呼、每日焦點文字／完成狀態／延續日期、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。首頁稱呼只會顯示在本機問候語中；每日焦點也不會自動分享給呆呆。兩者都會包含在您主動匯出的 MYNT 備份檔。呆呆受限配對權杖與最近已確認／拒絕的操作 ID 存在 extension storage，不會進入 MYNT 一般備份檔；重設 MYNT 或解除連動時會清除。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
         <p>控制中心的服務狀態只會在 localStorage 記錄服務識別名稱、成功或失敗結果、HTTP 狀態碼及時間；不會記錄完整網址、搜尋文字、位置、API 金鑰，也不會傳送至專案營運者。</p>
 
         <h3>代理伺服器（選用）</h3>
@@ -248,6 +268,10 @@
 
 
     <script src="scripts/privacy-policy.js"></script>
+<p>Layout draft recovery uses sessionStorage (myntLayoutDraft) only in the current tab and survives reload, not guaranteed tab closure. The dismissible guide preference uses localStorage (myntLayoutGuideSeen). Deleted layout profiles remain recoverable locally; no data is uploaded.</p>
+<p>Wallpaper gallery removal is recoverable: removed custom images and videos stay in this browser’s local IndexedDB so Undo remains available after reload. They are excluded from gallery playback but still use local storage. Original files on your device are not modified or uploaded.</p>
+<p>本機備份第 3 版包含設定、排版、待辦、便籤、圖庫（含回收項目）、番茄鐘圖片和音樂，含編碼媒體上限 32 MiB。超過時不會匯出不完整備份。WeatherAPI 金鑰、瀏覽器書籤與權限、DaiDai 配對不包含在內。備份檔含私人內容，請自行妥善保存；本功能不會上傳。網址媒體僅保留連結。還原前會顯示取代範圍，已知寫入失敗會嘗試恢復原資料，但不能保證關閉分頁或系統中斷時跨資料庫原子性。</p>
+<p>取消套用背景不刪圖庫檔案。回收區可逐張復原；顯示容量僅計算圖庫本機媒體和縮圖 Blob，不是瀏覽器整站儲存用量，也不包含遠端網址內容。書籤圖示只使用瀏覽器本機快取或內建替代圖示，不將書籤網域送往 Google 圖示服務。</p>
 </body>
 
 </html>

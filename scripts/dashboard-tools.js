@@ -46,6 +46,19 @@ function myntSevenDayStats(history, now = new Date()) {
     });
 }
 
+function myntNormalizeGreetingName(value) {
+    return Array.from(String(value || "").trim().replace(/\s+/gu, " ")).slice(0, 30).join("");
+}
+
+function myntFormatGreeting(greeting, name, template = "{greeting}, {name}") {
+    const normalizedName = myntNormalizeGreetingName(name);
+    if (!normalizedName) return String(greeting || "");
+    const greetingStem = String(greeting || "").trim().replace(/[.!。！?？]+$/u, "");
+    return String(template)
+        .replace("{greeting}", () => greetingStem)
+        .replace("{name}", () => normalizedName);
+}
+
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
     "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox", "scratchpadCheckbox"
@@ -74,7 +87,8 @@ function myntNormalizeWorkspaces(raw, defaults = []) {
 
 if (typeof module !== "undefined") {
     module.exports = {
-        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeWorkspaces
+        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeGreetingName,
+        myntFormatGreeting, myntNormalizeWorkspaces
     };
 }
 
@@ -361,6 +375,7 @@ if (typeof document !== "undefined") {
 
         function saveHabits() {
             localStorage.setItem(KEYS.habits, JSON.stringify(habits));
+            document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
         }
 
         function markSystemHabit(source) {
@@ -415,8 +430,9 @@ if (typeof document !== "undefined") {
                     remove.className = "habitDeleteBtn";
                     remove.setAttribute("aria-label", format("habitDeleteAria", "Delete {name}", { name: habit.name }));
                     remove.textContent = "×";
-                    remove.addEventListener("click", () => {
-                        if (!confirm(format("habitDeleteConfirm", "Delete habit ‘{name}’?", { name: habit.name }))) return;
+                    remove.addEventListener("click", async () => {
+                        const message = format("habitDeleteConfirm", "Delete habit ‘{name}’?", { name: habit.name });
+                        if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
                         habits = habits.filter(item => item.id !== habit.id);
                         saveHabits();
                         renderHabits();
@@ -487,8 +503,11 @@ if (typeof document !== "undefined") {
         }
 
         const decorativeVideo = document.getElementById("videoBg");
+        const decorativeVideoSource = decorativeVideo?.querySelector("source[data-src]");
         const networkConnection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let decorativeVideoStarted = false;
+        let resumeDecorativeAfterHidden = false;
+        let startDecorativeWhenVisible = false;
         let decorativeVideoStartHandle = null;
         let decorativeVideoUsesIdleCallback = false;
 
@@ -496,6 +515,7 @@ if (typeof document !== "undefined") {
             return Boolean(decorativeVideo)
                 && document.visibilityState === "visible"
                 && document.body.dataset.workspaceBackground === "video"
+                && document.body.dataset.galleryVideo !== "on"
                 && !effectiveReducedMotion()
                 && !accessibility.highContrast
                 && networkConnection?.saveData !== true;
@@ -510,9 +530,16 @@ if (typeof document !== "undefined") {
             decorativeVideoStartHandle = null;
         }
 
+        function loadDecorativeVideo() {
+            if (!decorativeVideoSource || decorativeVideoSource.hasAttribute("src")) return;
+            decorativeVideoSource.src = decorativeVideoSource.dataset.src;
+            decorativeVideo.load();
+        }
+
         function syncDecorativeVideo() {
             if (!decorativeVideo) return;
 
+            startDecorativeWhenVisible = document.hidden && document.body.dataset.workspaceBackground === "video";
             if (!canPlayDecorativeVideo()) {
                 cancelDecorativeVideoStart();
                 decorativeVideo.pause();
@@ -528,6 +555,7 @@ if (typeof document !== "undefined") {
             const startVideo = () => {
                 decorativeVideoStartHandle = null;
                 if (!canPlayDecorativeVideo()) return;
+                loadDecorativeVideo();
                 decorativeVideoStarted = true;
                 decorativeVideo.play().catch(() => {
                     decorativeVideoStarted = false;
@@ -553,7 +581,7 @@ if (typeof document !== "undefined") {
                 if (reduceMotion && !video.paused) {
                     video.dataset.myntWasPlaying = "true";
                     video.pause();
-                } else if (!reduceMotion && video.dataset.myntWasPlaying === "true") {
+                } else if (!reduceMotion && !document.hidden && video.dataset.myntWasPlaying === "true") {
                     delete video.dataset.myntWasPlaying;
                     video.play().catch(() => {});
                 }
@@ -768,10 +796,12 @@ if (typeof document !== "undefined") {
             closeWorkspaceEditor();
             applyWorkspace(preset.id);
         });
-        document.getElementById("workspaceDeleteBtn").addEventListener("click", () => {
+        document.getElementById("workspaceDeleteBtn").addEventListener("click", async () => {
             const id = document.getElementById("workspaceEditorId").value;
             const preset = workspaces.find(item => item.id === id);
-            if (!preset || !confirm(format("workspaceDeleteConfirm", "Delete mode ‘{name}’?", { name: preset.name }))) return;
+            if (!preset) return;
+            const message = format("workspaceDeleteConfirm", "Delete mode ‘{name}’?", { name: preset.name });
+            if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
             workspaces = workspaces.filter(item => item.id !== id);
             saveWorkspaces();
             if (localStorage.getItem(KEYS.workspace) === id) localStorage.removeItem(KEYS.workspace);
@@ -889,7 +919,12 @@ if (typeof document !== "undefined") {
         permissionApi?.onAdded?.addListener(renderPermissions);
         permissionApi?.onRemoved?.addListener(renderPermissions);
         document.addEventListener("visibilitychange", () => {
-            syncDecorativeVideo();
+            if(document.hidden){
+                resumeDecorativeAfterHidden=Boolean(decorativeVideo&&!decorativeVideo.paused);
+                cancelDecorativeVideoStart();decorativeVideo?.pause();
+            }else if(resumeDecorativeAfterHidden||startDecorativeWhenVisible){
+                resumeDecorativeAfterHidden=false;startDecorativeWhenVisible=false;syncDecorativeVideo();
+            }
             if (document.visibilityState === "visible") renderPermissions();
         });
 
@@ -948,6 +983,9 @@ if (typeof document !== "undefined") {
 
         const commandDefinitions = [
             { id: "shortcutsHelp", label: "commandShortcutsHelp", info: "commandShortcutsHelpInfo", run: () => openShortcutsHelp() },
+            { id: "wallpaperNext", label: "commandWallpaperNext", info: "commandWallpaperNextInfo", run: () => window.myntWallpaper?.next() },
+            { id: "wallpaperGallery", label: "commandWallpaperGallery", info: "commandWallpaperGalleryInfo", run: () => window.myntWallpaper?.open() },
+            { id: "wallpaperRandom", label: "commandWallpaperRandom", info: "commandWallpaperRandomInfo", run: () => window.myntWallpaper?.random() },
             { id: "control", label: "commandOpenControl", info: "commandOpenControlInfo", run: () => openControlCenter() },
             { id: "focus", label: "commandFocusStats", info: "commandFocusStatsInfo", run: () => openControlCenter("focusStatsSection") },
             { id: "workspaces", label: "commandWorkspaces", info: "commandWorkspacesInfo", run: () => openControlCenter("workspaceSection") },
@@ -1085,6 +1123,7 @@ if (typeof document !== "undefined") {
             const base = [
                 ...commandDefinitions.filter(command => matchesCommand(command, normalized)),
                 ...createCommand,
+                ...(window.myntFocusCommands?.(normalized) || []),
                 ...workspaceCommands,
                 ...workspaceLaunchCommands,
                 ...collectLinkCommands("#toolsCont a", "commandGroupAi", normalized),

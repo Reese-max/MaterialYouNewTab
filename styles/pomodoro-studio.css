@@ -1,0 +1,186 @@
+/* The original video, font, rounded card and saved layout remain untouched. */
+#pomodoroPanel {
+    min-width: min(240px, var(--pomo-viewport-width, 240px));
+    max-width: min(280px, var(--pomo-viewport-width, 280px));
+    max-height: min(calc(100dvh - 105px), var(--pomo-viewport-height, 100dvh));
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pomo-border, #ffffff44) transparent;
+    color: var(--pomo-fg, #fff);
+    color-scheme: var(--pomo-scheme, dark);
+    line-height: 1.4;
+}
+#pomodoroPanel [hidden] { display: none !important; }
+#myntPomoStudioMount, #myntPomoExtras, #myntPomoFloatMount, .pomoStudioTask { position: relative; z-index: 1; }
+#pomodoroPanel .pomodoroPhaseLabel { display: table; margin: 0 auto 6px; padding: 0; border-radius: 0; background: transparent; text-shadow: var(--pomo-text-shadow, none); font-size: var(--pomo-type-body); line-height: 1.4; letter-spacing: 0; color: var(--pomo-fg, #fff); }
+#pomodoroPanel .pomodoroPhaseLabel.break-phase { color: var(--pomo-accent, #a6edc2); }
+#pomodoroPanel .pomodoroCircleWrap { width: min(160px, 100%); height: auto; aspect-ratio: 1; margin-bottom: 4px; }
+#pomodoroPanel .pomodoroProgressRing { display: block; width: 100%; height: 100%; }
+#pomodoroPanel .pomodoroTimeDisplay {
+    box-sizing: border-box;
+    width: 6ch;
+    max-width: 100%;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    text-shadow: var(--pomo-text-shadow, none);
+    font-size: var(--pomo-type-timer);
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: 0;
+    white-space: nowrap;
+    color: var(--pomo-fg, #fff);
+}
+#pomodoroPanel .pomodoroRoundDisplay { display: table; margin: 0 auto 6px; padding: 2px 0; border-radius: 0; background: transparent; text-shadow: var(--pomo-text-shadow, none); font-size: var(--pomo-type-small); line-height: 1.4; color: var(--pomo-muted, #ffffffc9); font-variant-numeric: tabular-nums; }
+#pomodoroPanel .pomodoroRingBg { stroke: var(--pomo-surface, #162330b3); stroke-width: 12; }
+#pomodoroPanel .pomodoroRingFg { filter: none; stroke: var(--pomo-accent, #ffffffe6); transition: stroke-dashoffset .18s ease; }
+#pomodoroPanel .pomodoroRingFg.running { animation: none; }
+#pomodoroPanel .pomodoroRingFg.break-ring { stroke: var(--pomo-accent, #81d884); }
+.pomoStudioTask { display: block; margin: 0 0 8px; }
+#myntPomoTask {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-bottom-color: var(--pomo-border, #ffffff30);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--pomo-fg, #fff);
+    text-align: center;
+    text-overflow: ellipsis;
+    font: inherit;
+    font-size: var(--pomo-type-body);
+    line-height: 1.4;
+}
+#myntPomoTask::placeholder { color: var(--pomo-muted, #ffffffc9); opacity: 1; }
+#pomodoroPanel .pomodoroControls { display: grid; grid-template-columns: 48px minmax(0, 128px) 48px; justify-content: center; gap: 4px; margin-bottom: 8px; }
+#pomodoroPanel .pomodoroBtn {
+    min-height: 48px;
+    border-radius: 24px;
+    gap: 8px;
+    color: var(--pomo-on-accent, #183149);
+    background: var(--pomo-accent, #d7e8ff);
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: var(--pomo-type-action);
+    line-height: 1.25;
+    font-weight: 600;
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+#pomodoroPanel :is(#pomodoroStartBtn, #pomodoroPauseBtn) { grid-column: 2; grid-row: 1; width: 128px; max-width: 100%; padding: 8px 12px; }
+#pomodoroPanel .pomodoroBtn span { min-width: 0; overflow-wrap: anywhere; }
+#pomodoroPanel .pomodoroBtn svg { width: 24px; height: 24px; display: block; fill: currentColor; flex: none; }
+#pomodoroPanel .pomodoroBtn:hover { transform: none; box-shadow: 0 2px 10px #0003; }
+#pomodoroPanel .pomodoroResetBtn {
+    width: 48px;
+    height: 48px;
+    min-height: 48px;
+    flex: none;
+    color: var(--pomo-fg, #fff);
+    grid-column: 3; grid-row: 1;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+}
+#pomodoroPanel .pomodoroResetBtn:hover { background: color-mix(in srgb, var(--pomo-fg, #fff) 10%, var(--pomo-surface, #162330b3)); }
+#pomodoroPanel .pomodoroResetBtn:hover svg { fill: currentColor; }
+#myntPomoFloatMount { margin-top: 0; overflow: visible; max-height: none; }
+#myntPomoFloatMount > button, #myntPomoStudioMount button, #pomodoroPanel .pomoStudioCard {
+    box-sizing: border-box;
+    min-height: 44px;
+    min-width: 0;
+    border-radius: 22px;
+    border: 1px solid var(--pomo-border, #ffffff30);
+    background: var(--pomo-surface, #ffffff12);
+    color: var(--pomo-fg, #fff);
+    padding: 8px 10px;
+    font: inherit;
+    font-size: var(--pomo-type-body);
+    line-height: 1.25;
+    text-align: center;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+#myntPomoFloatMount > button { width: 100%; }
+#myntPomoFloatMount > button, #myntPomoStudioMount button { display: inline-flex; align-items: center; justify-content: center; }
+.pomoStudioRow { display: flex; gap: 8px; margin: 8px 0; }
+.pomoStudioRow > button { flex: 1; }
+#myntPomoStudioMount button:hover, #myntPomoFloatMount > button:hover, #pomodoroPanel .pomoStudioCard:hover { background: color-mix(in srgb, var(--pomo-fg, #fff) 10%, var(--pomo-surface, #162330b3)); }
+.pomoStudioCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 8px; }
+#pomodoroPanel .pomoStudioCard { display: grid; align-content: center; justify-items: center; text-align: center; gap: 2px; min-height: 54px; padding: 7px 4px; border-radius: 16px; line-height: 1.35; }
+.pomoStudioCard strong { width: 100%; font-size: var(--pomo-type-body); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pomoStudioCard span { width: 100%; font-size: var(--pomo-type-small); line-height: 1.4; color: var(--pomo-muted, #ffffffc9); }
+#pomodoroPanel .pomoStudioCard[aria-pressed="true"] { border-color: var(--pomo-accent, #d7e8ff); box-shadow: inset 0 0 0 1px var(--pomo-accent, #d7e8ff); }
+#myntPomoExtras { text-align: start; margin: 10px -2px 8px; padding: 8px 12px; border-radius: 20px; background: var(--pomo-surface, #0c141ba3); color: var(--pomo-fg, #fff); }
+#myntPomoExtras > details, #myntPomoExtras .pomoStudioScenarios { border-bottom: 1px solid var(--pomo-border, #ffffff24); }
+#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioAmbient, .pomoStudioAlarmNotes) summary { display: list-item; min-height: 44px; box-sizing: border-box; padding: 12px 0; cursor: pointer; font-size: var(--pomo-type-body); line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioAmbient, .pomoStudioAlarmNotes)[open] { padding-bottom: 12px; }
+#myntPomoExtras .mynt-pomo-music { border: 0; padding: 0; margin: 0; border-radius: 0; }
+#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioAmbient, .pomoStudioAlarmNotes) label { display: grid; gap: 6px; font-size: var(--pomo-type-body); line-height: 1.4; margin: 10px 0; }
+#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioAmbient, .pomoStudioAlarmNotes) :is(button, input, select), #myntPomoExtras > button { box-sizing: border-box; font: inherit; font-size: var(--pomo-type-body); line-height: 1.4; min-height: 44px; max-width: 100%; color: var(--pomo-fg, #fff); }
+#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioAmbient, .pomoStudioAlarmNotes) button, #myntPomoExtras > button { border: 1px solid var(--pomo-border, #ffffff30); border-radius: 16px; background: var(--pomo-surface, #ffffff12); padding: 8px 10px; cursor: pointer; overflow-wrap: anywhere; }
+#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioAmbient, .pomoStudioAlarmNotes) :is(input:not([type=range]):not([type=checkbox]), select) { width: 100%; min-width: 0; border: 1px solid var(--pomo-border, #ffffff40); border-radius: 12px; padding: 8px; background: var(--pomo-surface, #0003); }
+#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioAmbient, .pomoStudioAlarmNotes) select option { background: var(--pomo-surface, #25313c); color: var(--pomo-fg, #fff); }
+#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioAmbient, .pomoStudioAlarmNotes) input[type=range] { width: 100%; accent-color: var(--pomo-accent, #bbd6fd); }
+#myntPomoExtras .pomodoroAmbientRow { flex-wrap: wrap; margin: 0; }
+#myntPomoExtras .pomodoroAmbientSelect { flex: 1; }
+.pomoStudioSettings { display: grid; gap: 6px; }
+.pomoStudioScenarios > button { width: 100%; margin-top: 8px; }
+.pomoStudioDurations { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; padding-bottom: 12px; border-bottom: 1px solid var(--pomo-border, #ffffff24); }
+.pomoStudioDurations label { align-content: end; overflow-wrap: anywhere; }
+.pomoStudioApplyCustom { grid-column: 1 / -1; }
+.pomoStudioStatus, .pomoStudioNote, #myntPomoExtras > .mynt-pomo-note { font-size: var(--pomo-type-small); line-height: 1.6; overflow-wrap: anywhere; color: var(--pomo-muted, #ffffffc9); }
+.pomoStudioStatus:empty { display: none; }
+.pomoStudioStats { position: relative; z-index: 1; padding: 8px; border-radius: 0; background: transparent; }
+#pomodoroPanel .pomodoroSessionsToday { padding-top: 0; margin-top: 0; border-top: 0; text-shadow: var(--pomo-text-shadow, none); font-size: var(--pomo-type-small); line-height: 1.4; color: var(--pomo-muted, #ffffffc9); border-color: var(--pomo-border, #ffffff24); font-variant-numeric: tabular-nums; }
+#pomodoroPanel .pomodoroFocusSummary { flex-wrap: wrap; margin-top: 0; font-size: var(--pomo-type-small); line-height: 1.4; color: var(--pomo-muted, #ffffffc9); font-variant-numeric: tabular-nums; }
+#pomodoroPanel #pomodoroStatsBtn { display: inline-flex; align-items: center; justify-content: center; font-size: var(--pomo-type-small); line-height: 1.25; min-height: 36px; padding-inline: 10px; background: transparent; color: var(--pomo-fg, #fff); }
+#pomodoroPanel :focus-visible { outline: 2px solid var(--pomo-accent, #fff); outline-offset: 3px; }
+#pomodoroPanel button:disabled { opacity: .5; cursor: default; }
+.pomoStudioSrOnly { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media(max-width: 480px) { #pomodoroPanel { min-width: 0; box-sizing: border-box; width: 280px; max-width: min(calc(100vw - 30px), var(--pomo-viewport-width, 100vw)); max-height: min(calc(100dvh - 100px), var(--pomo-viewport-height, 100dvh)); } }
+@media(prefers-reduced-motion: reduce) { #pomodoroPanel, #pomodoroPanel * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.reduced-motion #pomodoroPanel, .reduced-motion #pomodoroPanel *, html.myntReducedMotion #pomodoroPanel, html.myntReducedMotion #pomodoroPanel * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+@media(forced-colors: active) { #myntPomoExtras { background: Canvas; color: CanvasText; } #myntPomoExtras button, #myntPomoStudioMount button { border: 1px solid ButtonText; } }
+/* The open timer is a temporary overlay, never a saved layout change. */
+body:not(.mynt-layout-editing) #pomodoroPanel { z-index: 2147483002; }
+
+#myntPomoExtras > .mynt-pomo-settings { margin-top: 0; }
+
+/* Zero net flow height; sticky positioning never creates a translated overflow tail. */
+#pomodoroPanel > .pomoStudioBackdrop { position: sticky; top: 0; height: 0; z-index: -1; pointer-events: none; contain: paint; overflow: clip; border-radius: 26px; }
+#myntPomoExtras > .mynt-pomo-open-popup { display: flex; justify-content: center; width: 100%; margin-block: 8px; }
+
+/* Main-panel refinement only: accepted floating-card styling stays independent. */
+#pomodoroPanel { border-color: var(--pomo-border, #ffffff40); }
+#pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-overlay { background: var(--pomo-float-scrim, var(--pomo-overlay)); }
+#pomodoroPanel.mynt-pomo-static { background-image: var(--pomo-float-scrim, none), var(--pomo-background, none) !important; }
+#pomodoroPanel :is(.pomodoroTimeDisplay, .pomodoroPhaseLabel, .pomodoroRoundDisplay, .pomoStudioStats) { text-shadow: 0 1px 5px color-mix(in srgb, var(--pomo-surface) 65%, transparent); }
+#pomodoroPanel #myntPomoTask:focus { background: var(--pomo-surface); border-color: var(--pomo-accent); }
+#pomodoroPanel #myntPomoFloatMount > button,
+#pomodoroPanel .pomoStudioRow > button,
+#pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup { background: transparent; border-color: transparent; }
+#pomodoroPanel #myntPomoExtras .mynt-pomo-appearance > summary { display: list-item; list-style: revert; padding: 12px 0; text-align: start; font-weight: 600; }
+#pomodoroPanel #myntPomoExtras .mynt-pomo-background-choice { border-width: 1px; background: transparent; }
+#pomodoroPanel #myntPomoExtras .mynt-music-heading { padding-top: 12px; opacity: 1; }
+#pomodoroPanel #myntPomoExtras .pomoStudioCard { background: transparent; }
+@media (forced-colors: active) {
+    #pomodoroPanel.mynt-pomo-static { background: Canvas !important; }
+    #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > button, .pomoStudioRow > button, .pomodoroResetBtn) { border-color: ButtonText; }
+}
+#pomodoroPanel { border-width: 1px; }
+#pomodoroPanel #myntPomoFloatMount > button:hover,
+#pomodoroPanel .pomoStudioRow > button:hover,
+#pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup:hover { background: color-mix(in srgb, var(--pomo-fg) 8%, transparent); }
+html.myntHighContrast #pomodoroPanel > .pomoStudioBackdrop { visibility: hidden; }
+html.myntHighContrast #pomodoroPanel :is(.pomodoroTimeDisplay, .pomodoroPhaseLabel, .pomodoroRoundDisplay, .pomoStudioStats) { text-shadow: none; }
+html.myntHighContrast #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > button, .pomoStudioRow > button, .pomodoroResetBtn) { border-color: ButtonText; }
+@media (forced-colors: active) {
+    #pomodoroPanel > .pomoStudioBackdrop { visibility: hidden; }
+    #pomodoroPanel :is(.pomodoroTimeDisplay, .pomodoroPhaseLabel, .pomodoroRoundDisplay, .pomoStudioStats) { text-shadow: none; }
+}

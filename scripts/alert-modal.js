@@ -16,6 +16,10 @@
 
     const modalContainer = document.createElement("div");
     modalContainer.id = "prompt-modal-container";
+    modalContainer.setAttribute("role", "dialog");
+    modalContainer.setAttribute("aria-modal", "true");
+    modalContainer.setAttribute("aria-describedby", "prompt-modal-message");
+    modalContainer.setAttribute("aria-hidden", "true");
 
     const modalBox = document.createElement("div");
     modalBox.id = "prompt-modal-box";
@@ -41,6 +45,10 @@ function alertPrompt(message, isAlert = true, okText, cancelText) {
         const messageElement = document.getElementById("prompt-modal-message");
         const buttonContainer = document.getElementById("prompt-modal-buttons");
         const bookmarkContainer = document.getElementById("bookmarkSidebar");
+        const previousFocus = document.activeElement;
+        const previousBodyPointerEvents = document.body.style.pointerEvents;
+        const previousBookmarkPointerEvents = bookmarkContainer?.style.pointerEvents || "";
+        let closed = false;
 
         // Clear previous message
         messageElement.innerHTML = "";
@@ -81,6 +89,10 @@ function alertPrompt(message, isAlert = true, okText, cancelText) {
         }
 
         modalContainer.style.display = "flex";
+        modalContainer.setAttribute("aria-hidden", "false");
+        modalContainer.setAttribute("aria-label", translations[currentLanguage]?.[isAlert ? "dialogAlertLabel" : "dialogConfirmLabel"]
+            || translations.en?.[isAlert ? "dialogAlertLabel" : "dialogConfirmLabel"]
+            || (isAlert ? "Notice" : "Confirmation"));
         blurOverlay.style.display = "block";
 
         // Disable background interaction
@@ -115,6 +127,14 @@ function alertPrompt(message, isAlert = true, okText, cancelText) {
                 }
             } else if (event.key === "Escape") {
                 closeModal(isAlert ? undefined : false);
+            } else if (event.key === "Tab") {
+                event.preventDefault();
+                const buttons = [...buttonContainer.querySelectorAll("button")];
+                const direction = event.shiftKey ? -1 : 1;
+                const index = buttons.indexOf(document.activeElement);
+                const next = buttons[(index + direction + buttons.length) % buttons.length];
+                next.focus();
+                lastFocusedButton = next;
             } else if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
                 event.preventDefault();
                 const buttons = buttonContainer.querySelectorAll("button");
@@ -132,12 +152,16 @@ function alertPrompt(message, isAlert = true, okText, cancelText) {
         document.addEventListener("keydown", handleKeydown);
 
         function closeModal(result) {
+            if (closed) return;
+            closed = true;
             modalContainer.style.display = "none";
+            modalContainer.setAttribute("aria-hidden", "true");
             blurOverlay.style.display = "none";
             document.removeEventListener("keydown", handleKeydown);
             document.removeEventListener("mousedown", preventFocusLoss);
-            document.body.style.pointerEvents = "auto";
-            if (bookmarkContainer) bookmarkContainer.style.pointerEvents = "auto";
+            document.body.style.pointerEvents = previousBodyPointerEvents;
+            if (bookmarkContainer) bookmarkContainer.style.pointerEvents = previousBookmarkPointerEvents;
+            if (previousFocus?.isConnected) previousFocus.focus();
             resolve(result);
         }
     });
