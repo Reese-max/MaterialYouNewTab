@@ -9205,3 +9205,25 @@ body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayo
 #wallpaperGalleryDialog .wallpaperCurrentBadge[hidden] { display:none; }
 #wallpaperGalleryDialog .wallpaperRecoveryRow small { white-space:nowrap; }
 #clearImage { width:auto; min-height:44px; padding:8px 12px; border-radius:22px; }
+
+/* Local backup choices: same settings rhythm, no extra dashboard. */
+.backupScopeControl { display:grid; grid-template-columns:1fr; gap:8px; margin:18px 0 12px; }
+.backupScopeControl label { font-size:14px; font-weight:600; line-height:1.4; }
+.backupScopeControl select { width:100%; min-width:0; min-height:44px; box-sizing:border-box; padding:10px 14px; border-radius:16px; border:1px solid transparent; font:inherit; color:var(--textColorDark-blue); background:var(--accentLightTint-blue); }
+.backupScopeControl select:focus-visible { outline:2px solid currentColor; outline-offset:2px; }
+#backupScopeText, #backupStatus { font-size:13px; line-height:1.65; overflow-wrap:anywhere; margin:10px 0; }
+#backupStatus:empty { display:none; }
+
+.black-theme .backupScopeControl select { color:var(--textColorDark-dark); background:var(--darkColor-dark); }
+.backupScopeControl + .backupRestoreContainer { min-height:44px; height:auto; margin-top:0; }
+.backupScopeControl + .backupRestoreContainer .backupRestoreBtn { min-height:44px; padding:8px; }
+
+/* Keep backup choices clear without competing with the primary export action. */
+#backupScopeText { white-space: pre-line; }
+.backupScopeDetails { margin: 8px 0 14px; }
+.backupScopeDetails summary { cursor: pointer; padding: 10px 0; font-size: 13px; line-height: 1.5; }
+.backupScopeDetails summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 6px; }
+#backupScopeDetailsText { font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+#resetsettings { background: transparent; color: var(--textColorDark-blue); border: 1px solid currentColor; opacity: .85; margin-top: 18px; box-shadow: none; }
+.black-theme #resetsettings { color: var(--textColorDark-dark); }
+#resetsettings:hover { opacity: 1; }

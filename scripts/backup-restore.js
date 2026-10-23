@@ -5,12 +5,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Full local backups. Keep the old wallpaper field for v1/v2 compatibility.
+// Scoped local backups. Keep the old wallpaper field for v1/v2 compatibility.
+// A v3 file without scope is a legacy full export. Settings-only files omit media
+// entirely (rather than claiming an empty library), so older readers reject them.
 const BACKUP_FORMAT = "material-you-newtab";
 const BACKUP_VERSION = 3;
 const MAX_BACKUP_FILE_SIZE = 32 * 1024 * 1024;
 const SENSITIVE_LOCAL_STORAGE_KEYS = new Set(["weatherApiKey"]);
 const TRANSIENT_LOCAL_STORAGE_KEYS = new Set(["myntPomoMusicOwnerV1"]);
+const MEDIA_LOCAL_STORAGE_KEYS = new Set(["myntPomodoroAppearance.v1", "myntPomoMusicSettingsV1", "myntPomoScenarios"]);
+function isMediaLocalStorageKey(key) { return key.startsWith("myntWallpaper") || MEDIA_LOCAL_STORAGE_KEYS.has(key); }
 const INDEXED_DB_KEYS = new Set(["backgroundImage", "lastUpdateTime", "imageType"]);
 const MEDIA_DATABASES = {
     gallery: { name: "MYNTWallpaperGallery", store: "items", keyPath: "id", maxRecords: 1000 },
@@ -18,13 +22,27 @@ const MEDIA_DATABASES = {
     music: { name: "myntPomodoroMusicV1", store: "tracks", keyPath: "id", maxRecords: 30 }
 };
 const BACKUP_WORDS = {
-    backupScopeText: ["Full local backup: settings, layouts, tasks, notes, wallpaper gallery, timer image and music. Limit: 32 MiB including encoded media; larger exports fail without omitting files. WeatherAPI keys, browser bookmarks/permissions and DaiDai pairing are excluded. URL-only wallpaper entries remain links, not offline copies.", "完整本機備份：設定、版面、待辦、便籤、桌布圖庫、番茄鐘圖片及音樂。含編碼媒體上限 32 MiB；超過時會停止，不會省略檔案。排除 WeatherAPI 金鑰、瀏覽器書籤／權限及呆呆配對。網址型桌布僅保存連結，非離線副本。"],
+    backupDetailsLabel: ["What does this backup include?", "備份包含哪些內容？"],
+    backupScopeFullShort: ["Settings, layouts, tasks, notes and media.\n32 MiB maximum, including encoded files.", "包含設定、排版、待辦、便籤及媒體。\n含編碼檔案上限 32 MiB。"],
+    backupScopeSettingsShort: ["Settings, layouts, tasks and notes.\nNo media or media-linked preferences. Maximum 32 MiB.", "包含設定、排版、待辦與便籤。\n不含媒體及相關偏好，上限 32 MiB。"],
+    backupScopeLabel: ["Export scope", "匯出範圍"],
+    backupScopeFull: ["Settings + media", "設定＋媒體"],
+    backupScopeSettings: ["Settings only", "僅設定"],
+    backupScopeText: ["Settings + media: settings, layouts, tasks, notes, saved wallpaper, gallery, timer image and music. Limit: 32 MiB including encoded media; nothing is silently omitted. If it is too large, choose Settings only and keep original media separately. WeatherAPI keys, browser bookmarks/permissions and DaiDai pairing are excluded. URL-only wallpapers remain links, not offline copies.", "設定＋媒體：設定、版面、待辦、便籤、已儲存桌布、圖庫、番茄鐘圖片及音樂。含編碼媒體上限 32 MiB，不會默默省略檔案。超過時可選「僅設定」，並另行保留原始媒體。排除 WeatherAPI 金鑰、瀏覽器書籤／權限及呆呆配對。網址型桌布僅保存連結，非離線副本。"],
+    backupScopeSettingsText: ["Settings only: general settings, layouts, tasks, notes and timer state (restored paused). Excludes all wallpaper/gallery, timer-image and music files, plus wallpaper preferences, timer appearance, music preferences and saved focus scenarios that can reference those files. Those media and preferences stay unchanged on restore. WeatherAPI keys, browser bookmarks/permissions and DaiDai pairing are excluded. Limit: 32 MiB.", "僅設定：一般設定、版面、待辦、便籤及還原後暫停的計時狀態。不含桌布／圖庫、番茄鐘圖片及音樂檔，也不含可能引用媒體的桌布偏好、計時器外觀、音樂偏好及已儲存專注情境。還原時會保留目的端的這些媒體與偏好。排除 WeatherAPI 金鑰、瀏覽器書籤／權限及呆呆配對。上限 32 MiB。"],
     backupWorking: ["Preparing the complete local backup…", "正在準備完整本機備份…"],
     backupReady: ["Complete backup prepared; download requested. Check that the file was saved.", "完整備份已準備好並要求下載，請確認檔案已儲存。"],
-    backupTooLarge: ["The complete backup exceeds 32 MiB. Nothing was exported or changed. Keep the original media files separately; this backup format cannot export this library in full.", "完整備份超過 32 MiB，未匯出或更動任何資料。請另行保留原始媒體檔；此備份格式目前無法完整匯出這個媒體庫。"],
+    backupSettingsWorking: ["Preparing a settings-only backup without reading media…", "正在準備僅設定備份，不會讀取媒體檔…"],
+    backupSettingsReady: ["Settings-only backup prepared; download requested. Media and their preferences are excluded. Check that the file was saved.", "僅設定備份已準備好並要求下載，不含媒體及其偏好。請確認檔案已儲存。"],
+    backupEstimate: ["Estimated export: {size} MiB / 32 MiB. Preparing the selected data…", "預估匯出：{size} MiB／32 MiB，正在準備所選資料…"],
+    backupTooLarge: ["The complete backup exceeds 32 MiB. Nothing was exported or changed. Choose Settings only to export without media, and keep the original media files separately.", "完整備份超過 32 MiB，未匯出或更動任何資料。可選「僅設定」匯出不含媒體的備份，並另行保留原始媒體檔。"],
+    backupSettingsTooLarge: ["The settings-only backup exceeds 32 MiB. Nothing was exported or changed.", "僅設定備份超過 32 MiB，未匯出或更動任何資料。"],
+    backupFileTooLarge: ["This backup file exceeds the 32 MiB restore limit. No data changed.", "此備份檔超過還原的 32 MiB 上限，未變更任何資料。"],
     backupRestorePreview: ["Restore this backup? This replaces settings, layouts, tasks, notes and the saved wallpaper. Close other MYNT tabs and pause active timers/music first. The current WeatherAPI key is kept; browser bookmarks and permissions are not changed. Restored timers stay paused and music requires manual playback. A reload follows success.", "要還原此備份嗎？將取代設定、版面、待辦、便籤及已儲存桌布。請先關閉其他 MYNT 分頁並暫停計時／音樂。目前的 WeatherAPI 金鑰會保留，不會變更瀏覽器書籤及權限。還原的計時器會保持暫停，音樂須手動播放。成功後會重新載入。"],
     backupRestoreFullMedia: ["This v3 backup also replaces the wallpaper gallery, timer image and music library, including empty libraries. Files not present in the backup will be removed from these libraries. Export your current data first if you need to keep it.", "此 v3 備份也會取代桌布圖庫、番茄鐘圖片及音樂庫，包括空的媒體庫。備份未包含的現有媒體將從這些媒體庫移除；如需保留，請先匯出目前資料。"],
-    backupRestoreLegacyMedia: ["This older backup contains no complete media libraries. Existing gallery, timer image and music files will be kept; missing media cannot be recovered from this file.", "此舊版備份不含完整媒體庫。現有圖庫、番茄鐘圖片及音樂檔會保留；無法從此檔案還原未包含的媒體。"],
+    backupRestoreLegacyMedia: ["This older backup contains no complete media libraries. Existing gallery, timer image and music files, and their media-linked preferences, will be kept; missing media cannot be recovered from this file.", "此舊版備份不含完整媒體庫。現有圖庫、番茄鐘圖片、音樂檔及其媒體關聯偏好會保留；無法從此檔案還原未包含的媒體。"],
+    backupRestoreSettingsPreview: ["Restore this settings-only backup? It replaces general settings, layouts, tasks and notes. All existing wallpaper/gallery, timer-image and music files, wallpaper preferences, timer appearance, music preferences and saved focus scenarios stay unchanged. No media can be recovered from this file. Close other MYNT tabs and pause active timers/music first. The current WeatherAPI key is kept; browser bookmarks and permissions are not changed. Restored timers stay paused and music requires manual playback. A reload follows success.", "要還原此僅設定備份嗎？將取代一般設定、版面、待辦及便籤。現有桌布／圖庫、番茄鐘圖片、音樂檔、桌布偏好、計時器外觀、音樂偏好及已儲存專注情境都會保留。無法從此檔案還原媒體。請先關閉其他 MYNT 分頁並暫停計時／音樂。目前的 WeatherAPI 金鑰會保留，不會變更瀏覽器書籤及權限。還原的計時器會保持暫停，音樂須手動播放。成功後會重新載入。"],
+    backupSettingsCounts: ["General setting entries to replace: {settings}. Media and media-linked preferences: excluded and kept on this device.", "將取代的一般設定項目：{settings}。媒體及媒體關聯偏好：不在還原範圍內，會保留此裝置現有資料。"],
     backupScopeCounts: ["Setting entries: {settings}; saved wallpaper: {wallpaper}; gallery entries: {gallery}; timer images: {timerImage}; music tracks: {music}.", "設定項目：{settings}；已儲存桌布：{wallpaper}；圖庫項目：{gallery}；番茄鐘圖片：{timerImage}；音樂曲目：{music}。"],
     backupRestoreWorking: ["Restoring local data. Keep this tab open until it finishes.", "正在還原本機資料，完成前請勿關閉此分頁。"],
     backupRestoreCancelled: ["Restore cancelled. No data changed.", "已取消還原，未變更任何資料。"],
@@ -36,10 +54,12 @@ const backupButton = document.getElementById("backupBtn");
 const restoreButton = document.getElementById("restoreBtn");
 const backupFileInput = document.getElementById("fileInput");
 const resetButton = document.getElementById("resetsettings");
+const backupScopeSelect = document.getElementById("backupScopeSelect");
 let backupOperationBusy = false;
 backupButton.addEventListener("click", backupData);
 restoreButton.addEventListener("click", () => { if (!backupOperationBusy) backupFileInput.click(); });
 backupFileInput.addEventListener("change", validateAndRestoreData);
+backupScopeSelect?.addEventListener("change", () => { refreshBackupScope(); setBackupStatus(""); });
 
 function getTranslatedText(key) {
     const lang = typeof currentLanguage !== "undefined" ? currentLanguage : "en";
@@ -49,7 +69,14 @@ function getTranslatedText(key) {
 
 function refreshBackupScope() {
     const scope = document.getElementById("backupScopeText");
-    if (scope) scope.textContent = getTranslatedText("backupScopeText");
+    const settingsOnly = backupScopeSelect?.value === "settings";
+    if (scope) scope.textContent = getTranslatedText(settingsOnly ? "backupScopeSettingsShort" : "backupScopeFullShort");
+    const details = document.getElementById("backupScopeDetailsText");
+    if (details) details.textContent = getTranslatedText(settingsOnly ? "backupScopeSettingsText" : "backupScopeText");
+    for (const id of ["backupScopeLabel", "backupScopeFull", "backupScopeSettings", "backupDetailsLabel"]) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = getTranslatedText(id);
+    }
 }
 function setBackupStatus(text) {
     const status = document.getElementById("backupStatus");
@@ -58,6 +85,7 @@ function setBackupStatus(text) {
 function setBackupBusy(value) {
     backupOperationBusy = value;
     backupButton.disabled = restoreButton.disabled = resetButton.disabled = value;
+    if (backupScopeSelect) backupScopeSelect.disabled = value;
 }
 refreshBackupScope();
 function getErrorMessage(error) { return error instanceof Error ? error.message : String(error); }
@@ -128,7 +156,7 @@ function blobToDataUrl(blob) {
 async function encodeBackupValue(value, budget) {
     if (value instanceof Blob) {
         // Check the base64 expansion before allocating it. Never make a partial export.
-        budget.bytes += 4 * Math.ceil(value.size / 3) + value.type.length + 64;
+        budget.bytes += estimateBackupBytes(value);
         if (budget.bytes > MAX_BACKUP_FILE_SIZE) throw new Error(getTranslatedText("backupTooLarge"));
         return { blob: await blobToDataUrl(value), isBlob: true };
     }
@@ -140,41 +168,67 @@ async function encodeBackupValue(value, budget) {
     }
     return value;
 }
-async function backupIndexedDB(budget = { bytes: 0 }) {
-    const data = Object.create(null);
-    for (const [key, value] of await readIndexedDBEntries()) {
-        if (INDEXED_DB_KEYS.has(String(key))) data[key] = await encodeBackupValue(value, budget);
+function backupSizeError(scope) { return new Error(getTranslatedText(scope === "settings" ? "backupSettingsTooLarge" : "backupTooLarge")); }
+function estimateBackupBytes(value, seen = new Set()) {
+    // Count the exact JSON/UTF-8 and base64 expansion using Blob metadata only.
+    // In particular, a huge final music track must fail BEFORE encoding earlier
+    // images/tracks or allocating its base64 string. Files are never omitted.
+    const jsonBytes = item => new Blob([JSON.stringify(item)]).size;
+    if (value instanceof Blob) {
+        return jsonBytes({ blob: `data:${value.type || "application/octet-stream"};base64,`, isBlob: true }) + 4 * Math.ceil(value.size / 3);
     }
-    return data;
+    if (value === null || ["string", "number", "boolean"].includes(typeof value)) return jsonBytes(value);
+    if (!Array.isArray(value) && !isPlainRecord(value)) throw new Error("Unsupported stored data in backup.");
+    if (seen.has(value) || seen.size > 20) throw new Error("Invalid or deeply nested stored data in backup.");
+    seen.add(value);
+    try {
+        const entries = Array.isArray(value) ? Array.from(value) : Object.entries(value).filter(([, item]) => item !== undefined);
+        return 2 + Math.max(0, entries.length - 1) + entries.reduce((bytes, item) => {
+            return bytes + (Array.isArray(value) ? estimateBackupBytes(item === undefined ? null : item, seen) :
+                jsonBytes(item[0]) + 1 + estimateBackupBytes(item[1], seen));
+        }, 0);
+    } finally { seen.delete(value); }
 }
-async function createBackup() {
-    const budget = { bytes: 0 };
-    const backup = {
-        format: BACKUP_FORMAT, version: BACKUP_VERSION, createdAt: new Date().toISOString(),
+async function createBackup(scope = "full", onEstimate) {
+    if (!["full", "settings"].includes(scope)) throw new Error("Invalid backup scope.");
+    const settings = snapshotLocalStorage({ includeSensitive: false });
+    const omittedSettings = scope === "settings" ? Object.keys(settings).filter(isMediaLocalStorageKey) : [];
+    omittedSettings.forEach(key => { delete settings[key]; });
+    const source = {
+        format: BACKUP_FORMAT, version: BACKUP_VERSION, scope, createdAt: new Date().toISOString(),
         excludedLocalStorageKeys: [...SENSITIVE_LOCAL_STORAGE_KEYS, ...TRANSIENT_LOCAL_STORAGE_KEYS],
-        localStorage: snapshotLocalStorage({ includeSensitive: false }),
-        indexedDB: await backupIndexedDB(budget), media: { version: 1 }
+        localStorage: settings, indexedDB: Object.create(null)
     };
-    for (const key of Object.keys(MEDIA_DATABASES)) backup.media[key] = await encodeBackupValue(await readMediaEntries(key), budget);
+    if (scope === "settings") source.excludedLocalStorageKeys.push(...omittedSettings);
+    else {
+        source.indexedDB = Object.fromEntries((await readIndexedDBEntries()).filter(([key]) => INDEXED_DB_KEYS.has(String(key))));
+        source.media = { version: 1 };
+        for (const key of Object.keys(MEDIA_DATABASES)) source.media[key] = await readMediaEntries(key);
+    }
+    const estimatedBytes = estimateBackupBytes(source);
+    if (estimatedBytes > MAX_BACKUP_FILE_SIZE) throw backupSizeError(scope);
+    onEstimate?.(estimatedBytes);
+    const backup = await encodeBackupValue(source, { bytes: 0 });
     const serialized = JSON.stringify(backup);
-    if (new Blob([serialized]).size > MAX_BACKUP_FILE_SIZE) throw new Error(getTranslatedText("backupTooLarge"));
+    if (new Blob([serialized]).size > MAX_BACKUP_FILE_SIZE) throw backupSizeError(scope);
     if (!isValidBackupFile(backup)) throw new Error("The stored data cannot be represented safely in this backup format. Nothing was exported.");
-    return { backup, serialized };
+    return { backup, serialized, estimatedBytes };
 }
 async function backupData() {
     if (backupOperationBusy) return;
     let objectUrl;
+    const scope = backupScopeSelect ? backupScopeSelect.value : "full";
     setBackupBusy(true);
-    setBackupStatus(getTranslatedText("backupWorking"));
+    setBackupStatus(getTranslatedText(scope === "settings" ? "backupSettingsWorking" : "backupWorking"));
     try {
-        const { serialized } = await createBackup();
+        const { serialized } = await createBackup(scope, bytes => setBackupStatus(getTranslatedText("backupEstimate").replace("{size}", (bytes / 1024 / 1024).toFixed(2))));
         const date = new Date();
         const formattedDate = `${String(date.getDate()).padStart(2, "0")}${String(date.getMonth() + 1).padStart(2, "0")}${date.getFullYear()}`;
         const link = document.createElement("a");
         objectUrl = URL.createObjectURL(new Blob([serialized], { type: "application/json" }));
-        link.href = objectUrl; link.download = `MYNT_Backup_${formattedDate}.json`;
+        link.href = objectUrl; link.download = `MYNT_Backup_${scope === "settings" ? "Settings_" : ""}${formattedDate}.json`;
         document.body.appendChild(link); link.click(); link.remove();
-        setBackupStatus(getTranslatedText("backupReady"));
+        setBackupStatus(getTranslatedText(scope === "settings" ? "backupSettingsReady" : "backupReady"));
     } catch (error) {
         const message = getTranslatedText("failedbackup") + getErrorMessage(error);
         setBackupStatus(message); await alertPrompt(message);
@@ -236,7 +290,11 @@ function isValidBackupFile(backup) {
     if (!isPlainRecord(backup) || !isPlainRecord(backup.localStorage) || !isPlainRecord(backup.indexedDB)) return false;
     if ("format" in backup && backup.format !== BACKUP_FORMAT) return false;
     if ("version" in backup && (!Number.isInteger(backup.version) || backup.version < 1 || backup.version > BACKUP_VERSION)) return false;
-    if (backup.version === 3 && (backup.format !== BACKUP_FORMAT || !isValidMedia(backup.media))) return false;
+    if ("scope" in backup && (backup.version !== 3 || !["full", "settings"].includes(backup.scope))) return false;
+    if (backup.version === 3 && backup.format !== BACKUP_FORMAT) return false;
+    if (backup.version === 3 && backup.scope === "settings") {
+        if ("media" in backup || Object.keys(backup.indexedDB).length || Object.keys(backup.localStorage).some(isMediaLocalStorageKey)) return false;
+    } else if (backup.version === 3 && !isValidMedia(backup.media)) return false;
     if (backup.version !== 3 && "media" in backup) return false;
     if ("createdAt" in backup && (typeof backup.createdAt !== "string" || Number.isNaN(Date.parse(backup.createdAt)))) return false;
     const settings = Object.entries(backup.localStorage);
@@ -276,10 +334,13 @@ function restoredSettingValue(key, value, createdAt) {
 }
 function prepareBackupForRestore(backup) {
     if (!isValidBackupFile(backup)) throw new Error("Invalid backup structure, media or size.");
+    const scope = backup.scope === "settings" ? "settings" : backup.version === 3 ? "full" : "legacy";
     return {
-        localStorageEntries: Object.entries(backup.localStorage).filter(([key]) => !SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key)).map(([key, value]) => [key, restoredSettingValue(key, value, backup.createdAt)]),
-        indexedDBEntries: decodeBackupValue(Object.entries(backup.indexedDB)),
-        media: backup.version === 3 ? Object.fromEntries(Object.keys(MEDIA_DATABASES).map(key => [key, decodeBackupValue(backup.media[key])])) : null
+        scope,
+        localStorageEntries: Object.entries(backup.localStorage).filter(([key]) => !SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key) &&
+            (scope === "full" || !isMediaLocalStorageKey(key))).map(([key, value]) => [key, restoredSettingValue(key, value, backup.createdAt)]),
+        indexedDBEntries: scope === "settings" ? null : decodeBackupValue(Object.entries(backup.indexedDB)),
+        media: scope === "full" ? Object.fromEntries(Object.keys(MEDIA_DATABASES).map(key => [key, decodeBackupValue(backup.media[key])])) : null
     };
 }
 function replaceLocalStorage(entries) {
@@ -318,17 +379,22 @@ function replaceMediaEntries(key, entries) {
 async function restoreData(backup) {
     const prepared = prepareBackupForRestore(backup);
     const previousLocalStorage = Object.entries(snapshotLocalStorage());
-    const previousIndexedDB = await readIndexedDBEntries();
+    // An omitted store is NOT an empty store. Settings-only restore must work
+    // even when a media database is blocked/unavailable, and never touch it.
+    const previousIndexedDB = prepared.indexedDBEntries === null ? null : await readIndexedDBEntries();
     const previousMedia = Object.create(null);
     if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) previousMedia[key] = await readMediaEntries(key);
-    const preservedEntries = previousLocalStorage.filter(([key]) => SENSITIVE_LOCAL_STORAGE_KEYS.has(key) || TRANSIENT_LOCAL_STORAGE_KEYS.has(key));
-    const unownedWallpaper = previousIndexedDB.filter(([key]) => !INDEXED_DB_KEYS.has(key));
+    const preservedEntries = previousLocalStorage.filter(([key]) => SENSITIVE_LOCAL_STORAGE_KEYS.has(key) || TRANSIENT_LOCAL_STORAGE_KEYS.has(key) ||
+        (prepared.scope !== "full" && isMediaLocalStorageKey(key)));
+    const unownedWallpaper = previousIndexedDB?.filter(([key]) => !INDEXED_DB_KEYS.has(key)) || [];
     let wallpaperWritten = false;
     const mediaWritten = [];
     try {
         replaceLocalStorage([...prepared.localStorageEntries, ...preservedEntries]);
-        await replaceIndexedDB([...prepared.indexedDBEntries, ...unownedWallpaper]);
-        wallpaperWritten = true;
+        if (prepared.indexedDBEntries !== null) {
+            await replaceIndexedDB([...prepared.indexedDBEntries, ...unownedWallpaper]);
+            wallpaperWritten = true;
+        }
         if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) {
             await replaceMediaEntries(key, prepared.media[key]);
             mediaWritten.push(key);
@@ -348,8 +414,11 @@ async function restoreData(backup) {
     }
 }
 function backupScopePreview(backup) {
-    const counts = { settings: Object.keys(backup.localStorage).filter(key => !SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key)).length,
+    const counts = { settings: Object.keys(backup.localStorage).filter(key => !SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key) &&
+            (backup.version === 3 && backup.scope !== "settings" || !isMediaLocalStorageKey(key))).length,
         wallpaper: backup.indexedDB.backgroundImage ? 1 : 0, gallery: backup.media?.gallery.length ?? "—", timerImage: backup.media?.timerImage.length ?? "—", music: backup.media?.music.length ?? "—" };
+    if (backup.scope === "settings") return [getTranslatedText("backupRestoreSettingsPreview"),
+        getTranslatedText("backupSettingsCounts").replace("{settings}", String(counts.settings))].join("\n\n");
     return [getTranslatedText("backupRestorePreview"), getTranslatedText(backup.version === 3 ? "backupRestoreFullMedia" : "backupRestoreLegacyMedia"),
         getTranslatedText("backupScopeCounts").replace(/\{(\w+)\}/gu, (_, key) => String(counts[key]))].join("\n\n");
 }
@@ -359,7 +428,7 @@ async function validateAndRestoreData(event) {
     if (!file || backupOperationBusy) return;
     setBackupBusy(true);
     try {
-        if (file.size > MAX_BACKUP_FILE_SIZE) throw new Error(getTranslatedText("backupTooLarge"));
+        if (file.size > MAX_BACKUP_FILE_SIZE) throw new Error(getTranslatedText("backupFileTooLarge"));
         const backup = JSON.parse(await file.text());
         // Decode everything before confirmation and before the first storage write.
         prepareBackupForRestore(backup);

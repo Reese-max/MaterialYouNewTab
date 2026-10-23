@@ -281,6 +281,9 @@ function applyLanguage(lang) {
         "uploadWallpaperText",
         "backupText",
         "backupScopeText",
+        "backupScopeLabel",
+        "backupScopeFull",
+        "backupScopeSettings",
         "restoreText",
         "rangColor",
         "bookmarksText",
@@ -475,6 +478,7 @@ function applyLanguage(lang) {
     // Save the selected language in localStorage
     document.documentElement.lang = lang === "zh_TW" ? "zh-TW" : lang.replace("_", "-");
     saveLanguageStatus("selectedLanguage", lang);
+    if (typeof refreshBackupScope === "function") refreshBackupScope();
 }
 
 // Detect language from navigator.language

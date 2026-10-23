@@ -1960,7 +1960,14 @@
                                     <button class="settingsActionBtn" id="openControlCenterBtn" type="button">Open</button>
                                 </div>
 
-                                <!-- Settings -->
+                                <!-- Choose a truthful backup scope without changing existing data. -->
+                                <div class="backupScopeControl">
+                                    <label id="backupScopeLabel" for="backupScopeSelect">Backup contents</label>
+                                    <select id="backupScopeSelect" aria-describedby="backupScopeText">
+                                        <option id="backupScopeFull" value="full">Settings and media</option>
+                                        <option id="backupScopeSettings" value="settings">Settings only</option>
+                                    </select>
+                                </div>
                                 <div class="backupRestoreContainer">
                                     <button class="backupRestoreBtn" id="backupBtn">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -1981,6 +1988,10 @@
                                     </button>
                                 </div>
                                 <p id="backupScopeText" class="infoText"></p>
+                                <details class="backupScopeDetails">
+                                    <summary id="backupDetailsLabel">What does this backup include?</summary>
+                                    <p id="backupScopeDetailsText" class="infoText"></p>
+                                </details>
                                 <p id="backupStatus" class="infoText" role="status" aria-live="polite"></p>
 
                                 <input type="file" id="fileInput" accept=".json" style="display: none;">

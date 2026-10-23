@@ -375,3 +375,8 @@ execFileSync(process.execPath, [resolve(root, "tools/regress-backup-completion.c
 execFileSync(process.execPath, [resolve(root, "tools/regress-bookmark-completion.cjs"), root], {stdio:"inherit"});
 
 execFileSync(process.execPath, [resolve(root, "tools/regress-focus-completion.cjs"), root], {stdio:"inherit"});
+
+// Daily reliability: scoped backups, safe editor entry, and local music import feedback.
+execFileSync(process.execPath, [resolve(root, "tools/regress-backup-scope.cjs"), root], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-layout-daily.cjs"), root], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-music-daily.cjs"), root], {stdio:"inherit"});
