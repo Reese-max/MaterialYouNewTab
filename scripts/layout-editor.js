@@ -10,6 +10,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["aiTools", "#aiToolsCont", "layoutBlockAiTools", "AI tools"],
     ["shortcuts", "#shortcutsContainer", "layoutBlockShortcuts", "Shortcuts"],
     ["quote", "#studyQuote", "layoutBlockQuote", "Quote"],
+    ["countdowns", "#eventCountdownCard", "layoutBlockCountdowns", "Countdowns"],
     ["exam", "#examDaily", "layoutBlockExam", "Daily exam"],
     ["pomodoro", "#pomodoroCont", "layoutBlockPomodoro", "Pomodoro"],
     ["scratchpad", "#scratchpadCont", "layoutBlockScratchpad", "Scratchpad"],

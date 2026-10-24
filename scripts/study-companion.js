@@ -79,6 +79,8 @@
         btn.dataset.quote = text;
     }
     function examText() {
+        // The dedicated countdown card owns migrated dates. Keep legacy data intact.
+        if (window.myntCountdowns) return "";
         const v = localStorage.getItem(KEY_EXAM);
         if (!v) return "";
         const exam = new Date(v + "T00:00:00");

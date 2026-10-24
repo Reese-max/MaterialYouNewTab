@@ -122,6 +122,9 @@ function applyLanguage(lang) {
     // Mapping of text elements and their translation keys
     const translationMap = [
         "menuTitle",
+        "eventCountdownSettingTitle",
+        "eventCountdownSettingInfo",
+        "eventCountdownManage",
         "feedback",
         "resetsettings",
         "shortcutsText",

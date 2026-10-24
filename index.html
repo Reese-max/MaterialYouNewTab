@@ -35,6 +35,9 @@
     <script defer src="scripts/wallpaper.js"></script>
     <script defer src="scripts/wallpaper-gallery.js"></script>
     <script defer src="scripts/study-quotes.js"></script>
+    <script defer src="scripts/event-countdown-core.js"></script>
+    <script defer src="scripts/event-countdown.js"></script>
+    <link href="styles/event-countdown.css" rel="stylesheet">
     <script defer src="scripts/study-companion.js"></script>
     <script defer src="scripts/quote-contrast.js"></script>
     <script defer src="scripts/widgets-transparency.js"></script>
@@ -1399,10 +1402,10 @@
                                     </div>
                                     <div class="ttcont">
                                         <div class="texts">
-                                            <div class="bigText" id="examDateText">Exam date</div>
-                                            <div class="infoText" id="examDateInfo">Optional: show days left next to the encouragement line</div>
+                                            <div class="bigText" id="eventCountdownSettingTitle">特考與紀念日倒數</div>
+                                            <div class="infoText" id="eventCountdownSettingInfo">管理重要日期，保存在這個瀏覽器</div>
                                         </div>
-                                        <input id="examDateInput" type="date" aria-labelledby="examDateText">
+                                        <button id="eventCountdownManage" class="settingsActionBtn" type="button">管理倒數</button>
                                     </div>
 
                                     <div class="ttcont">
@@ -2434,6 +2437,7 @@
             </div>
         </section>
     </div>
+    <section id="eventCountdownCard" hidden aria-label="重要日期倒數"></section>
     <div id="studyQuote" class="studyQuote" hidden>
         <button id="studyQuoteText" class="studyQuoteText" type="button"><span id="studyQuoteBody" class="studyQuoteBody"></span><span id="studyQuoteSource" class="studyQuoteSource"></span></button>
         <span id="studyQuoteExam" class="studyQuoteExam" hidden></span>

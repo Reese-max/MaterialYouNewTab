@@ -274,6 +274,7 @@
 <p>Settings-only exports omit media databases and media-linked wallpaper, timer appearance, music and saved scenario preferences. Restoring them preserves those existing destination files and preferences. Legacy v1/v2 restores likewise preserve omitted media-linked preferences. Full exports never silently downgrade; retain original media separately when the 32 MiB encoded backup limit is exceeded.</p>
 <p>本機備份第 3 版的「設定＋媒體」包含設定、排版、待辦、便籤、圖庫（含回收項目）、番茄鐘圖片和音樂，含編碼媒體上限 32 MiB。超過時不會匯出不完整備份。WeatherAPI 金鑰、瀏覽器書籤與權限、DaiDai 配對不包含在內。備份檔含私人內容，請自行妥善保存；本功能不會上傳。網址媒體僅保留連結。還原前會顯示取代範圍，已知寫入失敗會嘗試恢復原資料，但不能保證關閉分頁或系統中斷時跨資料庫原子性。</p>
 <p>取消套用背景不刪圖庫檔案。回收區可逐張復原；顯示容量僅計算圖庫本機媒體和縮圖 Blob，不是瀏覽器整站儲存用量，也不包含遠端網址內容。書籤圖示只使用瀏覽器本機快取或內建替代圖示，不將書籤網域送往 Google 圖示服務。</p>
+<section><h2>Local event countdowns / 本機重要日期倒數</h2><p>Exam, anniversary and custom event names, calendar dates, display preferences and the latest recoverable deletion are stored only in this browser under myntEventCountdownsV1. Both settings-only and full backups include these events. No dates are sent to a server; exam dates are user-defined, not verified official schedules. Annual dates use the Gregorian calendar and observe February 29 on February 28 in non-leap years. / 特考、紀念日及自訂日期僅存於本機，兩種備份均包含；不自動查詢官方考期，不上傳資料。每年重複使用公曆，非閏年以 2 月 28 日計算 2 月 29 日事件。</p></section>
 </body>
 
 </html>

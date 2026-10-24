@@ -380,3 +380,7 @@ execFileSync(process.execPath, [resolve(root, "tools/regress-focus-completion.cj
 execFileSync(process.execPath, [resolve(root, "tools/regress-backup-scope.cjs"), root], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-layout-daily.cjs"), root], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-music-daily.cjs"), root], {stdio:"inherit"});
+
+// Local calendar countdowns: calendar arithmetic, safe storage and backup integration.
+execFileSync(process.execPath, [resolve(root, "tools/regress-event-countdown-core.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-event-countdown-integration.cjs")], {stdio:"inherit"});

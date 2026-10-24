@@ -299,6 +299,13 @@ function isValidBackupFile(backup) {
     if ("createdAt" in backup && (typeof backup.createdAt !== "string" || Number.isNaN(Date.parse(backup.createdAt)))) return false;
     const settings = Object.entries(backup.localStorage);
     if (settings.length > 1000 || settings.some(([key, value]) => key.length > 512 || typeof value !== "string")) return false;
+    // Countdown data is included by both backup scopes and validated before any write.
+    if (Object.prototype.hasOwnProperty.call(backup.localStorage, "myntEventCountdownsV1")) {
+        try {
+            if (typeof MYNTCountdownCore === "undefined") return false;
+            MYNTCountdownCore.validate(JSON.parse(backup.localStorage.myntEventCountdownsV1));
+        } catch (_) { return false; }
+    }
     const wallpaper = Object.entries(backup.indexedDB);
     if (wallpaper.length > INDEXED_DB_KEYS.size || !wallpaper.every(([key, value]) => INDEXED_DB_KEYS.has(key) && isValidIndexedDBValue(key, value))) return false;
     try { return new Blob([JSON.stringify(backup)]).size <= MAX_BACKUP_FILE_SIZE; } catch (_) { return false; }
