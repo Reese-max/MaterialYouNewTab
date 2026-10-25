@@ -8,7 +8,7 @@ for(const storage of [{getItem(){throw Error('blocked')}},{getItem(){return '{ma
  const c={myntNormalizeAdaptive:n,localStorage:storage,KEY:'myntAdaptiveBackground'};vm.createContext(c);vm.runInContext(load+';result={config,language}',c);assert.equal(c.result.config.layout,false);assert.ok(c.result.language);
 }
 const persist=source.match(/function persist\(\)\{.*?\n/)[0];const c={localStorage:{setItem(){throw Error('quota')}},KEY:'myntAdaptiveBackground',config:n(null),storageError:false};vm.createContext(c);vm.runInContext(persist+'persist()',c);assert.equal(c.storageError,true);
-assert.equal((source.match(/localStorage.setItem\(/g)||[]).length,1);assert.ok(!source.includes("setItem('myntLayout'"));
+assert.deepEqual([...source.matchAll(/localStorage\.setItem\(\s*([^,]+)/g)].map(match=>match[1]),['KEY','KEY'],'UI and guarded MCP persistence both write only the adaptive settings key');assert.ok(!source.includes("setItem('myntLayout'"));
 assert.match(source,/6000/);assert.ok(!source.includes('function place('));assert.equal(n({version:1,layout:true}).layout,false);assert.ok(!source.includes("layout:['adaptiveLayout'"));
 console.log('ADAPTIVE_SETTINGS_OK: schema, all-off, malformed JSON, denied reads, quota failure, distinct storage and video scheduling');
 
