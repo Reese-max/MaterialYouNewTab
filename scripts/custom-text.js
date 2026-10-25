@@ -174,7 +174,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         render();
     });
 
+    document.addEventListener('mynt:mcp-settings-refresh', () => { const visible=localStorage.getItem('userTextVisible')!=='false'; userTextCheckbox.checked=visible; setVisible(visible); });
     window.myntFocus = {
+        reload() { focus = readState(); overwriteConfirmed = false; render(); },
         get: () => ({ ...focus, steps: (focus.steps || []).map(step => ({ ...step })) }),
         update(patch) {
             focus = { ...focus, ...patch };

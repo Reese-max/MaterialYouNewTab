@@ -115,6 +115,7 @@ class StudioNode {
  const name=panel.querySelector('.pomoStudioScenarios').querySelectorAll('input').find(input=>input.maxLength===40);name.value='Reading';await find('button','Save scenario').emit('click');
  const saved=parse(storage.get('myntPomoScenarios'));assert.equal(saved.length,1);assert.equal(saved[0].durations.workMinutes,42);assert.equal(panel.querySelector('#myntPomoScenario').value,'2');
  await find('button','Delete scenario').emit('click');assert.equal(parse(storage.get('myntPomoScenarios')).length,0);await find('button','Undo').emit('click');assert.equal(parse(storage.get('myntPomoScenarios')).length,1,'undo restores the same bounded storage record');
+ for(const composing of [{key:'Escape',isComposing:true},{key:'Escape',keyCode:229}]){await extras.emit('keydown',composing);assert.equal(extras.hidden,false,'IME cancellation keeps advanced settings open');}
  panel.scrollTop=137.5;const escape=await extras.emit('keydown',{key:'Escape'});assert.equal(panel.scrollTop,0,'simple mode restores the timer to the top after advanced scrolling');assert.equal(escape.stopped,true);assert.equal(extras.hidden,true);assert.equal(document.activeElement.getAttribute('aria-controls'),'myntPomoExtras');
  start.focus();await controls.emit('click',{target:start});state.isRunning=true;publish();assert.equal(document.activeElement,pause,'keyboard focus follows the primary action when it becomes Pause');
  assert.equal(storage.get('pomodoroPanelPosition'),'{"top":85,"left":15}','no existing manual position is rewritten');

@@ -1,0 +1,1218 @@
+[
+  {
+    "name": "mynt_workspaces_mutate",
+    "description": "Create or update workspace presets without applying them or opening URLs.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "create",
+            "update"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$",
+          "maxLength": 64
+        },
+        "patch": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "maxLength": 30
+            },
+            "widgets": {
+              "type": "object",
+              "properties": {
+                "shortcutsCheckbox": {
+                  "type": "boolean"
+                },
+                "bookmarksCheckbox": {
+                  "type": "boolean"
+                },
+                "todoListCheckbox": {
+                  "type": "boolean"
+                },
+                "pomodoroCheckbox": {
+                  "type": "boolean"
+                },
+                "aiToolsCheckbox": {
+                  "type": "boolean"
+                },
+                "googleAppsCheckbox": {
+                  "type": "boolean"
+                },
+                "motivationalQuotesCheckbox": {
+                  "type": "boolean"
+                },
+                "bongoCatCheckbox": {
+                  "type": "boolean"
+                },
+                "scratchpadCheckbox": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "background": {
+              "type": "string",
+              "enum": [
+                "video",
+                "wallpaper",
+                "color"
+              ]
+            },
+            "focusMinutes": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 120
+            },
+            "urls": {
+              "type": "array",
+              "maxItems": 10,
+              "items": {
+                "type": "string",
+                "maxLength": 2048
+              }
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_accessibility_get",
+    "description": "Read reduced-motion, contrast and text-scale preferences.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_accessibility_update",
+    "description": "Update accessibility preferences without starting media or requesting permissions.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "patch": {
+          "type": "object",
+          "properties": {
+            "reduceMotion": {
+              "type": "boolean"
+            },
+            "highContrast": {
+              "type": "boolean"
+            },
+            "fontScale": {
+              "type": "number",
+              "enum": [
+                0.9,
+                1,
+                1.1,
+                1.2
+              ],
+              "minimum": 0.9,
+              "maximum": 1.2
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_dashboard_get",
+    "description": "Read dashboard counts and seven-day focus statistics, excluding task titles, notes and credentials.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_shortcuts_mutate",
+    "description": "Create, update, recoverably trash or restore a shortcut; keep at least one as required by the browser UI. IDs change after edits; icons stay private and new icons are local-only.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "create",
+            "update",
+            "trash",
+            "undo"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_shortcuts_get",
+    "description": "Read persisted shortcut titles and HTTP(S) URLs without credentials, query strings, fragments or icon data.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_habits_mutate",
+    "description": "Create, rename, check today or recoverably trash/restore a custom habit. Built-in habits cannot be edited or removed.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "create",
+            "rename",
+            "check",
+            "trash",
+            "undo"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_data_inventory",
+    "description": "List supported feature families and browser-only boundaries.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_events_get",
+    "description": "Read validated countdown events and recovery record.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_events_mutate",
+    "description": "Create/update countdown, toggle visibility, trash once or restore retained event.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "upsert",
+            "trash",
+            "undo",
+            "visibility"
+          ]
+        },
+        "event": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$",
+              "maxLength": 80
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "exam",
+                "anniversary",
+                "custom"
+              ]
+            },
+            "emoji": {
+              "type": "string",
+              "maxLength": 16
+            },
+            "color": {
+              "type": "string",
+              "enum": [
+                "lavender",
+                "blue",
+                "green",
+                "peach",
+                "rose"
+              ]
+            },
+            "annual": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "date",
+            "category",
+            "emoji",
+            "color",
+            "annual"
+          ],
+          "additionalProperties": false
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$",
+          "maxLength": 80
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_todos_get",
+    "description": "Read bounded tasks with stable IDs. Malformed storage fails closed.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_todos_mutate",
+    "description": "Create, update, recoverably trash or restore a task and synchronize system habit completion.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "create",
+            "update",
+            "trash",
+            "undo"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$",
+          "maxLength": 80
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_focus_get",
+    "description": "Read current daily focus using daily rollover model.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_focus_update",
+    "description": "Update daily focus text, completion, subject or steps and synchronize bounded focus history.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "subject": {
+          "type": "string",
+          "enum": [
+            "",
+            "db",
+            "sec",
+            "im",
+            "prog",
+            "chi",
+            "law",
+            "police",
+            "case"
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "done": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "text",
+              "done"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 3
+        },
+        "linked": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_scratchpad_get",
+    "description": "Read bounded scratchpad text.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_scratchpad_update",
+    "description": "Append text or replace one exact occurrence, with conflict checks.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "append",
+            "replace"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "before": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_layouts_get",
+    "description": "Read validated wide/narrow named manual layouts.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_layouts_mutate",
+    "description": "Create, rename, activate, save, reorder, trash or recover a named layout.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "create",
+            "rename",
+            "activate",
+            "save",
+            "move",
+            "trash",
+            "undo"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$",
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "wide",
+            "narrow"
+          ]
+        },
+        "layout": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "const": 2
+            },
+            "snap": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "blocks": {
+              "type": "object",
+              "properties": {
+                "clock": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "focus": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "search": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "aiTools": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "shortcuts": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "quote": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "countdowns": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "exam": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "pomodoro": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "scratchpad": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "bookmarks": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "wallpaper": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
+                "menu": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "version",
+            "snap",
+            "locked",
+            "blocks"
+          ],
+          "additionalProperties": false
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down"
+          ]
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_settings_get",
+    "description": "Read only explicitly safe preference whitelist.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_settings_update",
+    "description": "Update explicitly safe preferences; never credentials or security permissions.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "patch": {
+          "type": "object",
+          "properties": {
+            "preferredTheme": {
+              "type": "string",
+              "enum": [
+                "light",
+                "dark",
+                "system"
+              ]
+            },
+            "userTextVisible": {
+              "type": "boolean"
+            },
+            "myntExamDailyVisible": {
+              "type": "boolean"
+            },
+            "myntStudyQuoteEnabled": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_habits_get",
+    "description": "Read bounded habit completion history with stable IDs.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_workspaces_get",
+    "description": "Read named workspace presets; applying modes and opening URLs require existing UI.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_backup_preview",
+    "description": "Return backup scope metadata only. Export/restore/reset require existing browser UI.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+]

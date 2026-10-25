@@ -13,6 +13,8 @@ const todoListCont = document.getElementById("todoListCont");
 const todoulList = document.getElementById("todoullist");
 const todoAdd = document.getElementById("todoAdd");
 const todoInput = document.getElementById("todoInput");
+let todoStorageInvalid = false;
+let todoRecoveryControl;
 let todoList = {}; // Initialize todoList JSON
 let suppressNextClick = false;
 let suppressTimeout = null;
@@ -34,6 +36,7 @@ function addtodoItem() {
 }
 
 function createTodo(title) {
+    if (todoStorageInvalid || !todoList) return null;
     const rawText = String(title || "").trim().slice(0, 120);
     if (!rawText) return null;
     let id = "t" + Date.now();
@@ -205,6 +208,8 @@ todoulList.addEventListener("click", (event) => {
 
 // Save JSON to local Storage
 function SaveToDoData() {
+    if (todoStorageInvalid || !todoList) return false;
+    try { const current=JSON.parse(localStorage.getItem("todoList") || "{}"); if(!current || Array.isArray(current) || typeof current!=="object") throw Error("Invalid todo data"); } catch { todoStorageInvalid=true; return false; }
     localStorage.setItem("todoList", JSON.stringify(todoList));
     const items = Object.entries(todoList).map(([id, todo]) => ({ id, ...todo }));
     document.dispatchEvent(new CustomEvent("mynt:todo-updated", {
@@ -266,6 +271,8 @@ document.addEventListener("mynt:todo-action", event => {
 function ShowToDoList() {
     try {
         todoList = JSON.parse(localStorage.getItem("todoList")) || {}; // Parse stored data or initialize empty
+        if(!todoList || Array.isArray(todoList) || typeof todoList!=="object") throw Error("Invalid todo data");
+        todoStorageInvalid=false;
         todoulList.replaceChildren();
         const fragment = document.createDocumentFragment(); // Create a DocumentFragment
 
@@ -278,8 +285,10 @@ function ShowToDoList() {
         todoulList.appendChild(fragment); // Append all `li` to the `ul` at once
     } catch (error) {
         console.error("Error loading from localStorage:", error);
-        localStorage.setItem("todoList", "{}"); // Reset corrupted data
+        todoStorageInvalid=true;
+        // Preserve malformed data for recovery; never erase it on a failed read.
     }
+    todoRecoveryControl?.refresh();
 }
 
 // Code to reset the List on the Next Day
@@ -291,9 +300,9 @@ if (todoLastUpdateDate === todoCurrentDate) {
 } else {
     // Modify the list when last update date and the current date does not match
     localStorage.setItem("todoLastUpdateDate", todoCurrentDate);
-    todoList = JSON.parse(localStorage.getItem("todoList")) || {};
+    try { todoList = JSON.parse(localStorage.getItem("todoList")) || {}; } catch { todoList = null; todoStorageInvalid=true; }
 
-    for (let id in todoList) {
+    for (let id in (todoList || {})) {
         if (todoList[id].pinned === false) {
             if (todoList[id].status === "completed") {
                 delete todoList[id]; // Remove the Unpinned and Completed list item data
@@ -303,7 +312,7 @@ if (todoLastUpdateDate === todoCurrentDate) {
         }
     }
 
-    SaveToDoData();
+    if (todoList) SaveToDoData();
     ShowToDoList();
 }
 
@@ -342,6 +351,9 @@ document.addEventListener("click", function (event) {
 
 // ----------------------- To Do List Toggle -----------------------------
 document.addEventListener("DOMContentLoaded", function () {
+    todoRecoveryControl = window.MyntRecoveryControls?.create({
+        domain: "todos", container: todoContainer, before: todoulList, focusTarget: todoInput
+    });
     const todoListCheckbox = document.getElementById("todoListCheckbox");
 
     todoListCheckbox.addEventListener("change", function () {

@@ -1,0 +1,5 @@
+node_modules/
+*.sock
+
+windows/bin/
+windows/obj/

@@ -175,6 +175,11 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     assert.match(status.textContent, /Choose a local image/);
     await appearanceForm.emit('change', { target: modeInput('original') });
     const appearanceDetails = mount.querySelector('.mynt-pomo-appearance'); appearanceDetails.open = true;
+    for (const composition of [{ isComposing: true }, { keyCode: 229 }]) {
+        const composingEscape = await appearanceDetails.emit('keydown', { key: 'Escape', ...composition });
+        assert.equal(appearanceDetails.open, true, 'composition Escape does not collapse appearance settings');
+        assert.equal(composingEscape.defaultPrevented, false, 'the input method keeps its Escape action');
+    }
     const appearanceEscape = await appearanceDetails.emit('keydown', { key: 'Escape' });
     assert.equal(appearanceDetails.open, false); assert.equal(appearanceEscape.stopped, true);
     assert.equal(document.activeElement, appearanceDetails.querySelector('summary'));
@@ -243,14 +248,37 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     await find(pip.document, 'Pause').emit('click'); assert.equal(paused, 1);
     await find(pip.document, '+5 minutes').emit('click'); assert.equal(extended, 5);
     const task = pip.document.querySelector('input'); task.focus(); task.value = 'Draft in progress';
+    const taskTimer = require('../scripts/pomodoro-timer-core.js').create({ storage: { getItem: () => null, setItem() {} } });
+    await taskTimer.setTask('字'.repeat(300));
+    assert.equal(task.maxLength, taskTimer.getState().task.length, 'floating task input uses the shared timer storage limit');
+    const maximumTask = '字'.repeat(task.maxLength);
+    await taskTimer.setTask(maximumTask);
+    assert.equal(taskTimer.getState().task, maximumTask, 'every character allowed by the input can be persisted');
     renderState({ ...state, task: 'Remote task' }); assert.equal(task.value, 'Draft in progress', 'live state does not erase a focused task edit');
     await task.emit('change'); assert.equal(state.task, 'Draft in progress');
     await find(pip.document, 'Reset').emit('click'); assert.equal(reset, 0, 'reset waits for explicit confirmation');
     await find(pip.document, 'Cancel').emit('click'); assert.equal(reset, 0, 'cancel preserves timer');
     assert.equal(pip.document.activeElement, find(pip.document, 'Reset'), 'cancel restores focus');
     await find(pip.document, 'Reset').emit('click');
+    for (const composition of [{ isComposing: true }, { keyCode: 229 }]) {
+        const composingEscape = await pip.document.querySelector('.mynt-pomo-confirm').emit('keydown', { key: 'Escape', ...composition });
+        assert.ok(pip.document.querySelector('.mynt-pomo-confirm'), 'composition Escape does not dismiss a reset confirmation');
+        assert.equal(composingEscape.defaultPrevented, false);
+    }
     const escape = await pip.document.querySelector('.mynt-pomo-confirm').emit('keydown', { key: 'Escape' });
     assert.equal(escape.stopped, true); assert.ok(!pip.closed, 'reset Escape must not close the miniwindow');
+    for (const optionsOpen of [false, true]) {
+        compactOptions.open = optionsOpen;
+        await find(pip.document, 'Reset').emit('click');
+        compactOptions.querySelector('summary').focus();
+        const outsideEscape = await pip.document.emit('keydown', { key: 'Escape', target: compactOptions.querySelector('summary') });
+        assert.ok(!pip.document.querySelector('.mynt-pomo-confirm'), 'Escape dismisses the pending prompt after focus leaves its section');
+        assert.equal(compactOptions.open, optionsOpen, 'reset confirmation has priority over closing options');
+        assert.ok(!pip.closed, 'Escape outside the pending prompt does not close the window');
+        assert.equal(outsideEscape.defaultPrevented, true);
+        assert.equal(pip.document.activeElement, find(pip.document, 'Reset'), 'dismissal restores focus to Reset');
+        assert.equal(reset, 0, 'keyboard dismissal never resets the timer');
+    }
     await find(pip.document, 'Reset').emit('click'); await find(pip.document, 'Confirm').emit('click'); assert.equal(reset, 1);
     state = { ...state, isRunning: false, timeRemaining: 1500 }; renderState(state);
     await find(pip.document, 'Reset').emit('click'); assert.equal(reset, 2, 'pristine reset requires no confirmation');
@@ -295,8 +323,19 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     document.documentElement.classList.add('myntHighContrast'); observers.forEach(fn => fn());
     assert.ok(pip.document.documentElement.classList.contains('myntHighContrast')); assert.equal(pip.document.querySelector('video').paused, true);
     const options = pip.document.querySelector('.mynt-pomo-options'); options.open = true;
+    task.focus();
+    for (const composition of [{ isComposing: true }, { keyCode: 229 }]) {
+        const composingEscape = await pip.document.emit('keydown', { key: 'Escape', target: task, ...composition });
+        assert.equal(options.open, true, 'composition Escape keeps the task editor open');
+        assert.equal(pip.document.activeElement, task, 'composition Escape does not move focus away from the edit');
+        assert.equal(composingEscape.defaultPrevented, false);
+    }
     await pip.document.emit('keydown', { key: 'Escape' }); assert.equal(options.open, false); assert.ok(!pip.closed);
     assert.equal(pip.document.activeElement, options.querySelector('summary'));
+    for (const composition of [{ isComposing: true }, { keyCode: 229 }]) {
+        await pip.document.emit('keydown', { key: 'Escape', ...composition });
+        assert.ok(!pip.closed, 'composition Escape never closes the floating window');
+    }
     await pip.document.emit('keydown', { key: 'Escape' }); assert.equal(pip.closed, true);
     window.documentPictureInPicture.requestWindow = async () => { throw new Error('Unsupported context'); };
     await floatButton.emit('click'); assert.match(status.textContent, /unavailable/i);
@@ -315,6 +354,12 @@ function win() { const window = new Node(); window.document = doc(); window.focu
     assert.equal(panel.style.getPropertyValue('--pomo-scheme'), 'light', 'local image sampling derives a light palette from the decoded bright image');
     const css = fs.readFileSync(require.resolve('../styles/pomodoro-float.css'), 'utf8');
     assert.match(css, /font-variant-numeric: tabular-nums/);
+    assert.match(css, /width: min\(100%, 232px\); grid-template-columns: 44px minmax\(0, 128px\) 44px/, 'balanced control group keeps reset close without moving the primary off-center');
+    assert.match(css, /button svg \{ width: 20px; height: 20px; \}/, 'consistent floating action icon scale');
+    assert.match(css, /width: 100%; min-height: 100vh; min-height: 100dvh; max-width: none/, 'standalone card fills the viewport');
+    assert.match(css, /--pomo-ring-size: clamp\(120px, min\(72vw, 46vh\), 360px\)/, 'ring responds to both viewport dimensions');
+    assert.match(css, /mynt-pomo-card\.mynt-pomo-static \{ background-size: cover !important/, 'PiP image fills viewport');
+    assert.equal(pip.document.documentElement.style.fontSize, 'calc(16px * var(--mynt-font-scale, 1))', 'PiP root does not inherit compact homepage font size');
     assert.match(css, /forced-colors: active/); assert.match(css, /prefers-reduced-motion: reduce/);
     assert.ok(!css.includes('linear-gradient(#0006, #0006)'), 'independent backgrounds no longer get a blanket dark filter');
     assert.ok(!css.includes('myntPomoPulse'), 'PiP ring does not pulse distractingly');

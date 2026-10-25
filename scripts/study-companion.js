@@ -79,6 +79,8 @@
         btn.dataset.quote = text;
     }
     function examText() {
+        // The dedicated countdown card owns migrated dates. Keep legacy data intact.
+        if (window.myntCountdowns) return "";
         const v = localStorage.getItem(KEY_EXAM);
         if (!v) return "";
         const exam = new Date(v + "T00:00:00");
@@ -166,6 +168,7 @@
         });
         render();
     }
+    document.addEventListener('mynt:mcp-settings-refresh', render);
     window.myntStudy = { count: () => list.length, bag: loadBag, current: () => format(currentQuote()), next: nextQuote, render, openPomodoro, showAfterPomodoro };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
     else init();

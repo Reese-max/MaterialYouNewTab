@@ -1,0 +1,345 @@
+[
+  {
+    "name": "mynt_clock_get",
+    "description": "Read clock mode, 12-hour format, greeting and visibility.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_clock_update",
+    "description": "Change only local clock presentation and greeting; no timezone or location access.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "analog",
+            "digital"
+          ]
+        },
+        "hour12": {
+          "type": "boolean"
+        },
+        "greeting": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_search_settings_get",
+    "description": "Read fixed Google provider and local search controls; no search is performed.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_search_settings_update",
+    "description": "Change local search-controls visibility. The default engine is fixed to Google; existing bang aliases are unchanged.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": [
+            "google",
+            "bing",
+            "duckduckgo",
+            "brave"
+          ]
+        },
+        "providerRowHidden": {
+          "type": "boolean"
+        },
+        "aiModeVisible": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_ai_settings_get",
+    "description": "Read built-in AI tool order and visibility, never account data.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_ai_settings_update",
+    "description": "Reorder/hide the three built-in AI tools and their container without opening sites.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "tools": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "chatGPT",
+                  "claude",
+                  "youtube"
+                ]
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "visible"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_theme_get",
+    "description": "Read local preset/custom palette, separate from automatic appearance settings.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_theme_update",
+    "description": "Change a preset palette or local custom hex color; no images or remote services.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "palette": {
+          "type": "string",
+          "enum": [
+            "red",
+            "yellow",
+            "green",
+            "cyan",
+            "blue",
+            "pink",
+            "purple",
+            "orange",
+            "brown",
+            "silver",
+            "peach",
+            "dark"
+          ]
+        },
+        "customColor": {
+          "type": "string",
+          "pattern": "^#[a-fA-F0-9]{6}$",
+          "maxLength": 7
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_language_get",
+    "description": "Read supported language and explain browser reload requirements.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_language_update",
+    "description": "Preview language change requirements; cannot reload or refetch quotes through MCP.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string",
+          "enum": [
+            "en",
+            "pt",
+            "ne",
+            "es",
+            "hi",
+            "hu",
+            "zh",
+            "zh_TW",
+            "cs",
+            "it",
+            "tr",
+            "bn",
+            "vi",
+            "ru",
+            "uz",
+            "ja",
+            "ko",
+            "idn",
+            "mr",
+            "fr",
+            "az",
+            "sl",
+            "ur",
+            "de",
+            "fa",
+            "ar_SA",
+            "el",
+            "ta",
+            "th",
+            "pl",
+            "uk",
+            "sv"
+          ]
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  }
+]

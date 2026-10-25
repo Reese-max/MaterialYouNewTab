@@ -50,6 +50,11 @@ syncThemeChange(systemTheme);
         }
     }
 
+    document.addEventListener('mynt:mcp-settings-refresh', () => {
+        const theme = localStorage.getItem(preferredThemeKey) || 'light';
+        segment.dataset.active = theme; moveIndicator(theme); if(theme==='system') syncThemeChange(systemTheme);
+    });
+
     // Button click handlers
     buttons.forEach(btn => {
         btn.addEventListener("click", () => {
@@ -120,9 +125,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Function to load background color 
-function ApplyLoadingColor() {
+function ApplyLoadingColor(persist = true) {
     let LoadingScreenColor = getComputedStyle(document.body).getPropertyValue("background-color");
-    localStorage.setItem("LoadingScreenColor", LoadingScreenColor);
+    if (persist) localStorage.setItem("LoadingScreenColor", LoadingScreenColor);
 }
 
 const resetDarkTheme = () => {
@@ -131,7 +136,7 @@ const resetDarkTheme = () => {
 };
 
 // Function to apply the selected theme
-const applySelectedTheme = (colorValue) => {
+const applySelectedTheme = (colorValue, persist = true) => {
     const isDarkMode = colorValue === "dark";
 
     // Reset dark theme if not in dark mode
@@ -169,17 +174,17 @@ const applySelectedTheme = (colorValue) => {
     }
 
     updateAccessibleActionColor();
-    changeFaviconColor();
-    ApplyLoadingColor();
+    changeFaviconColor(persist);
+    ApplyLoadingColor(persist);
 };
 
-function changeFaviconColor() {
+function changeFaviconColor(persist = true) {
     // Fetch colors from CSS variables
     const rootStyles = getComputedStyle(document.documentElement);
     const darkColor = rootStyles.getPropertyValue("--darkColor-blue");
     //const bgColor = rootStyles.getPropertyValue("--bg-color-blue");
     let accentLightTintColor = rootStyles.getPropertyValue("--accentLightTint-blue");
-    localStorage.setItem("accentLightTintColor", accentLightTintColor);
+    if (persist) localStorage.setItem("accentLightTintColor", accentLightTintColor);
 
     const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -281,7 +286,7 @@ function updateAccessibleActionColor() {
     document.documentElement.style.setProperty("--onActionColor-blue", best.value);
 }
 
-const applyCustomTheme = (color) => {
+const applyCustomTheme = (color, persist = true) => {
     let adjustedColor = window.ThemeHelpers.isNearWhite(color) ? "#696969" : color;
 
     const lighterColorHex = window.ThemeHelpers.adjustHexColor(adjustedColor, 0.7);
@@ -299,8 +304,8 @@ const applyCustomTheme = (color) => {
     document.getElementById("dfChecked").checked = false;
 
     updateAccessibleActionColor();
-    changeFaviconColor();
-    ApplyLoadingColor();
+    changeFaviconColor(persist);
+    ApplyLoadingColor(persist);
 };
 
 // Handle radio button changes
@@ -356,3 +361,12 @@ const throttle = (func, limit) => {
 // Add listeners for color picker
 colorPicker.removeEventListener("input", handleColorPickerChange); // Ensure no duplicate listeners
 colorPicker.addEventListener("input", throttle(handleColorPickerChange, 10));
+
+// Local palette refresh without cache writes, network fetches or external navigation.
+window.myntThemePreferences = { reload() {
+    const custom = localStorage.getItem('customThemeColor');
+    const selected = localStorage.getItem('selectedTheme') || 'blue';
+    if (custom) { resetDarkTheme(); applyCustomTheme(custom, false); colorPicker.value = custom; }
+    else applySelectedTheme(selected, false);
+    radioButtons.forEach(radio => { radio.checked = !custom && radio.value === selected; });
+} };

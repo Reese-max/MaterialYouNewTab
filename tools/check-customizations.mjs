@@ -375,3 +375,27 @@ execFileSync(process.execPath, [resolve(root, "tools/regress-backup-completion.c
 execFileSync(process.execPath, [resolve(root, "tools/regress-bookmark-completion.cjs"), root], {stdio:"inherit"});
 
 execFileSync(process.execPath, [resolve(root, "tools/regress-focus-completion.cjs"), root], {stdio:"inherit"});
+
+// Daily reliability: scoped backups, safe editor entry, and local music import feedback.
+execFileSync(process.execPath, [resolve(root, "tools/regress-backup-scope.cjs"), root], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-layout-daily.cjs"), root], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-music-daily.cjs"), root], {stdio:"inherit"});
+
+// Local calendar countdowns: calendar arithmetic, safe storage and backup integration.
+execFileSync(process.execPath, [resolve(root, "tools/regress-event-countdown-core.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-event-countdown-integration.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-data.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-media.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-bridge.cjs")], {stdio:"inherit"});
+
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-ui.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-recovery-controls.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-studio.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-component-manager.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-clock-lifecycle.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-manual-editor.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-adaptive-settings.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-component-visibility.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-components.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-preferences.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-component-manager.cjs")], {stdio:"inherit"});

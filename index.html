@@ -35,6 +35,9 @@
     <script defer src="scripts/wallpaper.js"></script>
     <script defer src="scripts/wallpaper-gallery.js"></script>
     <script defer src="scripts/study-quotes.js"></script>
+    <script defer src="scripts/event-countdown-core.js"></script>
+    <script defer src="scripts/event-countdown.js"></script>
+    <link href="styles/event-countdown.css" rel="stylesheet">
     <script defer src="scripts/study-companion.js"></script>
     <script defer src="scripts/quote-contrast.js"></script>
     <script defer src="scripts/widgets-transparency.js"></script>
@@ -48,6 +51,7 @@
     <script defer src="scripts/layout-editor.js"></script>
     <script defer src="scripts/search.js"></script>
     <script defer src="scripts/quotes.js"></script>
+    <script defer src="scripts/local-recovery-controls.js"></script>
     <script defer src="scripts/shortcuts.js"></script>
     <script defer src="scripts/script.js"></script>
     <script defer src="scripts/search-suggestions.js"></script>
@@ -67,6 +71,18 @@
     <script defer src="scripts/backup-restore.js"></script>
     <script defer src="scripts/scratchpad.js"></script>
     <script defer src="scripts/ambient-sound.js"></script>
+    <script defer src="scripts/component-visibility-core.js"></script>
+    <script defer src="scripts/component-manager.js"></script>
+    <link rel="stylesheet" href="styles/component-manager.css">
+    <script defer src="scripts/local-mcp-components.js"></script>
+    <script defer src="scripts/local-mcp-data.js"></script>
+    <script defer src="scripts/local-mcp-media.js"></script>
+    <script defer src="scripts/local-mcp-ui.js"></script>
+    <script defer src="scripts/local-mcp-studio.js"></script>
+    <script defer src="scripts/local-mcp-preferences.js"></script>
+    <script defer src="scripts/local-mcp-bridge.js"></script>
+    <link rel="stylesheet" href="styles/local-mcp.css">
+    <link rel="stylesheet" href="styles/local-recovery-controls.css">
     <script defer src="scripts/lazy-loader.js"></script>
 
     <!-- LANGUAGES SCRIPTS -->
@@ -1399,10 +1415,10 @@
                                     </div>
                                     <div class="ttcont">
                                         <div class="texts">
-                                            <div class="bigText" id="examDateText">Exam date</div>
-                                            <div class="infoText" id="examDateInfo">Optional: show days left next to the encouragement line</div>
+                                            <div class="bigText" id="eventCountdownSettingTitle">特考與紀念日倒數</div>
+                                            <div class="infoText" id="eventCountdownSettingInfo">管理重要日期，保存在這個瀏覽器</div>
                                         </div>
-                                        <input id="examDateInput" type="date" aria-labelledby="examDateText">
+                                        <button id="eventCountdownManage" class="settingsActionBtn" type="button">管理倒數</button>
                                     </div>
 
                                     <div class="ttcont">
@@ -1952,6 +1968,18 @@
                                     <!-- end of languageSelector -->
                                 </div>
 
+            <section class="controlSection" id="localMcpSection" aria-labelledby="mcpTitle">
+                <details>
+                    <summary id="mcpTitle">本機 MCP</summary>
+                    <p id="mcpInfo">預設關閉。僅連接此電腦上另行核准安裝的主機；關閉此新分頁即斷線，不會自行啟用權限。</p>
+                    <p id="mcpPrivacy">工具結果可能由你使用的 AI 用戶端傳送給其模型供應商。預設不分享便箋內容與書籤，不傳送媒體檔或金鑰。</p>
+                    <label class="controlSettingRow"><span id="mcpWriteLabel">本次連線允許修改（需僅開啟一個 MYNT 分頁）</span><input type="checkbox" data-mcp-write></label>
+                    <label class="controlSettingRow"><span id="mcpPrivateLabel">本次連線允許讀取便箋與書籤</span><input type="checkbox" data-mcp-private></label>
+                    <div class="workspaceEditorActions"><button type="button" data-mcp-connect id="mcpConnect">連接本機 MCP</button><button type="button" data-mcp-disconnect id="mcpDisconnect" disabled>中斷連線</button></div>
+                    <p role="status" aria-live="polite" id="mcpStatus">尚未連線。沒有分享資料。</p>
+                </details>
+            </section>
+
                                 <div class="ttcont controlCenterLaunch">
                                     <div class="texts">
                                         <div class="bigText" id="controlCenterText">Control Center</div>
@@ -1960,7 +1988,14 @@
                                     <button class="settingsActionBtn" id="openControlCenterBtn" type="button">Open</button>
                                 </div>
 
-                                <!-- Settings -->
+                                <!-- Choose a truthful backup scope without changing existing data. -->
+                                <div class="backupScopeControl">
+                                    <label id="backupScopeLabel" for="backupScopeSelect">Backup contents</label>
+                                    <select id="backupScopeSelect" aria-describedby="backupScopeText">
+                                        <option id="backupScopeFull" value="full">Settings and media</option>
+                                        <option id="backupScopeSettings" value="settings">Settings only</option>
+                                    </select>
+                                </div>
                                 <div class="backupRestoreContainer">
                                     <button class="backupRestoreBtn" id="backupBtn">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -1981,6 +2016,10 @@
                                     </button>
                                 </div>
                                 <p id="backupScopeText" class="infoText"></p>
+                                <details class="backupScopeDetails">
+                                    <summary id="backupDetailsLabel">What does this backup include?</summary>
+                                    <p id="backupScopeDetailsText" class="infoText"></p>
+                                </details>
                                 <p id="backupStatus" class="infoText" role="status" aria-live="polite"></p>
 
                                 <input type="file" id="fileInput" accept=".json" style="display: none;">
@@ -2423,6 +2462,7 @@
             </div>
         </section>
     </div>
+    <section id="eventCountdownCard" hidden aria-label="重要日期倒數"></section>
     <div id="studyQuote" class="studyQuote" hidden>
         <button id="studyQuoteText" class="studyQuoteText" type="button"><span id="studyQuoteBody" class="studyQuoteBody"></span><span id="studyQuoteSource" class="studyQuoteSource"></span></button>
         <span id="studyQuoteExam" class="studyQuoteExam" hidden></span>

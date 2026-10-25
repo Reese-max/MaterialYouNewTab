@@ -39,6 +39,7 @@ class FakeElement {
     removeAttribute(key) { delete this.attributes[key]; if (key === 'id') this.id = ''; }
     addEventListener(type, fn) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type).add(fn); }
     removeEventListener(type, fn) { this.listeners.get(type)?.delete(fn); }
+    dispatchEvent(event) { this.lastDispatched = event; return this.emit(event.type, event); }
     emit(type, data = {}) {
         const event = { target: this, currentTarget: this, key: '', button: 0, isPrimary: true, pointerId: 1, preventDefault() { this.defaultPrevented = true; }, stopPropagation() { this.stopped = true; }, ...data };
         let node = this;
@@ -76,7 +77,7 @@ function editor(raw) {
     const setting = document.createElement('input'); setting.id = 'layoutEditCheckbox'; document.body.append(setting);
     const globalEvents = new Map();
     const ctx = {
-        document, innerWidth: 1200, innerHeight: 800, setTimeout: () => 1, clearTimeout() {}, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
+        document, CustomEvent: class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } }, innerWidth: 1200, innerHeight: 800, setTimeout: () => 1, clearTimeout() {}, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
         localStorage: { getItem: key => storage.get(key) || null, setItem(key, value) { if (blocked) throw Error('Storage full'); writes++; storage.set(key, value); } },
         getComputedStyle: el => ({ display: el.hidden ? 'none' : 'block', visibility: 'visible' }),
         addEventListener(type, fn) { if (!globalEvents.has(type)) globalEvents.set(type, new Set()); globalEvents.get(type).add(fn); },
@@ -91,6 +92,7 @@ function editor(raw) {
 const raw = '{ "version": 2, "snap": false, "locked": true, "blocks": { "search": { "x": 0.05, "y": 0.02, "s": 1 } } }';
 const app = editor(raw), original = clone(app.ctx.myntLayout.get());
 assert.equal(app.ctx.myntLayout.isEditing(), false);
+assert.equal(app.document.lastDispatched.type, 'mynt:layout-applied', 'Initial layout broadcasts the production refresh event');
 assert.equal(app.search.listeners.size, 0, 'Underlying content is not a drag surface');
 app.id('myntLayoutEdit').click();
 assert.equal(app.ctx.myntLayout.isEditing(), true);

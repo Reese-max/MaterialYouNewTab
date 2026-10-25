@@ -170,7 +170,8 @@
         delete document.body.dataset.wallpaperId;
         renderSelection();
     }
-    async function applyItem(item, { persist = true } = {}) {
+    async function applyItem(item, { persist = true, beforeMutation } = {}) {
+        if (beforeMutation) beforeMutation();
         if (!item || item.removedAt) return false;
         if (item.type === "video") {
             const v = ensureVideo();
@@ -208,20 +209,20 @@
         return true;
     }
 
-    async function next(direction = 1) {
+    async function next(direction = 1, beforeMutation) {
         const items = await listItems();
         if (!items.length) return false;
         const currentId = localStorage.getItem(KEY_CURRENT);
         const idx = items.findIndex(i => i.id === currentId);
         const target = items[(idx + direction + items.length) % items.length];
-        return await applyItem(target);
+        return await applyItem(target, { beforeMutation });
     }
-    async function random() {
+    async function random(beforeMutation) {
         const items = await listItems();
         if (!items.length) return;
         const currentId = localStorage.getItem(KEY_CURRENT);
         const pool = items.length > 1 ? items.filter(i => i.id !== currentId) : items;
-        await applyItem(pool[Math.floor(Math.random() * pool.length)]);
+        return await applyItem(pool[Math.floor(Math.random() * pool.length)], { beforeMutation });
     }
 
     // ---------- Add items ----------
@@ -660,7 +661,106 @@
         }
     }
 
-    window.myntWallpaper = { cancelApply, useLegacy, restore: undoRemove, remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
+    // Narrow MCP operations: metadata only, optimistic revisions, and recoverable records.
+    function remoteItemMetadata(item) {
+        if (!item) return null;
+        return { id: String(item.id), name: String(item.name || "").slice(0, 160), type: item.type === "video" ? "video" : "image",
+            source: item.source === "bundled" ? "bundled" : "custom", removed: Boolean(item.removedAt), hidden: remoteHiddenIds().has(item.id),
+            bytes: Number.isFinite(item.blob?.size) ? item.blob.size : null };
+    }
+    function remoteHiddenIds() {
+        const raw = localStorage.getItem(KEY_HIDDEN);
+        if (raw === null) return new Set();
+        if (typeof raw !== "string" || raw.length > 4096) throw Error("Invalid stored wallpaper visibility; repair it in the browser before editing");
+        let values; try { values = JSON.parse(raw); } catch (_) { throw Error("Invalid stored wallpaper visibility; no preferences were changed"); }
+        if (!Array.isArray(values) || values.length > 100 || values.some(id => typeof id !== "string" || !id || id.length > 200) || new Set(values).size !== values.length) throw Error("Invalid stored wallpaper visibility; no preferences were changed");
+        return new Set(values);
+    }
+    function remoteItemRevision(item) {
+        return JSON.stringify({ item: item ? { id: item.id, name: item.name || "", type: item.type, source: item.source,
+            added: item.added, removedAt: item.removedAt || null, bytes: item.blob?.size || 0, thumbBytes: item.thumb?.size || 0 } : null,
+            current: localStorage.getItem(KEY_CURRENT), hidden: item ? remoteHiddenIds().has(item.id) : false, hiddenState: JSON.stringify([...remoteHiddenIds()].sort()) });
+    }
+    function remoteConflict(message) { const error = Error(message); error.code = "CONFLICT"; return error; }
+    async function remoteGet(id) {
+        const item = await getItem(id);
+        if (!item) throw Error("Unknown wallpaper ID");
+        return { item: remoteItemMetadata(item), itemRevision: remoteItemRevision(item) };
+    }
+    function remoteCancelRevision() {
+        return JSON.stringify({ current: localStorage.getItem(KEY_CURRENT), mode: localStorage.getItem(KEY_MODE), applied: document.body.dataset.wallpaperId || null });
+    }
+    async function remoteCancel(expected, beforeMutation) {
+        if (typeof beforeMutation !== "function") throw Error("Guard required");
+        beforeMutation();
+        if (remoteCancelRevision() !== expected) throw remoteConflict("Wallpaper selection changed");
+        // Both local settings are verified; partial storage failures are reported, never hidden.
+        localStorage.setItem(KEY_CURRENT, "none"); localStorage.setItem(KEY_MODE, "fixed");
+        if (localStorage.getItem(KEY_CURRENT) !== "none" || localStorage.getItem(KEY_MODE) !== "fixed") throw Error("Wallpaper cancellation was not saved");
+        scheduleRotate(); clearGalleryBackground(); $("videoBg")?.pause();
+        const modeSelect = $("wallpaperModeSelect"); if (modeSelect) modeSelect.value = "fixed";
+        const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
+        const minutesSelect = $("wallpaperMinutesSelect"); if (minutesSelect) minutesSelect.disabled = true;
+        await renderGallery();
+        return { cancelled: true, cancelRevision: remoteCancelRevision() };
+    }
+    async function remoteEdit(action, id, name, expected, beforeMutation) {
+        if (typeof beforeMutation !== "function" || !["select", "rename", "remove", "restore", "undo"].includes(action)) throw Error("Invalid guarded gallery action");
+        if (typeof id !== "string" || !id || id.length > 200) throw Error("Invalid wallpaper ID");
+        if (action === "rename" && (typeof name !== "string" || !name.trim() || name.length > 60)) throw Error("Wallpaper name must contain 1–60 characters");
+        if (action === "select") {
+            const item = await getItem(id);
+            if (!item || item.removedAt || hiddenIds().has(id)) throw Error("Restore this wallpaper before selecting it");
+            const applied = await applyItem(item, { beforeMutation: () => { beforeMutation(); if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed"); } });
+            if (!applied || localStorage.getItem(KEY_CURRENT) !== id || document.body.dataset.wallpaperId !== id) throw Error("Wallpaper selection was not saved");
+            return remoteGet(id);
+        }
+        const record = await getItem(id);
+        if (record?.source === "bundled" && ["remove", "restore", "undo"].includes(action)) {
+            if (remoteItemRevision(record) !== expected) throw remoteConflict("Wallpaper changed");
+            if (action === "remove" && localStorage.getItem(KEY_CURRENT) === id) throw remoteConflict("Cancel or change the applied wallpaper before hiding it");
+            const hidden = remoteHiddenIds(), hide = action === "remove";
+            if (hidden.has(id) === hide) throw remoteConflict(hide ? "Wallpaper is already hidden" : "Wallpaper is not hidden");
+            beforeMutation();
+            if (remoteItemRevision(record) !== expected) throw remoteConflict("Wallpaper changed");
+            if (hide) hidden.add(id); else hidden.delete(id);
+            saveHidden(hidden);
+            if (hiddenIds().has(id) !== hide) throw Error("Wallpaper visibility was not saved");
+            await renderGallery();
+            return remoteGet(id);
+        }
+        const database = await db();
+        await new Promise((resolve, reject) => {
+            const transaction = database.transaction(STORE, "readwrite"), store = transaction.objectStore(STORE);
+            let failure;
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = transaction.onabort = () => reject(failure || transaction.error || Error("Gallery transaction failed"));
+            const request = store.get(id);
+            request.onerror = () => { failure = request.error; transaction.abort(); };
+            request.onsuccess = () => {
+                try {
+                    const item = request.result;
+                    if (!item) throw Error("Unknown wallpaper ID");
+                    if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed");
+                    if (["remove", "restore", "undo"].includes(action) && item.source === "bundled") throw remoteConflict("Wallpaper type changed");
+                    if (action === "remove" && localStorage.getItem(KEY_CURRENT) === id) throw remoteConflict("Cancel or change the applied wallpaper before removing it");
+                    const nextItem = { ...item };
+                    if (action === "rename") nextItem.name = name.trim();
+                    if (action === "remove") { if (item.removedAt) throw remoteConflict("Wallpaper is already removed"); nextItem.removedAt = Date.now(); }
+                    if (action === "restore" || action === "undo") { if (!item.removedAt) throw remoteConflict("Wallpaper is not removed"); delete nextItem.removedAt; }
+                    beforeMutation();
+                    // No asynchronous gap between the gate/revision check and the IDB write.
+                    if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed");
+                    store.put(nextItem);
+                } catch (error) { failure = error; transaction.abort(); }
+            };
+        });
+        beforeMutation(); // If access was revoked during commit, report it before further UI work.
+        await renderGallery();
+        return remoteGet(id);
+    }
+
+    window.myntWallpaper = { remoteGet, remoteEdit, remoteCancel, remoteCancelRevision, runRemote(action, beforeMutation) { if(typeof beforeMutation!=="function")throw Error("Guard required"); if(action==="next")return next(1,beforeMutation);if(action==="previous")return next(-1,beforeMutation);if(action==="random")return random(beforeMutation);throw Error("Unsupported action"); }, cancelApply, useLegacy, restore: undoRemove, remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
 
     // Run after workspace restore (dashboard-tools) so our choice wins.
     if (document.readyState === "complete") setTimeout(init, 0);

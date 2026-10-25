@@ -1,0 +1,772 @@
+[
+  {
+    "name": "mynt_pomodoro_get",
+    "description": "Read the active page timer state.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_pomodoro_control",
+    "description": "Start, pause or extend the timer. Reset returns action-required and must be performed in the browser UI.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "start",
+            "pause",
+            "extend",
+            "reset"
+          ]
+        },
+        "minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_pomodoro_configure",
+    "description": "Set task label or future phase durations without resetting an active timer.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "durations": {
+          "type": "object",
+          "properties": {
+            "workMinutes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120
+            },
+            "shortBreakMinutes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            },
+            "longBreakMinutes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            },
+            "roundsBeforeLong": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          "additionalProperties": false
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_music_get",
+    "description": "Read local music names, IDs and settings only; never exports audio.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_music_configure",
+    "description": "Update local playlist settings; the existing API pauses playback when settings change.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "selectedId": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "off",
+            "one",
+            "all"
+          ]
+        },
+        "shuffle": {
+          "type": "boolean"
+        },
+        "restPolicy": {
+          "type": "string",
+          "enum": [
+            "pause",
+            "continue"
+          ]
+        },
+        "order": {
+          "type": "array",
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_music_library",
+    "description": "List active and recoverably removed local-track metadata and per-track itemRevision. Retained audio still counts toward storage limits; never exports blobs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_music_edit",
+    "description": "Recoverably remove or restore a local track by stable ID and itemRevision. Removal requires music paused in all tabs and Web Locks. Audio and playlist ordering are retained; restore never autoplays or restores prior selected playback.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "remove",
+            "restore"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "id",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_music_control",
+    "description": "Pause music; play and seek require the real browser player until a verified API is available.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "pause",
+            "play",
+            "seek"
+          ]
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 86400
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_wallpaper_list",
+    "description": "List gallery metadata without blobs, source URLs, thumbnails or filesystem paths. includeRemoved lists recoverable records.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "includeRemoved": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_wallpaper_control",
+    "description": "Cycle existing gallery wallpapers or open its panel. Imports and removal stay in the browser UI.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "next",
+            "previous",
+            "random",
+            "open"
+          ]
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_list",
+    "description": "Read a bounded bookmark tree only when bookmark permission is already granted. Never requests permission.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_preview",
+    "description": "Validate and preview a bookmark edit only. Apply manually through the browser bookmark editor; this tool never mutates bookmarks.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "create",
+            "update",
+            "remove"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "parentId": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_get",
+    "description": "Read one stable bookmark/folder ID and fresh optimistic revision tokens. Does not request permissions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_create",
+    "description": "Create a bookmark or folder under an explicit parent with its childrenRevision. Existing permission only; browser edits are optimistic, not atomic with other editors.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "parentId": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "parentId",
+        "title",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_update",
+    "description": "Update an existing bookmark title or HTTP(S) URL using its revision. Does not delete or move bookmarks. Browser edits are optimistic, not atomic with other editors.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_move",
+    "description": "Move an existing bookmark/folder without changing IDs. Requires source revision and destination childrenRevision. Protected roots, managed folders and cycles are rejected; concurrency is optimistic.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "parentId": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "targetRevision": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parentId",
+        "targetRevision",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_trash",
+    "description": "Recoverably remove a bookmark/folder by moving it intact into an explicitly selected folder named MYNT MCP Trash. Create that folder separately if needed. Never permanently deletes anything; returns a restoration receipt.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "trashFolderId": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "targetRevision": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "trashFolderId",
+        "targetRevision",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_bookmarks_restore",
+    "description": "Undo trash by moving the same stable ID from MYNT MCP Trash to the explicit original parent/index from its receipt. Without a receipt, use move with a reviewed destination. Requires fresh source and destination revisions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "trashFolderId": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "originalParentId": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "originalIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "targetRevision": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "trashFolderId",
+        "originalParentId",
+        "originalIndex",
+        "targetRevision",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_wallpaper_item_get",
+    "description": "Read gallery item metadata including recoverably removed records, plus its itemRevision.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_wallpaper_edit",
+    "description": "Select, rename, recoverably remove, restore or undo removal by stable ID. Cancel the applied wallpaper before removing it. Never deletes blobs; bundled removal hides the packaged asset and restore unhides it.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "select",
+            "rename",
+            "remove",
+            "restore",
+            "undo"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "id",
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_wallpaper_cancel",
+    "description": "Stop applying the gallery wallpaper and rotation without deleting any media. Use cancelRevision from wallpaper_list.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "expectedRevision"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_ui_features",
+    "description": "Inventory features that need browser UI, a gesture, or permission. Does not trigger clicks, navigation, dialogs or permissions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  }
+]

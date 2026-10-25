@@ -15,3 +15,7 @@ dist/
 .wrangler/
 *.bak-*
 
+
+# Local MCP dependencies and runtime files
+local-mcp/node_modules/
+local-mcp/.runtime/

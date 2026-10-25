@@ -4,6 +4,34 @@
  * Licensed under the GNU General Public License v3.0 (GPL-3.0)
  */
 
+// Strict storage boundary shared with local recovery. Invalid data is preserved,
+// never normalized into a silently destructive replacement.
+function myntValidateHabits(value) {
+    if (!Array.isArray(value) || value.length > 14) throw Error("Invalid habits");
+    const ids = new Set(), systemSources = { "system-pomodoro": "pomodoro", "system-todo": "todo" };
+    const validDate = date => {
+        if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+        const [year, month, day] = date.split("-").map(Number);
+        const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+        const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        return month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1];
+    };
+    const clean = value.map(item => {
+        if (!item || typeof item !== "object" || Array.isArray(item) ||
+            Object.keys(item).some(key => !["id", "name", "source", "doneDates"].includes(key)) ||
+            typeof item.id !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(item.id) || ids.has(item.id) ||
+            typeof item.name !== "string" || item.name.length > 60 || ![null, "todo", "pomodoro"].includes(item.source) ||
+            (item.source === null && !item.name.trim()) ||
+            (Object.hasOwn(systemSources, item.id) ? item.source !== systemSources[item.id] : item.source !== null) ||
+            !Array.isArray(item.doneDates) || item.doneDates.length > 400 || item.doneDates.some(date => !validDate(date)) ||
+            new Set(item.doneDates).size !== item.doneDates.length) throw Error("Invalid habit");
+        ids.add(item.id);
+        return { id: item.id, name: item.name, source: item.source, doneDates: [...item.doneDates] };
+    });
+    if (clean.filter(item => item.source === null).length > 12) throw Error("Excess custom habits");
+    return clean;
+}
+
 function myntDateKey(date = new Date()) {
     return [
         date.getFullYear(),
@@ -88,7 +116,7 @@ function myntNormalizeWorkspaces(raw, defaults = []) {
 if (typeof module !== "undefined") {
     module.exports = {
         myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeGreetingName,
-        myntFormatGreeting, myntNormalizeWorkspaces
+        myntFormatGreeting, myntNormalizeWorkspaces, myntValidateHabits
     };
 }
 
@@ -371,11 +399,28 @@ if (typeof document !== "undefined") {
                 all.filter(item => !item.source).indexOf(habit) < MAX_CUSTOM_HABITS);
         }
 
-        let habits = normalizeHabits(readJSON(KEYS.habits, []));
+        let habitsStorageInvalid = false, habitRecoveryControl;
+        function readHabits() {
+            try {
+                const value = myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
+                habitsStorageInvalid = false;
+                return normalizeHabits(value);
+            } catch (_) {
+                habitsStorageInvalid = true;
+                return [];
+            }
+        }
+        let habits = readHabits();
 
         function saveHabits() {
+            if (habitsStorageInvalid) return false;
+            try {
+                myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
+                myntValidateHabits(habits);
+            } catch (_) { habitsStorageInvalid = true; return false; }
             localStorage.setItem(KEYS.habits, JSON.stringify(habits));
             document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
+            return true;
         }
 
         function markSystemHabit(source) {
@@ -392,6 +437,9 @@ if (typeof document !== "undefined") {
             const list = document.getElementById("habitList");
             const today = myntDateKey();
             list.replaceChildren();
+            document.getElementById("habitInput").disabled = habitsStorageInvalid;
+            document.getElementById("habitAddBtn").disabled = habitsStorageInvalid;
+            habitRecoveryControl?.refresh();
 
             habits.forEach(habit => {
                 const done = habit.doneDates.includes(today);
@@ -445,6 +493,7 @@ if (typeof document !== "undefined") {
 
         document.getElementById("habitForm").addEventListener("submit", event => {
             event.preventDefault();
+            if (habitsStorageInvalid) return;
             const input = document.getElementById("habitInput");
             const name = input.value.trim();
             const customHabits = habits.filter(habit => !habit.source);
@@ -479,6 +528,11 @@ if (typeof document !== "undefined") {
             if (Number(event.detail?.completed) > 0) markSystemHabit("todo");
         });
         document.addEventListener("DOMContentLoaded", () => {
+            habitRecoveryControl = window.MyntRecoveryControls?.create({
+                domain: "habits", container: document.getElementById("habitsSection"),
+                before: document.getElementById("habitList"), focusTarget: document.getElementById("habitInput"),
+                validateCurrent: () => myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"))
+            });
             try {
                 const todos = JSON.parse(localStorage.getItem("todoList") || "{}");
                 if (Object.values(todos).some(todo => todo?.status === "completed")) markSystemHabit("todo");
@@ -568,7 +622,7 @@ if (typeof document !== "undefined") {
                 : setTimeout(startVideo, 500);
         }
 
-        function applyAccessibility() {
+        function applyAccessibility(allowResume = true) {
             const reduceMotion = effectiveReducedMotion();
             document.documentElement.classList.toggle("myntReducedMotion", reduceMotion);
             document.documentElement.classList.toggle("myntHighContrast", accessibility.highContrast);
@@ -581,12 +635,13 @@ if (typeof document !== "undefined") {
                 if (reduceMotion && !video.paused) {
                     video.dataset.myntWasPlaying = "true";
                     video.pause();
-                } else if (!reduceMotion && !document.hidden && video.dataset.myntWasPlaying === "true") {
+                } else if (allowResume && !reduceMotion && !document.hidden && video.dataset.myntWasPlaying === "true") {
                     delete video.dataset.myntWasPlaying;
                     video.play().catch(() => {});
                 }
             });
-            syncDecorativeVideo();
+            if (allowResume) syncDecorativeVideo();
+            else if (reduceMotion) decorativeVideo?.pause();
         }
 
         function saveAccessibility() {
@@ -1224,6 +1279,58 @@ if (typeof document !== "undefined") {
             input.removeAttribute("aria-activedescendant");
         });
 
+        function remoteWorkspaceState() {
+            return { presets: workspaces.map(({urls,...preset})=>JSON.parse(JSON.stringify(preset))),
+                active: localStorage.getItem(KEYS.workspace),
+                widgets: Object.fromEntries(MYNT_WORKSPACE_WIDGETS.map(id=>[id,document.getElementById(id)?.checked===true])),
+                background: document.body.dataset.workspaceBackground || 'video',
+                durations: window.myntPomodoro?.getState()?.durations || null, safetyStatus: window.myntPomodoro?.getState()?.safetyStatus || 'unavailable' };
+        }
+        async function applyWorkspaceRemote(id, gate, assertAccess) {
+            const preset=workspaces.find(item=>item.id===id);
+            if(!preset || typeof gate!=='function' || typeof assertAccess!=='function')throw Error('INVALID_ARGUMENT');
+            // Quote visibility's existing handler fetches and clears cached content.
+            // Do not silently invoke that unrelated network/data side effect.
+            if(document.getElementById('motivationalQuotesCheckbox')?.checked!==preset.widgets.motivationalQuotesCheckbox)throw Error('ACTION_REQUIRED');
+            if(MYNT_WORKSPACE_WIDGETS.some(key=>!document.getElementById(key)))throw Error('UNAVAILABLE');
+            const timer=window.myntPomodoro;
+            if(!timer?.runRemote)throw Error('UNAVAILABLE');
+            if(timer.getState().safetyStatus!=='ready'||!timer.getState().coordinationAvailable)throw Error('ACTION_REQUIRED');
+            gate();
+            const timerResult=await timer.runRemote('setDurations',{...timer.getState().durations,workMinutes:preset.focusMinutes},gate);
+            if(timerResult===false || timer.getState().safetyStatus!=='ready' || !timer.getState().coordinationAvailable || timer.getState().durations.workMinutes!==preset.focusMinutes || localStorage.getItem('pomodoroWorkMinutes')!==String(preset.focusMinutes))throw Error('OPERATION_FAILED');
+            assertAccess();
+            applyingWorkspace=true;
+            try {
+                for(const [widgetId,enabled] of Object.entries(preset.widgets)) {
+                    assertAccess();const checkbox=document.getElementById(widgetId);
+                    if(checkbox.checked!==enabled){
+                        checkbox.click();
+                        const key=widgetId+'State';
+                        if(checkbox.checked!==enabled || localStorage.getItem(key)!==(enabled?'checked':'unchecked'))throw Error('OPERATION_FAILED');
+                    }
+                }
+                assertAccess();
+                localStorage.setItem(KEYS.workspace,id);
+                document.body.dataset.workspaceBackground=preset.background;
+                if(preset.background!=='video')document.body.dataset.bg=preset.background;
+                cancelDecorativeVideoStart(); startDecorativeWhenVisible=false; resumeDecorativeAfterHidden=false;
+                decorativeVideo?.pause();
+                renderWorkspace();
+                return {applied:true,playbackDeferred:true,openedUrls:0};
+            } finally {applyingWorkspace=false;}
+        }
+
+        window.myntDashboard = {
+            getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
+            reloadHabits: () => { habits=readHabits(); renderHabits(); },
+            getWorkspacePresets: () => JSON.parse(JSON.stringify(workspaces)),
+            reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); renderWorkspace(); },
+            reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); }
+        };
+        window.addEventListener("storage", event => {
+            if (event.key === KEYS.habits || event.key === null) window.myntDashboard.reloadHabits();
+        });
         localizeStaticUI();
         migratePomodoroToday();
         saveHabits();

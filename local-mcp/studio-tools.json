@@ -1,0 +1,153 @@
+[
+  {
+    "name": "mynt_studio_appearance_get",
+    "description": "Read timer appearance settings and whether an existing local image is available; no image bytes or URLs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_studio_appearance_update",
+    "description": "Change bounded timer appearance, solid/gradient colors, fit/crop, or select the already-loaded local image. No import or autoplay.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "patch": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "original",
+                "home",
+                "image",
+                "color",
+                "gradient"
+              ]
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "color2": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "fit": {
+              "type": "string",
+              "enum": [
+                "cover",
+                "contain"
+              ]
+            },
+            "position": {
+              "type": "string",
+              "enum": [
+                "50% 50%",
+                "50% 0%",
+                "50% 100%"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 10000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,100}$",
+          "minLength": 8,
+          "maxLength": 100
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "patch",
+        "expectedRevision"
+      ]
+    },
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_studio_scenarios_get",
+    "description": "List built-in/custom scenarios and in-tab recovery metadata. IDs are positional and valid only with this revision.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mynt_studio_scenarios_mutate",
+    "description": "Save current settings, rename/recapture a custom scenario, recoverably trash/undo, or apply to a pristine stopped timer. Applying never resets progress or starts playback.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "save",
+            "update",
+            "trash",
+            "undo",
+            "apply"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^(builtin|custom):[0-7]$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "captureCurrent": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "maxLength": 10000
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,100}$",
+          "minLength": 8,
+          "maxLength": 100
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedRevision"
+      ]
+    },
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  }
+]

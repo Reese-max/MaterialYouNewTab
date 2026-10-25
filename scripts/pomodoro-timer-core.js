@@ -60,8 +60,8 @@
             emit();
         }
         function persist() { const saved = write(KEY, JSON.stringify(state)); emit(); return saved; }
-        function run(action) {
-            const perform = () => { sync(); return action(); };
+        function run(action, beforeMutation) {
+            const perform = () => { sync(); if (beforeMutation) beforeMutation(); return action(); };
             queue = queue.catch(() => {}).then(async () => {
                 if (!locks?.request) return perform();
                 let entered = false;
@@ -95,12 +95,12 @@
         const api = {
             getState: snapshot,
             subscribe(fn) { if (typeof fn !== 'function') return () => {}; listeners.add(fn); fn(snapshot()); return () => listeners.delete(fn); },
-            start: () => run(() => { if (state.isRunning) { complete(); return; } if (state.timeRemaining <= 0) state.timeRemaining = state.totalTime; state.isRunning = true; state.endAt = now() + state.timeRemaining * 1000; persist(); }),
-            pause: () => run(() => { if (snapshot().timeRemaining === 0 && state.isRunning) complete(); state.timeRemaining = snapshot().timeRemaining; state.isRunning = false; state.endAt = null; persist(); }),
+            start: beforeMutation => run(() => { if (state.isRunning) { complete(); return; } if (state.timeRemaining <= 0) state.timeRemaining = state.totalTime; state.isRunning = true; state.endAt = now() + state.timeRemaining * 1000; persist(); }, beforeMutation),
+            pause: beforeMutation => run(() => { if (snapshot().timeRemaining === 0 && state.isRunning) complete(); state.timeRemaining = snapshot().timeRemaining; state.isRunning = false; state.endAt = null; persist(); }, beforeMutation),
             reset: () => run(() => { const task = state.task; state = fresh(state.settings); state.task = task; persist(); }),
-            extend: (minutes = 5) => run(() => { if (!valid(minutes, 1, 120)) return; const seconds = Math.min(Math.floor(minutes * 60), 86400 - state.totalTime); state.timeRemaining = snapshot().timeRemaining + seconds; state.totalTime += seconds; if (state.isRunning) state.endAt = now() + state.timeRemaining * 1000; persist(); }),
-            setTask: label => run(() => { state.task = String(label ?? '').slice(0, 200); persist(); }),
-            setDurations: input => run(() => {
+            extend: (minutes = 5, beforeMutation) => run(() => { if (!valid(minutes, 1, 120)) return; const seconds = Math.min(Math.floor(minutes * 60), 86400 - state.totalTime); state.timeRemaining = snapshot().timeRemaining + seconds; state.totalTime += seconds; if (state.isRunning) state.endAt = now() + state.timeRemaining * 1000; persist(); }, beforeMutation),
+            setTask: (label, beforeMutation) => run(() => { state.task = String(label ?? '').slice(0, 200); persist(); }, beforeMutation),
+            setDurations: (input, beforeMutation) => run(() => {
                 if (!input || typeof input !== 'object' || Array.isArray(input)) return false;
                 const entries = Object.entries(input);
                 if (entries.some(([key, value]) => !Object.hasOwn(DEFAULTS, key) || !Number.isInteger(value) || !valid(value, 1, LIMITS[key]))) return false;
@@ -113,7 +113,7 @@
                 Object.entries(SETTING_KEYS).forEach(([k, key]) => write(key, String(settings[k])));
                 persist();
                 return true;
-            }),
+            }, beforeMutation),
             tick: () => run(complete),
             sync,
         };

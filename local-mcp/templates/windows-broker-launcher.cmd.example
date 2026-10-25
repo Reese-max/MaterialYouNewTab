@@ -1,0 +1,3 @@
+@echo off
+REM TEMPLATE ONLY. Do not Run as Administrator. Replace reviewed absolute paths.
+"C:\Program Files\nodejs\node.exe" "C:\APPROVED\mynt-daily\local-mcp\broker.mjs"
