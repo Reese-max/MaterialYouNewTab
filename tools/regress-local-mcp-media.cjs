@@ -252,6 +252,7 @@ const plain = x => JSON.parse(JSON.stringify(x));
     const gallerySettings = new Map([['current', 'none'], ['mode', 'fixed']]);
     let galleryWrites = 0, abortNext = false;
     const galleryContext = { Date, JSON, Error, Number, String, Boolean, Promise,
+        withGalleryWrite: fn => fn(), notifyGalleryChange() {},
         localStorage: { getItem: key => gallerySettings.get(key) ?? null, setItem: (key, value) => gallerySettings.set(key, value) },
         KEY_CURRENT: 'current', KEY_MODE: 'mode', KEY_HIDDEN: 'hidden', STORE: 'items', hiddenIds: () => new Set(JSON.parse(gallerySettings.get('hidden') || '[]')), saveHidden: set => gallerySettings.set('hidden', JSON.stringify([...set])),
         document: { body: { dataset: {} } }, $: () => null, scheduleRotate() {}, renderGallery: async () => {},
@@ -263,7 +264,7 @@ const plain = x => JSON.parse(JSON.stringify(x));
                 put(record) { pending = record; }
             }) }; return transaction;
         } }) };
-    galleryContext.applyItem = async (item, options) => { options.beforeMutation(); gallerySettings.set('current', item.id); galleryContext.document.body.dataset.wallpaperId = item.id; return true; };
+    galleryContext.applyItemUnlocked = async (item, options) => { options.beforeMutation(); gallerySettings.set('current', item.id); galleryContext.document.body.dataset.wallpaperId = item.id; return true; };
     vm.createContext(galleryContext); vm.runInContext(galleryCode, galleryContext);
     const getG = () => galleryContext.remoteGet('custom');
     let galleryState = await getG();
@@ -298,6 +299,12 @@ const plain = x => JSON.parse(JSON.stringify(x));
     const adapterItem = await galleryAdapter.execute('mynt_wallpaper_item_get', { id: 'custom' });
     assert.equal(adapterItem.ok, true); assert(!JSON.stringify(adapterItem).includes('must survive'));
     assert.equal((await galleryAdapter.execute('mynt_wallpaper_edit', { action: 'rename', id: 'custom', name: 'Adapter name', expectedRevision: adapterItem.data.itemRevision })).ok, true);
+    let purgeEffects=0;
+    const purgeAdapter=setup({myntWallpaper:{list:async()=>[],remoteEdit(){purgeEffects++;}},myntDialog:{confirm(){purgeEffects++;}},confirm(){purgeEffects++;}});
+    const purgeContext={assertAccess(){},operationMayHaveExecuted:false};
+    const purgeResult=await purgeAdapter.execute('mynt_wallpaper_edit',{action:'purge',id:'custom',expectedRevision:'synthetic-revision'},purgeContext);
+    assert.equal(purgeResult.error.code,'ACTION_REQUIRED');assert.equal(purgeEffects,0);assert.equal(purgeContext.operationMayHaveExecuted,false);
+    assert.equal((await purgeAdapter.execute('mynt_wallpaper_edit',{action:'purge',id:'custom',confirmed:true,expectedRevision:'synthetic-revision'})).error.code,'INVALID_ARGUMENT');
     const listingAll = await galleryAdapter.execute('mynt_wallpaper_list', { includeRemoved: true });
     assert.equal(listingAll.ok, true); assert.equal(typeof listingAll.data.cancelRevision, 'string');
     // Reuse the existing isolated music-browser fixture, without running its separate test suite.

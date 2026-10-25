@@ -1,7 +1,7 @@
 /*
  * Manual layout editor. myntLayout remains a version-2 map of viewport-relative
  * offsets and scales. Editing is a local draft; only Save and lock writes it.
- * Normal page content never becomes a drag surface, even while editing.
+ * Cards keep their normal content; small entry buttons use a transparent edit-only drag surface.
  */
 const MYNT_LAYOUT_BLOCKS = [
     ["clock", "#analogClock, #digitalClock", "layoutBlockClock", "Clock"],
@@ -18,6 +18,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["wallpaper", "#wallpaperQuickActions", "layoutBlockWallpaper", "Wallpaper"],
     ["menu", "#menuButton", "layoutBlockMenu", "Settings"]
 ];
+const MYNT_LAYOUT_COMPACT = new Set(["bookmarks", "wallpaper", "menu"]);
 const MYNT_LAYOUT_LIMITS = { minScale: 0.5, maxScale: 2, grid: 16, snapDistance: 8 };
 
 function myntNormalizeLayout(raw) {
@@ -117,8 +118,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     let toolbar = null, dock, status, lockStatus, selected = null, activeDrag = null;
     let undoButton, redoButton, snapBox, selectedLabel, resetSelectedButton, editButton;
     let guideLayer = null, resizeObserver = null, frame = null;
-    let preciseFields = null, warnings = null;
+    let preciseFields = null, warnings = null, sizePresets = null;
     const overlays = new Map();
+    const inertEntries = new Map();
     let draft=null,editScope=null;
     try { if(typeof MyntLayoutDraft!=='undefined')draft=MyntLayoutDraft.create(sessionStorage,myntNormalizeLayout); } catch {}
     function checkpoint(){
@@ -159,7 +161,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         snapBox.checked = layout.snap;
         document.body.classList.toggle("mynt-layout-snap", layout.snap);
         const entry = MYNT_LAYOUT_BLOCKS.find(item => item[0] === selected);
-        selectedLabel.textContent = entry ? t("layoutSelected", "Selected: {name}", { name: blockName(entry) }) : t("layoutSelectHandle", "Select a drag handle");
+        selectedLabel.value = entry ? selected : "";
+        if (sizePresets) {
+            sizePresets.hidden = !entry || !MYNT_LAYOUT_COMPACT.has(selected);
+            for (const control of sizePresets.children) control.setAttribute("aria-pressed", String(Number(control.dataset.scale) === (layout.blocks[selected]?.s || 1)));
+        }
         resetSelectedButton.disabled = !selected || !layout.blocks[selected];
         if (preciseFields) {
             const el = selected && elementFor(selected), r = el?.getBoundingClientRect();
@@ -250,9 +256,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             if (!el) continue;
             const r = el.getBoundingClientRect();
             Object.assign(overlay.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
-            overlay.style.setProperty("--mynt-handle-top", r.top < 48 ? "0px" : "-24px");
-            overlay.style.setProperty("--mynt-resize-right", r.right > innerWidth - 24 ? "0px" : "-20px");
-            overlay.style.setProperty("--mynt-resize-bottom", r.bottom > innerHeight - 24 ? "0px" : "-20px");
+            const compact = MYNT_LAYOUT_COMPACT.has(id);
+            if (compact && !inertEntries.has(el)) { inertEntries.set(el, el.inert === true); el.inert = true; }
+            const handle = overlay.querySelector(".myntLayoutMove"), resize = overlay.querySelector(".myntLayoutResize");
+            // Controls stay within their own rectangle, never across a neighboring item.
+            handle.hidden = !compact && (selected !== id || r.width < 44 || r.height < 44);
+            if (resize) resize.hidden = selected !== id || r.width < 44 || r.height < 44 || (r.width < 88 && r.height < 88);
+            overlay.classList.toggle("is-small-target", r.width < 44 || r.height < 44);
         }
     }
     function scheduleOverlays() {
@@ -262,7 +272,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function select(id) {
         selected = id;
         for (const [blockId, overlay] of overlays) overlay.classList.toggle("is-selected", blockId === id);
-        updateControls();
+        placeOverlays(); updateControls();
     }
     function hideGuides() { guideLayer?.replaceChildren(); }
     function showGuides(guides) {
@@ -340,7 +350,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             const [id] = entry, name = blockName(entry), overlay = document.createElement("div");
             overlay.className = "myntLayoutOverlay"; overlay.dataset.block = id;
             overlay.setAttribute("role", "group"); overlay.setAttribute("aria-label", name);
-            const handle = button("", `⠿ ${name}`);
+            const compact = MYNT_LAYOUT_COMPACT.has(id);
+            overlay.classList.toggle("is-compact", compact); overlay.tabIndex = compact ? -1 : 0;
+            overlay.addEventListener("focus", event => { if (event.target === overlay) select(id); });
+            const handle = button("", compact ? "" : "⠿");
             handle.removeAttribute("id"); handle.className = "myntLayoutMove myntLayoutLabel";
             handle.setAttribute("aria-label", t("layoutMoveAria", "Move {name}; arrows 1px, Shift + arrows 10px", { name }));
             handle.title = t("layoutMoveHint", "Drag to move · Arrow keys to nudge · Hold Alt to bypass snapping");
@@ -353,6 +366,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             resize.addEventListener("pointerdown", e => startDrag(e, id, "resize"));
             resize.addEventListener("focus", () => select(id));
             overlay.addEventListener("keydown", e => {
+                // Leave IME events and browser/navigation shortcuts to their owner.
+                if (e.defaultPrevented || e.isComposing || e.keyCode === 229 || e.ctrlKey || e.metaKey || e.altKey) return;
                 if (editing && !layout.locked && !activeDrag && ["+", "=", "-", "_"].includes(e.key)) {
                     e.preventDefault(); e.stopPropagation(); select(id);
                     const b = { ...(layout.blocks[id] || { x: 0, y: 0, s: 1 }) };
@@ -360,7 +375,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                     layout.blocks[id] = b; applyBlock(id); placeOverlays(); recordChange();
                 } else nudge(e, id);
             });
-            overlay.append(handle, resize); document.body.append(overlay); overlays.set(id, overlay);
+            // A click/Enter on the edit surface selects, never activates the entry underneath.
+            for (const type of ["click", "auxclick", "dblclick", "contextmenu"]) handle.addEventListener(type, e => {
+                if (!editing) return; e.preventDefault(); e.stopPropagation(); select(id);
+            });
+            overlay.append(handle); if (!compact) overlay.append(resize);
+            document.body.append(overlay); overlays.set(id, overlay);
         }
     }
     function changeHistory(direction) {
@@ -421,7 +441,25 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const done = button("myntLayoutSave", t("layoutSaveLock", "Save and lock"), () => { activeDrag?.finish(); save(); }); done.className = "primary";
         top.append(title, dockToggle, undoButton, redoButton, snapLabel, cancel, done);
         const bottom = document.createElement("div"); bottom.className = "myntLayoutToolbarRow myntLayoutHelp";
-        selectedLabel = document.createElement("span");
+        selectedLabel = document.createElement("select"); selectedLabel.id = "myntLayoutTarget";
+        selectedLabel.setAttribute("aria-label", t("layoutChooseBlock", "Select a component"));
+        const prompt = document.createElement("option"); prompt.value = ""; prompt.disabled = true; prompt.textContent = t("layoutChooseBlock", "Select a component"); selectedLabel.append(prompt);
+        for (const entry of MYNT_LAYOUT_BLOCKS) {
+            if (!elementFor(entry[0])) continue;
+            const option = document.createElement("option"); option.value = entry[0]; option.textContent = blockName(entry); selectedLabel.append(option);
+        }
+        selectedLabel.addEventListener("change", () => { if (selectedLabel.value && elementFor(selectedLabel.value)) select(selectedLabel.value); });
+        sizePresets = document.createElement("div"); sizePresets.id = "myntLayoutSizePresets"; sizePresets.hidden = true;
+        sizePresets.setAttribute("role", "group"); sizePresets.setAttribute("aria-label", t("layoutEntrySize", "Entry size"));
+        for (const [scale, key, label] of [[.75,"layoutSizeSmall","Small"],[1,"layoutSizeMedium","Medium"],[1.25,"layoutSizeLarge","Large"]]) {
+            const control = button("", t(key, label), () => {
+                if (!editing || layout.locked || activeDrag || !MYNT_LAYOUT_COMPACT.has(selected)) return;
+                const el = elementFor(selected); if (!el) return;
+                layout.blocks[selected] = {...currentBlock(selected, el), s:scale};
+                applyBlock(selected); placeOverlays(); recordChange();
+            });
+            control.removeAttribute("id"); control.dataset.scale = String(scale); control.setAttribute("aria-pressed", "false"); sizePresets.append(control);
+        }
         resetSelectedButton = button("myntLayoutResetSelected", t("layoutResetSelected", "Reset selected"), () => {
             if (!selected || !layout.blocks[selected]) return;
             delete layout.blocks[selected]; applyBlock(selected); placeOverlays(); recordChange();
@@ -434,7 +472,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         });
         const hint = document.createElement("span"); hint.className = "myntLayoutInstructions";
         hint.textContent = t("layoutInstructions", "Drag ⠿ handles · Arrows 1px · Shift 10px · Esc cancels");
-        bottom.append(selectedLabel, resetSelectedButton, reset, hint);
+        bottom.append(selectedLabel, sizePresets, resetSelectedButton, reset, hint);
         const precise=document.createElement('details');precise.className='myntLayoutPrecision';
         const summary=document.createElement('summary');summary.textContent=t('layoutPrecision','Position, size and alignment');precise.append(summary);
         const row=document.createElement('div');row.className='myntLayoutToolbarRow';preciseFields={};
@@ -452,7 +490,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         document.body.classList.remove("mynt-layout-editing", "mynt-layout-snap");
         const box = document.getElementById("layoutEditCheckbox"); if (box) box.checked = false;
         overlays.forEach(overlay => overlay.remove()); overlays.clear();
-        preciseFields = null; warnings = null;
+        for (const [el, wasInert] of inertEntries) el.inert = wasInert;
+        inertEntries.clear();
+        preciseFields = null; warnings = null; sizePresets = null;
         toolbar?.remove(); toolbar = null; guideLayer?.remove(); guideLayer = null;
         resizeObserver?.disconnect(); resizeObserver = null;
         if (frame !== null) cancelAnimationFrame(frame); frame = null;
@@ -500,12 +540,20 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         toolbar.querySelector("button:not(:disabled)")?.focus({ preventScroll: true });
         return true;
     }
+    document.addEventListener("pointerdown", event => {
+        if (!editing || activeDrag) return;
+        for (const [id] of MYNT_LAYOUT_BLOCKS) {
+            const el = elementFor(id);
+            if (el && (event.target === el || el.contains?.(event.target))) { select(id); break; }
+        }
+    }, true);
     const settingBox = document.getElementById("layoutEditCheckbox");
     settingBox?.addEventListener("change", () => setEditing(settingBox.checked));
     const titleEl = document.getElementById("layoutEditTitle"), infoEl = document.getElementById("layoutEditInfo");
     if (titleEl) titleEl.textContent = t("layoutEditSetting", "Edit layout");
     if (infoEl) infoEl.textContent = t("layoutEditSettingInfo", "Drag handles, snapping and undo; save and lock when finished (Alt+L)");
     document.addEventListener("keydown", e => {
+        if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
         const typing = e.target?.closest?.("input, textarea, select, [contenteditable='true'], [contenteditable='']");
         if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.code === "KeyL") {
             if (typing) return;

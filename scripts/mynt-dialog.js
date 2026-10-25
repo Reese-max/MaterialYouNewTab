@@ -8,7 +8,7 @@
     const t = (key, fallback) => (typeof translations !== "undefined" && (translations[lang()]?.[key] || translations.en?.[key])) || fallback;
     let seq = 0;
 
-    function open({ kind, message, title, defaultValue = "", okText, cancelText, danger = false, maxLength }) {
+    function open({ kind, message, title, defaultValue = "", okText, cancelText, danger = false, focusCancel = false, maxLength }) {
         return new Promise(resolve => {
             const id = `myntDialog${++seq}`;
             const dialog = document.createElement("dialog");
@@ -47,8 +47,9 @@
             ok.textContent = okText || t("dialogOk", "OK");
             // OK first in DOM so Enter (implicit submit) accepts; CSS row-reverse keeps Cancel on the left.
             row.append(ok);
+            let cancel = null;
             if (kind !== "alert") {
-                const cancel = document.createElement("button");
+                cancel = document.createElement("button");
                 cancel.type = "submit";
                 cancel.value = "cancel";
                 cancel.formNoValidate = true;
@@ -72,7 +73,10 @@
             dialog.addEventListener("cancel", () => { dialog.returnValue = "cancel"; });
             document.body.append(dialog);
             dialog.showModal();
-            (input || (kind === "alert" ? ok : ok)).focus();
+            (input || (focusCancel && cancel ? cancel : ok)).focus();
+            if (focusCancel && cancel) dialog.addEventListener("keydown", event => {
+                if (event.key === "Enter" && event.target !== ok && event.target !== cancel) { event.preventDefault(); cancel.focus(); }
+            });
             if (input) input.select();
         });
     }

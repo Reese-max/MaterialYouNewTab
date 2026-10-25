@@ -8,7 +8,7 @@ const tools=[
  {name:'mynt_ambient_get',description:'Read actual ambient audio type, playback and volume.',inputSchema:obj({})},
  {name:'mynt_ambient_control',description:'Control generated local ambient sound; browser autoplay may require action.',inputSchema:obj({action:{type:'string',enum:['play','stop','volume']},type:{type:'string',enum:['rain','ocean','whitenoise','campfire']},volume:{type:'number',minimum:0,maximum:1}}),write:true},
  {name:'mynt_appearance_get',description:'Read automatic palette/contrast/opacity options. No automatic positioning exists.',inputSchema:obj({})},
- {name:'mynt_appearance_update',description:'Update only palette, contrast and opacity booleans, never positions.',inputSchema:obj({color:{type:'boolean'},contrast:{type:'boolean'},opacity:{type:'boolean'}}),write:true},
+ {name:'mynt_appearance_update',description:'Update background/manual palette choice, contrast, opacity and soft/vivid intensity; never positions.',inputSchema:obj({color:{type:'boolean'},contrast:{type:'boolean'},opacity:{type:'boolean'},strength:{type:'string',enum:['soft','vivid']}}),write:true},
  {name:'mynt_study_quote_get',description:'Read the current bundled public study quote.',inputSchema:obj({})},
  {name:'mynt_study_quote_next',description:'Select the next bundled study quote, without network requests.',inputSchema:obj({}),write:true}
 ].map(({write,...tool})=>{tool.annotations={readOnlyHint:!write,destructiveHint:!!write,openWorldHint:false};if(write){Object.assign(tool.inputSchema.properties,{expectedRevision:{type:'string',maxLength:20000},requestId:{type:'string',maxLength:100}});tool.inputSchema.required=['expectedRevision'];}return tool;});

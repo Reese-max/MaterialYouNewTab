@@ -6,14 +6,14 @@ const c={document:doc,generation:0,timer:1,resizeTimer:2,videoSampleTimer:null,s
 for(let i=0;i<20;i++){doc.hidden=false;c.samplingVisibility();c.samplingVisibility();assert.equal(active.size,1);doc.hidden=true;c.samplingVisibility();assert.equal(active.size,0);}
 assert.equal(c.generation,20);assert.equal(schedules,40);
 const d=fs.readFileSync('scripts/dashboard-tools.js','utf8');assert.match(d,/resumeDecorativeAfterHidden=Boolean\(decorativeVideo&&!decorativeVideo.paused\)/);assert.match(d,/else if\(resumeDecorativeAfterHidden\|\|startDecorativeWhenVisible\)/);
-const g=fs.readFileSync('scripts/wallpaper-gallery.js','utf8');assert.match(g,/resumeGalleryAfterHidden=Boolean\(videoEl&&!videoEl.paused\)/);assert.match(g,/else if\(resumeGalleryAfterHidden\|\|startGalleryWhenVisible\)/);
+const g=fs.readFileSync('scripts/wallpaper-gallery.js','utf8');assert.match(g,/resumeGalleryAfterHidden=Boolean\(videoEl&&!videoEl.paused\)/);assert.match(g,/const resume = resumeGalleryAfterHidden \|\| startGalleryWhenVisible/);assert.match(g,/refreshSharedGallery\(resume\)/);assert.match(g,/resumeVideo === true && current && current === document.body.dataset.wallpaperId/);
 console.log('BACKGROUND_POWER_OK: 20 simulated visibility cycles keep exactly one visible timer and none hidden; video prior-play guards present');
 // Execute actual visibility listeners with fake media; don't infer browser playback from source strings.
 function visibilityCase(source,start,end,videoName,flagName){
  const block=source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
  for(const wasPlaying of [true,false]){
   let listener,plays=0,cancels=0;const media={paused:!wasPlaying,pause(){this.paused=true}};
-  const context={document:{hidden:false,visibilityState:'visible',addEventListener(type,fn){listener=fn}},[videoName]:media,[flagName]:false,startDecorativeWhenVisible:false,startGalleryWhenVisible:false,cancelDecorativeVideoStart(){cancels++},syncDecorativeVideo(){plays++;media.paused=false},syncVideoPlayback(){plays++;media.paused=false},renderPermissions(){}};
+  const context={document:{hidden:false,visibilityState:'visible',addEventListener(type,fn){listener=fn}},[videoName]:media,[flagName]:false,startDecorativeWhenVisible:false,startGalleryWhenVisible:false,cancelDecorativeVideoStart(){cancels++},syncDecorativeVideo(){plays++;media.paused=false},syncVideoPlayback(){plays++;media.paused=false},refreshSharedGallery(resume){if(resume){plays++;media.paused=false;}},renderPermissions(){}};
   vm.createContext(context);vm.runInContext(block,context);
   context.document.hidden=true;context.document.visibilityState='hidden';listener();assert.equal(media.paused,true);
   context.document.hidden=false;context.document.visibilityState='visible';listener();assert.equal(plays,wasPlaying?1:0);assert.equal(media.paused,!wasPlaying);
@@ -27,7 +27,7 @@ for(const [source,start,end,video,flag,pending] of [
  [d,'        document.addEventListener("visibilitychange", () => {','        // Native dialogs','decorativeVideo','resumeDecorativeAfterHidden','startDecorativeWhenVisible'],
  [g,'    document.addEventListener("visibilitychange",()=>{','    function stopGalleryVideo','videoEl','resumeGalleryAfterHidden','startGalleryWhenVisible']]){
  let listener,plays=0;const media={paused:true,pause(){this.paused=true}};
- const context={document:{hidden:false,addEventListener(_,fn){listener=fn}},[video]:media,[flag]:false,[pending]:true,cancelDecorativeVideoStart(){},syncDecorativeVideo(){plays++},syncVideoPlayback(){plays++},renderPermissions(){}};
+ const context={document:{hidden:false,addEventListener(_,fn){listener=fn}},[video]:media,[flag]:false,[pending]:true,cancelDecorativeVideoStart(){},syncDecorativeVideo(){plays++},syncVideoPlayback(){plays++},refreshSharedGallery(resume){if(resume)plays++;},renderPermissions(){}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start))),context);listener();listener();assert.equal(plays,1);assert.equal(context[pending],false);
 }
 // Execute gallery's actual sync path to establish a pending first start while hidden.

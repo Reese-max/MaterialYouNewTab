@@ -4,16 +4,16 @@ body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #userText, b
 body[data-adaptive-color="on"] #enterBtn { background:var(--adaptive-accent,#3569ac);color:var(--adaptive-accent-text,#fff); }
 body[data-adaptive-color="on"] .accentColor { fill:var(--adaptive-accent,#3569ac); }
 body[data-adaptive-color="on"] .micIcon, body[data-adaptive-color="on"] .aiModeIcon { color:var(--adaptive-accent,#3569ac); }
-#myntAdaptivePanel { position:fixed; z-index:2147483003; right:24px; top:100px; font:13px/1.5 system-ui; color:#213851; max-width:calc(100vw - 32px); }
-#myntAdaptivePanel summary { cursor:pointer; background:#eef5ff; border:1px solid #fff; border-radius:14px; padding:9px 14px; width:max-content; margin-left:auto; box-shadow:0 4px 20px #243c561a; }
-#myntAdaptivePanel .adaptiveContent { margin-top:8px; width:320px; max-width:calc(100vw - 32px); max-height:calc(100dvh - 200px); overflow:auto; background:#f4f8ff; padding:16px; border-radius:18px; box-sizing:border-box; box-shadow:0 12px 44px #172e4a30; }
+#myntAdaptivePanel { position:fixed; z-index:2147483003; right:24px; top:100px; font:13px/1.5 system-ui; color:var(--adaptive-text,var(--textColorDark-blue)); max-width:calc(100vw - 32px); }
+#myntAdaptivePanel summary { cursor:pointer; background:var(--adaptive-widget-bg,var(--accentLightTint-blue)); border:1px solid color-mix(in srgb,currentColor 18%,transparent); border-radius:14px; padding:9px 14px; width:max-content; margin-left:auto; box-shadow:0 4px 20px #243c561a; }
+#myntAdaptivePanel .adaptiveContent { margin-top:8px; width:320px; max-width:calc(100vw - 32px); max-height:calc(100dvh - 200px); overflow:auto; background:var(--adaptive-widget-bg,var(--accentLightTint-blue)); padding:16px; border-radius:18px; box-sizing:border-box; box-shadow:0 12px 44px #172e4a30; }
 #myntAdaptivePanel label { display:flex; align-items:flex-start; gap:8px; padding:7px 0; cursor:pointer; }
-#myntAdaptivePanel input { flex:0 0 auto; accent-color:#3569ac; width:16px; height:16px; }
-#myntAdaptivePanel button { background:#3569ac; color:white; border:0; border-radius:12px; padding:10px 14px; font:inherit; cursor:pointer; }
+#myntAdaptivePanel input { flex:0 0 auto; accent-color:var(--adaptive-accent,var(--darkerColor-blue)); width:16px; height:16px; }
+#myntAdaptivePanel button { background:var(--adaptive-accent,var(--darkerColor-blue)); color:var(--adaptive-accent-text,var(--onActionColor-blue)); border:0; border-radius:12px; padding:10px 14px; font:inherit; cursor:pointer; }
 #myntAdaptivePanel p { margin:0 0 12px; }
 #myntAdaptiveStatus { margin-top:12px!important; font-weight:600; }
 #myntAdaptivePanel .adaptiveNotes { font-size:12px; opacity:.85; margin:0; }
-#myntAdaptivePanel :focus-visible { outline:3px solid #3569ac; outline-offset:3px; }
+#myntAdaptivePanel :focus-visible { outline:3px solid var(--adaptive-accent,var(--darkerColor-blue)); outline-offset:3px; }
 html.myntReducedMotion #myntAdaptivePanel *, html.myntReducedMotion body[data-adaptive-color] .aiToolsCont a, html.myntReducedMotion body[data-adaptive-color] #studyQuote { transition:none!important; }
 @media (prefers-reduced-motion: reduce) {
     #myntAdaptivePanel *, body[data-adaptive-color] .aiToolsCont a, body[data-adaptive-color] #studyQuote { transition:none!important; }
@@ -35,3 +35,41 @@ html.myntHighContrast #myntAdaptivePanel :focus-visible { outline-color: Highlig
 html.myntHighContrast #myntAdaptivePanel input { accent-color: LinkText; }
 body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchQ::placeholder {color:var(--adaptive-text,#213851)!important;opacity:1;}
 body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchbar {background:var(--adaptive-surface);}
+
+#myntAdaptivePanel select { max-width:100%; min-height:36px; border:1px solid currentColor; border-radius:9px; padding:5px 9px; background:var(--adaptive-widget-bg,var(--accentLightTint-blue)); color:inherit; font:inherit; }
+#myntAdaptivePanel label:has(select) { align-items:center; justify-content:space-between; flex-wrap:wrap; }
+
+/* Descendant-only theme tokens keep the wallpaper's own color untouched. */
+body:is([data-adaptive-color="on"],[data-adaptive-contrast="on"]) > * {
+    --bg-color-blue:var(--adaptive-widget-bg);
+    --accentLightTint-blue:var(--adaptive-widget-bg);
+    --darkerColor-blue:var(--adaptive-accent);
+    --darkColor-blue:var(--adaptive-accent);
+    --textColorDark-blue:var(--adaptive-text);
+    --whitishColor-blue:var(--adaptive-widget-bg);
+    --onActionColor-blue:var(--adaptive-accent-text);
+}
+/* Disable only the upstream paired inversion, not media effects or other filters. */
+html:has(body:is([data-adaptive-color="on"],[data-adaptive-contrast="on"])) {
+    --mynt-legacy-invert:none;
+    --mynt-legacy-invert-amount:0;
+}
+/* Legacy white-label actions need the matching on-accent color, including hover. */
+body:is([data-adaptive-color="on"],[data-adaptive-contrast="on"]) :is(
+    #todoAdd,#todoAdd:hover,.uploadButton,.randomButton,.bookmark-sort-button.active,
+    #bookmarkGridCheckbox:checked ~ #bookmarkViewGrid,
+    #bookmarkGridCheckbox:not(:checked) ~ #bookmarkViewList,
+    #bookmarkViewGrid.active,#bookmarkViewList.active,#saveBookmarkChanges,
+    .pomodoroNumBtn:hover,.searchWithCont .hint:hover,
+    .uploadCustomIconButton:not(.inactive):hover,.shortcutDelete button:not(.inactive):hover,
+    .backupRestoreBtn:hover,.backupRestoreBtn:active,.prompt-modal-ok,
+    .prompt-modal-ok:hover,.prompt-modal-cancel:hover,#dontShowTips
+) { background:var(--adaptive-accent)!important; color:var(--adaptive-accent-text)!important; fill:var(--adaptive-accent-text); }
+html.myntHighContrast body { --adaptive-widget-bg:Canvas!important; }
+
+/* Solid-color dark mode needs its own backing after legacy inversion is disabled.
+   It is static, not sampled output, so it cannot create a source/palette loop. */
+body[data-bg="color"]:is([data-adaptive-color="on"],[data-adaptive-contrast="on"]):has(#themeSegment[data-active="dark"]),
+body[data-bg="color"][sysTheme="systemDark"]:is([data-adaptive-color="on"],[data-adaptive-contrast="on"]):has(#themeSegment[data-active="system"]) {
+    background-color:#15161a;
+}

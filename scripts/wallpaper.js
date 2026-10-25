@@ -11,6 +11,7 @@
 const dbName = "ImageDB";
 const storeName = "backgroundImages";
 const timestampKey = "lastUpdateTime"; // Key to store last update time
+const galleryOwnerKey = "myntGalleryCacheOwnerV1";
 const imageTypeKey = "imageType"; // Key to store the type of image ("random" or "upload")
 let activeBackgroundObjectUrl = null;
 
@@ -64,7 +65,8 @@ function openDatabase() {
 }
 
 // Save image Blob, timestamp, and type to IndexedDB
-async function saveImageToIndexedDB(imageBlob, isRandom) {
+async function saveImageToIndexedDB(imageBlob, isRandom, galleryOwnerId = null) {
+    if (galleryOwnerId !== null && (typeof galleryOwnerId !== "string" || !galleryOwnerId || galleryOwnerId.length > 512)) throw Error("Invalid gallery owner");
     const db = await openDatabase();
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, "readwrite");
@@ -73,9 +75,12 @@ async function saveImageToIndexedDB(imageBlob, isRandom) {
         store.put(imageBlob, "backgroundImage");
         store.put(new Date().toISOString(), timestampKey);
         store.put(isRandom ? "random" : "upload", imageTypeKey);
+        if (galleryOwnerId) store.put(galleryOwnerId, galleryOwnerKey);
+        else store.delete(galleryOwnerKey);
 
         transaction.oncomplete = () => resolve();
         transaction.onerror = (event) => reject("Transaction error: " + event.target.errorCode);
+        transaction.onabort = () => reject(transaction.error || Error("Image cache transaction aborted"));
     });
 }
 
@@ -109,11 +114,39 @@ async function clearImageFromIndexedDB() {
         store.delete("backgroundImage");
         store.delete(timestampKey);
         store.delete(imageTypeKey);
+        store.delete(galleryOwnerKey);
 
         transaction.oncomplete = () => resolve();
         transaction.onerror = (event) => reject("Delete error: " + event.target.errorCode);
     });
 }
+
+// The ownership marker is written atomically with the cached image. Unmarked legacy
+// copies and copies owned by another feature/item are never guessed or erased.
+window.myntGalleryCache = Object.freeze({
+    async purgeOwned(id) {
+        if (typeof id !== "string" || !id || id.length > 512) throw Error("Invalid gallery owner");
+        const database = await openDatabase();
+        return new Promise((resolve, reject) => {
+            const transaction = database.transaction(storeName, "readwrite");
+            const store = transaction.objectStore(storeName);
+            let result = { deleted: false, retainedUnowned: false };
+            const request = store.get(galleryOwnerKey);
+            request.onsuccess = () => {
+                if (request.result === id) {
+                    for (const key of ["backgroundImage", timestampKey, imageTypeKey, galleryOwnerKey]) store.delete(key);
+                    result.deleted = true;
+                } else if (request.result == null) {
+                    const image = store.get("backgroundImage");
+                    image.onsuccess = () => { result.retainedUnowned = !!image.result; };
+                }
+            };
+            transaction.oncomplete = () => resolve(result);
+            transaction.onerror = () => reject(transaction.error || Error("Image cache cleanup failed"));
+            transaction.onabort = () => reject(transaction.error || Error("Image cache cleanup aborted"));
+        });
+    }
+});
 
 // Handle file input and save image as upload
 document.getElementById("imageUpload").addEventListener("change", function (event) {
@@ -157,9 +190,8 @@ async function applyRandomImage(showConfirmation = true) {
         if (!response.ok) throw new Error(`Wallpaper request failed (${response.status}).`);
         const blob = await response.blob(); // Get Blob from response
 
-        applyBlobBackground(blob);
-        await saveImageToIndexedDB(blob, true);
-        window.myntWallpaper?.useLegacy?.();
+        if (window.myntWallpaper?.useLegacy) await window.myntWallpaper.useLegacy(blob);
+        else { applyBlobBackground(blob); await saveImageToIndexedDB(blob, true); }
         toggleBackgroundType(true);
     } catch (error) {
         console.error("Error fetching random image:", error);

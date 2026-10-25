@@ -1,9 +1,10 @@
 /* Offline background adaptation. Manual myntLayout is never written by this module. */
-const MYNT_ADAPTIVE_DEFAULTS = {version:1, color:true, contrast:true, opacity:true, layout:false};
+const MYNT_ADAPTIVE_DEFAULTS = {version:1, color:true, contrast:true, opacity:true, layout:false, strength:'soft'};
 function myntNormalizeAdaptive(raw) {
     const out = {...MYNT_ADAPTIVE_DEFAULTS};
     if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.version !== 1) return out;
     for (const key of ['color','contrast','opacity']) if (typeof raw[key] === 'boolean') out[key] = raw[key];
+    if (['soft','vivid'].includes(raw.strength)) out.strength = raw.strength;
     return out;
 }
 if (typeof module !== 'undefined' && module.exports) module.exports = {myntNormalizeAdaptive};
@@ -11,7 +12,8 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     const KEY = 'myntAdaptiveBackground';
     const body = document.body, core = globalThis.MyntAdaptiveCore;
     if (!core) return;
-    let config; try { config = myntNormalizeAdaptive(JSON.parse(localStorage.getItem(KEY))); } catch { config = myntNormalizeAdaptive(null); }
+    let configReadWarning=false;
+    let config; try { const saved=localStorage.getItem(KEY);const raw=JSON.parse(saved);config = myntNormalizeAdaptive(raw);if(saved!==null&&(!raw||raw.version!==1||['color','contrast','opacity'].some(key=>raw[key]!==undefined&&typeof raw[key]!=='boolean')||(raw.strength!==undefined&&!['soft','vivid'].includes(raw.strength))))configReadWarning=true;if(saved===null&&(localStorage.getItem('selectedTheme')!==null||localStorage.getItem('customThemeColor')!==null))config.color=false; } catch { config = myntNormalizeAdaptive(null);configReadWarning=true; }
     let language='zh_TW';try{language=localStorage.getItem('selectedLanguage')||language;}catch{}
     const t = (key, fallback) => typeof translations !== 'undefined' ? (translations[language]?.[key] || translations.en?.[key] || fallback) : fallback;
     let frame = null, palette = null, sourceKey = '', imageCache = null, imageUrl = '', generation = 0, timer = null, resizeTimer = null, storageError = false;
@@ -21,8 +23,17 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     const content = document.createElement('div'); content.className = 'adaptiveContent';
     const intro = document.createElement('p'); intro.textContent = t('adaptiveIntro','完全在本機分析色彩、亮暗與紋理；不是人物辨識。');
     content.append(intro);
-    const labels = {color:['adaptiveColor','自動配色'],contrast:['adaptiveContrast','自動文字明暗與對比'],opacity:['adaptiveOpacity','自動卡片透明度']};
+    const labels = {contrast:['adaptiveContrast','自動文字明暗與對比'],opacity:['adaptiveOpacity','自動卡片透明度']};
     const inputs = {};
+    const modeLabel=document.createElement('label'), mode=document.createElement('select');mode.id='myntAdaptiveMode';
+    modeLabel.append(document.createTextNode(t('adaptiveMode','配色來源')),mode);
+    for(const [value,key,label] of [['background','adaptiveFollow','跟隨背景'],['manual','adaptiveManualColor','手動主色']]){const option=document.createElement('option');option.value=value;option.textContent=t(key,label);mode.append(option);}
+    const strengthLabel=document.createElement('label'), strength=document.createElement('select');strength.id='myntAdaptiveStrength';
+    strengthLabel.append(document.createTextNode(t('adaptiveStrength','配色強度')),strength);
+    for(const [value,key,label] of [['soft','adaptiveSoft','柔和'],['vivid','adaptiveVivid','鮮明']]){const option=document.createElement('option');option.value=value;option.textContent=t(key,label);strength.append(option);}
+    content.append(modeLabel,strengthLabel);
+    mode.addEventListener('change',()=>{config.color=mode.value==='background';persist();applyModes();schedule();});
+    strength.addEventListener('change',()=>{config.strength=strength.value;persist();applyModes();});
     for (const [key,[labelKey, fallback]] of Object.entries(labels)) {
         const label = document.createElement('label'), input = document.createElement('input'); input.type='checkbox'; input.id=`myntAdaptive-${key}`; input.checked=config[key]; inputs[key]=input;
         label.append(input, document.createTextNode(t(labelKey,fallback))); content.append(label);
@@ -34,9 +45,10 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     content.append(analyzeButton,state,notes);panel.append(summary,content);body.append(panel);
 
     panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();panel.open=false;summary.focus();}});
-    function report(message) { state.textContent=message+(storageError?' '+t('adaptiveStorageError','設定未能保存，僅本次有效。'):''); }
-    function persist(){ try{localStorage.setItem(KEY,JSON.stringify(config));storageError=false;}catch{storageError=true;} }
+    function report(message) { state.textContent=message+(configReadWarning?' '+t('adaptiveStoredFallback','原設定無法讀取，暫用預設；原資料未覆寫。'):'')+(storageError?' '+t('adaptiveStorageError','設定未能保存，僅本次有效。'):''); }
+    function persist(){ try{localStorage.setItem(KEY,JSON.stringify(config));storageError=false;configReadWarning=false;}catch{storageError=true;} }
     function applyModes(){
+        mode.value=config.color?'background':'manual';strength.value=config.strength;strength.disabled=!config.color;
         body.dataset.adaptiveColor=config.color?'on':'off';body.dataset.adaptiveContrast=config.contrast?'on':'off';body.dataset.adaptiveOpacity=config.opacity?'on':'off';
         if(palette)applyPalette(palette,false);
     }
@@ -66,6 +78,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
         ctx.drawImage(el,dx*canvas.width/innerWidth,dy*canvas.height/innerHeight,rw*canvas.width/innerWidth,rh*canvas.height/innerHeight);
         return ctx.getImageData(0,0,canvas.width,canvas.height);
     }
+    let pendingMode=null, pendingSince=0;
     const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
     const hex=arr=>'#'+arr.map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
     const blend=(a,b)=>hex(rgb(a).map((v,i)=>v*.75+rgb(b)[i]*.25));
@@ -101,20 +114,48 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
         }
         return hex(rgb(accent).map((v,i)=>v*(1-high)+rgb(target)[i]*high));
     }
+    function themeColor(name,fallback){
+        // Resolve the ORIGINAL root palette, never the adaptive descendant overrides.
+        const probe=document.createElement('span');probe.style.color=`var(${name})`;document.documentElement.append(probe);
+        const value=getComputedStyle(probe).color;probe.remove();
+        const channels=value.match(/^rgba?\(\s*([\d.]+)[, ]+([\d.]+)[, ]+([\d.]+)/i);
+        return channels?hex(channels.slice(1,4).map(Number)):fallback;
+    }
+    function safeOpacity(surface,text,requested){
+        // Check the composited card over both possible wallpaper extremes.
+        let alpha=Math.max(.72,Math.min(.98,requested));
+        for(;alpha<1;alpha+=.005){if([0,255].every(bg=>contrastRatio(text,hex(rgb(surface).map(v=>v*alpha+bg*(1-alpha))))>=4.6))break;}
+        return Math.min(1,Math.ceil(alpha*1000)/1000);
+    }
     function applyPalette(next,smooth){
         let p={...next};
+        if(smooth&&palette&&p.mode!==palette.mode){
+            const now=Date.now();
+            if(pendingMode!==p.mode){pendingMode=p.mode;pendingSince=now;}
+            if(now-pendingSince<12000){p={...palette};}
+            else{pendingMode=null;smooth=false;}
+        }else{pendingMode=null;}
         if(smooth&&palette){p.surface=blend(palette.surface,p.surface);p.accent=blend(palette.accent,p.accent);p.opacity=palette.opacity*.75+p.opacity*.25;}
-        // Hysteresis: keep a stable surface family during video playback, avoiding mid-gray flashes.
-        if(smooth&&palette&&p.mode!==palette.mode){p.surface=palette.surface;p.mode=palette.mode;p.accent=palette.accent;}
         p.text=textFor(p.surface);palette=p;
-        const surface=config.contrast?p.surface:config.opacity?'#f4f8ff':unadaptedSurface();
-        const text=config.contrast?p.text:'#213851';
-        const alpha=config.opacity?Math.max(.94,Math.min(.99,p.opacity)):manualOpacity();
-        // Validate against the surface actually selected by the toggles, not the unused source palette.
-        const accent=config.color?readableAccent(p.accent,surface,alpha,config.opacity):'#3569ac';
+        let manualSurface=themeColor('--accentLightTint-blue','#f4f8ff');
+        const selectedMode=document.getElementById('themeSegment')?.dataset.active;
+        const dark=selectedMode==='dark'||selectedMode==='system'&&body.getAttribute?.('sysTheme')==='systemDark'||document.documentElement.classList?.contains('black-theme');
+        if(dark&&(config.color||config.contrast))manualSurface=hex(rgb(manualSurface).map((v,i)=>v*.08+[20,21,25][i]*.92));
+        // The explicit black preset has legacy fixed dark surfaces; honor it so
+        // new foreground tokens cannot become dark text on those surfaces.
+        const blackPreset=document.documentElement.classList?.contains('black-theme');
+        const surface=config.color&&config.contrast&&!blackPreset?p.surface:manualSurface;
+        const text=textFor(surface);
+        const alpha=config.opacity?safeOpacity(surface,text,Math.max(.76,Math.min(.9,p.opacity-.09))):manualOpacity();
+        let rawAccent=config.color?p.accent:themeColor('--darkerColor-blue','#3569ac');
+        if(config.color&&config.strength==='soft')rawAccent=hex(rgb(rawAccent).map(v=>v*.7+luminance(rawAccent)*255*.3));
+        const accent=readableAccent(rawAccent,surface,alpha,config.opacity);
         body.style.setProperty('--adaptive-surface',`rgba(${rgb(surface).join(',')},${alpha.toFixed(3)})`);
         body.style.setProperty('--adaptive-text',text);body.style.setProperty('--adaptive-accent',accent);body.style.setProperty('--adaptive-accent-text',textFor(accent));
-        body.dataset.adaptiveMode=p.mode;
+        body.dataset.adaptiveMode=luminance(surface)>.4?'light':'dark';
+        // All original widgets use the same Material tokens. Never mutate root
+        // manual values; removing descendant overrides restores them exactly.
+        body.style.setProperty('--adaptive-widget-bg',surface);
     }
     function measureQuote(){
         if(!frame)return false;const quote=document.querySelector('#studyQuote');if(!quote)return false;
@@ -125,23 +166,24 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     }
     async function analyze(){
         if(document.hidden)return;const token=++generation,src=source(),changed=src.key!==sourceKey;
-        if(changed){sourceKey=src.key;palette=null;}
+        if(changed){sourceKey=src.key;pendingMode=null;}
         try{
             const next=await sample(src);if(token!==generation||document.hidden)return;frame=next;
             const result=core.analyze(next.data,next.width,next.height);if(!result.valid)throw Error('pixels');
             applyPalette(result,src.kind==='video'&&!changed);measureQuote();
             const where=t('adaptiveManual','保留手動位置');
-            report(`${t('adaptiveReady','本機分析完成')} · ${palette.mode==='dark'?t('adaptiveDark','深色'):t('adaptiveLight','淺色')} · ${where}`);
-        }catch(error){if(token!==generation)return;frame=null;palette=null;
-            applyPalette({surface:'#f4f8ff',text:'#213851',accent:'#3569ac',accentText:'#ffffff',mode:'light',opacity:.96},false);
-            report(error.message==='not-ready'?t('adaptiveWaiting','等待背景影片就緒；暫用安全預設。'):t('adaptiveFallback','無法讀取背景像素（跨來源、解碼或 Canvas 限制）；已回退安全配色，保留排版。'));
+            report(`${t('adaptiveReady','本機分析完成')} · ${body.dataset.adaptiveMode==='dark'?t('adaptiveDark','深色'):t('adaptiveLight','淺色')} · ${where}`);
+        }catch(error){if(token!==generation)return;frame=null;
+            if(!palette)applyPalette({surface:'#f4f8ff',text:'#213851',accent:'#3569ac',accentText:'#ffffff',mode:'light',opacity:.96},false);
+            report(error.message==='not-ready'?t('adaptiveWaiting','等待背景影片就緒；暫用安全預設。'):t('adaptiveFallback','無法讀取背景像素（跨來源、解碼或 Canvas 限制）；保留上次有效配色；首次分析使用安全預設，保留排版。'));
         }
     }
     function schedule(){clearTimeout(timer);if(!document.hidden)timer=setTimeout(()=>analyze(),180);}
     let lastSource='';const checkSource=()=>{const next=source().key;if(next!==lastSource){lastSource=next;schedule();}};
     new MutationObserver(checkSource).observe(body,{attributes:true,attributeFilter:['style','data-workspace-background','data-gallery-video','data-wallpaper-id']});
     // Respect transparency changes immediately without touching its stored value or manual layout.
-    new MutationObserver(()=>{checkSource();if(palette&&!config.opacity)applyPalette(palette,false);}).observe(document.documentElement,{attributes:true,attributeFilter:['style']});
+    new MutationObserver(()=>{checkSource();if(palette)applyPalette(palette,false);}).observe(document.documentElement,{attributes:true,attributeFilter:['style']});
+    document.addEventListener('mynt:theme-mode',()=>{checkSource();if(palette)applyPalette(palette,false);});
     document.addEventListener('loadeddata',event=>{if(['videoBg','myntGalleryVideo'].includes(event.target.id))schedule();},true);
     addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>analyze(),250);});
     let videoSampleTimer=null;
@@ -152,9 +194,16 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     }
     document.addEventListener('visibilitychange',samplingVisibility);
     samplingVisibility();
-    window.myntAdaptive={measureQuote,getConfig:()=>({...config}),updateRemote(patch,gate){
-        if(!patch||typeof patch!=='object'||Array.isArray(patch)||!Object.keys(patch).length||Object.keys(patch).some(key=>!['color','contrast','opacity'].includes(key)||typeof patch[key]!=='boolean'))throw Error('Invalid appearance patch');
+    function reloadPreferences(){
+        try{const raw=localStorage.getItem(KEY);const value=raw===null?null:JSON.parse(raw);if(value!==null&&(!value||value.version!==1))return;config=myntNormalizeAdaptive(value);storageError=false;}catch{return;}
+        for(const key of ['contrast','opacity'])inputs[key].checked=config[key];applyModes();schedule();
+    }
+    addEventListener('storage',event=>{if(event.key===KEY||event.key===null)reloadPreferences();if(['selectedTheme','customThemeColor'].includes(event.key))window.myntThemePreferences?.reload();});
+    document.addEventListener('mynt:manual-theme',()=>{config.color=false;persist();applyModes();schedule();});
+    window.myntAdaptive={reload:reloadPreferences,measureQuote,getConfig:()=>({...config}),updateRemote(patch,gate){
+        if(!patch||typeof patch!=='object'||Array.isArray(patch)||!Object.keys(patch).length||Object.keys(patch).some(key=>!['color','contrast','opacity','strength'].includes(key)||(key==='strength'?!['soft','vivid'].includes(patch[key]):typeof patch[key]!=='boolean')))throw Error('Invalid appearance patch');
+        const stored=localStorage.getItem(KEY);if(stored!==null){let raw;try{raw=JSON.parse(stored);}catch{throw Error('Invalid stored appearance');}if(!raw||raw.version!==1||['color','contrast','opacity'].some(key=>typeof raw[key]!=='boolean')||(raw.strength!==undefined&&!['soft','vivid'].includes(raw.strength)))throw Error('Invalid stored appearance');}
         gate();const next={...config,...patch,layout:false};localStorage.setItem(KEY,JSON.stringify(next));config=next;storageError=false;
-        for(const key of ['color','contrast','opacity'])inputs[key].checked=config[key];applyModes();schedule();return {...config};
-    }};persist();applyModes();schedule();
+        for(const key of ['contrast','opacity'])inputs[key].checked=config[key];applyModes();schedule();return {...config};
+    }};applyModes();schedule();
 });

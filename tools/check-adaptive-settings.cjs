@@ -1,8 +1,8 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('scripts/adaptive-background.js','utf8');
 const {myntNormalizeAdaptive:n}=require('../scripts/adaptive-background.js');
-for(const bad of [null,[],false,'x',{version:99},{version:1,color:'false',layout:0}])assert.deepEqual(n(bad),{version:1,color:true,contrast:true,opacity:true,layout:false});
-assert.deepEqual(n({version:1,color:false,contrast:false,opacity:false,layout:false,extra:'drop'}),{version:1,color:false,contrast:false,opacity:false,layout:false});
+for(const bad of [null,[],false,'x',{version:99},{version:1,color:'false',layout:0}])assert.deepEqual(n(bad),{version:1,color:true,contrast:true,opacity:true,layout:false,strength:'soft'});
+assert.deepEqual(n({version:1,color:false,contrast:false,opacity:false,layout:false,extra:'drop'}),{version:1,color:false,contrast:false,opacity:false,layout:false,strength:'soft'});
 const load=source.match(/let config; try \{[\s\S]*?let language='zh_TW';try\{[\s\S]*?catch\{\}/)[0];
 for(const storage of [{getItem(){throw Error('blocked')}},{getItem(){return '{malformed'}}]){
  const c={myntNormalizeAdaptive:n,localStorage:storage,KEY:'myntAdaptiveBackground'};vm.createContext(c);vm.runInContext(load+';result={config,language}',c);assert.equal(c.result.config.layout,false);assert.ok(c.result.language);
@@ -30,17 +30,17 @@ for(const pixel of fixtures){
  for(let i=0;i<data.length;i+=4)data.set([...pixel,255],i);
  const sampled=core.analyze(data,16,16);
  for(const color of [false,true])for(const contrast of [false,true])for(const opacity of [false,true]){
-  const properties=new Map(),root={},card={};let transparency='47%';
+  const properties=new Map(),root={append(){}},card={};let transparency='47%';
   const context={
-   config:n({version:1,color,contrast,opacity}),palette:null,
-   body:{dataset:{},style:{setProperty:(key,value)=>properties.set(key,value)}},
-   document:{documentElement:root,getElementById:id=>id==='searchbar'?card:null},
-   getComputedStyle:el=>el===root?{getPropertyValue:()=>transparency}:{backgroundColor:'rgb(238, 245, 255)'}
+   config:n({version:1,color,contrast,opacity}),palette:null,pendingMode:null,pendingSince:0,
+   body:{dataset:{},style:{setProperty:(key,value)=>properties.set(key,value),removeProperty:key=>properties.delete(key)}},
+   document:{documentElement:root,getElementById:id=>id==='searchbar'?card:null,createElement:()=>({style:{},remove(){}})},
+   getComputedStyle:el=>el===root?{getPropertyValue:()=>transparency}:{backgroundColor:'rgb(238, 245, 255)',color:'rgb(238, 245, 255)'}
   };
   vm.createContext(context);vm.runInContext(appearanceSource,context);context.applyPalette(sampled,false);
   const surface=properties.get('--adaptive-surface').match(/[\d.]+/g).map(Number);
-  assert.equal(surface[3],opacity?Math.max(.94,Math.min(.99,sampled.opacity)):.47,'Opacity off respects the existing slider');
-  const expected=contrast?rgb(sampled.surface):opacity?[244,248,255]:[238,245,255];
+  if(opacity){assert.ok(surface[3]>=.72&&surface[3]<=1);assert.ok(surface[3]<.94,'Automatic surface is lighter than the previous fixed floor');}else assert.equal(surface[3],.47,'Opacity off respects the existing slider');
+  const expected=color&&contrast?rgb(sampled.surface):[238,245,255];
   assert.deepEqual(surface.slice(0,3),expected,'Rendered surface follows the active toggle combination');
   if(color){
    const accent=rgb(properties.get('--adaptive-accent'));
@@ -62,7 +62,7 @@ for(const pixel of fixtures){
   combinations++;
  }
 }
-assert.match(source,/new MutationObserver\(\(\)=>\{checkSource\(\);if\(palette&&!config\.opacity\)applyPalette\(palette,false\);\}\)\.observe\(document\.documentElement,\{attributes:true,attributeFilter:\['style'\]\}\)/,'Existing slider updates trigger a palette refresh');
+assert.match(source,/new MutationObserver\(\(\)=>\{checkSource\(\);if\(palette\)applyPalette\(palette,false\);\}\)\.observe\(document\.documentElement,\{attributes:true,attributeFilter:\['style'\]\}\)/,'Existing slider updates trigger a palette refresh');
 const css=fs.readFileSync('styles/adaptive-background.css','utf8');
 assert.doesNotMatch(css,/\.reduced-motion|mynt-adaptive-dashboard/);
 assert.match(css,/html\.myntReducedMotion/);
@@ -77,5 +77,5 @@ vm.runInNewContext(source.match(/    panel.addEventListener\('keydown'.*?\n/)[0]
 escape({key:'Escape',stopPropagation(){stopped++}});assert.equal(panel.open,false);assert.equal(stopped,1);assert.equal(focused,1);
 let observer,checked=0,reapplied=0;
 vm.runInNewContext(source.match(/    new MutationObserver\(\(\)=>\{checkSource\(\);.*?\n/)[0],{MutationObserver:class{constructor(fn){observer=fn}observe(){}},document:{documentElement:{}},checkSource(){checked++},palette:{},config:{opacity:true},applyPalette(){reapplied++}});
-observer();assert.equal(checked,1);assert.equal(reapplied,0);
+observer();assert.equal(checked,1);assert.equal(reapplied,1);
 console.log('ADAPTIVE_INTERACTIONS_OK: Escape stays inside panel and root theme changes check the source even with adaptive opacity');

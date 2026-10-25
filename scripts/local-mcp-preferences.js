@@ -19,7 +19,7 @@ const definitions=[
  ['mynt_language_update','Preview language change requirements; cannot reload or refetch quotes through MCP.','language',{language:en(LOCALES)}]
 ];
 const tools=definitions.map(([name,description,domain,patch])=>({name,description,readOnly:!patch,annotations:{readOnlyHint:!patch,destructiveHint:false,openWorldHint:false},inputSchema:obj(patch?{...patch,expectedRevision:{type:'string',pattern:'^[a-f0-9]{64}$',maxLength:64},requestId:str(100)}:{},patch?['expectedRevision']:[])}));
-const KEY={clock:['clocktype','hourformat','greetingEnabled','myntGreetingName','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField','greetingField'],search:['showShortcutSwitch','aiModeIconVisible','motivationalQuotesVisible'],ai:['aiToolsSettings','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
+const KEY={clock:['clocktype','hourformat','greetingEnabled','myntGreetingName','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField','greetingField'],search:['showShortcutSwitch','aiModeIconVisible','motivationalQuotesVisible'],ai:['aiToolsSettings','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor','myntAdaptiveBackground'],language:['selectedLanguage']};
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v)&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
 function fail(code,message){const error=Error(message);error.code=code;throw error;}
 function validate(v,s,path='args'){
@@ -44,6 +44,7 @@ function get(domain,raw){
  if(domain==='search')return{engine:'google',supportedDefaultEngines:['google'],bangAliases:['!yt','!youtube','!gh','!github','!gpt','!chat','!claude','!maps','!npm','!b','!trans','!mail','!drive'],directUrlNavigationAvailableInBrowser:true,providerRowHidden:boolean(raw.showShortcutSwitch),aiModeVisible:boolean(raw.aiModeIconVisible,true),cachedQuotesPreserved:true};
  if(domain==='ai'){value(raw.aiToolsDisplayStatus,['flex','none'],null);return{tools:aiSettings(raw.aiToolsSettings),visible:value(raw.aiToolsCheckboxState,['checked','unchecked'],'unchecked')==='checked'};}
  if(domain==='theme'){
+  if(raw.myntAdaptiveBackground!==null){const a=parse(raw.myntAdaptiveBackground);if(!plain(a)||a.version!==1||['color','contrast','opacity'].some(k=>typeof a[k]!=='boolean')||(a.strength!==undefined&&!['soft','vivid'].includes(a.strength)))fail('INVALID_STORAGE','Invalid appearance preference preserved');}
   const palette=value(raw.selectedTheme,PALETTES,'blue'),customColor=raw.customThemeColor;
   if(customColor!==null&&!/^#[a-fA-F0-9]{6}$/.test(customColor))fail('INVALID_STORAGE','Invalid custom palette preserved');return{palette,customColor};
  }
@@ -75,6 +76,8 @@ async function execute(name,args={},context={}){
    if(args.tools){if(new Set(args.tools.map(v=>v.id)).size!==3)fail('INVALID_ARGUMENT','Each built-in AI tool must appear exactly once');next.aiToolsSettings=JSON.stringify(args.tools.map(v=>v.visible?v.id:{[v.id]:false}));}
    if(args.visible!==undefined){next.aiToolsCheckboxState=args.visible?'checked':'unchecked';next.aiToolsDisplayStatus=args.visible?'flex':'none';}
   }else if(domain==='theme'){
+   const adaptive=raw.myntAdaptiveBackground===null?{version:1,color:false,contrast:true,opacity:true,layout:false,strength:'soft'}:parse(raw.myntAdaptiveBackground);
+   next.myntAdaptiveBackground=JSON.stringify({...adaptive,color:false,layout:false});
    if(args.palette&&args.customColor)fail('INVALID_ARGUMENT','Choose a preset or custom color, not both');
    if(args.palette){next.selectedTheme=args.palette;next.customThemeColor=null;}
    else{next.customThemeColor=args.customColor;next.selectedTheme=null;}

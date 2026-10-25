@@ -18,6 +18,7 @@ const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
 
 const syncThemeChange = (MediaQuery) => {
     document.body.setAttribute("sysTheme", MediaQuery.matches ? "systemDark" : "systemLight");
+    document.dispatchEvent(new Event("mynt:theme-mode"));
 }
 
 // Initialize system theme attribute immediately
@@ -43,6 +44,7 @@ syncThemeChange(systemTheme);
         localStorage.setItem(preferredThemeKey, theme);
         segment.dataset.active = theme;
         moveIndicator(theme);
+        document.dispatchEvent(new Event("mynt:theme-mode"));
 
         // Update sysTheme attribute when system mode is selected
         if (theme === "system") {
@@ -315,6 +317,7 @@ const handleThemeChange = function () {
         localStorage.setItem(themeStorageKey, colorValue);
         localStorage.removeItem(customThemeStorageKey); // Clear custom theme
         applySelectedTheme(colorValue);
+        document.dispatchEvent(new Event('mynt:manual-theme'));
     }
 };
 
@@ -331,6 +334,7 @@ const handleColorPickerChange = function (event) {
     localStorage.setItem(customThemeStorageKey, selectedColor); // Save custom color
     localStorage.removeItem(themeStorageKey); // Clear predefined theme
     applyCustomTheme(selectedColor);
+    document.dispatchEvent(new Event('mynt:manual-theme'));
 
     // Uncheck all radio buttons
     radioButtons.forEach(radio => {
@@ -369,4 +373,5 @@ window.myntThemePreferences = { reload() {
     if (custom) { resetDarkTheme(); applyCustomTheme(custom, false); colorPicker.value = custom; }
     else applySelectedTheme(selected, false);
     radioButtons.forEach(radio => { radio.checked = !custom && radio.value === selected; });
+    window.myntAdaptive?.reload();
 } };

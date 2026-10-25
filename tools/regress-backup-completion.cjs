@@ -73,7 +73,7 @@ function environment() {
     });
     vm.runInContext(source, context);
     vm.runInContext(`
-        seed('ImageDB', 'backgroundImages', null, [['backgroundImage', new Blob(['old wallpaper'], {type:'image/png'})], ['lastUpdateTime', '2026-10-20T00:00:00Z'], ['imageType','upload'], ['future-metadata','keep me']]);
+        seed('ImageDB', 'backgroundImages', null, [['backgroundImage', new Blob(['old wallpaper'], {type:'image/png'})], ['lastUpdateTime', '2026-10-20T00:00:00Z'], ['imageType','upload'], ['future-metadata','keep me'], ['myntGalleryCacheOwnerV1','old-gallery']]);
         seed('MYNTWallpaperGallery', 'items', 'id', [['old-gallery',{id:'old-gallery',name:'old.png',type:'image',source:'upload',added:1,blob:new Blob(['old gallery'],{type:'image/png'})}]]);
         seed('MyntPomodoroAppearance', 'images', null, [['background',new Blob(['old timer'],{type:'image/png'})]]);
         seed('myntPomodoroMusicV1', 'tracks', 'id', [['old-track',{id:'old-track',name:'old.mp3',blob:new Blob(['old audio'],{type:'audio/mpeg'})}]]);
@@ -114,6 +114,7 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     assert.equal(result.backup.media.timerImage.length, 1);
     assert.equal(result.backup.media.music.length, 1);
     assert(!Object.hasOwn(result.backup.indexedDB, 'future-metadata'));
+    assert(!Object.hasOwn(result.backup.indexedDB, 'myntGalleryCacheOwnerV1'), 'Ephemeral cache ownership must not be exported');
     assert.deepEqual(await snapshot(exporting), beforeExport);
 
     const fresh = environment();
@@ -124,6 +125,11 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     assert.deepEqual(JSON.parse(JSON.stringify(roundTrip.backup.indexedDB)), JSON.parse(JSON.stringify(result.backup.indexedDB)));
     assert.deepEqual(JSON.parse(JSON.stringify(roundTrip.backup.localStorage)), JSON.parse(JSON.stringify(result.backup.localStorage)));
 
+    const noLock = environment(); loadFixture(noLock); noLock.context.navigator = {}; const noLockBefore = await snapshot(noLock);
+    await assert.rejects(noLock.run('restoreData(fixture)')); assert.deepEqual(await snapshot(noLock), noLockBefore, 'Missing browser coordination fails before any restore writes');
+    const locked = environment(); loadFixture(locked); let locks = 0;
+    locked.context.navigator = { locks: { async request(name, callback) { assert.equal(name, 'mynt-wallpaper-gallery-write'); locks++; return callback(); } } };
+    await locked.run('restoreData(fixture)'); assert.equal(locks, 1, 'Full restore shares the gallery transaction lock');
     const full = environment(); loadFixture(full);
     const { myntNormalizeLayout } = require(path.join(process.argv[2] || process.cwd(), 'scripts/layout-editor.js'));
     const profiles = require(path.join(process.argv[2] || process.cwd(), 'scripts/layout-profiles.js'));
@@ -146,6 +152,7 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     assert.equal(await full.databases.get('myntPomodoroMusicV1').entries.get('song').blob.text(), 'music');
     assert.equal(await full.databases.get('MyntPomodoroAppearance').entries.get('background').text(), 'timer');
     assert.equal(full.databases.get('ImageDB').entries.get('future-metadata'), 'keep me');
+    assert(!full.databases.get('ImageDB').entries.has('myntGalleryCacheOwnerV1'), 'Full restore cannot misattribute imported wallpaper to an old gallery item');
     assert(!full.databases.get('MYNTWallpaperGallery').entries.has('old-gallery'));
 
     for (const [kind, name] of [['commit','ImageDB'], ['commit','MYNTWallpaperGallery'], ['commit','MyntPomodoroAppearance'], ['commit','myntPomodoroMusicV1'], ['throwPut','MYNTWallpaperGallery'], ['local','todoList']]) {
@@ -208,6 +215,9 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     cancelled.accept(true); await cancelled.run('validateAndRestoreData(event)');
     assert.equal(cancelled.reloads(), 1); assert(cancelled.alerts.includes('Restored.'));
 
+    const paletteValidation=environment();
+    for(const strength of ['soft','vivid'])assert(paletteValidation.run(`isValidBackupFile({localStorage:{myntAdaptiveBackground:JSON.stringify({version:1,color:false,contrast:false,opacity:false,layout:false,strength:'${strength}'})},indexedDB:{}})`));
+    for(const raw of ['{bad',JSON.stringify({version:2}),JSON.stringify({version:1,color:'false'}),JSON.stringify({version:1,strength:'unsafe'})]){paletteValidation.context.paletteRaw=raw;assert.equal(paletteValidation.run('isValidBackupFile({localStorage:{myntAdaptiveBackground:paletteRaw},indexedDB:{}})'),false);}
     const oversized = environment();
     oversized.run(`seed('myntPomodoroMusicV1','tracks','id',[['large',{id:'large',name:'large.mp3',blob:new Blob([new Uint8Array(25*1024*1024)],{type:'audio/mpeg'})}]]);`);
     const beforeOversized = await snapshot(oversized);

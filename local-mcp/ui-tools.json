@@ -121,7 +121,7 @@
   },
   {
     "name": "mynt_appearance_update",
-    "description": "Update only palette, contrast and opacity booleans, never positions.",
+    "description": "Update background/manual palette choice, contrast, opacity and soft/vivid intensity; never positions.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -133,6 +133,13 @@
         },
         "opacity": {
           "type": "boolean"
+        },
+        "strength": {
+          "type": "string",
+          "enum": [
+            "soft",
+            "vivid"
+          ]
         },
         "expectedRevision": {
           "type": "string",

@@ -681,7 +681,7 @@
   },
   {
     "name": "mynt_wallpaper_edit",
-    "description": "Select, rename, recoverably remove, restore or undo removal by stable ID. Cancel the applied wallpaper before removing it. Never deletes blobs; bundled removal hides the packaged asset and restore unhides it.",
+    "description": "Select, rename, recoverably remove, restore or undo removal by stable ID. Cancel the applied wallpaper before removing it. Never deletes blobs; purge returns ACTION_REQUIRED for the browser Recovery confirmation. Bundled removal hides the packaged asset and restore unhides it.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -692,7 +692,8 @@
             "rename",
             "remove",
             "restore",
-            "undo"
+            "undo",
+            "purge"
           ]
         },
         "id": {

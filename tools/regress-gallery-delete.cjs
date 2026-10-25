@@ -10,6 +10,8 @@ const c={console,Date,Map,Set,window:{myntDialog:{confirm:async()=>{confirmation
  hiddenIds:()=>new Set(hidden),saveHidden:h=>hidden=h,localStorage:{getItem:()=>current,removeItem:()=>current=null},KEY_CURRENT:'current',
  tx:async(mode,fn)=>{if(fail)throw Error('quota');const copy=new Map(map);const result=await fn({getAll:()=>[...copy.values()],put:x=>copy.set(x.id,x)});if(mode==='readwrite'){map.clear();copy.forEach((v,k)=>map.set(k,v));}return result;},reqP:async x=>x,
  next:async()=>{nexts++;current='b';return true;},URL:{revokeObjectURL(){}},setTimeout,clearTimeout};
+c.withGalleryWrite=fn=>fn();c.notifyGalleryChange=()=>{};c.releaseGalleryImage=()=>{};c.scheduleRotate=()=>{};c.nextUnlocked=(...args)=>c.next(...args);
+c.updateItems=async(ids,update)=>c.tx('readwrite',store=>{const changed=[];for(const id of ids){const current=map.get(id);if(!current)continue;const next=update(current);if(next){store.put(next);changed.push(next);}}return changed;});
 vm.createContext(c);vm.runInContext(between('    async function allItems(', '    // Items that take part'),c);
 vm.runInContext(between('    // ---------- Gallery UI ----------','    function renderSelection()'),c);
 c.renderGallery=async()=>{renders++;};c.setStatus=x=>status=x;
@@ -24,7 +26,9 @@ c.stopGalleryVideo=()=>{};c.document.body={style:{removeProperty:k=>assert.equal
 vm.runInContext(between('    function clearGalleryBackground()', '    async function applyItem('),c);
 await c.removeItems([map.get('a')]);assert.equal(current,'none');assert.equal(c.document.body.dataset.workspaceBackground,'color');assert(!c.document.body.dataset.wallpaperId);await c.undoRemove();
 fail=true;await c.removeItems([map.get('a')]);assert(!map.get('a').removedAt);assert(status.includes('not been permanently deleted'));
-assert(!src.includes('store.delete('));assert.equal(confirmations,4);
+// The old blanket ban on store.delete is replaced by the isolated purge suite.
+// Ordinary removal must still retain the exact blob and be reversible above.
+assert.match(src,/assertPurgeTarget\(request.result, expected\); store.delete\(id\)/);assert.equal(confirmations,4);
 fail=false;
 map.set('a',{...map.get('a'),removedAt:1});map.set('b',{...map.get('b'),removedAt:2});
 await c.undoRemove('a');assert(!map.get('a').removedAt);assert(map.get('b').removedAt,'Per-item recovery must leave other removed items untouched');
@@ -41,10 +45,10 @@ assert.match(src, /currentBadge.className = "wallpaperBadge wallpaperCurrentBadg
 assert.match(src, /wallpaperUndoBtn: \["wallpaperRestoreAll", "Restore all"\]/, "bulk restore is distinct from per-item restore");
 
 (async()=>{
-const ctx={listItems:async()=>[{id:'fallback'}],localStorage:{getItem:()=> 'removed'},KEY_CURRENT:'current',applyItem:async item=>{assert.equal(item.id,'fallback');return true;}};
+const ctx={withGalleryWrite:fn=>fn(),listItems:async()=>[{id:'fallback'}],localStorage:{getItem:()=> 'removed'},KEY_CURRENT:'current',applyItemUnlocked:async item=>{assert.equal(item.id,'fallback');return true;}};
 vm.createContext(ctx);vm.runInContext(between('    async function next(', '    async function random('),ctx);
 assert.equal(await ctx.next(1),true,'Actual next must report successful fallback, so removal does not clear it');
-ctx.applyItem=async()=>false;assert.equal(await ctx.next(1),false);
+ctx.applyItemUnlocked=async()=>false;assert.equal(await ctx.next(1),false);
 ctx.listItems=async()=>[];assert.equal(await ctx.next(1),false);
 console.log('GALLERY_NEXT_RESULT_OK: real next reports applied, failed, and empty fallback results');
 })().catch(error=>{console.error(error);process.exitCode=1;});

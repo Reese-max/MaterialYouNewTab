@@ -160,7 +160,7 @@
         <h2>背景自適應與排版儲存</h2>
 <p>myntLayoutProfiles（版本 1）只在本機保存命名組合、寬／窄螢幕位置、上一個儲存版本與修訂號。舊 myntLayout 保留，不刪除；排版專用 JSON 匯出不含便籤、帳號或 API 金鑰，匯入先驗證並確認後新增副本。不同分頁的過期寫入會拒絕，以免覆寫更新。</p>
 <p>Named layout profiles and previous versions stay in localStorage. Layout-only exports contain no notes, accounts or API keys; validated imports add copies after confirmation.</p>
-<p>背景圖片與影片像素只在本機 Canvas 進行低解析度色彩、亮度與紋理分析，不傳送到模型或伺服器。localStorage 的 myntAdaptiveBackground（版本 1）保存配色、對比、透明度開關，舊自動排版設定固定轉為關閉；myntLayout（版本 2）保存手動相對位置、縮放、格線與鎖定。背景功能不會移動元件，也不覆寫手動位置。這些設定不跨裝置同步，清除網站資料會刪除設定。無新增權限、網路服務或遙測。</p>
+<p>背景圖片與影片像素只在本機 Canvas 進行低解析度色彩、亮度與紋理分析，不傳送到模型或伺服器。localStorage 的 myntAdaptiveBackground（版本 1）保存背景／手動主色、柔和／鮮明強度、對比與透明度偏好，沿用舊配色開關表示來源，不新增個人資料，舊自動排版設定固定轉為關閉；myntLayout（版本 2）保存手動相對位置、縮放、格線與鎖定。背景功能不會移動元件，也不覆寫手動位置。這些設定不跨裝置同步，清除網站資料會刪除設定。無新增權限、網路服務或遙測。</p>
 <p>Adaptive background processing stays on-device. Versioned local preferences are stored in myntAdaptiveBackground and myntLayout. No pixels are uploaded and no new remote service is used.</p>
 <h2>資料收集與權限</h2>
         <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用搜尋建議、天氣、語音辨識、隨機桌布、語錄或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
@@ -269,6 +269,7 @@
 
     <script src="scripts/privacy-policy.js"></script>
 <p>Layout draft recovery uses sessionStorage (myntLayoutDraft) only in the current tab and survives reload, not guaranteed tab closure. The dismissible guide preference uses localStorage (myntLayoutGuideSeen). Deleted layout profiles remain recoverable locally; no data is uploaded.</p>
+<p>Permanent deletion is available only for individual custom items already in Recovery, after an explicit irreversible confirmation. It deletes that gallery record and thumbnail, and any legacy cache explicitly owned by that record. Unowned legacy caches, other features’ separately saved copies, device originals and exported backups are not erased. New cached gallery images carry a local ownership marker (myntGalleryCacheOwnerV1); full backup restoration discards this ephemeral marker rather than guessing ownership. 本機圖庫永久刪除須先移至回收區，再逐張明確確認；不影響其他功能另存副本、來源檔或已匯出備份。未知來源的舊快取保留，不假設其擁有者。</p>
 <p>Wallpaper gallery removal is recoverable: removed custom images and videos stay in this browser’s local IndexedDB so Undo remains available after reload. They are excluded from gallery playback but still use local storage. Original files on your device are not modified or uploaded.</p>
 <p>「僅設定」可匯出一般設定、排版、待辦、便籤及還原後暫停的計時狀態，不讀取或包含媒體資料庫，也不包含桌布偏好、計時器外觀、音樂偏好與已儲存專注情境。還原時保留目的端的這些媒體及偏好；舊版 v1／v2 備份同樣保留未涵蓋的媒體關聯偏好。完整備份不會自動降級為僅設定；音樂庫可達 300 MiB，不代表能放入 32 MiB 備份，請另行保留原始媒體檔。</p>
 <p>Settings-only exports omit media databases and media-linked wallpaper, timer appearance, music and saved scenario preferences. Restoring them preserves those existing destination files and preferences. Legacy v1/v2 restores likewise preserve omitted media-linked preferences. Full exports never silently downgrade; retain original media separately when the 32 MiB encoded backup limit is exceeded.</p>

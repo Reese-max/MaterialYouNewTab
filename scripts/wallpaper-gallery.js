@@ -17,6 +17,7 @@
     const BUNDLED_VIDEO_ID = "bundled-video-bg";
     const BUNDLED_VIDEO_SRC = "./videos/bg.mp4?v=2";
     const VIDEO_WARN_BYTES = 200 * 1024 * 1024;
+    const WRITE_LOCK = "mynt-wallpaper-gallery-write";
     const lang = localStorage.getItem("selectedLanguage") || "zh_TW";
 
     function t(key, fallback) {
@@ -45,11 +46,13 @@
         return new Promise((resolve, reject) => {
             const transaction = d.transaction(STORE, mode);
             const store = transaction.objectStore(STORE);
-            let result;
-            Promise.resolve(fn(store)).then(r => { result = r; });
+            let result, failure;
+            Promise.resolve().then(() => fn(store)).then(r => { result = r; }, error => {
+                failure = error;
+                try { transaction.abort(); } catch (_) { reject(error); }
+            });
             transaction.oncomplete = () => resolve(result);
-            transaction.onerror = () => reject(transaction.error);
-            transaction.onabort = () => reject(transaction.error);
+            transaction.onerror = transaction.onabort = () => reject(failure || transaction.error || Error("Gallery transaction failed"));
         });
     }
     const reqP = req => new Promise((resolve, reject) => { req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); });
@@ -65,7 +68,39 @@
         return (await allItems()).filter(i => !hidden.has(i.id));
     }
     const getItem = id => tx("readonly", store => reqP(store.get(id)));
-    const putItem = item => tx("readwrite", store => { store.put(item); });
+    let localWriteQueue = Promise.resolve();
+    function withGalleryWrite(operation, requireCrossTab = false) {
+        if (navigator.locks?.request) return navigator.locks.request(WRITE_LOCK, operation);
+        if (requireCrossTab) return Promise.reject(Error("PURGE_UNAVAILABLE"));
+        const pending = localWriteQueue.catch(() => {}).then(operation);
+        localWriteQueue = pending.catch(() => {});
+        return pending;
+    }
+    const putItem = item => withGalleryWrite(() => tx("readwrite", store => { store.put(item); }));
+
+    // Every update re-reads its target in the same transaction. A stale card,
+    // rename prompt or Undo must never recreate a permanently deleted record.
+    async function updateItems(ids, update) {
+        const database = await db();
+        return new Promise((resolve, reject) => {
+            const transaction = database.transaction(STORE, "readwrite");
+            const store = transaction.objectStore(STORE), changed = [];
+            let failure;
+            transaction.oncomplete = () => resolve(changed);
+            transaction.onerror = transaction.onabort = () => reject(failure || transaction.error || Error("Gallery transaction failed"));
+            for (const id of new Set(ids)) {
+                const request = store.get(id);
+                request.onsuccess = () => {
+                    try {
+                        const current = request.result;
+                        if (!current) return;
+                        const nextItem = update(current);
+                        if (nextItem) { store.put(nextItem); changed.push(nextItem); }
+                    } catch (error) { failure = error; transaction.abort(); }
+                };
+            }
+        });
+    }
 
     const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
 
@@ -98,6 +133,7 @@
     let startGalleryWhenVisible = false;
     let videoUrl = null;
     let imageUrl = null;
+    let imageOwnerId = null;
     const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
         || document.documentElement.classList.contains("reduced-motion")
         || document.body.classList.contains("reduced-motion");
@@ -128,7 +164,11 @@
     let resumeGalleryAfterHidden=false;
     document.addEventListener("visibilitychange",()=>{
         if(document.hidden){resumeGalleryAfterHidden=Boolean(videoEl&&!videoEl.paused);videoEl?.pause();}
-        else if(resumeGalleryAfterHidden||startGalleryWhenVisible){resumeGalleryAfterHidden=false;startGalleryWhenVisible=false;syncVideoPlayback();}
+        else {
+            const resume = resumeGalleryAfterHidden || startGalleryWhenVisible;
+            resumeGalleryAfterHidden=false;startGalleryWhenVisible=false;
+            refreshSharedGallery(resume);
+        }
     });
 
     function stopGalleryVideo() {
@@ -139,8 +179,13 @@
     }
 
     // ---------- Apply ----------
+    function releaseGalleryImage() {
+        if (imageUrl) URL.revokeObjectURL(imageUrl);
+        imageUrl = null; imageOwnerId = null;
+    }
     function clearGalleryBackground() {
         stopGalleryVideo();
+        releaseGalleryImage();
         document.body.style.removeProperty("--bg-image");
         document.body.dataset.workspaceBackground = "color";
         document.body.dataset.bg = "color";
@@ -148,32 +193,57 @@
     }
     async function cancelApply() {
         try {
-            localStorage.setItem(KEY_CURRENT, "none");
-            localStorage.setItem(KEY_MODE, "fixed");
-            scheduleRotate();
-            clearGalleryBackground();
-            $("videoBg")?.pause();
-            const modeSelect = $("wallpaperModeSelect");
-            if (modeSelect) modeSelect.value = "fixed";
-            const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
-            const minutesSelect = $("wallpaperMinutesSelect"); if (minutesSelect) minutesSelect.disabled = true;
+            await withGalleryWrite(async () => {
+                localStorage.setItem(KEY_CURRENT, "none");
+                localStorage.setItem(KEY_MODE, "fixed");
+                scheduleRotate();
+                clearGalleryBackground();
+                $("videoBg")?.pause();
+                const modeSelect = $("wallpaperModeSelect");
+                if (modeSelect) modeSelect.value = "fixed";
+                const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
+                const minutesSelect = $("wallpaperMinutesSelect"); if (minutesSelect) minutesSelect.disabled = true;
+            });
+            notifyGalleryChange();
             await renderGallery();
             setStatus(t("wallpaperUnapplied", "Background removed from the home page. Gallery files are kept; rotation is stopped."));
         } catch (error) { setStatus(t("wallpaperActionError", "Could not save this change. Your media are unchanged.")); }
     }
-    function useLegacy() {
-        localStorage.removeItem(KEY_CURRENT);
-        localStorage.setItem(KEY_MODE, "fixed");
-        scheduleRotate(); stopGalleryVideo();
-        document.body.dataset.workspaceBackground = "wallpaper";
-        document.body.dataset.bg = "wallpaper";
-        delete document.body.dataset.wallpaperId;
-        renderSelection();
+    function useLegacy(blob = null) {
+        if (blob !== null && !(blob instanceof Blob)) return Promise.reject(TypeError("A wallpaper Blob is required"));
+        return withGalleryWrite(async () => {
+            if (blob) {
+                if (typeof saveImageToIndexedDB !== "function" || typeof applyBlobBackground !== "function") throw Error("Legacy wallpaper is unavailable");
+                await saveImageToIndexedDB(blob, true);
+            }
+            localStorage.removeItem(KEY_CURRENT);
+            localStorage.setItem(KEY_MODE, "fixed");
+            scheduleRotate(); stopGalleryVideo(); releaseGalleryImage();
+            document.body.dataset.workspaceBackground = "wallpaper";
+            document.body.dataset.bg = "wallpaper";
+            delete document.body.dataset.wallpaperId;
+            if (blob) applyBlobBackground(blob);
+            renderSelection();
+            notifyGalleryChange();
+        });
     }
     async function applyItem(item, { persist = true, beforeMutation } = {}) {
+        return withGalleryWrite(() => applyItemUnlocked(item, { persist, beforeMutation }));
+    }
+    async function applyItemUnlocked(item, { persist = true, beforeMutation } = {}) {
+        // Revalidate after waiting for the shared lock; item may be a stale DOM snapshot.
+        item = item?.id ? await getItem(item.id) : null;
         if (beforeMutation) beforeMutation();
-        if (!item || item.removedAt) return false;
+        if (!item || item.removedAt || hiddenIds().has(item.id)) return false;
+        // Await this owned cache write while holding the same lock as purge.
+        // A delayed cache write must not bring a deleted image back afterwards.
+        if (persist && item.type === "image" && item.blob && typeof saveImageToIndexedDB === "function") {
+            await saveImageToIndexedDB(item.blob, false, item.id);
+            if (beforeMutation) beforeMutation();
+        }
         if (item.type === "video") {
+            releaseGalleryImage();
+            document.body.style.removeProperty("--bg-image");
             const v = ensureVideo();
             const src = item.blob ? URL.createObjectURL(item.blob) : item.src;
             if (videoUrl) URL.revokeObjectURL(videoUrl);
@@ -189,12 +259,11 @@
             if (item.blob) {
                 const url = URL.createObjectURL(item.blob);
                 document.body.style.setProperty("--bg-image", `url(${url})`);
-                if (imageUrl) { const old = imageUrl; requestAnimationFrame(() => URL.revokeObjectURL(old)); }
+                releaseGalleryImage();
                 imageUrl = url;
-                if (persist && typeof saveImageToIndexedDB === "function") {
-                    saveImageToIndexedDB(item.blob, false).catch(() => {});
-                }
+                imageOwnerId = item.id;
             } else if (item.src) {
+                releaseGalleryImage();
                 document.body.style.setProperty("--bg-image", `url("${item.src.replace(/"/g, "%22")}")`);
             }
             document.body.dataset.workspaceBackground = "wallpaper";
@@ -206,23 +275,29 @@
             localStorage.setItem(KEY_LAST, String(Date.now()));
         }
         renderSelection();
+        if (persist) notifyGalleryChange();
         return true;
     }
 
     async function next(direction = 1, beforeMutation) {
+        return withGalleryWrite(() => nextUnlocked(direction, beforeMutation));
+    }
+    async function nextUnlocked(direction = 1, beforeMutation) {
         const items = await listItems();
         if (!items.length) return false;
         const currentId = localStorage.getItem(KEY_CURRENT);
         const idx = items.findIndex(i => i.id === currentId);
         const target = items[(idx + direction + items.length) % items.length];
-        return await applyItem(target, { beforeMutation });
+        return await applyItemUnlocked(target, { beforeMutation });
     }
     async function random(beforeMutation) {
-        const items = await listItems();
-        if (!items.length) return;
-        const currentId = localStorage.getItem(KEY_CURRENT);
-        const pool = items.length > 1 ? items.filter(i => i.id !== currentId) : items;
-        return await applyItem(pool[Math.floor(Math.random() * pool.length)], { beforeMutation });
+        return withGalleryWrite(async () => {
+            const items = await listItems();
+            if (!items.length) return;
+            const currentId = localStorage.getItem(KEY_CURRENT);
+            const pool = items.length > 1 ? items.filter(i => i.id !== currentId) : items;
+            return await applyItemUnlocked(pool[Math.floor(Math.random() * pool.length)], { beforeMutation });
+        });
     }
 
     // ---------- Add items ----------
@@ -303,6 +378,7 @@
     const selected = new Set();
     let selectMode = false;
     let removing = false;
+    let purging = false;
     let undoItems = [];
 
     function displayName(item) {
@@ -320,27 +396,28 @@
                     .replace("{name}", custom.length === 1 ? displayName(custom[0]) : String(custom.length));
                 const ok = window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message);
                 if (!ok) return;
-                // Keep the original blobs in the same local database. No permanent
-                // deletion or time-limited recovery; no schema upgrade is needed.
-                await tx("readwrite", store => {
-                    for (const item of custom) store.put({ ...item, removedAt: Date.now() });
-                });
             }
-            const bundled = items.filter(item => item.source === "bundled");
-            if (bundled.length) {
-                const hidden = hiddenIds();
-                for (const item of bundled) hidden.add(item.id);
-                saveHidden(hidden);
-                undoItems = [...new Map([...undoItems, ...bundled].map(item => [item.id, item])).values()];
-            }
-            const wasCurrent = items.some(item => item.id === localStorage.getItem(KEY_CURRENT));
-            if (wasCurrent) {
-                localStorage.removeItem(KEY_CURRENT);
-                if (!(await next(1))) {
-                    localStorage.setItem(KEY_CURRENT, "none");
-                    clearGalleryBackground();
+            await withGalleryWrite(async () => {
+                // Update only records that still exist. Stale cards cannot resurrect a purge.
+                await updateItems(custom.map(item => item.id), item => item.source !== "bundled" && !item.removedAt ? { ...item, removedAt: Date.now() } : null);
+                const bundled = items.filter(item => item.source === "bundled");
+                if (bundled.length) {
+                    const hidden = hiddenIds();
+                    for (const item of bundled) hidden.add(item.id);
+                    saveHidden(hidden);
+                    undoItems = [...new Map([...undoItems, ...bundled].map(item => [item.id, item])).values()];
                 }
-            }
+                const wasCurrent = items.some(item => item.id === localStorage.getItem(KEY_CURRENT));
+                if (wasCurrent) {
+                    localStorage.removeItem(KEY_CURRENT);
+                    if (!(await nextUnlocked(1))) {
+                        localStorage.setItem(KEY_CURRENT, "none");
+                        clearGalleryBackground();
+                    }
+                    scheduleRotate();
+                }
+            });
+            notifyGalleryChange();
             await renderGallery();
             if (!$("wallpaperUndoBar")?.hidden) $("wallpaperUndoBtn")?.focus();
         } catch (error) {
@@ -359,19 +436,22 @@
 
     async function undoRemove(onlyId = null) {
         try {
-            const removed = (await allItems(true)).filter(item => item.removedAt && (!onlyId || item.id === onlyId));
-            const restoredIds = new Set([...removed, ...undoItems].map(item => item.id));
-            await tx("readwrite", store => {
-                for (const item of removed) {
-                    const restored = { ...item }; delete restored.removedAt; store.put(restored);
+            let restoredIds;
+            await withGalleryWrite(async () => {
+                const removed = (await allItems(true)).filter(item => item.removedAt && (!onlyId || item.id === onlyId));
+                const changed = await updateItems(removed.map(item => item.id), item => {
+                    if (!item.removedAt) return null;
+                    const restored = { ...item }; delete restored.removedAt; return restored;
+                });
+                restoredIds = new Set([...changed, ...undoItems].map(item => item.id));
+                if (!onlyId && undoItems.length) {
+                    const hidden = hiddenIds();
+                    for (const item of undoItems) hidden.delete(item.id);
+                    saveHidden(hidden);
+                    undoItems = [];
                 }
             });
-            if (!onlyId && undoItems.length) {
-                const hidden = hiddenIds();
-                for (const item of undoItems) hidden.delete(item.id);
-                saveHidden(hidden);
-                undoItems = [];
-            }
+            notifyGalleryChange();
             await renderGallery();
             const card = [...($("wallpaperGalleryGrid")?.children || [])].find(node => restoredIds.has(node.dataset.id));
             const target = card?.querySelector(".wallpaperCardPick") || $("closeWallpaperGalleryBtn");
@@ -385,9 +465,89 @@
         const message = t("wallpaperRenamePrompt", "Wallpaper name");
         const name = window.myntDialog ? await window.myntDialog.prompt(message, item.name || "", { maxLength: 60 }) : window.prompt(message, item.name || "");
         if (name === null) return;
-        item.name = name.trim().slice(0, 60);
-        await putItem(item);
-        await renderGallery();
+        try {
+            await withGalleryWrite(() => updateItems([item.id], current => current.source !== "bundled" && !current.removedAt ? { ...current, name: name.trim().slice(0, 60) } : null));
+            notifyGalleryChange();
+            await renderGallery();
+        } catch (_) { setStatus(t("wallpaperActionError", "The change could not be completed. Your stored media have not been permanently deleted. Please try again.")); }
+    }
+
+    function purgeRevision(item) {
+        return JSON.stringify([item.id, item.name, item.source, item.type, item.added, item.removedAt,
+            item.src || null, item.blob?.size || 0, item.blob?.type || null, item.thumb?.size || 0, item.thumb?.type || null]);
+    }
+    async function purgeBlobFingerprint(blob) {
+        if (!blob) return null;
+        // A chained SHA-256 fingerprint processes bounded 1 MiB chunks,
+        // including for large videos. No raw media leave this browser.
+        let digest = new Uint8Array(32);
+        for (let offset = 0; offset < blob.size; offset += 1048576) {
+            const chunk = new Uint8Array(await blob.slice(offset, offset + 1048576).arrayBuffer());
+            const input = new Uint8Array(digest.length + chunk.length);
+            input.set(digest); input.set(chunk, digest.length);
+            digest = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
+        }
+        return Array.from(digest, byte => byte.toString(16).padStart(2, "0")).join("");
+    }
+    async function purgeFingerprint(item) {
+        return JSON.stringify([purgeRevision(item), await purgeBlobFingerprint(item.blob), await purgeBlobFingerprint(item.thumb)]);
+    }
+    function assertPurgeTarget(item, expected) {
+        if (!item || item.source === "bundled" || !item.removedAt || purgeRevision(item) !== expected) throw Error("PURGE_CHANGED");
+        if (localStorage.getItem(KEY_CURRENT) === item.id) throw Error("PURGE_CHANGED");
+    }
+    // This function is deliberately not exposed by the remote API. The only
+    // ordinary entry is a named, irreversible confirmation in the Recovery UI.
+    async function purgeItem(id) {
+        if (purging) return false;
+        purging = true;
+        let committed = false;
+        try {
+            if (!navigator.locks?.request || !crypto.subtle?.digest || typeof window.myntGalleryCache?.purgeOwned !== "function" || typeof window.myntDialog?.confirm !== "function") throw Error("PURGE_UNAVAILABLE");
+            const item = await getItem(id);
+            if (!item || item.source === "bundled" || !item.removedAt) throw Error("PURGE_CHANGED");
+            const expected = purgeRevision(item);
+            const fingerprint = await purgeFingerprint(item);
+            const message = t("wallpaperPurgeConfirm", 'Permanently delete “{name}” from this gallery? Its saved original and thumbnail will be deleted and cannot be restored here. Original files, other features’ saved copies and exported backups are not deleted.').replace("{name}", displayName(item));
+            const accepted = await window.myntDialog.confirm(message, { danger: true, focusCancel: true, okText: t("wallpaperPurge", "Permanently delete") });
+            if (!accepted) return false;
+            await withGalleryWrite(async () => {
+                const current = await getItem(id);
+                assertPurgeTarget(current, expected);
+                if (await purgeFingerprint(current) !== fingerprint) throw Error("PURGE_CHANGED");
+                // The cache helper compares its atomic ownership marker, never
+                // filenames or bytes. Unowned / other features' copies survive.
+                await window.myntGalleryCache.purgeOwned(id);
+                const database = await db();
+                await new Promise((resolve, reject) => {
+                    const transaction = database.transaction(STORE, "readwrite");
+                    const store = transaction.objectStore(STORE);
+                    let failure;
+                    transaction.oncomplete = () => { committed = true; resolve(); };
+                    transaction.onerror = transaction.onabort = () => reject(failure || transaction.error || Error("Gallery transaction failed"));
+                    const request = store.get(id);
+                    request.onsuccess = () => {
+                        try { assertPurgeTarget(request.result, expected); store.delete(id); }
+                        catch (error) { failure = error; transaction.abort(); }
+                    };
+                });
+                selected.delete(id);
+                undoItems = undoItems.filter(item => item.id !== id);
+                if (document.body.dataset.wallpaperId === id) clearGalleryBackground();
+                else if (imageOwnerId === id) releaseGalleryImage();
+            }, true);
+            notifyGalleryChange();
+            await renderGallery();
+            $("wallpaperRecoveryTitle")?.focus();
+            setStatus(t("wallpaperPurged", "This gallery item and its thumbnail were permanently deleted. Other saved copies and exported backups were not deleted."));
+            return true;
+        } catch (error) {
+            const key = committed ? "wallpaperPurgeRefresh" : error.message === "PURGE_UNAVAILABLE" ? "wallpaperPurgeUnavailable" : error.message === "PURGE_CHANGED" ? "wallpaperPurgeChanged" : "wallpaperPurgeFailed";
+            const fallback = committed ? "The gallery item was permanently deleted. Reopen the gallery to refresh its display." : error.message === "PURGE_UNAVAILABLE" ? "Permanent deletion is unavailable in this browser. Your gallery item is kept." : error.message === "PURGE_CHANGED" ? "This wallpaper changed or is still in use. Refresh the gallery and review it again; no gallery item was permanently deleted." : "The gallery item was not permanently deleted. A related cache copy may have been cleared; the original remains in Recovery. Please try again.";
+            setStatus(t(key, fallback));
+            if (committed) notifyGalleryChange();
+            return committed;
+        } finally { purging = false; }
     }
 
     function updateSelectUi() {
@@ -421,7 +581,14 @@
             const restore = document.createElement("button"); restore.type = "button";
             restore.textContent = t("wallpaperUndo", "Restore"); restore.setAttribute("aria-label", `${restore.textContent} ${displayName(item)}`);
             restore.addEventListener("click", () => undoRemove(item.id));
-            row.appendChild(name); row.appendChild(size); row.appendChild(restore); list.appendChild(row);
+            row.appendChild(name); row.appendChild(size); row.appendChild(restore);
+            if (item.source !== "bundled") {
+                const purge = document.createElement("button"); purge.type = "button"; purge.className = "wallpaperPurge";
+                purge.textContent = t("wallpaperPurge", "Permanently delete"); purge.setAttribute("aria-label", `${purge.textContent} ${displayName(item)}`);
+                purge.addEventListener("click", async () => { purge.disabled = true; try { await purgeItem(item.id); } finally { purge.disabled = false; } });
+                row.appendChild(purge);
+            }
+            list.appendChild(row);
         }
         const empty = $("wallpaperRecoveryEmpty"); if (empty) empty.hidden = removed.length > 0;
     }
@@ -494,10 +661,11 @@
                     return;
                 }
                 if (isHidden) {
-                    const h = hiddenIds(); h.delete(item.id); saveHidden(h);
+                    await withGalleryWrite(() => { const h = hiddenIds(); h.delete(item.id); saveHidden(h); });
+                    notifyGalleryChange();
                     await renderGallery();
                 }
-                applyItem(item);
+                await applyItem(item);
             });
             card.appendChild(pick);
 
@@ -520,7 +688,7 @@
             del.textContent = delLabel;
             del.title = delLabel; del.setAttribute("aria-label", `${delLabel} ${displayName(item)}`);
             del.addEventListener("click", async () => {
-                if (isHidden) { const h = hiddenIds(); h.delete(item.id); saveHidden(h); await renderGallery(); return; }
+                if (isHidden) { await withGalleryWrite(() => { const h = hiddenIds(); h.delete(item.id); saveHidden(h); }); notifyGalleryChange(); await renderGallery(); return; }
                 await removeItems([item]);
             });
             footer.appendChild(del);
@@ -661,6 +829,50 @@
         }
     }
 
+    // Cross-tab messages are invalidation only, never deletion instructions.
+    // Re-read IndexedDB under the shared lock before changing a displayed image.
+    let galleryChannel = null;
+    try { if (typeof BroadcastChannel === "function") galleryChannel = new BroadcastChannel("mynt-wallpaper-gallery"); } catch (_) { /* Focus and storage events still refresh. */ }
+    function notifyGalleryChange() { try { galleryChannel?.postMessage({ type: "changed" }); } catch (_) { /* Closed page. */ } }
+    async function refreshSharedGallery(resumeVideo = false) {
+        try {
+            await withGalleryWrite(async () => {
+                const current = localStorage.getItem(KEY_CURRENT);
+                const applied = document.body.dataset.wallpaperId;
+                if (applied) {
+                    const item = await getItem(applied);
+                    if (!item || item.removedAt || hiddenIds().has(applied) || current !== applied) clearGalleryBackground();
+                }
+                // Release a stale image even if another feature changed the body marker.
+                if (imageOwnerId) {
+                    const image = await getItem(imageOwnerId);
+                    if (!image || image.removedAt) releaseGalleryImage();
+                }
+                if (current && current !== "none" && current !== document.body.dataset.wallpaperId) {
+                    await applyItemUnlocked(await getItem(current), { persist: false });
+                }
+                if (resumeVideo === true && current && current === document.body.dataset.wallpaperId) syncVideoPlayback();
+                scheduleRotate();
+            });
+            await renderGallery();
+        } catch (_) { /* A failed read must not recreate data or delete another item. */ }
+    }
+    if (galleryChannel) galleryChannel.onmessage = event => { if (event.data?.type === "changed") refreshSharedGallery(); };
+    window.addEventListener("storage", event => { if ([KEY_CURRENT, KEY_MODE, KEY_HIDDEN].includes(event.key)) refreshSharedGallery(); });
+    window.addEventListener("focus", refreshSharedGallery);
+    window.addEventListener("pagehide", event => {
+        if (event.persisted) { resumeGalleryAfterHidden = resumeGalleryAfterHidden || Boolean(videoEl && !videoEl.paused); videoEl?.pause(); return; }
+        releaseThumbs(); releaseGalleryImage(); stopGalleryVideo(); galleryChannel?.close();
+    });
+    window.addEventListener("pageshow", event => {
+        if (event.persisted) {
+            const resume = resumeGalleryAfterHidden || startGalleryWhenVisible;
+            resumeGalleryAfterHidden = false; startGalleryWhenVisible = false;
+            refreshSharedGallery(resume);
+        }
+    });
+
+
     // Narrow MCP operations: metadata only, optimistic revisions, and recoverable records.
     function remoteItemMetadata(item) {
         if (!item) return null;
@@ -691,73 +903,80 @@
         return JSON.stringify({ current: localStorage.getItem(KEY_CURRENT), mode: localStorage.getItem(KEY_MODE), applied: document.body.dataset.wallpaperId || null });
     }
     async function remoteCancel(expected, beforeMutation) {
-        if (typeof beforeMutation !== "function") throw Error("Guard required");
-        beforeMutation();
-        if (remoteCancelRevision() !== expected) throw remoteConflict("Wallpaper selection changed");
-        // Both local settings are verified; partial storage failures are reported, never hidden.
-        localStorage.setItem(KEY_CURRENT, "none"); localStorage.setItem(KEY_MODE, "fixed");
-        if (localStorage.getItem(KEY_CURRENT) !== "none" || localStorage.getItem(KEY_MODE) !== "fixed") throw Error("Wallpaper cancellation was not saved");
-        scheduleRotate(); clearGalleryBackground(); $("videoBg")?.pause();
-        const modeSelect = $("wallpaperModeSelect"); if (modeSelect) modeSelect.value = "fixed";
-        const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
-        const minutesSelect = $("wallpaperMinutesSelect"); if (minutesSelect) minutesSelect.disabled = true;
-        await renderGallery();
-        return { cancelled: true, cancelRevision: remoteCancelRevision() };
+        return withGalleryWrite(async () => {
+            if (typeof beforeMutation !== "function") throw Error("Guard required");
+            beforeMutation();
+            if (remoteCancelRevision() !== expected) throw remoteConflict("Wallpaper selection changed");
+            // Both local settings are verified; partial storage failures are reported, never hidden.
+            localStorage.setItem(KEY_CURRENT, "none"); localStorage.setItem(KEY_MODE, "fixed");
+            if (localStorage.getItem(KEY_CURRENT) !== "none" || localStorage.getItem(KEY_MODE) !== "fixed") throw Error("Wallpaper cancellation was not saved");
+            scheduleRotate(); clearGalleryBackground(); $("videoBg")?.pause();
+            const modeSelect = $("wallpaperModeSelect"); if (modeSelect) modeSelect.value = "fixed";
+            const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
+            const minutesSelect = $("wallpaperMinutesSelect"); if (minutesSelect) minutesSelect.disabled = true;
+            notifyGalleryChange();
+            await renderGallery();
+            return { cancelled: true, cancelRevision: remoteCancelRevision() };
+        });
     }
     async function remoteEdit(action, id, name, expected, beforeMutation) {
-        if (typeof beforeMutation !== "function" || !["select", "rename", "remove", "restore", "undo"].includes(action)) throw Error("Invalid guarded gallery action");
-        if (typeof id !== "string" || !id || id.length > 200) throw Error("Invalid wallpaper ID");
-        if (action === "rename" && (typeof name !== "string" || !name.trim() || name.length > 60)) throw Error("Wallpaper name must contain 1–60 characters");
-        if (action === "select") {
-            const item = await getItem(id);
-            if (!item || item.removedAt || hiddenIds().has(id)) throw Error("Restore this wallpaper before selecting it");
-            const applied = await applyItem(item, { beforeMutation: () => { beforeMutation(); if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed"); } });
-            if (!applied || localStorage.getItem(KEY_CURRENT) !== id || document.body.dataset.wallpaperId !== id) throw Error("Wallpaper selection was not saved");
-            return remoteGet(id);
-        }
-        const record = await getItem(id);
-        if (record?.source === "bundled" && ["remove", "restore", "undo"].includes(action)) {
-            if (remoteItemRevision(record) !== expected) throw remoteConflict("Wallpaper changed");
-            if (action === "remove" && localStorage.getItem(KEY_CURRENT) === id) throw remoteConflict("Cancel or change the applied wallpaper before hiding it");
-            const hidden = remoteHiddenIds(), hide = action === "remove";
-            if (hidden.has(id) === hide) throw remoteConflict(hide ? "Wallpaper is already hidden" : "Wallpaper is not hidden");
-            beforeMutation();
-            if (remoteItemRevision(record) !== expected) throw remoteConflict("Wallpaper changed");
-            if (hide) hidden.add(id); else hidden.delete(id);
-            saveHidden(hidden);
-            if (hiddenIds().has(id) !== hide) throw Error("Wallpaper visibility was not saved");
+        return withGalleryWrite(async () => {
+            if (typeof beforeMutation !== "function" || !["select", "rename", "remove", "restore", "undo"].includes(action)) throw Error("Invalid guarded gallery action");
+            if (typeof id !== "string" || !id || id.length > 200) throw Error("Invalid wallpaper ID");
+            if (action === "rename" && (typeof name !== "string" || !name.trim() || name.length > 60)) throw Error("Wallpaper name must contain 1–60 characters");
+            if (action === "select") {
+                const item = await getItem(id);
+                if (!item || item.removedAt || hiddenIds().has(id)) throw Error("Restore this wallpaper before selecting it");
+                const applied = await applyItemUnlocked(item, { beforeMutation: () => { beforeMutation(); if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed"); } });
+                if (!applied || localStorage.getItem(KEY_CURRENT) !== id || document.body.dataset.wallpaperId !== id) throw Error("Wallpaper selection was not saved");
+                return remoteGet(id);
+            }
+            const record = await getItem(id);
+            if (record?.source === "bundled" && ["remove", "restore", "undo"].includes(action)) {
+                if (remoteItemRevision(record) !== expected) throw remoteConflict("Wallpaper changed");
+                if (action === "remove" && localStorage.getItem(KEY_CURRENT) === id) throw remoteConflict("Cancel or change the applied wallpaper before hiding it");
+                const hidden = remoteHiddenIds(), hide = action === "remove";
+                if (hidden.has(id) === hide) throw remoteConflict(hide ? "Wallpaper is already hidden" : "Wallpaper is not hidden");
+                beforeMutation();
+                if (remoteItemRevision(record) !== expected) throw remoteConflict("Wallpaper changed");
+                if (hide) hidden.add(id); else hidden.delete(id);
+                saveHidden(hidden);
+                if (hiddenIds().has(id) !== hide) throw Error("Wallpaper visibility was not saved");
+                notifyGalleryChange();
+                await renderGallery();
+                return remoteGet(id);
+            }
+            const database = await db();
+            await new Promise((resolve, reject) => {
+                const transaction = database.transaction(STORE, "readwrite"), store = transaction.objectStore(STORE);
+                let failure;
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = transaction.onabort = () => reject(failure || transaction.error || Error("Gallery transaction failed"));
+                const request = store.get(id);
+                request.onerror = () => { failure = request.error; transaction.abort(); };
+                request.onsuccess = () => {
+                    try {
+                        const item = request.result;
+                        if (!item) throw Error("Unknown wallpaper ID");
+                        if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed");
+                        if (["remove", "restore", "undo"].includes(action) && item.source === "bundled") throw remoteConflict("Wallpaper type changed");
+                        if (action === "remove" && localStorage.getItem(KEY_CURRENT) === id) throw remoteConflict("Cancel or change the applied wallpaper before removing it");
+                        const nextItem = { ...item };
+                        if (action === "rename") nextItem.name = name.trim();
+                        if (action === "remove") { if (item.removedAt) throw remoteConflict("Wallpaper is already removed"); nextItem.removedAt = Date.now(); }
+                        if (action === "restore" || action === "undo") { if (!item.removedAt) throw remoteConflict("Wallpaper is not removed"); delete nextItem.removedAt; }
+                        beforeMutation();
+                        // No asynchronous gap between the gate/revision check and the IDB write.
+                        if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed");
+                        store.put(nextItem);
+                    } catch (error) { failure = error; transaction.abort(); }
+                };
+            });
+            beforeMutation(); // If access was revoked during commit, report it before further UI work.
+            notifyGalleryChange();
             await renderGallery();
             return remoteGet(id);
-        }
-        const database = await db();
-        await new Promise((resolve, reject) => {
-            const transaction = database.transaction(STORE, "readwrite"), store = transaction.objectStore(STORE);
-            let failure;
-            transaction.oncomplete = () => resolve();
-            transaction.onerror = transaction.onabort = () => reject(failure || transaction.error || Error("Gallery transaction failed"));
-            const request = store.get(id);
-            request.onerror = () => { failure = request.error; transaction.abort(); };
-            request.onsuccess = () => {
-                try {
-                    const item = request.result;
-                    if (!item) throw Error("Unknown wallpaper ID");
-                    if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed");
-                    if (["remove", "restore", "undo"].includes(action) && item.source === "bundled") throw remoteConflict("Wallpaper type changed");
-                    if (action === "remove" && localStorage.getItem(KEY_CURRENT) === id) throw remoteConflict("Cancel or change the applied wallpaper before removing it");
-                    const nextItem = { ...item };
-                    if (action === "rename") nextItem.name = name.trim();
-                    if (action === "remove") { if (item.removedAt) throw remoteConflict("Wallpaper is already removed"); nextItem.removedAt = Date.now(); }
-                    if (action === "restore" || action === "undo") { if (!item.removedAt) throw remoteConflict("Wallpaper is not removed"); delete nextItem.removedAt; }
-                    beforeMutation();
-                    // No asynchronous gap between the gate/revision check and the IDB write.
-                    if (remoteItemRevision(item) !== expected) throw remoteConflict("Wallpaper changed");
-                    store.put(nextItem);
-                } catch (error) { failure = error; transaction.abort(); }
-            };
         });
-        beforeMutation(); // If access was revoked during commit, report it before further UI work.
-        await renderGallery();
-        return remoteGet(id);
     }
 
     window.myntWallpaper = { remoteGet, remoteEdit, remoteCancel, remoteCancelRevision, runRemote(action, beforeMutation) { if(typeof beforeMutation!=="function")throw Error("Guard required"); if(action==="next")return next(1,beforeMutation);if(action==="previous")return next(-1,beforeMutation);if(action==="random")return random(beforeMutation);throw Error("Unsupported action"); }, cancelApply, useLegacy, restore: undoRemove, remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };

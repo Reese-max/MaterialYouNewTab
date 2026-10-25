@@ -74,6 +74,7 @@ function editor(raw) {
     };
     const search = document.createElement('section'); search.id = 'rightDiv'; search.rect = { left: 100, top: 180, width: 300, height: 60 }; document.body.append(search);
     const focus = document.createElement('section'); focus.className = 'ttteexxtt'; focus.rect = { left: 600, top: 110, width: 250, height: 80 }; document.body.append(focus);
+    const bookmark = document.createElement('button'); bookmark.id = 'bookmarkButton'; bookmark.rect = { left: 20, top: 30, width: 64, height: 64 }; document.body.append(bookmark);
     const setting = document.createElement('input'); setting.id = 'layoutEditCheckbox'; document.body.append(setting);
     const globalEvents = new Map();
     const ctx = {
@@ -87,7 +88,7 @@ function editor(raw) {
     const id = value => document.getElementById(value);
     const overlay = () => document.all().find(x => x.dataset?.block === 'search');
     const handle = () => overlay().querySelector('.myntLayoutMove');
-    return { ctx, document, storage, search, id, handle, overlay, globalEvents, writes: () => writes, blockSave: value => { blocked = value; } };
+    return { ctx, document, storage, search, bookmark, id, handle, overlay, globalEvents, writes: () => writes, blockSave: value => { blocked = value; } };
 }
 const raw = '{ "version": 2, "snap": false, "locked": true, "blocks": { "search": { "x": 0.05, "y": 0.02, "s": 1 } } }';
 const app = editor(raw), original = clone(app.ctx.myntLayout.get());
@@ -172,3 +173,101 @@ for(const scale of [0.5,1.5,2]){
  vm.createContext(c);vm.runInContext(precise,c);c.preciseChange('center');const r=element.getBoundingClientRect();assert.equal(r.left+r.width/2,500);assert.equal(records,1);
 }
 console.log('PRECISE_CENTER_OK: resizing and centering in one action uses the new rendered width');
+
+
+// Compact controls preserve the icon, capture only their own editing surface,
+// and expose size controls in the existing toolbar instead of an oversized corner.
+const compact = editor(raw); let opened = 0;
+compact.bookmark.addEventListener('click', () => opened++);
+compact.ctx.myntLayout.setEditing(true);
+const small = compact.document.all().find(x => x.dataset.block === 'bookmarks');
+const smallHandle = small.querySelector('.myntLayoutMove');
+assert.equal(smallHandle.textContent, '');
+assert(smallHandle.attributes['aria-label'].includes('Bookmarks'));
+assert.equal(small.querySelector('.myntLayoutResize'), null);
+assert.equal(compact.bookmark.inert, true, 'Underlying entry cannot receive keyboard activation while editing');
+assert.equal(small.style.width, '64px'); assert.equal(small.style.height, '64px');
+assert.equal(compact.handle().hidden, true, 'Unselected card handles are hidden');
+assert.equal(compact.overlay().tabIndex, 0, 'Unselected card remains keyboard selectable');
+for (const kind of ['click','auxclick','dblclick','contextmenu']) {
+ const e=smallHandle.emit(kind); assert(e.defaultPrevented && e.stopped, kind+' never activates the entry');
+}
+assert.equal(opened,0); assert.equal(compact.id('myntLayoutSizePresets').hidden,false);
+assert.equal(compact.id('myntLayoutTarget').value,'bookmarks');
+assert.equal(compact.id('myntLayoutTarget').children[0].disabled,true,'Placeholder cannot clear the displayed selection while old handles remain active');
+const beforeSmall=clone(compact.ctx.myntLayout.get());
+smallHandle.emit('pointerdown',{clientX:30,clientY:40,pointerType:'touch'});
+smallHandle.emit('pointermove',{clientX:65,clientY:58,pointerType:'touch'});
+smallHandle.emit('pointercancel');
+assert.deepEqual(clone(compact.ctx.myntLayout.get()),beforeSmall);
+assert.equal(compact.id('myntLayoutUndo').disabled,true);
+const largePreset=compact.id('myntLayoutSizePresets').children.find(x=>x.dataset.scale==='1.25');
+largePreset.click();assert.equal(compact.ctx.myntLayout.get().blocks.bookmarks.s,1.25);
+assert.equal(largePreset.attributes['aria-pressed'],'true');
+compact.ctx.myntLayout.undo();assert.deepEqual(clone(compact.ctx.myntLayout.get()),beforeSmall);
+compact.ctx.myntLayout.redo();assert.equal(compact.ctx.myntLayout.get().blocks.bookmarks.s,1.25);
+compact.overlay().focus();assert.equal(compact.handle().hidden,false);
+assert.equal(compact.id('myntLayoutSizePresets').hidden,true);
+compact.search.rect.width=64;compact.search.rect.height=64;compact.ctx.myntLayout.applyAll();
+assert.equal(compact.overlay().querySelector('.myntLayoutResize').hidden,true,'Two 44px controls never overlap in a small card');
+compact.search.rect.width=300;compact.search.rect.height=60;compact.ctx.myntLayout.applyAll();
+assert.equal(compact.overlay().querySelector('.myntLayoutResize').hidden,false);
+assert.equal(compact.document.all().filter(x=>x.classList.contains('myntLayoutOverlay')&&x.classList.contains('is-selected')).length,1);
+compact.id('myntLayoutTarget').value='bookmarks';compact.id('myntLayoutTarget').emit('change');
+assert.equal(compact.handle().hidden,true);assert.equal(compact.id('myntLayoutSizePresets').hidden,false);
+smallHandle.emit('keydown',{key:'-'});assert.equal(compact.ctx.myntLayout.get().blocks.bookmarks.s,1.2);
+compact.ctx.innerWidth=393;compact.ctx.innerHeight=600;compact.ctx.myntLayout.applyAll();
+assert.equal(small.style.width,String(compact.bookmark.getBoundingClientRect().width)+'px','Overlay stays inside rendered small entry');
+compact.ctx.myntLayout.cancel();assert.equal(compact.bookmark.inert,false);assert.equal(compact.storage.get('myntLayout'),raw);
+assert.equal(compact.document.all().filter(x=>x.classList.contains('myntLayoutOverlay')).length,0);
+compact.bookmark.click();assert.equal(opened,1,'Original entry behavior returns after cancel');
+compact.bookmark.inert=true;compact.ctx.myntLayout.setEditing(true);compact.ctx.myntLayout.cancel();assert.equal(compact.bookmark.inert,true,'Existing inert state is preserved');
+const compactSave=editor(raw);compactSave.ctx.myntLayout.setEditing(true);compactSave.id('myntLayoutTarget').value='bookmarks';compactSave.id('myntLayoutTarget').emit('change');compactSave.id('myntLayoutSizePresets').children.find(x=>x.dataset.scale==='.75'||x.dataset.scale==='0.75').click();compactSave.id('myntLayoutSave').click();assert.equal(compactSave.bookmark.inert,false);assert.equal(editor(compactSave.storage.get('myntLayout')).ctx.myntLayout.get().blocks.bookmarks.s,.75);
+const controlsCss=fs.readFileSync(path.join(__dirname,'../styles/manual-editor-controls.css'),'utf8');
+assert(controlsCss.includes('width: 44px; height: 44px;'));
+assert(controlsCss.includes('inset: 0; width: 100%; height: 100%;'));
+assert(!controlsCss.includes('--mynt-resize-right'));
+assert(!controlsCss.includes('--mynt-handle-top'));
+console.log('COMPACT_EDITOR_OK: transparent small entry, inert restoration, activation guards, selected-only handles, toolbar sizes, touch pointercancel, history, narrow bounds and save/reload. DOM/pointer simulation, not real browser hit testing.');
+
+// Editing must not consume IME cancellation, handled events, or browser shortcuts.
+const ignoredKeys = [{ isComposing: true }, { keyCode: 229 }, { defaultPrevented: true }];
+for (const flags of [...ignoredKeys, { ctrlKey: true }, { metaKey: true }, { altKey: true }]) {
+    for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-', '_']) {
+        const guarded = editor(raw); guarded.ctx.myntLayout.setEditing(true);
+        const before = clone(guarded.ctx.myntLayout.get());
+        const event = guarded.handle().emit('keydown', { key, ...flags });
+        assert.deepEqual(clone(guarded.ctx.myntLayout.get()), before, `${key} with ${JSON.stringify(flags)} preserves layout`);
+        assert.equal(Boolean(event.defaultPrevented), Boolean(flags.defaultPrevented), 'Native key behavior remains available');
+        assert.equal(guarded.id('myntLayoutUndo').disabled, true, 'Ignored keys do not record history');
+    }
+}
+for (const flags of ignoredKeys) {
+    for (const keys of [{ key: 'Escape' }, { key: 'l', code: 'KeyL', altKey: true }, { key: 'z', ctrlKey: true }, { key: 'y', ctrlKey: true }]) {
+        const guarded = editor(raw); guarded.ctx.myntLayout.setEditing(true);
+        guarded.handle().emit('keydown', { key: 'ArrowRight' });
+        const before = clone(guarded.ctx.myntLayout.get());
+        guarded.document.emit('keydown', { ...keys, ...flags });
+        assert.equal(guarded.ctx.myntLayout.isEditing(), true, 'IME/handled keys cannot discard the draft');
+        assert.deepEqual(clone(guarded.ctx.myntLayout.get()), before, 'IME/handled keys cannot change history');
+        assert.equal(guarded.writes(), 0);
+    }
+}
+const shortcuts = editor(raw); shortcuts.ctx.myntLayout.setEditing(true);
+shortcuts.handle().emit('keydown', { key: '+', shiftKey: true });
+assert.equal(shortcuts.ctx.myntLayout.get().blocks.search.s, 1.05);
+shortcuts.document.emit('keydown', { key: 'z', ctrlKey: true });
+assert.equal(shortcuts.ctx.myntLayout.get().blocks.search.s, 1);
+shortcuts.document.emit('keydown', { key: 'z', metaKey: true, shiftKey: true });
+assert.equal(shortcuts.ctx.myntLayout.get().blocks.search.s, 1.05);
+shortcuts.document.emit('keydown', { key: 'Escape' });
+assert.equal(shortcuts.ctx.myntLayout.isEditing(), false);
+assert.equal(shortcuts.storage.get('myntLayout'), raw);
+const bypass = editor(raw); bypass.ctx.myntLayout.setEditing(true);
+bypass.id('myntLayoutSnap').checked = true; bypass.id('myntLayoutSnap').emit('change');
+const bypassStart = bypass.search.getBoundingClientRect().left;
+bypass.handle().emit('pointerdown', { clientX: 200, clientY: 200 });
+bypass.handle().emit('pointermove', { clientX: 207, clientY: 200, altKey: true });
+bypass.handle().emit('pointerup');
+assert.equal(bypass.search.getBoundingClientRect().left, bypassStart + 7, 'Alt-drag still bypasses snapping');
+console.log('EDITOR_KEY_GUARDS_OK: IME/handled events preserve drafts, modified arrows/size keys remain native, plain/Shift editing and undo/redo/Escape work, Alt-drag bypass is preserved. Mock-only coverage.');

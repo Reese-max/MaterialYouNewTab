@@ -306,6 +306,14 @@ function isValidBackupFile(backup) {
     if (Object.prototype.hasOwnProperty.call(backup.localStorage, "myntComponentsMigrationV1")) {
         try { if (typeof MYNTComponentVisibilityCore === "undefined") return false; MYNTComponentVisibilityCore.validateMigration(backup.localStorage.myntComponentsMigrationV1); } catch (_) { return false; }
     }
+    if (Object.prototype.hasOwnProperty.call(backup.localStorage, "myntAdaptiveBackground")) {
+        try {
+            const value=JSON.parse(backup.localStorage.myntAdaptiveBackground);
+            if (!isPlainRecord(value) || value.version!==1 || Object.keys(value).some(key=>!["version","color","contrast","opacity","layout","strength"].includes(key)) ||
+                ["color","contrast","opacity","layout"].some(key=>value[key]!==undefined&&typeof value[key]!=="boolean") ||
+                (value.strength!==undefined&&!["soft","vivid"].includes(value.strength))) return false;
+        } catch (_) { return false; }
+    }
     // Countdown data is included by both backup scopes and validated before any write.
     if (Object.prototype.hasOwnProperty.call(backup.localStorage, "myntEventCountdownsV1")) {
         try {
@@ -401,6 +409,13 @@ function replaceMediaEntries(key, entries) {
 // committed store after an ordinary failure. Closing the tab mid-restore is unsafe.
 async function restoreData(backup) {
     const prepared = prepareBackupForRestore(backup);
+    if (typeof navigator !== "undefined") {
+        if (navigator.locks?.request) return navigator.locks.request("mynt-wallpaper-gallery-write", () => restorePreparedData(prepared));
+        if (prepared.indexedDBEntries !== null || prepared.media) throw new Error(getTranslatedText("backupCoordinationUnavailable"));
+    }
+    return restorePreparedData(prepared);
+}
+async function restorePreparedData(prepared) {
     const previousLocalStorage = Object.entries(snapshotLocalStorage());
     // An omitted store is NOT an empty store. Settings-only restore must work
     // even when a media database is blocked/unavailable, and never touch it.
@@ -409,7 +424,7 @@ async function restoreData(backup) {
     if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) previousMedia[key] = await readMediaEntries(key);
     const preservedEntries = previousLocalStorage.filter(([key]) => SENSITIVE_LOCAL_STORAGE_KEYS.has(key) || TRANSIENT_LOCAL_STORAGE_KEYS.has(key) ||
         (prepared.scope !== "full" && isMediaLocalStorageKey(key)));
-    const unownedWallpaper = previousIndexedDB?.filter(([key]) => !INDEXED_DB_KEYS.has(key)) || [];
+    const unownedWallpaper = previousIndexedDB?.filter(([key]) => !INDEXED_DB_KEYS.has(key) && key !== "myntGalleryCacheOwnerV1") || [];
     let wallpaperWritten = false;
     const mediaWritten = [];
     try {

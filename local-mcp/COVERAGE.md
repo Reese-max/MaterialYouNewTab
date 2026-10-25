@@ -85,3 +85,5 @@ The 55-tool checkpoint was extended by ten exact preference tools and two music-
 ## Unified home component visibility
 
 `mynt_components_get` and `mynt_components_update` share the same 19-entry visibility registry as Settings → Manage components. Read responses contain labels/status/revision only, not private widget text. Writes require request ID and exact revision, preserve data/positions and use the existing write/session/single-tab gates. Invalid preferences fail without replacement. Enabling weather, remote quotes or exam warm-up requires ordinary UI action; an uninitialized clock similarly reports ACTION_REQUIRED. Settings remains reachable and is intentionally not hideable. Hide does not pause an active timer or delete media. Existing feature subcontrols (search icons, greeting, individual AI links) retain their own preferences.
+
+Permanent wallpaper deletion is browser-only: mynt_wallpaper_edit(action="purge") always returns ACTION_REQUIRED, never opens a dialog or deletes media. Use the per-item Recovery confirmation. Other saved copies and exported backups are outside this action.

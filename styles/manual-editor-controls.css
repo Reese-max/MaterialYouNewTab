@@ -39,34 +39,38 @@ body.mynt-layout-editing #myntLayoutToolbar[data-dock="top"] { top: max(16px, en
 #myntLayoutToolbar .myntLayoutHelp button { min-height: 44px; padding: 8px; font-size: 12px; background: transparent; }
 .myntLayoutInstructions { flex: 1; text-align: right; min-width: 240px; }
 body.mynt-layout-editing .myntLayoutOverlay {
-    position: fixed; z-index: 2147483000; box-sizing: border-box; border: 2px dashed #5280b9;
-    border-radius: 14px; background: transparent; pointer-events: none; touch-action: auto; cursor: default;
+    position: fixed; z-index: 2147483000; box-sizing: border-box; border: 0; outline: 1px solid transparent;
+    border-radius: 12px; background: transparent; pointer-events: none; touch-action: auto;
     transition: none;
 }
-body.mynt-layout-editing .myntLayoutOverlay:hover { background: transparent; }
 body.mynt-layout-editing .myntLayoutOverlay.is-selected {
-    border: 3px solid #245b9f; box-shadow: 0 0 0 4px #eff6ffcc, 0 0 0 6px #245b9f55;
-    background: #3776b808; z-index: 2147483003;
+    outline-color: #245b9f; box-shadow: 0 0 0 1px #eff6ffcc;
+    z-index: 2147483003;
 }
-body.mynt-layout-editing .myntLayoutOverlay.is-dragging { z-index: 2147483005; box-shadow: 0 0 0 4px #eff6ffdd, 0 8px 30px #1e45623b; }
-body.mynt-layout-editing .myntLayoutMove {
-    position: absolute; top: var(--mynt-handle-top, -24px); left: 4px; min-width: 70px; min-height: 44px;
-    max-width: min(240px, calc(100vw - 32px)); padding: 10px 13px; border: 2px solid #fff;
-    border-radius: 13px; background: #e6eefb; color: #244f80; box-shadow: 0 2px 10px #224c7822;
-    font: 650 13px/1.2 system-ui, sans-serif; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
-    cursor: grab; pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none;
-}
-body.mynt-layout-editing .is-selected .myntLayoutMove { background: #245b9f; color: #fff; }
-body.mynt-layout-editing .is-dragging .myntLayoutMove { cursor: grabbing; }
+body.mynt-layout-editing .myntLayoutOverlay.is-dragging { z-index: 2147483005; }
+body.mynt-layout-editing .myntLayoutMove,
 body.mynt-layout-editing .myntLayoutResize {
-    position: absolute; right: var(--mynt-resize-right, -20px); bottom: var(--mynt-resize-bottom, -20px);
-    width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0;
-    border-radius: 13px; border: 2px solid #fff; background: #e6eefb; color: #244f80;
-    font: 700 25px/1 system-ui, sans-serif; pointer-events: auto; touch-action: none; cursor: nwse-resize;
-    user-select: none; -webkit-user-select: none; box-shadow: 0 2px 10px #224c7822;
+    position: absolute; width: 44px; height: 44px; min-width: 0; min-height: 0; padding: 0;
+    border: 0; border-radius: 10px; background: transparent; color: #245b9f;
+    font: 650 20px/1 system-ui, sans-serif; pointer-events: auto; touch-action: none;
+    user-select: none; -webkit-user-select: none; display: grid; place-items: center;
+    box-shadow: none; text-align: center;
 }
-body.mynt-layout-editing .is-selected .myntLayoutResize { background: #245b9f; color: #fff; }
-#myntLayoutToolbar button:focus-visible, #myntLayoutToolbar input:focus-visible, #myntLayoutEdit:focus-visible,
+body.mynt-layout-editing .myntLayoutMove { top: 0; left: 0; cursor: grab; }
+body.mynt-layout-editing .myntLayoutResize { right: 0; bottom: 0; cursor: nwse-resize; }
+body.mynt-layout-editing .myntLayoutOverlay:not(.is-compact) .myntLayoutMove:not([hidden]),
+body.mynt-layout-editing .myntLayoutResize:not([hidden]) { text-shadow: 0 1px 2px #fff, 0 -1px 2px #fff; }
+body.mynt-layout-editing .myntLayoutOverlay button[hidden] { display: none !important; }
+body.mynt-layout-editing .is-compact .myntLayoutMove {
+    inset: 0; width: 100%; height: 100%; border-radius: inherit; background: transparent;
+}
+body.mynt-layout-editing .is-dragging .myntLayoutMove { cursor: grabbing; }
+#myntLayoutTarget { max-width: min(210px, 100%); min-height: 44px; padding: 8px; border: 1px solid #c1d0e3; border-radius: 10px; background: #fff; color: #294b76; font: inherit; }
+#myntLayoutSizePresets { display: flex; gap: 3px; }
+#myntLayoutSizePresets[hidden] { display: none !important; }
+#myntLayoutSizePresets button[aria-pressed="true"] { background: #244f8d; color: #fff; }
+body.mynt-layout-editing .myntLayoutOverlay:focus-visible { outline: 2px solid #d77a0b; outline-offset: 1px; }
+#myntLayoutToolbar button:focus-visible, #myntLayoutToolbar input:focus-visible, #myntLayoutTarget:focus-visible, #myntLayoutEdit:focus-visible,
 body.mynt-layout-editing .myntLayoutOverlay button:focus-visible { outline: 3px solid #d77a0b; outline-offset: 3px; }
 #myntLayoutGuides { position: fixed; inset: 0; pointer-events: none; z-index: 2147483006; overflow: hidden; }
 .myntLayoutGuide { position: absolute; color: #9d2d77; pointer-events: none; }
@@ -89,7 +93,7 @@ body.mynt-layout-editing .myntLayoutOverlay button:focus-visible { outline: 3px 
     .myntLayoutInstructions { min-width: 100%; text-align: center; font-size: 11px; }
 }
 @media (forced-colors: active) {
-    body.mynt-layout-editing .myntLayoutOverlay { border-color: Highlight; }
+    body.mynt-layout-editing .myntLayoutOverlay.is-selected { outline-color: Highlight; }
     body.mynt-layout-editing .myntLayoutOverlay.is-selected { outline: 3px solid Highlight; }
     .myntLayoutGuide { border-color: Highlight !important; }
 }

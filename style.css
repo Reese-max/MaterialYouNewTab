@@ -405,8 +405,8 @@ html:has(
 			.menuBar
 			.themeSegment[data-active="system"]
 	):not(:has(#darkTheme:checked)) {
-	filter: invert(1) hue-rotate(180deg);
-	-webkit-filter: invert(1) hue-rotate(180deg);
+	filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
+	-webkit-filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
 
 	& #darkTheme,
 	& .favicon,
@@ -414,8 +414,8 @@ html:has(
 	&:not(:has(#adaptiveIconToggle:checked))
 		.shortcutLogoContainer
 		img[data-icon-type="default"] {
-		filter: invert(1) hue-rotate(180deg);
-		-webkit-filter: invert(1) hue-rotate(180deg);
+		filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
+		-webkit-filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
 	}
 
 	& .menuBar,
@@ -447,8 +447,8 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 		.menuBar .themeSegment[data-active="system"]
 	):not(:has(#darkTheme:checked))
 	:is(.menuCont, .bookmark-sidebar) {
-	filter: invert(1) hue-rotate(180deg);
-	-webkit-filter: invert(1) hue-rotate(180deg);
+	filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
+	-webkit-filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
 
 	& #darkTheme,
 	& .favicon,
@@ -456,8 +456,8 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	&:not(:has(#adaptiveIconToggle:checked))
 		.shortcutLogoContainer
 		img[data-icon-type="default"] {
-		filter: invert(1) hue-rotate(180deg);
-		-webkit-filter: invert(1) hue-rotate(180deg);
+		filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
+		-webkit-filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg));
 	}
 
 	--whitishColor-blue: #f2f2f2;
@@ -3463,7 +3463,7 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	.adaptive-icons
 	.shortcutLogoContainer
 	img[data-icon-type="default"] {
-	filter: grayscale(1) invert(1) !important;
+	filter: grayscale(1) invert(var(--mynt-legacy-invert-amount, 1)) !important;
 }
 
 .shortcutLogoContainer img[data-icon-type="custom"] {
@@ -3494,7 +3494,7 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	.shortcuts
 	.shortcutLogoContainer
 	img[data-icon-type="custom"] {
-	filter: invert(1) hue-rotate(180deg) !important;
+	filter: var(--mynt-legacy-invert, invert(1) hue-rotate(180deg)) !important;
 	mix-blend-mode: normal !important;
 }
 
@@ -9227,3 +9227,9 @@ body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayo
 #resetsettings { background: transparent; color: var(--textColorDark-blue); border: 1px solid currentColor; opacity: .85; margin-top: 18px; box-shadow: none; }
 .black-theme #resetsettings { color: var(--textColorDark-dark); }
 #resetsettings:hover { opacity: 1; }
+
+/* Recovery keeps destructive actions separate and readable on narrow cards. */
+#wallpaperGalleryDialog .wallpaperRecoveryRow { flex-wrap:wrap; }
+#wallpaperGalleryDialog .wallpaperRecoveryRow .wallpaperPurge { background:transparent; border:1px solid currentColor; font:inherit; min-height:44px; }
+#wallpaperGalleryDialog .wallpaperRecoveryRow button:focus-visible { outline:2px solid currentColor; outline-offset:2px; }
+@media (max-width:480px) { #wallpaperGalleryDialog .wallpaperRecoveryRow span { flex-basis:65%; } }

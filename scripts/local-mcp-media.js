@@ -28,7 +28,7 @@
         define('mynt_bookmarks_trash', 'Recoverably remove a bookmark/folder by moving it intact into an explicitly selected folder named MYNT MCP Trash. Create that folder separately if needed. Never permanently deletes anything; returns a restoration receipt.', { ...object({ id: str(200), trashFolderId: str(200), targetRevision: str(64) }), required: ['id', 'trashFolderId', 'targetRevision'] }, false),
         define('mynt_bookmarks_restore', 'Undo trash by moving the same stable ID from MYNT MCP Trash to the explicit original parent/index from its receipt. Without a receipt, use move with a reviewed destination. Requires fresh source and destination revisions.', { ...object({ id: str(200), trashFolderId: str(200), originalParentId: str(200), originalIndex: integer(0, 1000000), targetRevision: str(64) }), required: ['id', 'trashFolderId', 'originalParentId', 'originalIndex', 'targetRevision'] }, false),
         define('mynt_wallpaper_item_get', 'Read gallery item metadata including recoverably removed records, plus its itemRevision.', { ...object({ id: str(200) }), required: ['id'] }),
-        define('mynt_wallpaper_edit', 'Select, rename, recoverably remove, restore or undo removal by stable ID. Cancel the applied wallpaper before removing it. Never deletes blobs; bundled removal hides the packaged asset and restore unhides it.', { ...object({ action: choice(['select', 'rename', 'remove', 'restore', 'undo']), id: str(200), name: str(60) }), required: ['action', 'id'] }, false),
+        define('mynt_wallpaper_edit', 'Select, rename, recoverably remove, restore or undo removal by stable ID. Cancel the applied wallpaper before removing it. Never deletes blobs; purge returns ACTION_REQUIRED for the browser Recovery confirmation. Bundled removal hides the packaged asset and restore unhides it.', { ...object({ action: choice(['select', 'rename', 'remove', 'restore', 'undo', 'purge']), id: str(200), name: str(60) }), required: ['action', 'id'] }, false),
         define('mynt_wallpaper_cancel', 'Stop applying the gallery wallpaper and rotation without deleting any media. Use cancelRevision from wallpaper_list.', object({}), false),
         define('mynt_ui_features', 'Inventory features that need browser UI, a gesture, or permission. Does not trigger clicks, navigation, dialogs or permissions.', object({}))
     ];
@@ -248,6 +248,7 @@
                 const data = await w.remoteGet(args.id); check(); return ok(data);
             }
             if (name === 'mynt_wallpaper_edit') {
+                if (args.action === 'purge') return actionRequired('wallpaper', 'Permanently delete only from browser Gallery Recovery with the named irreversible confirmation. MCP write access cannot authorize deletion.');
                 if (!args.id) throw invalid('A nonempty wallpaper ID is required');
                 if (args.action === 'rename' ? !args.name?.trim() : own(args, 'name')) throw invalid('name is required only for rename');
                 if (!w.remoteEdit) return unavailable('wallpaper');
