@@ -1,0 +1,13 @@
+/* Authoritative visibility wins over historical layout CSS without moving saved coordinates. */
+/* Two ID-specificity anchors beat old video workspace !important rules, without inline overrides. */
+:is(#myntVisibilityPriority,[data-mynt-component-display]):is(#myntVisibilityTarget,[data-mynt-component-display]) { display: var(--mynt-component-display) !important; }
+:is(#myntVisibilityPriority,[data-mynt-component-hidden]):is(#myntVisibilityTarget,[data-mynt-component-hidden]) { display: none !important; }
+#myntComponentManager { margin: 8px 0 16px; border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent); font-size: 14px; line-height: 1.5; }
+#myntComponentManager > summary { min-height: 44px; padding: 10px 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
+#myntComponentManager > p { margin: 4px 8px 12px; opacity: .85; }
+#myntComponentManager .mynt-component-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 2px 12px; padding: 0 8px 12px; }
+#myntComponentManager label { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; cursor: pointer; overflow-wrap: anywhere; }
+#myntComponentManager input { position: static; opacity: 1; width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--color-primary, #80b5e8); cursor: pointer; }
+#myntComponentManager :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+#myntComponentManager .mynt-component-status:empty { display: none; }
+@media(max-width:420px) { #myntComponentManager .mynt-component-list { grid-template-columns: 1fr; } }

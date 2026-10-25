@@ -41,7 +41,7 @@ if (typeof module !== "undefined" && module.exports) {
     Object.assign(module.exports, { myntNormalizeShortcutUrl, myntPlanShortcutPin });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", function () {
     // Constants
     const MAX_SHORTCUTS = 50;
     const MAX_ICON_BYTES = 100 * 1024;
@@ -125,11 +125,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Cache for shortcuts data
     let shortcutsCache = [];
+    let recoveryControl;
+    let shortcutDragInitialized = false;
 
     // Initialization
     loadSettings();
     setupEventListeners();
     loadShortcuts();
+    recoveryControl = window.MyntRecoveryControls?.create({
+        domain: "shortcuts", container: dom.shortcutSettingsContainer.parentElement,
+        before: dom.shortcutSettingsContainer, focusTarget: dom.newShortcutButton
+    });
+    window.myntShortcuts = Object.freeze({
+        getItems: () => shortcutsCache.map(item => ({ ...item })),
+        reload() {
+            dom.shortcutSettingsContainer.replaceChildren();
+            dom.shortcutsContainer.replaceChildren();
+            loadShortcuts();
+            recoveryControl?.refresh();
+        }
+    });
 
     // Loads all settings from localStorage and applies them
     function loadSettings() {
@@ -241,9 +256,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Disable new shortcut button if max reached
-        if (amount >= MAX_SHORTCUTS) {
-            dom.newShortcutButton.classList.add("inactive");
-        }
+        dom.newShortcutButton.classList.toggle("inactive", amount >= MAX_SHORTCUTS);
 
         setupDragAndDrop();
     }
@@ -661,6 +674,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Drag and drop functionality for reordering shortcuts
     function setupDragAndDrop() {
+        // Reloading the list replaces rows, not the delegated listener targets.
+        if (shortcutDragInitialized) return;
+        shortcutDragInitialized = true;
         let draggedElement = null;
         let autoScrollInterval = null;
         let dragOffset = { x: 0, y: 0 };

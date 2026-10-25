@@ -207,3 +207,50 @@ html.myntHighContrast .mynt-pomo-float :focus-visible { outline-color: Highlight
 .mynt-pomo-options summary::before { content: "⋯"; font-size: 18px; line-height: 1; }
 
 @media (max-width: 280px) { .mynt-pomo-controls { display: flex; justify-content: center; flex-wrap: wrap; } }
+
+/* Standalone PiP/popup fills its viewport; never changes the homepage panel. */
+.mynt-pomo-float { display: block; padding: 0; }
+.mynt-pomo-float .mynt-pomo-card {
+    width: 100%; min-height: 100vh; min-height: 100dvh; max-width: none;
+    padding: clamp(12px, 4vmin, 28px); border: 0; border-radius: 0; box-shadow: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    --pomo-ring-size: clamp(120px, min(72vw, 46vh), 360px);
+}
+.mynt-pomo-float .mynt-pomo-card.mynt-pomo-static { background-size: cover !important; }
+.mynt-pomo-float .pomodoroCircleWrap { width: var(--pomo-ring-size); flex: 0 0 auto; }
+.mynt-pomo-float .pomodoroTimeDisplay { font-size: calc(var(--pomo-ring-size) * .235 * var(--mynt-font-scale, 1)); }
+.mynt-pomo-float .pomodoroPhaseLabel { flex: 0 0 auto; }
+.mynt-pomo-float .mynt-pomo-context { width: 100%; max-width: 32rem; }
+.mynt-pomo-float .mynt-pomo-controls { width: min(100%, 320px); flex: 0 0 auto; }
+.mynt-pomo-float .mynt-pomo-options,
+.mynt-pomo-float .mynt-pomo-confirm,
+.mynt-pomo-float .mynt-pomo-card > .mynt-pomo-note { width: min(100%, 380px); flex: 0 0 auto; }
+/* Extra options and very short windows scroll normally instead of clipping controls. */
+.mynt-pomo-float:has(.mynt-pomo-options[open]) .mynt-pomo-card { justify-content: flex-start; }
+@media (max-height: 360px) {
+    .mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: 120px; padding: 10px; }
+    .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
+    .mynt-pomo-float .pomodoroPhaseLabel { margin-bottom: 4px; }
+}
+/* A compact, optically balanced control group at every floating-window size. */
+.mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: clamp(120px, min(68vw, 43vh), 280px); }
+.mynt-pomo-float .mynt-pomo-controls {
+    display: grid; width: min(100%, 232px); grid-template-columns: 44px minmax(0, 128px) 44px;
+    gap: 8px; margin-bottom: 4px;
+}
+.mynt-pomo-float .mynt-pomo-primary {
+    min-width: 0; width: 100%; height: 44px; min-height: 44px; padding: 8px 12px;
+    gap: 6px; border-radius: 22px; font-size: .875rem; line-height: 1.25;
+}
+.mynt-pomo-float .mynt-pomo-reset {
+    width: 44px; height: 44px; min-height: 44px; padding: 12px;
+    justify-self: center; border-radius: 22px;
+}
+.mynt-pomo-float button svg { width: 20px; height: 20px; }
+.mynt-pomo-float .pomodoroTimeDisplay { font-size: calc(var(--pomo-ring-size) * .22 * var(--mynt-font-scale, 1)); }
+.mynt-pomo-float .mynt-pomo-context { margin: 10px 0 14px; }
+.mynt-pomo-float .mynt-pomo-options summary { min-height: 44px; padding: 8px 12px; font-size: .8125rem; }
+@media (max-height: 360px) {
+    .mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: 120px; }
+    .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
+}

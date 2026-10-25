@@ -1,0 +1,114 @@
+/* Countdown surfaces participate in the existing layout; no automatic positioning. */
+.event-countdown-card { position:fixed; right:24px; top:150px; z-index:5; box-sizing:border-box; width:min(320px,calc(100vw - 32px)); padding:16px; border-radius:24px; background:var(--adaptive-surface,rgba(246,249,255,.96)); color:var(--adaptive-text,#1b3041); font-size:14px; }
+.event-countdown-card[hidden], .event-countdown-dialog [hidden] { display:none !important; }
+.event-countdown-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.event-countdown-head h2 { font-size:1rem; margin:0; }
+.event-countdown-card button, .event-countdown-dialog button { font:inherit; color:inherit; border:1px solid transparent; border-radius:999px; background:rgba(127,127,127,.14); padding:8px 12px; cursor:pointer; min-height:40px; }
+.event-countdown-card button:hover, .event-countdown-dialog button:hover { background:rgba(127,127,127,.23); }
+.event-countdown-dialog button:disabled { opacity:.45; cursor:not-allowed; }
+.event-countdown-card :focus-visible, .event-countdown-dialog :focus-visible { outline:3px solid var(--darkColor-blue,#4285f4); outline-offset:3px; }
+.event-countdown-items { list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+.event-countdown-row { display:grid; grid-template-columns:32px minmax(0,1fr) auto; align-items:center; gap:8px; padding:10px; border-radius:16px; border-inline-start:4px solid #9a83bd; background:rgba(127,127,127,.07); }
+.event-countdown-row[data-color=blue] { border-inline-start-color:#7da5d1; }
+.event-countdown-row[data-color=green] { border-inline-start-color:#80ae93; }
+.event-countdown-row[data-color=peach] { border-inline-start-color:#d9a17f; }
+.event-countdown-row[data-color=rose] { border-inline-start-color:#ca8da2; }
+.event-countdown-icon { font-size:22px; overflow:hidden; }
+.event-countdown-details { display:grid; min-width:0; gap:4px; }
+.event-countdown-details strong { overflow-wrap:anywhere; line-height:1.4; }
+.event-countdown-meta, .event-countdown-zone { font-size:.75rem; opacity:.85; line-height:1.5; }
+.event-countdown-days { font-size:.85rem; font-variant-numeric:tabular-nums; text-align:end; }
+.event-countdown-zone { margin:10px 0 0; overflow-wrap:anywhere; }
+.event-countdown-dialog { box-sizing:border-box; width:min(560px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; border:0; border-radius:24px; padding:22px; background:var(--adaptive-surface,rgba(246,249,255,.96)); color:var(--adaptive-text,#1b3041); font:inherit; box-shadow:0 20px 60px #0005; }
+.event-countdown-dialog::backdrop { background:#0006; }
+.event-countdown-toolbar, .event-countdown-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.event-countdown-row .event-countdown-actions { grid-column:2 / -1; justify-content:flex-end; }
+.event-countdown-toggle { display:flex; align-items:center; gap:10px; line-height:1.5; margin:12px 0; }
+.event-countdown-toggle input { width:20px; height:20px; flex:0 0 auto; accent-color:var(--darkColor-blue,#4285f4); }
+.event-countdown-status { min-height:1.4em; font-size:.85rem; overflow-wrap:anywhere; }
+.event-countdown-status.is-error { color:var(--darkerColor-blue,#1b1f24); border-inline-start:3px solid #c44c4c; padding-inline-start:10px; }
+.event-countdown-help, .event-countdown-empty { font-size:.85rem; line-height:1.6; opacity:.8; }
+.event-countdown-form, .event-countdown-confirm { padding:16px; margin:12px 0; border:1px solid #8885; border-radius:16px; }
+.event-countdown-form h3 { margin:0 0 12px; font-size:1rem; }
+.event-countdown-field { display:grid; gap:6px; margin:12px 0; font-size:.9rem; }
+.event-countdown-field input, .event-countdown-field select { box-sizing:border-box; width:100%; min-width:0; min-height:42px; border:1px solid #8887; border-radius:10px; padding:9px 10px; font:inherit; background:var(--bg-color-blue,#e8f0fe); color:inherit; }
+.event-countdown-dialog .event-countdown-primary { background:var(--darkColor-blue,#4285f4); color:var(--textColorLight-blue,#fff); }
+.event-countdown-dialog .event-countdown-danger { border-color:#c44c4c; }
+.dark-theme .event-countdown-dialog, .black-theme .event-countdown-dialog, .dark-theme .event-countdown-card, .black-theme .event-countdown-card { background:#242a34; color:#eef1f5; }
+@media(max-width:440px) { .event-countdown-dialog { padding:16px; } .event-countdown-row { grid-template-columns:26px minmax(0,1fr); } .event-countdown-days { grid-column:2; text-align:start; } .event-countdown-head { align-items:flex-start; } .event-countdown-head button { flex-shrink:0; } }
+@media(forced-colors:active) { .event-countdown-row, .event-countdown-card, .event-countdown-dialog button { border:1px solid CanvasText; } }
+
+.event-countdown-field input, .event-countdown-field select { background:transparent; }
+.event-countdown-card { box-shadow:0 5px 24px #172c4b15; border:1px solid #8882; }
+/* Keep the existing narrow video workspace coordinates; append only the new card
+   in normal flow after the existing tools, instead of covering them. */
+@media (max-width:900px) {
+  body[data-workspace-background="video"] .event-countdown-card { position:relative; inset:auto; width:min(100%,440px); margin:24px auto 0; }
+  body:not([data-workspace-background="video"]) .event-countdown-card { position:absolute; top:calc(100vh + 24px); right:16px; max-width:calc(100vw - 32px); margin-bottom:120px; }
+}
+.event-countdown-card .event-countdown-details strong { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.event-countdown-card .event-countdown-days { white-space:nowrap; }
+.event-countdown-dialog { margin:auto; background:rgba(246,249,255,.98); color:#1b3041; }
+.event-countdown-dialog .event-countdown-head { position:sticky; top:-22px; z-index:2; padding-block:8px; background:inherit; }
+@media(max-width:440px) { .event-countdown-dialog .event-countdown-head { top:-16px; } }
+
+/* Detail polish: keep geometry user-controlled; improve the content rhythm only. */
+.event-countdown-card, .event-countdown-dialog { font-size:.875rem; line-height:1.5; }
+.event-countdown-head { min-height:40px; flex-wrap:wrap; }
+.event-countdown-head h2 { font-size:1rem; font-weight:700; line-height:1.5; min-width:0; overflow-wrap:anywhere; }
+.event-countdown-card button, .event-countdown-dialog button { display:inline-flex; align-items:center; justify-content:center; gap:6px; line-height:1.4; min-height:40px; transition:background-color .14s ease, box-shadow .14s ease; }
+.event-countdown-card .event-countdown-head button { font-size:.8125rem; padding-inline:12px; }
+.event-countdown-items { gap:10px; margin-top:14px; }
+.event-countdown-row { padding:12px; gap:8px 10px; }
+.event-countdown-icon { display:flex; align-items:center; justify-content:center; font-size:1.375rem; line-height:1.4; min-width:0; overflow-wrap:anywhere; }
+.event-countdown-details { gap:5px; }
+.event-countdown-details strong { font-size:.875rem; font-weight:650; line-height:1.5; }
+.event-countdown-meta, .event-countdown-zone { font-size:.8125rem; line-height:1.5; opacity:.85; min-width:0; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.event-countdown-days { font-size:.875rem; line-height:1.5; min-width:0; overflow-wrap:anywhere; }
+.event-countdown-card .event-countdown-row { grid-template-columns:28px minmax(0,1fr); }
+.event-countdown-card .event-countdown-icon { align-self:start; }
+.event-countdown-card .event-countdown-days { grid-column:2; text-align:start; white-space:normal; font-size:1rem; letter-spacing:.01em; }
+.event-countdown-card .event-countdown-zone { margin-top:14px; padding-top:10px; border-top:1px solid #8882; }
+.event-countdown-row[data-state=today] .event-countdown-days { text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:2px; }
+.event-countdown-row[data-state=past] .event-countdown-days { font-weight:500; }
+.event-countdown-dialog .event-countdown-head { padding-block:8px 12px; }
+.event-countdown-dialog .event-countdown-help { margin:8px 0 14px; }
+.event-countdown-status:empty { min-height:0; margin:0; }
+.event-countdown-status { margin:8px 0; }
+.event-countdown-toolbar { align-items:center; margin-top:18px; }
+#eventCountdownCount { margin:8px 0 0; }
+.event-countdown-dialog .event-countdown-row { background:rgba(127,127,127,.045); }
+.event-countdown-row .event-countdown-actions { gap:6px; margin-top:2px; }
+.event-countdown-row .event-countdown-actions button { background:transparent; font-size:.8125rem; min-height:40px; }
+.event-countdown-row .event-countdown-actions button:hover { background:rgba(127,127,127,.14); }
+.event-countdown-empty { list-style:none; padding:24px 16px; margin:0; text-align:center; border:1px dashed #8885; border-radius:16px; opacity:1; }
+.event-countdown-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px 16px; padding:16px; }
+.event-countdown-form h3, .event-countdown-form [data-field=name], .event-countdown-form [data-field=annual], .event-countdown-form .event-countdown-help, .event-countdown-form > .event-countdown-actions { grid-column:1 / -1; margin:0; }
+.event-countdown-field { margin:0; gap:7px; min-width:0; }
+.event-countdown-field > span { font-size:.8125rem; font-weight:600; }
+.event-countdown-field input, .event-countdown-field select { min-height:44px; line-height:1.4; }
+.event-countdown-form > .event-countdown-actions { justify-content:flex-end; padding-top:4px; }
+.event-countdown-confirm p { overflow-wrap:anywhere; }
+.event-countdown-confirm button + button { margin-inline-start:8px; }
+@media(max-width:440px) {
+  .event-countdown-dialog { padding:16px; }
+  .event-countdown-head { align-items:center; }
+  .event-countdown-form { grid-template-columns:minmax(0,1fr); gap:14px; padding:14px; }
+  .event-countdown-dialog .event-countdown-days { grid-column:2; text-align:start; }
+  .event-countdown-dialog .event-countdown-row { gap:7px 10px; }
+}
+@media(prefers-reduced-motion:reduce) { .event-countdown-card button, .event-countdown-dialog button { transition:none; } }
+.reduced-motion .event-countdown-card button, .reduced-motion .event-countdown-dialog button { transition:none; }
+html.myntHighContrast .event-countdown-card, html.myntHighContrast .event-countdown-dialog, html.myntHighContrast .event-countdown-row { background:Canvas; color:CanvasText; border:1px solid CanvasText; }
+html.myntHighContrast .event-countdown-meta, html.myntHighContrast .event-countdown-zone, html.myntHighContrast .event-countdown-help { opacity:1; }
+.event-countdown-dialog .event-countdown-primary { background:#28588c; color:#fff; }
+.event-countdown-dialog .event-countdown-primary:hover { background:#204a78; }
+.event-countdown-dialog:has(.event-countdown-form:not([hidden])) > .event-countdown-items { display:none; }
+@media(min-width:441px) {
+ .event-countdown-dialog .event-countdown-row .event-countdown-icon,
+ .event-countdown-dialog .event-countdown-row .event-countdown-details { grid-row:1 / 3; }
+ .event-countdown-dialog .event-countdown-row .event-countdown-days { grid-column:3; grid-row:1; }
+ .event-countdown-dialog .event-countdown-row .event-countdown-actions { grid-column:3; grid-row:2; margin:0; }
+ .event-countdown-dialog .event-countdown-row { row-gap:2px; }
+}
+html.myntReducedMotion .event-countdown-card button, html.myntReducedMotion .event-countdown-dialog button { transition:none; }

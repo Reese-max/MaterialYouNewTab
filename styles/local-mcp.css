@@ -1,0 +1,10 @@
+/* Compact disclosure only; does not change homepage positioning or timer visuals. */
+#localMcpSection { min-width:0; padding:14px; }
+#localMcpSection summary { font-weight:600; cursor:pointer; }
+#localMcpSection p { font-size:.875rem; line-height:1.6; overflow-wrap:anywhere; margin:8px 0; }
+#localMcpSection .controlSettingRow { display:grid; grid-template-columns:minmax(0,1fr) 28px; align-items:center; gap:12px; font-size:.875rem; line-height:1.55; padding:12px 0; }
+#localMcpSection input[type=checkbox] { justify-self:center; width:20px; height:20px; margin:0; }
+#localMcpSection .workspaceEditorActions { display:flex; flex-wrap:wrap; gap:8px; }
+#localMcpSection button { min-height:40px; flex:1; }
+#localMcpSection button:disabled { opacity:.55; cursor:default; }
+#localMcpSection :focus-visible { outline:2px solid currentColor; outline-offset:3px; }

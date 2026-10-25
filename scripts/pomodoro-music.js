@@ -50,22 +50,39 @@
         const target = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
         return Number.isFinite(target) ? Math.min(duration, Math.max(0, target)) : null;
     }
+    function keyboardSeek(key, current, duration) {
+        if (!Number.isFinite(current)) return null;
+        const changes = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5, PageDown: -30, PageUp: 30 };
+        return seekTarget(key === 'Home' ? 0 : key === 'End' ? duration : Object.hasOwn(changes, key) ? current + changes[key] : null, duration);
+    }
+    function libraryUsage(records) {
+        const bytes = records.reduce((total, record) => total + (Number.isFinite(record.blob?.size) && record.blob.size >= 0 ? record.blob.size : NaN), 0);
+        return { count: records.length, bytes: Number.isFinite(bytes) ? bytes : null };
+    }
+    function formatMiB(bytes) {
+        if (!Number.isFinite(bytes) || bytes < 0) return '?';
+        const size = bytes / (1024 * 1024);
+        return size > 0 && size < .1 ? '<0.1' : String(Math.round(size * 10) / 10);
+    }
     function timeline(media, selectedId, ownsPlayback) {
         const matches = Boolean(media && media.dataset.track === selectedId);
         const duration = matches && media.readyState >= 1 && Number.isFinite(media.duration) && media.duration > 0 ? media.duration : 0;
         const current = duration ? seekTarget(media.currentTime, duration) ?? 0 : 0;
         return { duration, current, disabled: !matches || !duration || Boolean(media.error) || (!media.paused && !ownsPlayback) };
     }
-    const core = { normalize, validate, ordered, nextId, errorKey, fadeVolume, formatTime, seekTarget, timeline, MAX_FILE, MAX_TOTAL, MAX_TRACKS };
+    const core = { normalize, validate, ordered, nextId, errorKey, fadeVolume, formatTime, seekTarget, keyboardSeek, libraryUsage, formatMiB, timeline, MAX_FILE, MAX_TOTAL, MAX_TRACKS };
     if (typeof module !== 'undefined' && module.exports) module.exports = core;
     if (!root?.document) return;
     const words = {
+        recovery: ['Removed tracks', '已移除曲目'], restore: ['Restore track', '還原曲目'], recoveryHint: ['Removed tracks stay on this device and still count toward storage limits. Restoring never starts playback.', '已移除曲目仍保存在本機，並計入儲存上限；還原不會自動播放。'],
         title: ['My focus music', '我的專注音樂'], local: ['Audio stays on this device. Up to 30 tracks, 100 MiB each, 300 MiB total. Full backups include music when the complete backup fits the 32 MiB limit.', '音樂只儲存在本機。最多 30 首，每首 100 MiB，合計 300 MiB；完整備份未超過 32 MiB 上限時會包含音樂。'],
         import: ['Import audio', '匯入音樂'], play: ['Play', '播放'], pause: ['Pause', '暫停'], up: ['Move up', '上移'], down: ['Move down', '下移'], remove: ['Delete track', '刪除曲目'], undo: ['Undo deletion', '復原刪除'],
         volume: ['Volume', '音量'], mode: ['Repeat', '重複播放'], off: ['Off', '關閉'], one: ['One track', '單曲'], all: ['All tracks', '全部曲目'], shuffle: ['Shuffle', '隨機播放'], rest: ['During breaks', '休息時'], continue: ['Keep playing', '繼續播放'], restPause: ['Pause (resume manually)', '暫停（手動恢復）'],
         library: ['Playlist & settings', '播放清單與設定'], noTrack: ['No track selected', '尚未選擇曲目'], seek: ['Playback position', '播放進度'], select: ['Select track', '選擇曲目'],
+        capacity: ['{count}/{maxTracks} tracks · {used}/{maxSize} MiB', '{count}/{maxTracks} 首 · {used}/{maxSize} MiB'], checking: ['Checking local music…', '正在檢查本機音樂…'], capacityUnknown: ['Local music usage unavailable', '無法取得本機音樂用量'], capacityHint: ['Stored audio size, not free device space. The browser may run out of storage before this limit.', '顯示已儲存的音樂大小，並非裝置剩餘空間；瀏覽器可用空間可能先達上限。'],
+        importResult: ['{imported} imported · {skipped} not imported.', '已匯入 {imported} 首 · 未匯入 {skipped} 首。'], importProgress: ['Importing {current}/{total}…', '正在匯入 {current}/{total}…'], batchLimit: ['Only 30 audio files can be checked per import. Select the remaining files again.', '每次匯入最多檢查 30 個音訊檔，請重新選取其餘檔案。'], seekHint: ['Arrow keys: 5 seconds. Page Up/Down: 30 seconds. Home/End: start/end.', '方向鍵：5 秒。Page Up／Down：30 秒。Home／End：開頭／結尾。'],
         empty: ['Import a song to start.', '匯入歌曲即可開始。'], ready: ['Ready. Press Play to listen.', '已就緒，按播放開始聆聽。'], playing: ['Playing', '播放中'], paused: ['Paused', '已暫停'], importing: ['Importing audio…', '正在匯入音樂…'],
-        fileSize: ['Each file must be nonempty and at most 100 MB.', '檔案不可為空且不得超過 100 MB。'], format: ['Choose MP3, M4A, AAC, Ogg, Opus, WAV, FLAC or WebM audio.', '請選擇 MP3、M4A、AAC、Ogg、Opus、WAV、FLAC 或 WebM 音訊。'], libraryFull: ['Library limit reached (30 tracks / 300 MB). Delete a track first.', '已達音樂庫上限（30 首／300 MB），請先刪除曲目。'], quota: ['Device storage is full. Free space or delete a track, then retry.', '本機儲存空間不足，請釋放空間或刪除曲目後重試。'], storageError: ['Local storage is unavailable. Check browser storage permissions and retry.', '無法存取本機儲存空間，請檢查瀏覽器儲存權限後重試。'], decode: ['This browser cannot play this file. Try another audio format.', '瀏覽器無法播放此檔案，請改用其他音訊格式。'], gesture: ['Playback was blocked. Press Play again to allow audio.', '播放被瀏覽器阻擋，請再次按播放。'], busy: ['Music is playing in another tab. Pause it there first.', '另一個分頁正在播放音樂，請先在該分頁暫停。'], fallback: ['Playing. Tab coordination is best-effort in this browser.', '播放中；此瀏覽器的跨分頁協調無法保證完全互斥。'], deleted: ['Track deleted. You can undo until the next deletion or reload.', '曲目已刪除；可在下一次刪除或重新載入前復原。'], confirm: ['Delete this local track?', '要刪除此本機曲目嗎？']
+        fileSize: ['Each file must be nonempty and at most 100 MiB.', '檔案不可為空且不得超過 100 MiB。'], format: ['Choose MP3, M4A, AAC, Ogg, Opus, WAV, FLAC or WebM audio.', '請選擇 MP3、M4A、AAC、Ogg、Opus、WAV、FLAC 或 WebM 音訊。'], libraryFull: ['Library limit reached (30 tracks / 300 MiB). Delete a track first.', '已達音樂庫上限（30 首／300 MiB），請先刪除曲目。'], quota: ['Device storage is full. Free space or delete a track, then retry.', '本機儲存空間不足，請釋放空間或刪除曲目後重試。'], storageError: ['Local storage is unavailable. Check browser storage permissions and retry.', '無法存取本機儲存空間，請檢查瀏覽器儲存權限後重試。'], decode: ['This browser cannot play this file. Try another audio format.', '瀏覽器無法播放此檔案，請改用其他音訊格式。'], gesture: ['Playback was blocked. Press Play again to allow audio.', '播放被瀏覽器阻擋，請再次按播放。'], busy: ['Music is playing in another tab. Pause it there first.', '另一個分頁正在播放音樂，請先在該分頁暫停。'], fallback: ['Playing. Tab coordination is best-effort in this browser.', '播放中；此瀏覽器的跨分頁協調無法保證完全互斥。'], deleted: ['Track deleted. You can undo until the next deletion or reload.', '曲目已刪除；可在下一次刪除或重新載入前復原。'], confirm: ['Delete this local track?', '要刪除此本機曲目嗎？']
     };
     function t(key) {
         const lang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'zh_TW';
@@ -73,13 +90,29 @@
         const dictionary = typeof translations !== 'undefined' ? translations : {};
         return dictionary[lang]?.[name] || dictionary.en?.[name] || words[key]?.[lang === 'zh_TW' ? 1 : 0] || key;
     }
+    function message(key, values) { return t(key).replace(/\{(\w+)\}/g, (match, name) => String(values?.[name] ?? match)); }
     let settings = normalize(defaults);
     try { settings = normalize(JSON.parse(localStorage.getItem(SETTINGS_KEY))); } catch (_) { /* safe defaults */ }
     let dbPromise, tracks = [], audio, objectUrl, releaseLock, fadeTimer, generation = 0, undoRecord, mounted = false, importBusy = false;
+    const activeTracks = () => tracks.filter(track => !track.removedAt);
     let played = new Set(), lastState, ui = {}, libraryRevision = 0, libraryChannel, transportFocus;
+    let libraryKnown = false, libraryLoading = true, writeBusy = false;
     const owner = root.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
     let ownsFallback = false;
-    function status(key) { if (ui.status) { ui.status.textContent = t(key); ui.status.dataset.state = key; } updateNowPlaying(); }
+    function status(key, text = t(key)) { if (ui.status) { ui.status.textContent = text; ui.status.dataset.state = key; } updateNowPlaying(); }
+    function updateLibraryState() {
+        if (!ui.capacity) return;
+        const usage = libraryUsage(tracks), known = libraryKnown && usage.bytes !== null;
+        ui.count.textContent = known ? String(usage.count) : '…';
+        ui.capacity.textContent = libraryLoading ? t('checking') : known ? message('capacity', { count: usage.count, maxTracks: MAX_TRACKS, used: formatMiB(usage.bytes), maxSize: formatMiB(MAX_TOTAL) }) : t('capacityUnknown');
+        ui.capacity.title = `${ui.capacity.textContent}. ${t('capacityHint')}`;
+        const pending = importBusy || writeBusy || libraryLoading;
+        ui.library.setAttribute('aria-busy', String(pending));
+        ui.input.disabled = pending;
+        if (ui.importButton) ui.importButton.disabled = pending;
+        if (ui.undo) ui.undo.disabled = pending;
+        for (const control of ui.mutations || []) control.disabled = pending || control.dataset.boundary === 'true';
+    }
     function updatePlaybackVolume() {
         if (!audio || fadeTimer) return;
         const remaining = audio.duration - audio.currentTime;
@@ -97,7 +130,7 @@
     }
     function updateNowPlaying() {
         if (!ui.trackName) return;
-        const track = tracks.find(item => item.id === settings.selectedId);
+        const track = activeTracks().find(item => item.id === settings.selectedId);
         const active = Boolean(track && audio?.dataset.track === track.id && !audio.paused);
         // Disabling the focused button can send focus to body. Only an explicit
         // transport action may hand it to its counterpart, never a background event.
@@ -112,7 +145,7 @@
         ui.play.setAttribute('aria-label', track ? `${t('play')}: ${track.name}` : t('play'));
         ui.pause.setAttribute('aria-label', track ? `${t('pause')}: ${track.name}` : t('pause'));
         ui.root.dataset.playing = String(active);
-        ui.count.textContent = String(tracks.length);
+        updateLibraryState();
         updateTimeline();
     }
     function requestTransportFocus(from, to) {
@@ -143,6 +176,7 @@
                 // in the same transaction, never against a tab's cached library.
                 req = store.getAll();
                 req.onsuccess = () => {
+                    if (req.result.some(track => track.id === value.id && track.removedAt)) { failure = new Error('Retained track ID collision; restore it instead'); tx.abort(); return; }
                     const others = req.result.filter(track => track.id !== value.id);
                     const issue = validate(value.blob, others.reduce((sum, track) => sum + track.blob.size, 0), others.length);
                     if (issue) { failure = Object.assign(new Error(issue), { issue }); tx.abort(); return; }
@@ -170,14 +204,14 @@
         try {
             const latest = await transact('getAll');
             if (revision !== libraryRevision) return;
-            tracks = latest;
+            tracks = latest; libraryKnown = true;
             try { settings = normalize(JSON.parse(localStorage.getItem(SETTINGS_KEY))); } catch (_) { /* keep usable preferences */ }
-            if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || '';
-            const removed = audio && !tracks.some(track => track.id === audio.dataset.track);
+            if (!activeTracks().some(track => track.id === settings.selectedId)) settings.selectedId = activeTracks()[0]?.id || '';
+            const removed = audio && !activeTracks().some(track => track.id === audio.dataset.track);
             if (removed || (audio && audio.dataset.track !== settings.selectedId)) { pause(true); unloadAudio(); }
             syncControls(); renderList();
             if (removed) status('deleted');
-        } catch (e) { status(errorKey(e)); }
+        } catch (e) { if (revision === libraryRevision) { libraryKnown = false; status(errorKey(e)); } }
     }
     function publishLibraryChange() {
         libraryRevision++;
@@ -225,13 +259,25 @@
         if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null;
         updateNowPlaying();
     }
-    async function play(id = settings.selectedId, continuation = false) {
-        const track = tracks.find(x => x.id === id);
+    async function play(id = settings.selectedId, continuation = false, beforeMutation) {
+        if (beforeMutation) beforeMutation();
+        let track = tracks.find(x => x.id === id && !x.removedAt);
         if (!track) { status('empty'); return; }
         cancelFade();
         const token = ++generation;
         if (!await claim(token)) { if (token === generation) status('busy'); return; }
         if (token !== generation) return;
+        let currentRecords;
+        try { currentRecords = await transact('getAll'); }
+        catch (error) {
+            if (token === generation) { pause(true); unloadAudio(); status(errorKey(error)); }
+            if (beforeMutation) throw error;
+            return;
+        }
+        if (token !== generation) return;
+        track = currentRecords.find(x => x.id === id && !x.removedAt);
+        if (!track) { pause(true); tracks = currentRecords; unloadAudio(); renderList(); status('deleted'); return; }
+        if (beforeMutation) { try { beforeMutation(); } catch(error) { pause(true); throw error; } }
         if (!audio || audio.dataset.track !== id) {
             unloadAudio();
             audio = new Audio(); audio.dataset.track = id;
@@ -257,12 +303,13 @@
         audio.volume = settings.volume;
         try {
             await audio.play();
+            if (beforeMutation) { try { beforeMutation(); } catch(error) { pause(true); throw error; } }
             if (token !== generation) return;
             status(navigator.locks?.request ? 'playing' : 'fallback');
-        } catch (e) { if (token === generation) { pause(true); status(e.name === 'NotAllowedError' ? 'gesture' : 'decode'); } }
+        } catch (e) { if (token === generation) { pause(true); status(e.name === 'NotAllowedError' ? 'gesture' : 'decode'); } if (beforeMutation) throw e; }
     }
     function advance() {
-        const ids = ordered(tracks, settings.order).map(x => x.id);
+        const ids = ordered(activeTracks(), settings.order).map(x => x.id);
         let next;
         if (settings.shuffle && settings.mode !== 'one') {
             let remaining = ids.filter(id => !played.has(id));
@@ -286,51 +333,109 @@
         }); } finally { probe.onloadedmetadata = probe.ondurationchange = probe.onerror = null; probe.removeAttribute('src'); probe.load(); URL.revokeObjectURL(url); }
     }
     async function importFiles(files) {
-        if (importBusy) return;
-        importBusy = true; ui.input.disabled = true; status('importing');
-        let failed = false;
+        if (importBusy || writeBusy || libraryLoading) return;
+        const selected = Array.from(files || []);
+        if (!selected.length) return;
+        importBusy = true; ui.importStatus.hidden = false; ui.importStatus.textContent = t('importing'); status('importing');
+        let imported = 0, checked = 0;
+        const issues = new Map();
+        const reject = (key, count = 1) => issues.set(key, (issues.get(key) || 0) + count);
         try {
-            for (const file of [...files].slice(0, MAX_TRACKS + 1)) {
+            for (const [index, file] of selected.entries()) {
+                ui.importStatus.textContent = message('importProgress', { current: index + 1, total: selected.length });
                 const issue = validate(file, 0, 0); // Shared capacity is checked atomically with the write below.
-                if (issue) { status(issue); failed = true; break; }
-                try { await playable(file); } catch (_) { status('decode'); failed = true; break; }
+                if (issue) { reject(issue); continue; }
+                // Bound slow metadata probes, not just successful writes. Never
+                // silently drop the unprocessed tail of a large file selection.
+                if (checked >= MAX_TRACKS) { reject(tracks.length >= MAX_TRACKS ? 'libraryFull' : 'batchLimit', selected.length - index); break; }
+                checked++;
+                try { await playable(file); } catch (_) { reject('decode'); continue; }
                 const record = { id: root.crypto.randomUUID(), name: file.name.slice(0, 160), blob: file };
-                tracks = await transact('put', record); settings.order.push(record.id);
+                try { tracks = await transact('put', record); libraryKnown = true; }
+                catch (e) {
+                    const key = errorKey(e);
+                    if (key === 'libraryFull') { reject(key); continue; }
+                    // Quota/storage failures need user action, not thirty repeated
+                    // writes. Earlier successful transactions remain available.
+                    reject(key, selected.length - index); break;
+                }
+                imported++; settings.order.push(record.id);
                 if (!settings.selectedId) settings.selectedId = record.id;
                 save(); publishLibraryChange(); renderList();
             }
-            if (!failed) status('ready');
-        } catch (e) { status(errorKey(e)); }
-        finally { importBusy = false; ui.input.disabled = false; ui.input.value = ''; }
+        } catch (e) { reject(errorKey(e), selected.length - imported - [...issues.values()].reduce((total, count) => total + count, 0)); }
+        finally {
+            // A rejected atomic write may have seen tracks added in another tab.
+            // Refresh the counter without adopting unrelated playback settings.
+            if (issues.size) {
+                const revision = ++libraryRevision;
+                try {
+                    const latest = await transact('getAll');
+                    if (revision === libraryRevision) {
+                        tracks = latest; libraryKnown = true;
+                        if (!activeTracks().some(track => track.id === settings.selectedId)) settings.selectedId = activeTracks()[0]?.id || '';
+                        if (audio && !activeTracks().some(track => track.id === audio.dataset.track)) { pause(true); unloadAudio(); }
+                    }
+                }
+                catch (_) { if (revision === libraryRevision) libraryKnown = false; }
+            }
+            importBusy = false; ui.input.value = ''; renderList();
+            const summary = message('importResult', { imported, skipped: selected.length - imported });
+            const reasons = [...issues].map(([key, count]) => `${count} × ${t(key)}`).join(' ');
+            ui.importStatus.textContent = reasons ? `${summary} ${reasons}` : summary;
+            status(issues.size ? issues.keys().next().value : 'importResult', reasons ? `${summary} ${t(issues.keys().next().value)}` : summary);
+        }
     }
     function node(tag, text, parent) { const element = document.createElement(tag); if (text) element.textContent = text; parent?.append(element); return element; }
     function button(key, parent, action) { const b = node('button', t(key), parent); b.type = 'button'; b.addEventListener('click', action); return b; }
-    function renderList() {
+    function renderList(focusRequest) {
         if (!ui.list) return;
+        const focused = document.activeElement;
+        const focusTrack = focusRequest?.track || focused?.dataset.musicTrack, focusAction = focusRequest?.action || focused?.dataset.musicAction;
+        let restoreFocus, trackFocus;
+        ui.mutations = [];
         ui.list.replaceChildren();
-        const list = ordered(tracks, settings.order);
+        const list = ordered(activeTracks(), settings.order);
         list.forEach((track, index) => {
             const item = node('li', '', ui.list);
             const select = button('select', item, () => { pause(true); if (audio?.dataset.track !== track.id) unloadAudio(); settings.selectedId = track.id; save(); renderList(); status('ready'); });
             select.textContent = track.name; select.title = track.name; select.className = 'mynt-music-track'; select.setAttribute('aria-pressed', String(settings.selectedId === track.id)); select.setAttribute('aria-label', `${t('select')}: ${track.name}`);
+            select.dataset.musicTrack = track.id; select.dataset.musicAction = 'select';
+            if (track.id === focusTrack) { trackFocus = select; if (focusAction === 'select') restoreFocus = select; }
             for (const [key, delta] of [['up', -1], ['down', 1]]) {
-                const b = button(key, item, () => { const ids = list.map(x => x.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; settings.order = ids; save(); renderList(); });
+                const b = button(key, item, () => { if (importBusy || writeBusy || index + delta < 0 || index + delta >= list.length) return; const ids = list.map(x => x.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; settings.order = ids; save(); renderList(); });
                 b.textContent = delta < 0 ? '↑' : '↓'; b.className = 'mynt-music-order'; b.title = t(key);
-                b.disabled = index + delta < 0 || index + delta >= list.length; b.setAttribute('aria-label', `${t(key)}: ${track.name}`);
+                b.dataset.boundary = String(index + delta < 0 || index + delta >= list.length); b.setAttribute('aria-label', `${t(key)}: ${track.name}`);
+                b.dataset.musicTrack = track.id; b.dataset.musicAction = key; ui.mutations.push(b);
+                if (track.id === focusTrack && focusAction === key) restoreFocus = b;
             }
             const remove = button('remove', item, async () => {
-                if (importBusy || !root.confirm(`${t('confirm')}\n${track.name}`)) return;
+                if (importBusy || writeBusy || !root.confirm(`${t('confirm')}\n${track.name}`)) return;
+                // Keep a stable, enabled anchor while the destructive control is
+                // pending. Only this user action may move focus to another row.
+                if (document.activeElement === remove) select.focus({ preventScroll: true });
+                let focusDeleted = false;
+                writeBusy = true; updateLibraryState();
                 try {
-                    tracks = await transact('delete', track.id); undoRecord = { track, index };
+                    tracks = await transact('delete', track.id); libraryKnown = true; undoRecord = { track, index };
                     if (audio?.dataset.track === track.id) { pause(true); unloadAudio(); }
                     settings.order = settings.order.filter(id => id !== track.id);
-                    if (settings.selectedId === track.id) settings.selectedId = tracks[0]?.id || '';
-                    save(); publishLibraryChange(); renderList(); ui.undo.hidden = false; status('deleted');
+                    if (settings.selectedId === track.id) settings.selectedId = activeTracks()[0]?.id || '';
+                    focusDeleted = document.activeElement === select;
+                    const nextTrack = ordered(activeTracks(), settings.order)[Math.min(index, activeTracks().length - 1)];
+                    save(); publishLibraryChange(); renderList(focusDeleted && nextTrack ? { track: nextTrack.id, action: 'select' } : null); ui.undo.hidden = false; status('deleted');
                 } catch (e) { status(errorKey(e)); }
+                finally { writeBusy = false; updateLibraryState(); if (focusDeleted && !activeTracks().length) ui.undo.focus({ preventScroll: true }); }
             });
             remove.className = 'mynt-music-delete'; remove.title = t('remove'); remove.setAttribute('aria-label', `${t('remove')}: ${track.name}`);
+            remove.dataset.musicTrack = track.id; remove.dataset.musicAction = 'remove'; ui.mutations.push(remove);
+            if (track.id === focusTrack && focusAction === 'remove') restoreFocus = remove;
         });
+        renderRecovery();
         updateNowPlaying();
+        // Rebuilding rows must not strand keyboard users on body. Only an
+        // explicit action may request a different row, never background work.
+        if (restoreFocus || trackFocus) (restoreFocus && !restoreFocus.disabled ? restoreFocus : trackFocus)?.focus({ preventScroll: true });
     }
     async function mount() {
         const host = document.getElementById('myntPomoMusicMount');
@@ -344,12 +449,22 @@
         ui.status = node('p', '', information); ui.status.className = 'mynt-music-status'; ui.status.setAttribute('role', 'status'); ui.status.setAttribute('aria-live', 'polite'); ui.status.setAttribute('aria-atomic', 'true');
         const progress = node('div', '', ui.root); progress.className = 'mynt-music-progress';
         ui.seek = node('input', '', progress); Object.assign(ui.seek, { type: 'range', min: '0', max: '1', step: '0.1', value: '0', disabled: true }); ui.seek.setAttribute('aria-label', t('seek'));
-        ui.seek.addEventListener('input', () => {
+        const seekHint = node('span', t('seekHint'), progress); seekHint.id = 'myntMusicSeekHint'; seekHint.className = 'mynt-music-sr-only';
+        ui.seek.setAttribute('aria-describedby', seekHint.id); ui.seek.title = t('seekHint');
+        function seek(value) {
             const state = timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback));
-            const target = seekTarget(ui.seek.value, state.duration);
+            const target = seekTarget(value, state.duration);
             if (state.disabled || target === null) { updateTimeline(); return; }
             try { audio.currentTime = target; if (!fadeTimer) audio.volume = settings.volume; } catch (_) { /* Metadata may have become unavailable. Never start playback to seek. */ }
             updateTimeline();
+        }
+        ui.seek.addEventListener('input', () => seek(ui.seek.value));
+        ui.seek.addEventListener('keydown', event => {
+            if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+            const state = timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback));
+            const target = keyboardSeek(event.key, state.current, state.duration);
+            if (state.disabled || target === null) return;
+            event.preventDefault(); event.stopPropagation(); seek(target);
         });
         const time = node('div', '', progress); time.className = 'mynt-music-time'; time.setAttribute('aria-hidden', 'true');
         ui.elapsed = node('span', '0:00', time); ui.duration = node('span', '0:00', time);
@@ -366,19 +481,36 @@
         ui.volume.setAttribute('aria-label', t('volume'));
         ui.volume.addEventListener('input', () => { settings.volume = Number(ui.volume.value); if (audio && !fadeTimer) audio.volume = settings.volume; updateVolume(); save(); });
         updateVolume();
-        const details = node('details', '', ui.root); details.className = 'mynt-music-library';
+        const details = node('details', '', ui.root); details.className = 'mynt-music-library'; ui.library = details;
         const summary = node('summary', '', details); node('span', t('library'), summary); ui.count = node('span', '0', summary); ui.count.className = 'mynt-music-count';
+        ui.capacity = node('p', '', details); ui.capacity.className = 'mynt-music-capacity'; ui.capacity.id = 'myntMusicCapacity';
+        const capacityHint = node('span', t('capacityHint'), details); capacityHint.id = 'myntMusicCapacityHint'; capacityHint.className = 'mynt-music-sr-only';
         const privacy = node('p', t('local'), details); privacy.className = 'mynt-music-local'; privacy.id = 'myntMusicLocalNotice';
-        const label = node('label', t('import'), details); label.className = 'mynt-music-import';
-        ui.input = node('input', '', label); ui.input.type = 'file'; ui.input.multiple = true; ui.input.accept = '.mp3,.m4a,.aac,.ogg,.oga,.opus,.wav,.flac,.webm'; ui.input.setAttribute('aria-describedby', privacy.id);
+        const importer = node('div', '', details); importer.className = 'mynt-music-import';
+        ui.input = node('input', '', importer); ui.input.type = 'file'; ui.input.multiple = true; ui.input.accept = '.mp3,.m4a,.aac,.ogg,.oga,.opus,.wav,.flac,.webm'; ui.input.hidden = true; ui.input.tabIndex = -1;
+        // A localized native button keeps keyboard activation while opening the
+        // same normal file chooser, without browser-language-dependent chrome.
+        ui.importButton = button('import', importer, () => { if (!ui.input.disabled) ui.input.click(); });
         ui.input.addEventListener('change', () => void importFiles(ui.input.files));
+        ui.importStatus = node('p', '', details); ui.importStatus.className = 'mynt-music-import-status'; ui.importStatus.id = 'myntMusicImportResult'; ui.importStatus.hidden = true;
+        // The compact status announces the outcome once; this persistent report
+        // keeps all rejection reasons available after playback status changes.
+        ui.input.setAttribute('aria-describedby', `${ui.capacity.id} ${capacityHint.id} ${privacy.id} ${ui.importStatus.id}`);
+        ui.importButton.setAttribute('aria-describedby', `${ui.capacity.id} ${capacityHint.id} ${privacy.id} ${ui.importStatus.id}`);
         ui.list = node('ol', '', details); ui.list.setAttribute('aria-label', t('library'));
+        ui.recovery = node('details', '', details); ui.recovery.className = 'mynt-music-recovery';
+        ui.recoverySummary = node('summary', t('recovery'), ui.recovery);
+        node('p', t('recoveryHint'), ui.recovery); ui.recoveryList = node('ol', '', ui.recovery);
         ui.undo = button('undo', ui.root, async () => {
-            if (!undoRecord || importBusy) return;
+            if (!undoRecord || importBusy || writeBusy) return;
             const { track, index } = undoRecord;
             const issue = validate(track.blob, 0, 0);
             if (issue) { status(issue); return; }
-            try { tracks = await transact('put', track); settings.order = settings.order.filter(id => id !== track.id); settings.order.splice(index, 0, track.id); if (!settings.selectedId) settings.selectedId = track.id; undoRecord = null; ui.undo.hidden = true; save(); publishLibraryChange(); renderList(); status('ready'); } catch (e) { status(errorKey(e)); }
+            const focusedUndo = document.activeElement === ui.undo;
+            if (focusedUndo) summary.focus({ preventScroll: true });
+            writeBusy = true; updateLibraryState();
+            try { tracks = await transact('put', track); libraryKnown = true; settings.order = settings.order.filter(id => id !== track.id); settings.order.splice(index, 0, track.id); if (!settings.selectedId) settings.selectedId = track.id; undoRecord = null; ui.undo.hidden = true; save(); publishLibraryChange(); renderList(focusedUndo && document.activeElement === summary && details.open ? { track: track.id, action: 'select' } : null); status('ready'); } catch (e) { status(errorKey(e)); }
+            finally { writeBusy = false; updateLibraryState(); if (focusedUndo && document.activeElement === summary && !ui.undo.hidden) ui.undo.focus({ preventScroll: true }); }
         }); ui.undo.hidden = true;
         const preferences = node('div', '', details); preferences.className = 'mynt-music-preferences';
         function select(key, field, choices) {
@@ -391,14 +523,112 @@
         const shuffle = node('label', t('shuffle'), preferences); shuffle.className = 'mynt-music-shuffle'; ui.shuffle = node('input', '', shuffle); ui.shuffle.type = 'checkbox'; ui.shuffle.checked = settings.shuffle;
         ui.shuffle.addEventListener('change', () => { settings.shuffle = ui.shuffle.checked; played = new Set([settings.selectedId]); save(); });
         updateNowPlaying();
-        try { tracks = await transact('getAll'); if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || ''; renderList(); status(tracks.length ? 'ready' : 'empty'); } catch (e) { status(errorKey(e)); }
+        status('checking');
+        try { tracks = await transact('getAll'); libraryKnown = true; if (!activeTracks().some(track => track.id === settings.selectedId)) settings.selectedId = activeTracks()[0]?.id || ''; renderList(); status(activeTracks().length ? 'ready' : 'empty'); } catch (e) { status(errorKey(e)); }
+        finally { libraryLoading = false; updateLibraryState(); }
     }
-    root.myntPomoMusic = {
+    // Recoverable remote removal retains the original audio in the same IDB record.
+    function assertTrackRecord(track) {
+        if (!track || typeof track !== 'object' || Array.isArray(track) || Object.keys(track).some(key => !['id', 'name', 'blob', 'removedAt'].includes(key)) ||
+            typeof track.id !== 'string' || !track.id || track.id.length > 100 || typeof track.name !== 'string' || !track.name || track.name.length > 160 ||
+            (track.removedAt !== undefined && (typeof track.removedAt !== 'number' || !Number.isFinite(track.removedAt) || track.removedAt <= 0)) ||
+            !track.blob || typeof track.blob !== 'object' || !Number.isInteger(track.blob.size) || track.blob.size <= 0 || track.blob.size > MAX_FILE ||
+            typeof track.blob.type !== 'string' || !(/^audio\/(mpeg|mp3|mp4|x-m4a|aac|ogg|opus|wav|wave|x-wav|flac|x-flac|webm)$/i.test(track.blob.type) ||
+                ((!track.blob.type || track.blob.type === 'application/octet-stream') && /\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm)$/i.test(track.name))) ||
+            (track.blob.lastModified !== undefined && (!Number.isFinite(track.blob.lastModified) || track.blob.lastModified < 0))) throw Error('Malformed music record; no media was changed');
+    }
+    function trackRevision(track) {
+        assertTrackRecord(track);
+        return JSON.stringify({ id: track.id, name: track.name, bytes: track.blob?.size, type: track.blob?.type || '', modified: track.blob?.lastModified || null, removedAt: track.removedAt || null });
+    }
+    function trackMetadata(track) { return { id: track.id, name: track.name, bytes: track.blob?.size || 0, removed: Boolean(track.removedAt), itemRevision: trackRevision(track) }; }
+    async function remoteLibrary() { return (await transact('getAll')).map(trackMetadata); }
+    async function remoteTrackEdit(action, id, expected, beforeMutation) {
+        if (!['remove', 'restore'].includes(action) || typeof id !== 'string' || !id || id.length > 100 || typeof beforeMutation !== 'function') throw Error('Invalid guarded music action');
+        if (importBusy || writeBusy || libraryLoading) throw Error('Music library is busy; try again after the current operation');
+        const conflict = message => { const error = Error(message); error.code = 'CONFLICT'; return error; };
+        const perform = async () => {
+            const db = await database();
+            const nextRecords = await new Promise((resolve, reject) => {
+                const tx = db.transaction('tracks', 'readwrite'), store = tx.objectStore('tracks');
+                let records, failure;
+                tx.oncomplete = () => resolve(records);
+                tx.onerror = tx.onabort = () => reject(failure || tx.error || Error('Music recovery transaction failed'));
+                const request = store.getAll();
+                request.onerror = () => { failure = request.error; tx.abort(); };
+                request.onsuccess = () => {
+                    try {
+                        request.result.forEach(assertTrackRecord);
+                        if (request.result.length > MAX_TRACKS || libraryUsage(request.result).bytes > MAX_TOTAL) throw Error('Music library exceeds supported bounds; no media was changed');
+                        const track = request.result.find(item => item.id === id);
+                        if (!track || trackRevision(track) !== expected) throw conflict('Music track changed; read a fresh revision');
+                        if (Boolean(track.removedAt) === (action === 'remove')) throw conflict(action === 'remove' ? 'Track is already removed' : 'Track is not removed');
+                        if (action === 'remove' && audio && !audio.paused) throw conflict('Pause music before removing a track');
+                        const replacement = { ...track };
+                        if (action === 'remove') replacement.removedAt = Date.now(); else delete replacement.removedAt;
+                        beforeMutation();
+                        store.put(replacement); records = request.result.map(item => item.id === id ? replacement : item);
+                    } catch (error) { failure = error; tx.abort(); }
+                };
+            });
+            // The transaction committed. Do not pretend to roll it back if access/storage later fails.
+            beforeMutation(); tracks = nextRecords; libraryKnown = true;
+            if (audio && !activeTracks().some(item => item.id === audio.dataset.track)) { pause(true); unloadAudio(); }
+            if (!activeTracks().some(item => item.id === settings.selectedId)) settings.selectedId = activeTracks()[0]?.id || '';
+            try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+            finally { publishLibraryChange(); renderList(); }
+            return trackMetadata(tracks.find(item => item.id === id));
+        };
+        writeBusy = true; updateLibraryState();
+        try {
+            if (action === 'remove') {
+                if (!navigator.locks?.request) { const error = Error('Safe removal requires playback coordination. Use a browser with Web Locks and pause music first.'); error.code = 'ACTION_REQUIRED'; throw error; }
+                return await navigator.locks.request('mynt-pomodoro-music', { ifAvailable: true }, lock => {
+                    if (!lock) { const error = Error('Pause music in all MYNT tabs before removing a track'); error.code = 'ACTION_REQUIRED'; throw error; }
+                    return perform();
+                });
+            }
+            return await perform();
+        } finally { writeBusy = false; updateLibraryState(); }
+    }
+    function renderRecovery() {
+        if (!ui.recoveryList) return;
+        ui.recoveryList.replaceChildren();
+        const removed = tracks.filter(track => track.removedAt);
+        ui.recovery.hidden = removed.length === 0;
+        for (const track of removed) {
+            const row = node('li', '', ui.recoveryList); node('span', track.name, row);
+            const restore = button('restore', row, async () => {
+                ui.recoverySummary.focus({ preventScroll: true });
+                try { await remoteTrackEdit('restore', track.id, trackRevision(track), () => {}); status('ready'); }
+                catch (error) { status(errorKey(error)); }
+            });
+            restore.setAttribute('aria-label', `${t('restore')}: ${track.name}`); ui.mutations.push(restore);
+        }
+    }
+    root.myntPomoMusic = { remoteLibrary, remoteTrackEdit,
         getSettings: () => normalize(settings),
-        applySettings(value) { pause(true); settings = normalize(value); if (!tracks.some(track => track.id === settings.selectedId)) settings.selectedId = tracks[0]?.id || ''; save(); syncControls(); renderList(); },
+        async play(id) { await play(id); return this.getPlayback(); },
+        async playRemote(beforeMutation) { await play(settings.selectedId, false, beforeMutation); return this.getPlayback(); },
+        getPlayback: () => ({ ...timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback)), playing: Boolean(audio && !audio.paused), status: ui.status?.dataset.state || 'unavailable' }),
+        seek(seconds) {
+            if (typeof seconds !== 'number' || !Number.isFinite(seconds)) throw new TypeError('Invalid seek');
+            const state = timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback));
+            const target = seekTarget(seconds, state.duration);
+            if (state.disabled || target === null) throw new Error('Playback metadata unavailable');
+            audio.currentTime = target; updateTimeline(); return this.getPlayback();
+        },
+        applyRemoteSettings(value) {
+            const next = normalize(value);
+            if (next.selectedId && !activeTracks().some(track => track.id === next.selectedId)) throw new Error('Unknown track');
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+            pause(true); settings = next; syncControls(); renderList(); return normalize(settings);
+        },
+        pauseImmediate: () => pause(true),
+        applySettings(value) { pause(true); settings = normalize(value); if (!activeTracks().some(track => track.id === settings.selectedId)) settings.selectedId = activeTracks()[0]?.id || ''; save(); syncControls(); renderList(); },
         pause: () => pause(),
         // Track IDs/settings only. The full-backup module reads audio blobs separately; scenarios only use settings.
-        getTracks: () => ordered(tracks, settings.order).map(({ id, name }) => ({ id, name }))
+        getTracks: () => ordered(activeTracks(), settings.order).map(({ id, name }) => ({ id, name }))
     };
     root.addEventListener('storage', event => {
         if (event.key === OWNER_KEY && ownsFallback && event.newValue !== owner) { pause(true); status('busy'); }

@@ -42,6 +42,36 @@
             !['50% 50%', '50% 0%', '50% 100%'].includes(out.position) || !/^#[0-9a-f]{6}$/i.test(out.color) || !/^#[0-9a-f]{6}$/i.test(out.color2)) throw new Error('Invalid settings');
         return out;
     }
+    function createRemoteAppearance({ storage, getSettings, setSettings, hasImage, render }) {
+        const error = (code, message) => { const e = Error(message); e.code = code; throw e; };
+        const strict = value => {
+            if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(k => !['version','mode','color','color2','fit','position'].includes(k)) || (value.version !== undefined && value.version !== 1)) error('INVALID_STORAGE', 'Appearance settings are malformed; existing data preserved.');
+            return validate(value);
+        };
+        const snapshot = () => {
+            const raw = storage.getItem(KEY); if (raw !== null) { if (raw.length > 4000) error('INVALID_STORAGE', 'Appearance settings too large.'); strict(JSON.parse(raw)); }
+            const settings = strict(getSettings());
+            if (raw !== null && JSON.stringify(strict(JSON.parse(raw))) !== JSON.stringify(settings)) error('CONFLICT', 'Appearance changed in another page; reload before writing.');
+            const imageAvailable = Boolean(hasImage());
+            return { settings, imageAvailable, revision: JSON.stringify([raw, settings, imageAvailable]) };
+        };
+        return {
+            getRemoteState: snapshot,
+            applyRemoteSettings(patch, expectedRevision, assertAccess = () => {}) {
+                assertAccess(); const before = snapshot();
+                if (before.revision !== expectedRevision) error('CONFLICT', 'Appearance changed; read it again.');
+                if (!patch || typeof patch !== 'object' || Array.isArray(patch) || !Object.keys(patch).length || Object.keys(patch).some(k => !['mode','color','color2','fit','position'].includes(k))) error('INVALID_ARGUMENTS', 'Use a nonempty appearance settings patch.');
+                const next = strict({ ...before.settings, ...patch });
+                if (next.mode === 'image' && !before.imageAvailable) error('ACTION_REQUIRED', 'Choose an existing local timer image in the browser first.');
+                assertAccess(); if (snapshot().revision !== expectedRevision) error('CONFLICT', 'Appearance changed before write.');
+                const serialized = JSON.stringify(next); storage.setItem(KEY, serialized);
+                if (storage.getItem(KEY) !== serialized) error('STORAGE_FAILURE', 'Appearance write could not be verified.');
+                setSettings(next); let warning;
+                try { render(); } catch { warning = 'PERSISTED_UI_REFRESH_REQUIRED'; }
+                return { ...snapshot(), ...(warning ? { warning } : {}) };
+            }
+        };
+    }
     function validImage(file) { return !!file && ['image/png', 'image/jpeg', 'image/webp'].includes(file.type) && file.size > 0 && file.size <= MAX_IMAGE; }
     const RING_CIRCUMFERENCE = 2 * Math.PI * 70;
     function progressOffset(remaining, total) {
@@ -104,13 +134,15 @@
     }
     function isCompactWindow(win) { return win.innerWidth > 0 && win.innerWidth <= 336 && win.innerHeight > 0 && win.innerHeight <= 436; }
     // Pure helpers are exported for dependency-free regression checks, not persisted.
-    if (typeof module !== 'undefined' && module.exports) { module.exports = { validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow }; return; }
+    if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow }; return; }
     let settings = { ...defaults }, imageUrl = '', floating = null, opening = false, unsubscribe = null;
     let status, appearanceForm, floatVideo;
     const imageSamples = new Map(), modeChoices = new Map(), settingGroups = new Map(), thumbnailCache = new WeakMap();
     try { settings = validate(JSON.parse(localStorage.getItem(KEY)) || defaults); } catch (_) { /* safe defaults */ }
     function el(doc, tag, text, className) { const node = doc.createElement(tag); if (text) node.textContent = text; if (className) node.className = className; return node; }
     function button(doc, label, action) { const node = el(doc, 'button', t(label)); node.type = 'button'; node.addEventListener('click', action); return node; }
+    // Escape belongs to the input method while the user is composing text.
+    function isDismissKey(event) { return event.key === 'Escape' && !event.defaultPrevented && !event.isComposing && event.keyCode !== 229; }
     async function imageStore(mode, file) {
         const db = await new Promise((resolve, reject) => {
             const req = indexedDB.open('MyntPomodoroAppearance', 1);
@@ -175,7 +207,7 @@
         if (floating.document.getElementById('myntPomoFloatCard').classList.contains('mynt-pomo-static') || reduceMotion || highContrast || floating.document.hidden) floatVideo.pause();
         else floatVideo.play().catch(() => { /* The theme-colored card remains usable if video playback is unavailable. */ });
     }
-    function renderAppearance() {
+    function renderAppearance(options = {}) {
         paint(document.getElementById('pomodoroPanel'));
         syncForm();
         if (!floating || floating.closed) return;
@@ -188,11 +220,12 @@
             else doc.documentElement.style.removeProperty(key);
         }
         doc.documentElement.style.setProperty('--mynt-font-scale', root.getPropertyValue('--mynt-font-scale').trim() || '1');
-        doc.documentElement.style.fontSize = root.fontSize || 'calc(16px * var(--mynt-font-scale, 1))';
+        // The homepage may use a compact root font; the standalone viewport must not inherit it.
+        doc.documentElement.style.fontSize = 'calc(16px * var(--mynt-font-scale, 1))';
         for (const name of ['myntReducedMotion', 'myntHighContrast']) doc.documentElement.classList.toggle(name, document.documentElement.classList.contains(name));
         doc.body.classList.toggle('black-theme', document.body.classList.contains('black-theme'));
         paint(doc.getElementById('myntPomoFloatCard'));
-        syncFloatVideo();
+        if (options.suppressPlayback) floatVideo?.pause(); else syncFloatVideo();
     }
     function applySettings(value) {
         const next = validate(value);
@@ -200,7 +233,9 @@
         settings = next; renderAppearance(); syncForm();
         return { ...settings };
     }
-    window.myntPomoAppearance = { getSettings: () => ({ ...settings }), applySettings };
+    window.myntPomoAppearance = { getSettings: () => ({ ...settings }), applySettings,
+        ...createRemoteAppearance({ storage: localStorage, getSettings: () => settings, setSettings: value => { settings = value; }, hasImage: () => Boolean(imageUrl), render: () => { renderAppearance({ suppressPlayback: true }); syncForm(); } })
+    };
     function videoThumbnail(video) {
         if (!video || video.readyState < 2 || !video.videoWidth) return '';
         const source = video.currentSrc || video.src;
@@ -270,7 +305,7 @@
             try { applySettings({ ...settings, [event.target.name]: event.target.value }); status.textContent = settings.mode === 'image' && !imageUrl ? t('missing') : t('ready'); }
             catch (_) { status.textContent = t('error'); syncForm(); }
         });
-        details.addEventListener('keydown', event => { if (event.key === 'Escape' && details.open) { event.preventDefault(); event.stopPropagation(); details.open = false; details.querySelector('summary').focus(); } });
+        details.addEventListener('keydown', event => { if (isDismissKey(event) && details.open) { event.preventDefault(); event.stopPropagation(); details.open = false; details.querySelector('summary').focus(); } });
         let deletedImage = null;
         const undo = button(document, 'undo', async () => {
             if (!deletedImage) return;
@@ -362,6 +397,10 @@
         reset.replaceChildren(icon('M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 16.22 7.78L13 11h7V4z'));
         controls.append(toggle, reset); main.append(controls);
         let resetPrompt = null;
+        function dismissReset() {
+            if (!resetPrompt) return;
+            resetPrompt.remove(); resetPrompt = null; reset.focus();
+        }
         function confirmReset() {
             if (resetPrompt) return;
             const state = window.myntPomodoro.getState();
@@ -369,15 +408,14 @@
             resetPrompt = el(doc, 'section', '', 'mynt-pomo-confirm');
             resetPrompt.setAttribute('role', 'group'); resetPrompt.setAttribute('aria-label', t('resetConfirm'));
             const message = el(doc, 'p', t('resetConfirm')); message.setAttribute('role', 'alert');
-            const dismiss = () => { resetPrompt.remove(); resetPrompt = null; reset.focus(); };
-            const cancel = button(doc, 'cancel', dismiss);
-            resetPrompt.append(message, button(doc, 'confirm', () => { dismiss(); return run('reset'); }), cancel);
-            resetPrompt.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); dismiss(); } });
+            const cancel = button(doc, 'cancel', dismissReset);
+            resetPrompt.append(message, button(doc, 'confirm', () => { dismissReset(); return run('reset'); }), cancel);
+            resetPrompt.addEventListener('keydown', event => { if (isDismissKey(event)) { event.preventDefault(); event.stopPropagation(); dismissReset(); } });
             controls.after(resetPrompt); cancel.focus();
         }
         const options = el(doc, 'details', '', 'mynt-pomo-options');
         const summary = el(doc, 'summary', t('options')); options.append(summary);
-        const taskLabel = el(doc, 'label', t('task')); const task = el(doc, 'input'); task.type = 'text'; task.maxLength = 300; task.placeholder = t('task');
+        const taskLabel = el(doc, 'label', t('task')); const task = el(doc, 'input'); task.type = 'text'; task.maxLength = 200; task.placeholder = t('task');
         taskLabel.append(task); task.addEventListener('change', () => run('setTask', task.value));
         const secondary = el(doc, 'div', '', 'mynt-pomo-secondary');
         const close = button(doc, 'close', () => win.close());
@@ -430,8 +468,11 @@
         render(window.myntPomodoro.getState()); unsubscribe = window.myntPomodoro.subscribe(render);
         win.addEventListener('pagehide', () => clearFloat(win), { once: true });
         doc.addEventListener('keydown', event => {
-            if (event.key !== 'Escape' || event.defaultPrevented) return;
-            if (options.open) { event.preventDefault(); options.open = false; summary.focus(); }
+            if (!isDismissKey(event)) return;
+            event.preventDefault();
+            // The inline prompt remains dismissible after tabbing to another control.
+            if (resetPrompt) { event.stopPropagation(); dismissReset(); }
+            else if (options.open) { options.open = false; summary.focus(); }
             else win.close();
         });
         doc.addEventListener('visibilitychange', syncFloatVideo);

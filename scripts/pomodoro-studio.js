@@ -16,7 +16,88 @@ const builtin=[normalizePreset({name:'25 / 5',durations:{workMinutes:25,shortBre
 function sameDurations(a,b){return !!a&&!!b&&['workMinutes','shortBreakMinutes','longBreakMinutes','roundsBeforeLong'].every(key=>a[key]===b[key]);}
 function readDurations(values){const result={};for(const [key,max] of [['workMinutes',120],['shortBreakMinutes',60],['longBreakMinutes',60],['roundsBeforeLong',12]]){const raw=values[key],value=Number(raw);if(!['string','number'].includes(typeof raw)||!Number.isInteger(value)||value<1||value>max)throw Error('invalid');result[key]=value;}return result;}
 function fitPanel(rect,width,height){return {left:Math.max(0,Math.min(rect.left,width-rect.width)),top:Math.max(0,Math.min(rect.top,height-rect.height))};}
-if(typeof module!=='undefined')module.exports={normalizePreset,parse,builtin,fitPanel,sameDurations,readDurations};
+function createRemoteStudio({storage,timer,appearance,music,crypto=root.crypto,readRecovery=()=>null,writeRecovery=()=>{},onChange=()=>{}}){
+ const fail=(code,message)=>{const e=Error(message);e.code=code;throw e;};
+ const clone=v=>JSON.parse(JSON.stringify(v));
+ function strictAppearance(value){
+  if(!plain(value)||Object.keys(value).some(k=>!['version','mode','color','color2','fit','position'].includes(k)))fail('INVALID_STORAGE','Unsafe scenario appearance preserved.');
+  if(value.version!==undefined&&value.version!==1)fail('INVALID_STORAGE','Unknown appearance version.');
+  const choices={mode:['original','home','image','color','gradient'],fit:['cover','contain'],position:['50% 50%','50% 0%','50% 100%']};
+  for(const [key,list]of Object.entries(choices))if(value[key]!==undefined&&!list.includes(value[key]))fail('INVALID_STORAGE','Invalid appearance preference.');
+  for(const key of ['color','color2'])if(value[key]!==undefined&&(typeof value[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(value[key])))fail('INVALID_STORAGE','Invalid appearance color.');
+  return value;
+ }
+ function strictMusic(value){
+  if(!plain(value)||Object.keys(value).some(k=>!['version','selectedId','order','volume','mode','shuffle','restPolicy'].includes(k)))fail('INVALID_STORAGE','Unsafe scenario music preserved.');
+  if(value.version!==undefined&&value.version!==1||value.selectedId!==undefined&&(typeof value.selectedId!=='string'||value.selectedId.length>100)||value.order!==undefined&&(!Array.isArray(value.order)||value.order.length>30||new Set(value.order).size!==value.order.length||value.order.some(v=>typeof v!=='string'||v.length>100))||value.volume!==undefined&&(!Number.isFinite(value.volume)||value.volume<0||value.volume>1)||value.mode!==undefined&&!['off','one','all'].includes(value.mode)||value.shuffle!==undefined&&typeof value.shuffle!=='boolean'||value.restPolicy!==undefined&&!['pause','continue'].includes(value.restPolicy))fail('INVALID_STORAGE','Invalid scenario music preferences.');
+  return value;
+ }
+ function strictPreset(value){
+  if(!plain(value)||Object.keys(value).some(k=>!['name','durations','appearance','music'].includes(k)))fail('INVALID_STORAGE','Unknown scenario fields preserved.');
+  const normalized=normalizePreset(value);strictAppearance(value.appearance);strictMusic(value.music);
+  if(Object.keys(value.durations).some(k=>!Object.hasOwn(normalized.durations,k)))fail('INVALID_STORAGE','Unknown duration fields preserved.');
+  return normalized;
+ }
+ function read(){
+  const raw=storage.getItem(KEY);if(raw!==null&&raw.length>70000)fail('INVALID_STORAGE','Scenario data too large.');
+  let presets=[];
+  if(raw!==null){const data=JSON.parse(raw);if(!plain(data)||Object.keys(data).some(k=>!['version','presets'].includes(k))||data.version!==1||!Array.isArray(data.presets)||data.presets.length>8)fail('INVALID_STORAGE','Malformed scenarios preserved.');presets=data.presets.map(strictPreset);}
+  const recovery=readRecovery();if(recovery)strictPreset(recovery.preset);
+  return {raw,presets,recovery:recovery?clone(recovery):null};
+ }
+ async function revision(state){if(!crypto?.subtle)fail('UNAVAILABLE','Revision hashing unavailable.');return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([state.raw,state.recovery])))),b=>b.toString(16).padStart(2,'0')).join('');}
+ const same=(a,b)=>a.raw===b.raw&&JSON.stringify(a.recovery)===JSON.stringify(b.recovery);
+ function captured(name){return strictPreset({name,durations:timer()?.getState().durations,appearance:appearance()?.getRemoteState().settings,music:music()?.getSettings()});}
+ function pristine(state){return state&&!state.isRunning&&state.phase==='work'&&state.currentRound===1&&Number.isFinite(state.timeRemaining)&&state.timeRemaining===state.totalTime&&state.safetyStatus==='ready'&&state.coordinationAvailable===true;}
+ async function getRemoteState(){const state=read();return {revision:await revision(state),presets:[...builtin.map((p,i)=>({id:'builtin:'+i,builtin:true,...clone(p)})),...state.presets.map((p,i)=>({id:'custom:'+i,builtin:false,...clone(p)}))],recovery:state.recovery?{name:state.recovery.preset.name,index:state.recovery.index}:null,notice:'Scenario IDs are positions bound to this revision. Recovery lasts only while this tab stays open.'};}
+ async function mutateRemote(args,assertAccess=()=>{}){
+  let changed=false;const state=read();const expected=await revision(state);assertAccess();
+  if(args.expectedRevision!==expected||!same(state,read()))fail('CONFLICT','Scenario state changed; read again.');
+  const check=()=>{assertAccess();if(!same(state,read()))fail('CONFLICT','Scenarios changed during operation.');};
+  try{
+   if(args.action==='apply'){
+    const match=/^(builtin|custom):([0-9])$/.exec(args.id||'');const preset=match&&(match[1]==='builtin'?builtin:state.presets)[Number(match[2])];if(!preset)fail('NOT_FOUND','Scenario not found.');
+    const t=timer(),a=appearance(),m=music();if(!t?.runRemote||!a?.getRemoteState||!a?.applyRemoteSettings||!m?.applyRemoteSettings)fail('UNAVAILABLE','Guarded scenario APIs are not ready.');
+    const initialTimer=t.getState();if(!pristine(initialTimer))fail('ACTION_REQUIRED','Applying a scenario could discard timer progress. Reset it yourself in the browser first.');
+    const initialAppearance=a.getRemoteState(),initialMusic=JSON.stringify(m.getSettings());
+    if(preset.appearance.mode==='image'&&!initialAppearance.imageAvailable)fail('ACTION_REQUIRED','Select a local timer image in the browser first.');
+    const musicRaw=storage.getItem('myntPomoMusicSettingsV1');if(musicRaw!==null)strictMusic(JSON.parse(musicRaw));
+    const ids=new Set((m.getTracks?.()||[]).map(v=>v.id));if(preset.music.selectedId&&!ids.has(preset.music.selectedId)||(preset.music.order||[]).some(id=>!ids.has(id)))fail('ACTION_REQUIRED','A saved music track is unavailable; review the scenario in the browser.');
+    const timerFingerprint=s=>JSON.stringify([s.sessionId,s.phase,s.currentRound,s.isRunning,s.timeRemaining,s.totalTime,s.durations]);
+    const beforeTimer=timerFingerprint(initialTimer);
+    const verifyComponents=()=>{check();if(a.getRemoteState().revision!==initialAppearance.revision||JSON.stringify(m.getSettings())!==initialMusic||storage.getItem('myntPomoMusicSettingsV1')!==musicRaw)fail('CONFLICT','Appearance or music changed during scenario application.');};
+    verifyComponents();
+    const result=await t.runRemote('setDurations',preset.durations,()=>{verifyComponents();if(!pristine(t.getState())||timerFingerprint(t.getState())!==beforeTimer)fail('ACTION_REQUIRED','Timer changed before applying; nothing was reset.');changed=true;});
+    check();if(result===false||!sameDurations(t.getState().durations,preset.durations)||!pristine(t.getState()))fail('OPERATION_FAILED','Timer duration update was not verified.');
+    const storedTimer=JSON.parse(storage.getItem('pomodoroState')||'null');
+    const durationKeys={workMinutes:'pomodoroWorkMinutes',shortBreakMinutes:'pomodoroShortBreakMinutes',longBreakMinutes:'pomodoroLongBreakMinutes',roundsBeforeLong:'pomodoroRoundsBeforeLong'};
+    if(!storedTimer||!sameDurations(storedTimer.settings,preset.durations)||Object.entries(durationKeys).some(([key,storedKey])=>storage.getItem(storedKey)!==String(preset.durations[key])))fail('STORAGE_FAILURE','Timer settings were not durably saved; appearance and music were not applied.');
+    const appliedTimer=timerFingerprint(t.getState());const checkAppliedTimer=()=>{check();if(!pristine(t.getState())||timerFingerprint(t.getState())!==appliedTimer)fail('CONFLICT','Timer health or state changed during scenario application.');};
+    checkAppliedTimer();verifyComponents();
+    const patch=Object.fromEntries(Object.entries(preset.appearance).filter(([key])=>key!=='version'));
+    if(Object.keys(patch).length)a.applyRemoteSettings(patch,initialAppearance.revision,checkAppliedTimer);
+    checkAppliedTimer();if(JSON.stringify(m.getSettings())!==initialMusic||storage.getItem('myntPomoMusicSettingsV1')!==musicRaw)fail('CONFLICT','Music changed before applying.');
+    if(Object.keys(preset.music).length){changed=true;await m.applyRemoteSettings(preset.music);checkAppliedTimer();if(Object.entries(preset.music).some(([key,value])=>JSON.stringify(m.getSettings()[key])!==JSON.stringify(value)))fail('OPERATION_FAILED','Music settings were not fully applied.');}
+    const finalState=await getRemoteState();checkAppliedTimer();return {...finalState,applied:args.id,timerStarted:false,musicStarted:false};
+   }
+   const next=clone(state.presets);let recovery=state.recovery;
+   if(args.action==='save'){if(next.length>=8)fail('LIMIT','At most eight custom scenarios.');next.push(captured(args.name));}
+   else if(args.action==='undo'){if(!recovery)fail('NOT_FOUND','No recoverable scenario.');if(next.length>=8)fail('LIMIT','Scenario list is full.');next.splice(Math.min(recovery.index,next.length),0,recovery.preset);recovery=null;}
+   else{
+    const match=/^custom:([0-7])$/.exec(args.id||'');const index=match?Number(match[1]):-1;if(index<0||!next[index])fail('NOT_FOUND','Only an existing custom scenario can be edited.');
+    if(args.action==='trash'){if(recovery)fail('RECOVERY_PENDING','Restore the existing recovery slot before removing another scenario.');recovery={preset:next.splice(index,1)[0],index};}
+    else if(args.action==='update'){if(args.name===undefined&&!args.captureCurrent)fail('INVALID_ARGUMENTS','Specify a name or captureCurrent.');next[index]=args.captureCurrent?captured(args.name??next[index].name):strictPreset({...next[index],name:args.name});}
+    else fail('INVALID_ARGUMENTS','Unknown scenario operation.');
+   }
+   const serialized=JSON.stringify({version:1,presets:next});check();storage.setItem(KEY,serialized);changed=true;
+   if(storage.getItem(KEY)!==serialized)fail('STORAGE_FAILURE','Scenario write could not be verified.');
+   writeRecovery(recovery);let warning;try{onChange(serialized,next,recovery);}catch{warning='PERSISTED_UI_REFRESH_REQUIRED';}
+   assertAccess();return {...await getRemoteState(),...(warning?{warning}:{})};
+  }catch(error){error.operationMayHaveExecuted=changed;throw error;}
+ }
+ return {getRemoteState,mutateRemote};
+}
+if(typeof module!=='undefined')module.exports={createRemoteStudio,normalizePreset,parse,builtin,fitPanel,sameDurations,readDurations};
 if(typeof document==='undefined')return;
 document.addEventListener('DOMContentLoaded',()=>{
  const panel=document.querySelector('#pomodoroPanel'),mount=document.querySelector('#myntPomoStudioMount');if(!panel||!mount)return;
@@ -44,7 +125,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  const mode=el('button',t('pomoStudioFull','完整設定'));mode.type='button';mode.setAttribute('aria-expanded','false');mode.setAttribute('aria-controls','myntPomoExtras');
  const extras=document.querySelector('#myntPomoExtras');let full=false;try{full=localStorage.getItem(MODE)==='full';}catch{}
  const setMode=()=>{extras.hidden=!full;if(!full)panel.scrollTop=0;panel.classList.toggle('pomoStudioExpanded',full);mode.textContent=t(full?'pomoStudioSimple':'pomoStudioFull',full?'簡潔模式':'完整設定');mode.setAttribute('aria-expanded',String(full));};setMode();mode.onclick=()=>{full=!full;setMode();try{localStorage.setItem(MODE,full?'full':'simple');}catch{status.textContent=t('pomoStudioStorage','設定無法保存。');}};
- extras.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();full=false;setMode();mode.focus();try{localStorage.setItem(MODE,'simple');}catch{}}});
+ extras.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.isComposing&&event.keyCode!==229&&!event.defaultPrevented){event.stopPropagation();full=false;setMode();mode.focus();try{localStorage.setItem(MODE,'simple');}catch{}}});
  const floatMount=document.querySelector('#myntPomoFloatMount');
  const appearance=floatMount?.querySelector('details'),popup=floatMount?.querySelectorAll(':scope > button')[1],floatStatus=floatMount?.querySelector(':scope > .mynt-pomo-note');
  if(appearance){appearance.classList.toggle("mynt-pomo-settings",true);extras.prepend(appearance);}if(popup)extras.append(popup);if(floatStatus)extras.append(floatStatus);
@@ -98,8 +179,9 @@ document.addEventListener('DOMContentLoaded',()=>{
  let deleted=null;
  const undo=el('button',t('pomoStudioUndo','復原刪除'));undo.type='button';undo.hidden=true;
  const remove=el('button',t('pomoStudioDelete','刪除所選自訂情境'));remove.type='button';
- remove.onclick=()=>run(()=>{const i=Number(select.value)-builtin.length;if(i<0||!presets[i])return;if(invalid||localStorage.getItem(KEY)!==raw)throw Error('conflict');const nextPresets=presets.filter((_,n)=>n!==i),next=JSON.stringify({version:1,presets:nextPresets});localStorage.setItem(KEY,next);deleted={preset:presets[i],index:i};raw=next;presets=nextPresets;render();updateRemove();undo.hidden=false;status.textContent=t('pomoStudioDeleted','情境已刪除；重新整理前可復原。');});
+ remove.onclick=()=>run(()=>{const i=Number(select.value)-builtin.length;if(i<0||!presets[i])return;if(deleted)throw Error('recovery_pending');if(invalid||localStorage.getItem(KEY)!==raw)throw Error('conflict');const nextPresets=presets.filter((_,n)=>n!==i),next=JSON.stringify({version:1,presets:nextPresets});localStorage.setItem(KEY,next);deleted={preset:presets[i],index:i};raw=next;presets=nextPresets;render();updateRemove();undo.hidden=false;status.textContent=t('pomoStudioDeleted','情境已刪除；重新整理前可復原。');});
  undo.onclick=()=>run(()=>{if(!deleted)return;if(invalid||presets.length>=8||localStorage.getItem(KEY)!==raw)throw Error('conflict');const nextPresets=[...presets];nextPresets.splice(Math.min(deleted.index,presets.length),0,deleted.preset);const next=JSON.stringify({version:1,presets:nextPresets});localStorage.setItem(KEY,next);raw=next;presets=nextPresets;deleted=null;undo.hidden=true;render();updateRemove();status.textContent=t('pomoStudioSaved','已保存情境（僅此瀏覽器）。');});
+ root.myntPomoStudio=createRemoteStudio({storage:localStorage,timer:()=>root.myntPomodoro,appearance:()=>root.myntPomoAppearance,music:()=>root.myntPomoMusic,readRecovery:()=>deleted,writeRecovery:value=>{deleted=value;},onChange:(value,list,recovery)=>{raw=value;presets=list;invalid=false;deleted=recovery;render();updateRemove();undo.hidden=!recovery;}});
  const alarmLabel=el('label',t('pomoStudioAlarm','結束提示音音量'));const alarm=el('input');alarm.type='range';alarm.min='0';alarm.max='1';alarm.step='.05';try{const x=Number(localStorage.getItem('myntPomoAlarmVolume')??'.5');alarm.value=Number.isFinite(x)?String(Math.max(0,Math.min(1,x))):'.5';}catch{alarm.value='.5';}alarmLabel.append(alarm);alarm.onchange=()=>{try{localStorage.setItem('myntPomoAlarmVolume',alarm.value);}catch{status.textContent=t('pomoStudioStorage','設定無法保存。');}};
  const limits=el('p',t('pomoStudioLimit','關閉瀏覽器或裝置休眠時，不保證準時提示。小窗關閉不會取消計時；音樂與圖片只保存在此瀏覽器，不會上傳。'));limits.className='pomoStudioNote';
  const scenarios=el('details');scenarios.className='pomoStudioScenarios';scenarios.append(el('summary',t('pomoStudioScenario','情境預設')),customTiming,selectLabel,apply,name,save,remove,undo);
