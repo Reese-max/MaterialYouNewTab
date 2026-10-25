@@ -1,0 +1,7 @@
+{
+  "name": "io.mynt.local_mcp",
+  "description": "MYNT approved Windows local MCP bridge",
+  "path": "C:\\APPROVED\\mynt-daily\\local-mcp\\windows\\bin\\MyntPipe.exe",
+  "type": "stdio",
+  "allowed_extensions": ["REPLACE_WITH_VERIFIED_FIREFOX_ADDON_ID"]
+}

@@ -221,7 +221,16 @@
     // Expose global API
     globalThis.myntAmbientAudio = {
         play,
+        getState: () => ({type:currentType, playing:isPlaying && audioCtx?.state==='running', volume:Number(localStorage.getItem('myntAmbientVolume') || .5)}),
+        async playRemote(type, gate) {
+            if(!['rain','ocean','whitenoise','campfire'].includes(type)||typeof gate!=='function')throw Error('Invalid ambient operation');
+            gate();const ctx=getAudioContext();if(!ctx)throw Error('Audio unavailable');
+            if(ctx.state!=='running')await ctx.resume();
+            gate();if(ctx.state!=='running')throw Error('Browser gesture required');
+            play(type);if(ctx.state!=='running'){stop(true);throw Error('Browser gesture required');}
+        },
         stop,
+
         toggle,
         setVolume,
         getType: () => currentType,

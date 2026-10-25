@@ -1,0 +1,78 @@
+[
+  {
+    "name": "mynt_components_get",
+    "description": "List supported homepage component visibility and browser-only enable boundaries. Does not read component contents, credentials, bookmarks or notes.",
+    "readOnly": true,
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mynt_components_update",
+    "description": "Hide or re-add one allowlisted homepage component without deleting its data, opening panels, starting playback, requesting permissions or initializing network services. Weather, external quotes and exam warm-up may require browser action.",
+    "readOnly": false,
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": [
+            "clock",
+            "weather",
+            "focus",
+            "search",
+            "shortcuts",
+            "aiTools",
+            "googleApps",
+            "bookmarks",
+            "todo",
+            "pomodoro",
+            "bongo",
+            "scratchpad",
+            "studyQuote",
+            "motivationalQuotes",
+            "exam",
+            "countdowns",
+            "galleryEntry",
+            "profilesEntry",
+            "adaptiveEntry"
+          ],
+          "maxLength": 40
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,100}$",
+          "minLength": 8,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "id",
+        "visible",
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    }
+  }
+]

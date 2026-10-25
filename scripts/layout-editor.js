@@ -10,6 +10,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["aiTools", "#aiToolsCont", "layoutBlockAiTools", "AI tools"],
     ["shortcuts", "#shortcutsContainer", "layoutBlockShortcuts", "Shortcuts"],
     ["quote", "#studyQuote", "layoutBlockQuote", "Quote"],
+    ["countdowns", "#eventCountdownCard", "layoutBlockCountdowns", "Countdowns"],
     ["exam", "#examDaily", "layoutBlockExam", "Daily exam"],
     ["pomodoro", "#pomodoroCont", "layoutBlockPomodoro", "Pomodoro"],
     ["scratchpad", "#scratchpadCont", "layoutBlockScratchpad", "Scratchpad"],
@@ -124,7 +125,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if(!editing||!dirty)return;
         if(!draft?.save(editScope,layout))announce(t('layoutDraftUnavailable','Draft recovery is unavailable; keep this tab open until saved.'));
     }
-    function clearDraft(){draft?.clear();document.getElementById('myntDraftRecovery')?.remove();}
+    function clearDraft(){draft?.clear();document.getElementById('myntDraftRecovery')?.remove();if(dock)dock.hidden=true;}
     addEventListener('beforeunload',event=>{activeDrag?.finish();if(editing&&dirty){checkpoint();event.preventDefault();event.returnValue='';}});
     document.addEventListener('visibilitychange',()=>{if(document.hidden)checkpoint();});
 
@@ -186,6 +187,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function buildDock() {
         dock = document.createElement("section");
         dock.id = "myntLayoutSaveDock";
+        dock.hidden = true;
         dock.setAttribute("aria-label", t("layoutManualLabel", "Manual layout"));
         const buttons = document.createElement("div");
         editButton = button("myntLayoutEdit", t("layoutEditEntry", "✥ Edit layout"), () => setEditing(true));
@@ -197,7 +199,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         status = document.createElement("span");
         status.id = "myntLayoutSaveStatus";
         status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite");
-        buttons.append(editButton, lock); dock.append(buttons, status); document.body.append(dock);
+        buttons.append(editButton, lock); buttons.hidden = true; buttons.style.display = "none";
+        dock.append(buttons); document.body.append(dock);
+        // Idle feedback belongs beside the settings entry, not in a floating toolbar.
+        (document.getElementById("layoutEditInfo")?.parentElement || dock).append(status);
+        const setting = document.getElementById("layoutEditCheckbox");
+        setting?.setAttribute("aria-labelledby", "layoutEditTitle");
+        setting?.setAttribute("aria-describedby", "layoutEditInfo myntLayoutSaveStatus");
         announce(t("layoutDragGuard", "Drag handles are available only in edit mode"));
     }
     const elementsFor = selector => [...document.querySelectorAll(selector)];
@@ -234,7 +242,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             }
         }
     }
-    function applyAll() { MYNT_LAYOUT_BLOCKS.forEach(([id]) => applyBlock(id)); if (editing) placeOverlays(); }
+    function applyAll() { MYNT_LAYOUT_BLOCKS.forEach(([id]) => applyBlock(id)); if (editing) placeOverlays(); document.dispatchEvent(new CustomEvent("mynt:layout-applied")); }
     function placeOverlays() {
         for (const [id, overlay] of overlays) {
             const el = elementFor(id);
@@ -449,9 +457,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         resizeObserver?.disconnect(); resizeObserver = null;
         if (frame !== null) cancelAnimationFrame(frame); frame = null;
         removeEventListener("scroll", scheduleOverlays, true); removeEventListener("resize", scheduleOverlays);
-        editButton.setAttribute("aria-expanded", "false"); dock.hidden = false; dock.append(status);
+        editButton.setAttribute("aria-expanded", "false"); dock.hidden = true;
+        (document.getElementById("layoutEditInfo")?.parentElement || dock).append(status);
         lockStatus.textContent = layout.locked ? t("layoutPositionsLocked", "Positions locked") : t("layoutEditOff", "Edit mode off");
-        applyAll(); editButton.focus({ preventScroll: true });
+        applyAll(); document.getElementById("menuButton")?.focus({ preventScroll: true });
         profiles?.finish();
     }
     function cancelEditing() {
@@ -460,10 +469,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         announce(t("layoutCancelled", "Cancelled · Previous layout and lock state restored"));
     }
     function setEditing(on, recovering=false) {
-        if(on&&!recovering&&document.getElementById("myntDraftRecovery")){announce(t("layoutDraftFound","Restore or discard the existing draft first."));return;}
-        if (Boolean(on) === editing) return;
-        if (!on) { cancelEditing(); return; }
-        if (profiles) { if (!profiles.reload()) return; layout = profiles.load(); }
+        if(on&&!recovering&&document.getElementById("myntDraftRecovery")){announce(t("layoutDraftFound","Restore or discard the existing draft first."));return false;}
+        if (Boolean(on) === editing) return true;
+        if (!on) { cancelEditing(); return true; }
+        if (profiles) { if (!profiles.reload()) return false; layout = profiles.load(); }
+        // Reload can select a newer saved profile or viewport variant. Render it
+        // before handles read pixel coordinates; never nudge stale screen offsets.
+        applyAll();
         editScope=profiles?.context()||{profile:"legacy",size:innerWidth<=900?"narrow":"wide",revision:0,base:null};
         beforeEdit = copy(layout); layout = copy(layout); layout.locked = false;
         history = myntLayoutHistory(layout); editing = true; dirty = false;
@@ -486,6 +498,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
         announce(t("layoutEditingDraft", "Editing · Your saved layout is unchanged"));
         toolbar.querySelector("button:not(:disabled)")?.focus({ preventScroll: true });
+        return true;
     }
     const settingBox = document.getElementById("layoutEditCheckbox");
     settingBox?.addEventListener("change", () => setEditing(settingBox.checked));
@@ -512,7 +525,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     // Legacy unlocked data stays intact, but dragging still requires an explicit edit session.
     setTimeout(applyAll, 800);
     addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
-    window.myntLayout = { setEditing, isEditing: () => editing, get: () => myntNormalizeLayout(layout), applyAll, undo: () => changeHistory("undo"), redo: () => changeHistory("redo"), cancel: cancelEditing, replaceSaved: value => { if(editing)return; layout=myntNormalizeLayout(value); applyAll(); }, preview: value => { setEditing(true); layout=myntNormalizeLayout({...value,locked:false}); applyAll(); recordChange(); } };
+    window.myntLayout = { reloadProfiles: () => { if(editing) throw Error("Layout draft active"); if(profiles && profiles.reload()){ layout=profiles.load(); applyAll(); } }, setEditing, isEditing: () => editing, get: () => myntNormalizeLayout(layout), applyAll, undo: () => changeHistory("undo"), redo: () => changeHistory("redo"), cancel: cancelEditing, replaceSaved: value => { if(editing)return; layout=myntNormalizeLayout(value); applyAll(); }, preview: value => {
+        // A recovery prompt or failed reload can refuse editor entry. Do not
+        // replace either the saved view or a draft already being edited.
+        if(editing||!setEditing(true))return false;
+        layout=myntNormalizeLayout({...value,locked:false});applyAll();recordChange();return true;
+    } };
     profiles?.mount(window.myntLayout);
     if(draft?.read()){
         const box=document.createElement('section');box.id='myntDraftRecovery';box.setAttribute('role','status');
@@ -522,8 +540,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             const scope=profiles?.context()||{profile:'legacy',size:innerWidth<=900?'narrow':'wide',revision:0,base:null};
             const saved=draft.matching(scope);
             if(!saved){text.textContent=t('layoutDraftStale','This draft belongs to another size/profile or an older saved revision. It cannot replace the current layout.');return;}
-            setEditing(true,true);layout=myntNormalizeLayout({...saved.layout,locked:false});applyAll();recordChange();box.remove();
+            if(!setEditing(true,true))return;
+            layout=myntNormalizeLayout({...saved.layout,locked:false});applyAll();recordChange();box.remove();
         });
-        box.append(text,restore,button('myntDraftDiscard',t('layoutDraftDiscard','Discard draft'),()=>clearDraft()));dock.append(box);
+        box.append(text,restore,button('myntDraftDiscard',t('layoutDraftDiscard','Discard draft'),()=>clearDraft()));dock.append(box);dock.hidden=false;
     }
 });

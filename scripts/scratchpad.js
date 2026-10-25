@@ -35,6 +35,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    window.myntScratchpad = { reload() { scratchpadInput.value = localStorage.getItem(STORAGE_KEY) || ''; updateCounts(); } };
+
     // Auto-save on input
     scratchpadInput.addEventListener("input", function () {
         localStorage.setItem(STORAGE_KEY, scratchpadInput.value);

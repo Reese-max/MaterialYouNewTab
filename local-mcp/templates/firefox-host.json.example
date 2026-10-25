@@ -1,0 +1,7 @@
+{
+  "name": "io.mynt.local_mcp",
+  "description": "MYNT explicitly enabled local MCP bridge",
+  "path": "/ABSOLUTE/PATH/TO/native-host-launcher",
+  "type": "stdio",
+  "allowed_extensions": ["REPLACE_WITH_VERIFIED_FIREFOX_ADDON_ID"]
+}

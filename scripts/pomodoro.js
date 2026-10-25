@@ -801,6 +801,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 this.open();
                 return startPomodoro();
             },
+            // Remote calls never open UI or play ambient audio before the queued access gate.
+            runRemote(method, value, beforeMutation) {
+                if (typeof beforeMutation !== "function" || !["start", "pause", "extend", "setTask", "setDurations"].includes(method)) throw new Error("Invalid remote timer operation");
+                const gate = () => { beforeMutation(); if (method === "pause") stopAmbient(); };
+                if (method === "start" || method === "pause") return timer[method](gate);
+                return timer[method](value, gate);
+            },
             getState: timer.getState,
             subscribe: timer.subscribe,
             pause: pausePomodoro,

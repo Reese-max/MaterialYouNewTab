@@ -201,6 +201,7 @@ if (typeof document !== "undefined") (function () {
         $("examDailySource").href = MYNT_EXAM_SITE;
         document.addEventListener("keydown", e => { if (e.key === "Escape" && !panel.hidden && !document.querySelector("dialog[open]")) setOpen(false); });
         toggle?.addEventListener("change", () => { localStorage.setItem(VISIBLE_KEY, String(toggle.checked)); applyVisible(); });
+        document.addEventListener('mynt:mcp-settings-refresh', applyVisible);
         texts();
         applyVisible();
         // Warm today's cache once the page is idle so the question is ready offline later.

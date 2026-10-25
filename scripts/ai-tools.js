@@ -179,8 +179,8 @@ function animateReorder(element1, element2, direction) {
 }
 
 // Function to apply saved settings (visibility and order)
-function applyAIToolsSettings() {
-    const settingsToApply = loadAIToolsSettings();
+function applyAIToolsSettings(settingsOverride) {
+    const settingsToApply = settingsOverride || loadAIToolsSettings();
 
     // Create a map of current tool elements for quick lookup
     const toolElements = new Map();
@@ -524,3 +524,15 @@ document.addEventListener("DOMContentLoaded", function () {
         if (event.key === "Escape") closeMobileAIToolsOverflow();
     });
 });
+
+// The adapter validates this array before committing. Avoid the ordinary loader's writes.
+window.myntAiPreferences = { reload() {
+    const settings = JSON.parse(localStorage.getItem('aiToolsSettings') || 'null') || getDefaultAIToolsSettings();
+    applyAIToolsSettings(settings);
+    const visible = localStorage.getItem('aiToolsCheckboxState') === 'checked';
+    const checkbox = document.getElementById('aiToolsCheckbox');
+    if (checkbox) checkbox.checked = visible;
+    aiToolsCont.style.display = visible ? 'flex' : 'none';
+    aiToolsEditField.classList.toggle('inactive', !visible);
+    if (!visible) { aiToolName.style.display = 'none'; aiToolsIcon.setAttribute('aria-expanded', 'false'); }
+} };

@@ -52,6 +52,7 @@ jobs:
             --exclude '.integration/'
             --exclude 'dist/'
             --exclude 'tools/'
+            --exclude 'local-mcp/'
             --exclude 'web-preview/'
             --exclude '.gitignore'
             --exclude 'AGENTS.md'

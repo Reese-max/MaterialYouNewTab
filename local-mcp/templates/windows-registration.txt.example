@@ -1,0 +1,18 @@
+DOCUMENTATION TEMPLATE ONLY. This is not a .reg file and performs no changes.
+After separate approval, register only the browser actually used, under HKCU:
+
+Chrome key:
+HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\io.mynt.local_mcp
+Default REG_SZ value: C:\APPROVED\mynt-local-mcp\chromium-host.json
+
+Firefox key:
+HKEY_CURRENT_USER\Software\Mozilla\NativeMessagingHosts\io.mynt.local_mcp
+Default REG_SZ value: C:\APPROVED\mynt-local-mcp\firefox-host.json
+
+Before changing anything, inspect whether the exact key exists. Never overwrite
+an unrelated registration. Use only the verified extension/add-on ID and the
+reviewed helper executable. Do not register HKLM, install a service, change UAC,
+weaken any pipe ACL, or enable execution-policy bypass.
+
+Uninstall after approval: remove only the exact io.mynt.local_mcp key/value you
+created and the corresponding manifest. Leave sibling hosts and unrelated keys.

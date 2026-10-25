@@ -152,5 +152,9 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     }
     document.addEventListener('visibilitychange',samplingVisibility);
     samplingVisibility();
-    window.myntAdaptive={measureQuote};persist();applyModes();schedule();
+    window.myntAdaptive={measureQuote,getConfig:()=>({...config}),updateRemote(patch,gate){
+        if(!patch||typeof patch!=='object'||Array.isArray(patch)||!Object.keys(patch).length||Object.keys(patch).some(key=>!['color','contrast','opacity'].includes(key)||typeof patch[key]!=='boolean'))throw Error('Invalid appearance patch');
+        gate();const next={...config,...patch,layout:false};localStorage.setItem(KEY,JSON.stringify(next));config=next;storageError=false;
+        for(const key of ['color','contrast','opacity'])inputs[key].checked=config[key];applyModes();schedule();return {...config};
+    }};persist();applyModes();schedule();
 });

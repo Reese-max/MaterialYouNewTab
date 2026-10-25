@@ -1,0 +1,3 @@
+#!/bin/sh
+# TEMPLATE ONLY. Use absolute verified paths; do not source user shell files.
+exec /ABSOLUTE/PATH/TO/node /ABSOLUTE/PATH/TO/mynt-daily/local-mcp/native-host.mjs "$@"

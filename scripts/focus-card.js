@@ -197,13 +197,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         });
     }
 
-    function render() {
+    function render(log = true) {
         const focus = api.get();
         localize();
         renderSubjects(focus);
         renderSteps(focus);
         daidaiBtn.hidden = !window.myntDaidai?.paired?.();
-        writeLog(focus);
+        if (log !== false) writeLog(focus);
     }
 
     function addSteps(texts) {
@@ -398,7 +398,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             run: openExam
         }
     ].filter(command => !query || `${command.labelText} ${command.infoText} focus 焦點 exam 考古題`.toLocaleLowerCase().includes(query));
-    window.myntFocusCard = { openHistory, openGpt, addSteps, prompt, renderStats, examUrl };
+    window.myntFocusCard = { refresh: () => render(false), openHistory, openGpt, addSteps, prompt, renderStats, examUrl };
 
     render();
 });
