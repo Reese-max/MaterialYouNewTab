@@ -179,7 +179,7 @@ window.myntSearchPreferences = { reload() {
     document.querySelector('.quotesOptions')?.classList.toggle('not-applicable', !showQuotes);
     const quoteContainer = document.getElementById('motivationalQuotesCont');
     if (quoteContainer) quoteContainer.style.display = showQuotes ? 'flex' : 'none';
-    if (hideSearchWith.checked) searchProviderRow.style.display = quotesEnabled ? 'none' : 'flex';
+    searchProviderRow.style.display = showQuotes ? 'none' : 'flex';
     if (aiModeIconCheckbox) aiModeIconCheckbox.checked = localStorage.getItem('aiModeIconVisible') === 'false';
     updateAiModeIconVisibility();
 } };

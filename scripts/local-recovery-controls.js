@@ -34,6 +34,7 @@
         const row = document.createElement("div");
         row.className = "myntRecoveryControl";
         row.hidden = true;
+        row.tabIndex = -1;
         const button = document.createElement("button");
         button.type = "button";
         button.className = "myntRecoveryUndo";
@@ -67,7 +68,7 @@
             button.hidden = !recovery || invalid;
             button.disabled = busy;
             status.textContent = text(invalid ? "invalid" : message) || "";
-            row.hidden = !recovery && !invalid && !message;
+            row.hidden = !busy && !recovery && !invalid && !message;
         }
         function resultMessage(result) {
             const code = String(result?.error?.code || result?.code || "").toUpperCase();
@@ -81,6 +82,10 @@
         button.addEventListener("click", async () => {
             if (busy || button.hidden) return;
             clearTimeout(clearMessageTimer);
+            const ownsFocus = document.activeElement === button;
+            // Disabling Undo or the coordinated commit refresh can remove its focus
+            // before undo resolves. Use a stable, non-editor anchor during the write.
+            if (ownsFocus) row.focus();
             busy = true;
             message = "";
             refresh();
@@ -88,13 +93,17 @@
                 const undo = root.myntLocalRecovery?.undo;
                 const result = typeof undo === "function" ? await undo(domain) : { code: "UNAVAILABLE" };
                 message = result?.ok ? "restored" : resultMessage(result);
-                if (result?.ok && document.activeElement === button) focusTarget?.focus();
             } catch (_) {
                 // An unexpected outcome may include a failed rollback; never claim no changes.
                 message = "rollback";
             } finally {
                 busy = false;
                 refresh();
+                // Do not reclaim focus if the user moved elsewhere while awaiting undo.
+                if (ownsFocus && document.activeElement === row) {
+                    if (message === "restored") focusTarget?.focus();
+                    else if (!button.hidden) button.focus();
+                }
                 if (message === "restored") clearMessageTimer = setTimeout(() => { message = ""; refresh(); }, 4000);
             }
         });

@@ -398,3 +398,4 @@ execFileSync(process.execPath, [resolve(root, "tools/check-adaptive-settings.cjs
 execFileSync(process.execPath, [resolve(root, "tools/check-component-visibility.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-components.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-preferences.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-component-manager.cjs")], {stdio:"inherit"});
