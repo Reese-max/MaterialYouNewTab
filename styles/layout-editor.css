@@ -28,3 +28,7 @@
 }
 #myntLayoutToolbar button.primary { background: #4285f4; }
 body.mynt-layout-editing .tooltip-text { display: none !important; }
+
+#myntLayoutState {font-weight:600;padding:4px 8px;border-radius:8px;background:var(--adaptive-widget-bg,var(--accentLightTint-blue));}
+#myntLayoutToolbar[data-dirty="true"] #myntLayoutState {text-decoration:underline;text-underline-offset:4px;}
+.myntLayoutGuide.is-spacing span {font-weight:600;}

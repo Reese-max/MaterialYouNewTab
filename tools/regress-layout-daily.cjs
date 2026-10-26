@@ -257,7 +257,9 @@ test('Idle layout dock stays hidden; edit, save and cancel preserve the hidden i
     assert.equal(app.id('myntLayoutToolbar'), null);
     assert.equal(app.id('myntLayoutSaveDock').hidden, true);
     assert.deepEqual(rectangle(app), rect); assert.equal(saved(app), bytes);
-    app.api.setEditing(true); app.id('myntLayoutSave').click();
+    app.api.setEditing(true); assert.equal(app.id('myntLayoutSave').disabled,true);
+    const beforeSaveWrites=app.writes();app.id('myntLayoutSave').click();assert.equal(app.writes(),beforeSaveWrites);
+    app.handle().emit('keydown',{key:'ArrowRight'});app.id('myntLayoutSave').click();
     assert.equal(app.id('myntLayoutSaveDock').hidden, true);
     assert.equal(app.id('myntLayoutToolbar'), null);
 });

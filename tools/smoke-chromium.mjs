@@ -24,7 +24,7 @@ function findChrome() {
     ].filter(Boolean);
 
     for (const candidate of candidates) {
-        if (candidate.includes("/") && existsSync(candidate)) return candidate;
+        if (existsSync(candidate)) return candidate;
         try {
             const resolved = execFileSync("bash", ["-lc", `command -v ${JSON.stringify(candidate)}`], {
                 encoding: "utf8",
@@ -48,9 +48,14 @@ class CdpClient {
         this.eventWaiters = new Map();
         this.listeners = new Map();
         this.ready = new Promise((resolveReady, rejectReady) => {
-            this.socket.addEventListener("open", resolveReady, { once: true });
-            this.socket.addEventListener("error", () => rejectReady(new Error(`Unable to connect to ${url}`)), { once: true });
+            const timer=setTimeout(()=>{rejectReady(new Error('CDP handshake timed out'));this.socket.close();},15000);
+            this.socket.addEventListener("open", () => {clearTimeout(timer);resolveReady();}, { once: true });
+            const failed=()=>{clearTimeout(timer);rejectReady(new Error(`Unable to connect to ${url}`));};
+            this.socket.addEventListener("error",failed,{once:true});this.socket.addEventListener('close',failed,{once:true});
         });
+        this.ready.catch(()=>{});
+        const rejectPending=()=>{for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(new Error(p.method+': CDP disconnected'));}this.pending.clear();};
+        this.socket.addEventListener('close',rejectPending);this.socket.addEventListener('error',rejectPending);
         this.socket.addEventListener("message", async (event) => {
             const raw = typeof event.data === "string"
                 ? event.data
@@ -59,7 +64,7 @@ class CdpClient {
             if (message.id) {
                 const pending = this.pending.get(message.id);
                 if (!pending) return;
-                this.pending.delete(message.id);
+                this.pending.delete(message.id);clearTimeout(pending.timer);
                 if (message.error) pending.reject(new Error(`${pending.method}: ${message.error.message}`));
                 else pending.resolve(message.result || {});
                 return;
@@ -88,7 +93,8 @@ class CdpClient {
         await this.ready;
         const id = this.nextId++;
         return new Promise((resolveRequest, rejectRequest) => {
-            this.pending.set(id, { resolve: resolveRequest, reject: rejectRequest, method });
+            const timer=setTimeout(()=>{this.pending.delete(id);rejectRequest(new Error(method+': timed out'));},15000);
+            this.pending.set(id, { resolve: resolveRequest, reject: rejectRequest, method, timer });
             this.socket.send(JSON.stringify({ id, method, params }));
         });
     }
@@ -190,6 +196,7 @@ async function inspectNewTabCandidate(port, targetId, extensionId, timeoutMs = 4
     });
 
     await Promise.all([
+        client.send("Emulation.setFocusEmulationEnabled", {enabled:false}),
         client.send("Page.enable"),
         client.send("Runtime.enable"),
         client.send("Log.enable"),
@@ -282,8 +289,6 @@ async function reloadAndWait() {
 async function main() {
     const chromeBinary = findChrome();
     chrome = spawn(chromeBinary, [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu",
         "--disable-background-networking",
@@ -356,13 +361,17 @@ async function main() {
     const { targetId: otherTabId } = await browserClient.send("Target.createTarget", { url: "about:blank" });
     async function switchAndObserve(targetId, hidden) {
         await browserClient.send("Target.activateTarget", { targetId });
+        const target = await waitForPageTarget(port, targetId);
+        assert.ok(target, 'Tab activation target is available');
+        const targetClient = new CdpClient(target.webSocketDebuggerUrl);
+        try { await targetClient.send('Page.bringToFront'); } finally { targetClient.close(); }
         const deadline=Date.now()+5000;
         while(Date.now()<deadline){
             const state=await evaluate(`({hidden:document.hidden,paused:document.querySelector('#videoBg').paused,time:document.querySelector('#videoBg').currentTime})`);
             if(state.hidden===hidden && (!hidden || state.paused))return state;
             await delay(100);
         }
-        throw Error("Wallpaper visibility/paused state did not follow actual tab activation");
+        throw Error("Wallpaper visibility/paused state did not follow actual tab activation: " + JSON.stringify({ expectedHidden: hidden, state: await evaluate(`({hidden:document.hidden,paused:document.querySelector('#videoBg').paused})`), targetWindow: await browserClient.send('Browser.getWindowForTarget', {targetId}), extensionWindow: await browserClient.send('Browser.getWindowForTarget', {targetId:newTab.target.id}) }));
     }
     await switchAndObserve(otherTabId,true);
     await reloadAndWait();
@@ -534,12 +543,16 @@ try {
     if (output) console.error(`\nRecent Chromium output:\n${output}`);
     process.exitCode = 1;
 } finally {
+    // Graceful browser shutdown also closes Windows child-process file handles.
+    try { await browserClient?.send('Browser.close'); } catch { /* Browser may already have exited. */ }
     pageClient?.close();
     browserClient?.close();
-    if (chrome && chrome.exitCode === null) {
+    if (chrome && chrome.exitCode === null && chrome.signalCode === null) {
         chrome.kill("SIGTERM");
         await delay(500);
-        if (chrome.exitCode === null) chrome.kill("SIGKILL");
+        if (chrome.exitCode === null && chrome.signalCode === null) chrome.kill("SIGKILL");
     }
-    rmSync(profileDir, { recursive: true, force: true });
+    if(chrome&&chrome.exitCode===null&&chrome.signalCode===null)await Promise.race([new Promise(resolve=>chrome.once('close',resolve)),delay(5000)]);
+    try {rmSync(profileDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });}
+    catch(error){console.error('Test profile cleanup failed; retained '+profileDir+': '+error.message);process.exitCode=1;}
 }

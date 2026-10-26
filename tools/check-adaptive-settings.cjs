@@ -1,14 +1,16 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const source=fs.readFileSync('scripts/adaptive-background.js','utf8');
+const source=fs.readFileSync('scripts/adaptive-background.js','utf8').replace(/\r\n/g,'\n');
 const {myntNormalizeAdaptive:n}=require('../scripts/adaptive-background.js');
 for(const bad of [null,[],false,'x',{version:99},{version:1,color:'false',layout:0}])assert.deepEqual(n(bad),{version:1,color:true,contrast:true,opacity:true,layout:false,strength:'soft'});
 assert.deepEqual(n({version:1,color:false,contrast:false,opacity:false,layout:false,extra:'drop'}),{version:1,color:false,contrast:false,opacity:false,layout:false,strength:'soft'});
 const load=source.match(/let config; try \{[\s\S]*?let language='zh_TW';try\{[\s\S]*?catch\{\}/)[0];
 for(const storage of [{getItem(){throw Error('blocked')}},{getItem(){return '{malformed'}}]){
- const c={myntNormalizeAdaptive:n,localStorage:storage,KEY:'myntAdaptiveBackground'};vm.createContext(c);vm.runInContext(load+';result={config,language}',c);assert.equal(c.result.config.layout,false);assert.ok(c.result.language);
+ const c={MyntPaletteSession:require('../scripts/palette-session.js'),myntNormalizeAdaptive:n,localStorage:storage,KEY:'myntAdaptiveBackground'};vm.createContext(c);vm.runInContext(load+';result={config,language}',c);assert.equal(c.result.config.layout,false);assert.ok(c.result.language);
 }
-const persist=source.match(/function persist\(\)\{.*?\n/)[0];const c={localStorage:{setItem(){throw Error('quota')}},KEY:'myntAdaptiveBackground',config:n(null),storageError:false};vm.createContext(c);vm.runInContext(persist+'persist()',c);assert.equal(c.storageError,true);
-assert.deepEqual([...source.matchAll(/localStorage\.setItem\(\s*([^,]+)/g)].map(match=>match[1]),['KEY','KEY'],'UI and guarded MCP persistence both write only the adaptive settings key');assert.ok(!source.includes("setItem('myntLayout'"));
+const sessionCore=require('../scripts/palette-session.js');
+const blocked=sessionCore.create({getItem:()=>null,setItem(){throw Error('quota')},removeItem(){}});blocked.stage('myntAdaptiveBackground',JSON.stringify(n(null)));assert.throws(()=>blocked.apply(),/STORAGE_FAILURE/);assert.equal(blocked.dirty(),true);
+assert.deepEqual([...source.matchAll(/localStorage\.setItem\(\s*([^,]+)/g)].map(match=>match[1]),['KEY'],'Only guarded MCP writes directly; UI uses the raw-value transaction');
+assert.throws(()=>blocked.stage('myntLayout','x'),/INVALID_KEY/);assert.ok(!source.includes("setItem('myntLayout'"));
 assert.match(source,/6000/);assert.ok(!source.includes('function place('));assert.equal(n({version:1,layout:true}).layout,false);assert.ok(!source.includes("layout:['adaptiveLayout'"));
 console.log('ADAPTIVE_SETTINGS_OK: schema, all-off, malformed JSON, denied reads, quota failure, distinct storage and video scheduling');
 
@@ -73,7 +75,7 @@ assert.match(css,/html\.myntHighContrast #myntAdaptivePanel \.adaptiveContent\s*
 console.log(`ADAPTIVE_APPEARANCE_OK: ${combinations} palette/toggle combinations, actual-surface contrast, manual slider, smooth updates, and accessibility CSS`);
 // Execute panel-local Escape listener and root observer rather than just matching source.
 let escape;const panel={open:true,addEventListener(type,fn){escape=fn}};let stopped=0,focused=0;
-vm.runInNewContext(source.match(/    panel.addEventListener\('keydown'.*?\n/)[0],{panel,summary:{focus(){focused++}}});
+vm.runInNewContext(source.match(/    panel.addEventListener\('keydown'.*?\n/)[0],{panel,cancelPreview(){},summary:{focus(){focused++}}});
 escape({key:'Escape',stopPropagation(){stopped++}});assert.equal(panel.open,false);assert.equal(stopped,1);assert.equal(focused,1);
 let observer,checked=0,reapplied=0;
 vm.runInNewContext(source.match(/    new MutationObserver\(\(\)=>\{checkSource\(\);.*?\n/)[0],{MutationObserver:class{constructor(fn){observer=fn}observe(){}},document:{documentElement:{}},checkSource(){checked++},palette:{},config:{opacity:true},applyPalette(){reapplied++}});

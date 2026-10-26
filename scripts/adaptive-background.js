@@ -14,6 +14,8 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     if (!core) return;
     let configReadWarning=false;
     let config; try { const saved=localStorage.getItem(KEY);const raw=JSON.parse(saved);config = myntNormalizeAdaptive(raw);if(saved!==null&&(!raw||raw.version!==1||['color','contrast','opacity'].some(key=>raw[key]!==undefined&&typeof raw[key]!=='boolean')||(raw.strength!==undefined&&!['soft','vivid'].includes(raw.strength))))configReadWarning=true;if(saved===null&&(localStorage.getItem('selectedTheme')!==null||localStorage.getItem('customThemeColor')!==null))config.color=false; } catch { config = myntNormalizeAdaptive(null);configReadWarning=true; }
+    let committed={...config};
+    const session=MyntPaletteSession.create(localStorage);
     let language='zh_TW';try{language=localStorage.getItem('selectedLanguage')||language;}catch{}
     const t = (key, fallback) => typeof translations !== 'undefined' ? (translations[language]?.[key] || translations.en?.[key] || fallback) : fallback;
     let frame = null, palette = null, sourceKey = '', imageCache = null, imageUrl = '', generation = 0, timer = null, resizeTimer = null, storageError = false;
@@ -31,22 +33,44 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     const strengthLabel=document.createElement('label'), strength=document.createElement('select');strength.id='myntAdaptiveStrength';
     strengthLabel.append(document.createTextNode(t('adaptiveStrength','配色強度')),strength);
     for(const [value,key,label] of [['soft','adaptiveSoft','柔和'],['vivid','adaptiveVivid','鮮明']]){const option=document.createElement('option');option.value=value;option.textContent=t(key,label);strength.append(option);}
-    content.append(modeLabel,strengthLabel);
-    mode.addEventListener('change',()=>{config.color=mode.value==='background';persist();applyModes();schedule();});
-    strength.addEventListener('change',()=>{config.strength=strength.value;persist();applyModes();});
+    content.append(modeLabel);
+    const advanced=document.createElement('details');advanced.id='myntAdaptiveAdvanced';
+    const advancedTitle=document.createElement('summary');advancedTitle.textContent=t('paletteAdvanced','Advanced appearance');advanced.append(advancedTitle,strengthLabel);content.append(advanced);
+    const reset=(key,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=t('paletteReset','Reset')+' · '+t(key,key);b.addEventListener('click',fn);return b;};
+    content.append(reset('adaptiveMode',()=>{config.color=true;preview();}),reset('palettePrimary',()=>{const color=config.color;previewTheme({selected:'blue'});config.color=color;preview();}));
+    advanced.append(reset('adaptiveStrength',()=>{config.strength='soft';preview();}));
+    mode.addEventListener('change',()=>{config.color=mode.value==='background';preview();});
+    strength.addEventListener('change',()=>{config.strength=strength.value;preview();});
     for (const [key,[labelKey, fallback]] of Object.entries(labels)) {
         const label = document.createElement('label'), input = document.createElement('input'); input.type='checkbox'; input.id=`myntAdaptive-${key}`; input.checked=config[key]; inputs[key]=input;
-        label.append(input, document.createTextNode(t(labelKey,fallback))); content.append(label);
-        input.addEventListener('change', () => {config[key]=input.checked; persist(); applyModes(); schedule();});
+        label.append(input, document.createTextNode(t(labelKey,fallback))); advanced.append(label,reset(labelKey,()=>{config[key]=true;preview();}));
+        input.addEventListener('change', () => {config[key]=input.checked; preview();});
     }
     const analyzeButton=document.createElement('button'); analyzeButton.type='button'; analyzeButton.id='myntAdaptiveAnalyze'; analyzeButton.textContent=t('adaptiveReanalyze','重新分析背景'); analyzeButton.addEventListener('click',()=>schedule());
     const state=document.createElement('p');state.id='myntAdaptiveStatus';state.setAttribute('role','status');state.setAttribute('aria-live','polite');
     const notes=document.createElement('p');notes.className='adaptiveNotes';notes.textContent=t('adaptiveNotes','影片每 6 秒平滑更新配色，不會移動元件。位置由手動排版、儲存與鎖定控制，設定只存於此瀏覽器。');
-    content.append(analyzeButton,state,notes);panel.append(summary,content);body.append(panel);
+    advanced.append(analyzeButton);
+    const actions=document.createElement('div');actions.className='paletteActions';
+    const apply=document.createElement('button');apply.type='button';apply.id='myntPaletteApply';apply.textContent=t('paletteApply','Apply colors');
+    const cancel=document.createElement('button');cancel.type='button';cancel.id='myntPaletteCancel';cancel.textContent=t('dialogCancel','Cancel');
+    apply.addEventListener('click',()=>{try{session.apply();committed={...config};storageError=false;configReadWarning=false;syncPreview();}catch(error){storageError=true;report(t(error.message==='CONFLICT'?'paletteConflict':'adaptiveStorageError',error.message));}});
+    cancel.addEventListener('click',cancelPreview);actions.append(apply,cancel);
+    content.append(actions,state,notes);panel.append(summary,content);(document.getElementById('appearanceSectionContent')?.querySelector('.innerSurface')||body).append(panel);
 
-    panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();panel.open=false;summary.focus();}});
-    function report(message) { state.textContent=message+(configReadWarning?' '+t('adaptiveStoredFallback','原設定無法讀取，暫用預設；原資料未覆寫。'):'')+(storageError?' '+t('adaptiveStorageError','設定未能保存，僅本次有效。'):''); }
-    function persist(){ try{localStorage.setItem(KEY,JSON.stringify(config));storageError=false;configReadWarning=false;}catch{storageError=true;} }
+    panel.addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.isComposing&&e.keyCode!==229){e.stopPropagation();cancelPreview();panel.open=false;summary.focus();}});
+    panel.addEventListener('toggle',()=>{if(!panel.open&&session.active())cancelPreview();});
+    document.getElementById('menuCloseButton')?.addEventListener('click',()=>{if(session.active())cancelPreview();});
+    function syncPreview(){panel.dataset.paletteEditing=String(session.active());apply.disabled=!session.dirty();cancel.disabled=!session.active();for(const key of ['contrast','opacity'])inputs[key].checked=config[key];applyModes();report(session.dirty()?t('palettePreview','Preview · not saved'):t('paletteSaved','Colors saved'));}
+    function preview(){session.stage(KEY,JSON.stringify(config));syncPreview();schedule();}
+    function previewTheme(choice){
+        session.stage('selectedTheme',choice.custom?null:choice.selected);session.stage('customThemeColor',choice.custom||null);
+        window.myntThemePreferences?.preview(choice);config.color=false;
+        session.stage('LoadingScreenColor',getComputedStyle(body).getPropertyValue('background-color'));
+        session.stage('accentLightTintColor',getComputedStyle(document.documentElement).getPropertyValue('--accentLightTint-blue'));
+        panel.open=true;preview();
+    }
+    function cancelPreview(){generation++;clearTimeout(timer);session.cancel();config={...committed};window.myntThemePreferences?.reload();syncPreview();schedule();}
+    function report(message) { state.textContent=message+(session.dirty()&&message!==t("palettePreview","Preview · not saved")?" · "+t("palettePreview","Preview · not saved"):"")+(configReadWarning?' '+t('adaptiveStoredFallback','原設定無法讀取，暫用預設；原資料未覆寫。'):'')+(storageError?' '+t('adaptiveStorageError','設定未能保存，僅本次有效。'):''); }
     function applyModes(){
         mode.value=config.color?'background':'manual';strength.value=config.strength;strength.disabled=!config.color;
         body.dataset.adaptiveColor=config.color?'on':'off';body.dataset.adaptiveContrast=config.contrast?'on':'off';body.dataset.adaptiveOpacity=config.opacity?'on':'off';
@@ -195,15 +219,17 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     document.addEventListener('visibilitychange',samplingVisibility);
     samplingVisibility();
     function reloadPreferences(){
-        try{const raw=localStorage.getItem(KEY);const value=raw===null?null:JSON.parse(raw);if(value!==null&&(!value||value.version!==1))return;config=myntNormalizeAdaptive(value);storageError=false;}catch{return;}
+        if(session.active())return;
+        try{const raw=localStorage.getItem(KEY);const value=raw===null?null:JSON.parse(raw);if(value!==null&&(!value||value.version!==1))return;config=myntNormalizeAdaptive(value);if(value===null&&(localStorage.getItem("selectedTheme")!==null||localStorage.getItem("customThemeColor")!==null))config.color=false;committed={...config};storageError=false;}catch{return;}
         for(const key of ['contrast','opacity'])inputs[key].checked=config[key];applyModes();schedule();
     }
     addEventListener('storage',event=>{if(event.key===KEY||event.key===null)reloadPreferences();if(['selectedTheme','customThemeColor'].includes(event.key))window.myntThemePreferences?.reload();});
-    document.addEventListener('mynt:manual-theme',()=>{config.color=false;persist();applyModes();schedule();});
-    window.myntAdaptive={reload:reloadPreferences,measureQuote,getConfig:()=>({...config}),updateRemote(patch,gate){
+    document.addEventListener('mynt:manual-theme',()=>{config.color=false;preview();});
+    window.myntAdaptive={reload:reloadPreferences,measureQuote,previewTheme,cancelPreview,isEditing:()=>session.active(),getConfig:()=>({...committed}),updateRemote(patch,gate){
+        if(session.active())throw Error("EDITOR_BUSY");
         if(!patch||typeof patch!=='object'||Array.isArray(patch)||!Object.keys(patch).length||Object.keys(patch).some(key=>!['color','contrast','opacity','strength'].includes(key)||(key==='strength'?!['soft','vivid'].includes(patch[key]):typeof patch[key]!=='boolean')))throw Error('Invalid appearance patch');
         const stored=localStorage.getItem(KEY);if(stored!==null){let raw;try{raw=JSON.parse(stored);}catch{throw Error('Invalid stored appearance');}if(!raw||raw.version!==1||['color','contrast','opacity'].some(key=>typeof raw[key]!=='boolean')||(raw.strength!==undefined&&!['soft','vivid'].includes(raw.strength)))throw Error('Invalid stored appearance');}
-        gate();const next={...config,...patch,layout:false};localStorage.setItem(KEY,JSON.stringify(next));config=next;storageError=false;
+        gate();const next={...committed,...patch,layout:false};localStorage.setItem(KEY,JSON.stringify(next));config=next;committed={...next};storageError=false;
         for(const key of ['contrast','opacity'])inputs[key].checked=config[key];applyModes();schedule();return {...config};
-    }};applyModes();schedule();
+    }};syncPreview();schedule();
 });

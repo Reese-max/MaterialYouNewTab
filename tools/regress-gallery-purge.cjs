@@ -112,7 +112,7 @@ function fixture(shared = sharedState(), options = {}) {
         BroadcastChannel: Channel, URL: { createObjectURL: () => { const value = `blob:fixture-${++objectCounter}`; objectUrls.push(value); return value; }, revokeObjectURL: value => revoked.push(value) },
         saveImageToIndexedDB: async (blob, random, owner) => { assert.equal(shared.lockDepth,1); saves.push({blob,random,owner}); if (options.saveGate) await options.saveGate.promise; shared.cache = {owner,blob}; },
         applyBlobBackground: blob => { assert(blob instanceof Blob); assert.equal(shared.lockDepth,1); document.body.style.setProperty('--bg-image','url(blob:legacy-fixture)'); },
-        crypto: require('node:crypto').webcrypto, console, Blob, Date, Promise, Set, Map, Error, Number, String, Boolean,
+        MyntBackgroundPlayback:require('../scripts/background-playback.js'),crypto: require('node:crypto').webcrypto, console, Blob, Date, Promise, Set, Map, Error, Number, String, Boolean,
         setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, requestAnimationFrame: callback => callback()
     };
     vm.createContext(context);
@@ -126,9 +126,11 @@ async function settle(shared) { for (let i=0;i<12;i++) { await tick(); await sha
 (async () => {
     // Cancellation and per-item scope, including originals and thumbnails.
     const f = fixture(); await f.test.renderGallery();
-    assert.equal(f.elements.get('wallpaperRecoveryList').children[0].children.length,4);
+    assert.equal(f.elements.get('wallpaperRecoveryList').children[0].children.length,5);
+    assert.equal(f.elements.get('wallpaperRecoveryList').children[0].children[0].tagName,'IMG');
     assert.equal(await f.test.purgeItem('a'),false); assert(f.shared.records.has('a')); assert.equal(f.shared.cacheCalls,0);
     assert.match(f.confirmations[0].message,/Fixture A/); assert.match(f.confirmations[0].message,/cannot be restored/);
+    assert.equal(await f.confirmations[0].config.previewBlob.text(),await f.shared.records.get('a').thumb.text());
     assert.equal(f.confirmations[0].config.danger,true); assert.equal(f.confirmations[0].config.focusCancel,true);
     const other = await f.shared.records.get('b').blob.text(), legacy = f.shared.cache.blob;
     f.accept(true); assert.equal(await f.test.purgeItem('a'),true);
@@ -143,7 +145,7 @@ async function settle(shared) { for (let i=0;i<12;i++) { await tick(); await sha
     assert.equal(await builtin.test.purgeItem('builtin'),false); assert.equal(await builtin.test.purgeItem('b'),false);
     assert.equal(builtin.confirmations.length,0); assert.equal(builtin.shared.deletes,0);
     builtin.shared.records.get('builtin').removedAt=20; await builtin.test.renderGallery();
-    assert.equal(builtin.elements.get('wallpaperRecoveryList').children.find(row=>row.children[0].textContent==='Built-in').children.length,3);
+    assert.equal(builtin.elements.get('wallpaperRecoveryList').children.find(row=>row.children.some(node=>node.textContent==='Built-in')).children.length,4);
     // Missing primitives fail closed without asking misleading confirmation.
     const unsupported=fixture(sharedState(),{noLocks:true}); unsupported.accept(true);
     assert.equal(await unsupported.test.purgeItem('a'),false); assert.equal(unsupported.confirmations.length,0); assert(unsupported.shared.records.has('a'));

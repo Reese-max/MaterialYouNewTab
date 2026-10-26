@@ -559,6 +559,8 @@ if (typeof document !== "undefined") {
         const decorativeVideo = document.getElementById("videoBg");
         const decorativeVideoSource = decorativeVideo?.querySelector("source[data-src]");
         const networkConnection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        let lifecycleFrozen=false;
+        const decorativePlayback=decorativeVideo ? MyntBackgroundPlayback.create(decorativeVideo,{key:'decorative',storage:sessionStorage,allowed:canPlayDecorativeVideo}) : null;
         let decorativeVideoStarted = false;
         let resumeDecorativeAfterHidden = false;
         let startDecorativeWhenVisible = false;
@@ -566,7 +568,7 @@ if (typeof document !== "undefined") {
         let decorativeVideoUsesIdleCallback = false;
 
         function canPlayDecorativeVideo() {
-            return Boolean(decorativeVideo)
+            return !lifecycleFrozen && Boolean(decorativeVideo)
                 && document.visibilityState === "visible"
                 && document.body.dataset.workspaceBackground === "video"
                 && document.body.dataset.galleryVideo !== "on"
@@ -592,16 +594,17 @@ if (typeof document !== "undefined") {
 
         function syncDecorativeVideo() {
             if (!decorativeVideo) return;
+            if (decorativePlayback.isManual()) {loadDecorativeVideo();return;}
 
             startDecorativeWhenVisible = document.hidden && document.body.dataset.workspaceBackground === "video";
             if (!canPlayDecorativeVideo()) {
                 cancelDecorativeVideoStart();
-                decorativeVideo.pause();
+                decorativePlayback.pause();
                 return;
             }
 
             if (decorativeVideoStarted) {
-                decorativeVideo.play().catch(() => {});
+                decorativePlayback.play();
                 return;
             }
             if (decorativeVideoStartHandle !== null) return;
@@ -611,9 +614,7 @@ if (typeof document !== "undefined") {
                 if (!canPlayDecorativeVideo()) return;
                 loadDecorativeVideo();
                 decorativeVideoStarted = true;
-                decorativeVideo.play().catch(() => {
-                    decorativeVideoStarted = false;
-                });
+                decorativePlayback.play();
             };
 
             decorativeVideoUsesIdleCallback = typeof requestIdleCallback === "function";
@@ -631,7 +632,7 @@ if (typeof document !== "undefined") {
             document.getElementById("highContrastCheckbox").checked = accessibility.highContrast;
             document.getElementById("fontScaleSelect").value = String(accessibility.fontScale);
 
-            document.querySelectorAll("video:not(#videoBg)").forEach(video => {
+            document.querySelectorAll("video:not(#videoBg):not(#myntGalleryVideo)").forEach(video => {
                 if (reduceMotion && !video.paused) {
                     video.dataset.myntWasPlaying = "true";
                     video.pause();
@@ -640,8 +641,8 @@ if (typeof document !== "undefined") {
                     video.play().catch(() => {});
                 }
             });
-            if (allowResume) syncDecorativeVideo();
-            else if (reduceMotion) decorativeVideo?.pause();
+            if (allowResume) {syncDecorativeVideo();window.myntWallpaper?.syncPlayback();}
+            else if (reduceMotion) decorativePlayback?.pause();
         }
 
         function saveAccessibility() {
@@ -666,7 +667,9 @@ if (typeof document !== "undefined") {
         document.addEventListener("play", event => {
             if (!(event.target instanceof HTMLMediaElement)) return;
             if (effectiveReducedMotion() || (event.target === decorativeVideo && !canPlayDecorativeVideo())) {
-                event.target.pause();
+                if(event.target===decorativeVideo)decorativePlayback?.pause();
+                else if(event.target.id==='myntGalleryVideo')window.myntWallpaper?.pausePlayback();
+                else event.target.pause();
             }
         }, true);
         reducedMotionQuery.addEventListener?.("change", () => {
@@ -975,13 +978,30 @@ if (typeof document !== "undefined") {
         permissionApi?.onRemoved?.addListener(renderPermissions);
         document.addEventListener("visibilitychange", () => {
             if(document.hidden){
-                resumeDecorativeAfterHidden=Boolean(decorativeVideo&&!decorativeVideo.paused);
-                cancelDecorativeVideoStart();decorativeVideo?.pause();
+                resumeDecorativeAfterHidden=resumeDecorativeAfterHidden||Boolean(decorativeVideo&&!decorativeVideo.paused);
+                startDecorativeWhenVisible=startDecorativeWhenVisible||decorativeVideoStartHandle!==null;
+                cancelDecorativeVideoStart();decorativePlayback?.pause();
             }else if(resumeDecorativeAfterHidden||startDecorativeWhenVisible){
                 resumeDecorativeAfterHidden=false;startDecorativeWhenVisible=false;syncDecorativeVideo();
             }
             if (document.visibilityState === "visible") renderPermissions();
         });
+
+        function suspendDecorative(){
+            resumeDecorativeAfterHidden=resumeDecorativeAfterHidden||Boolean(decorativeVideo&&!decorativeVideo.paused);
+            startDecorativeWhenVisible=startDecorativeWhenVisible||decorativeVideoStartHandle!==null;
+            lifecycleFrozen=true;cancelDecorativeVideoStart();decorativePlayback?.pause();
+        }
+        function resumeDecorative(){
+            lifecycleFrozen=false;
+            if(!document.hidden&&(resumeDecorativeAfterHidden||startDecorativeWhenVisible)){
+                resumeDecorativeAfterHidden=false;startDecorativeWhenVisible=false;syncDecorativeVideo();
+            }
+        }
+        addEventListener('pagehide',suspendDecorative);
+        addEventListener('pageshow',event=>{if(event.persisted)resumeDecorative();});
+        document.addEventListener('freeze',suspendDecorative);
+        document.addEventListener('resume',resumeDecorative);
 
         // Native dialogs provide focus trapping, Escape handling, and keyboard semantics.
         const controlDialog = document.getElementById("controlCenterDialog");
@@ -1314,15 +1334,15 @@ if (typeof document !== "undefined") {
                 localStorage.setItem(KEYS.workspace,id);
                 document.body.dataset.workspaceBackground=preset.background;
                 if(preset.background!=='video')document.body.dataset.bg=preset.background;
-                cancelDecorativeVideoStart(); startDecorativeWhenVisible=false; resumeDecorativeAfterHidden=false;
-                decorativeVideo?.pause();
+                cancelDecorativeVideoStart(); startDecorativeWhenVisible=false; resumeDecorativeAfterHidden=false;decorativePlayback?.defer();
+                decorativePlayback?.pause();
                 renderWorkspace();
                 return {applied:true,playbackDeferred:true,openedUrls:0};
             } finally {applyingWorkspace=false;}
         }
 
         window.myntDashboard = {
-            getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
+            pauseBackground:()=>decorativePlayback?.pause(),getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
             reloadHabits: () => { habits=readHabits(); renderHabits(); },
             getWorkspacePresets: () => JSON.parse(JSON.stringify(workspaces)),
             reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); renderWorkspace(); },

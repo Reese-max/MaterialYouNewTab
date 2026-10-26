@@ -58,6 +58,15 @@ function myntSnapMove(rect, dx, dy, peers, vw, vh, enabled) {
         const proposed = start + delta;
         const source = [proposed, proposed + size / 2, proposed + size];
         let nearest = null;
+        const spacing=[];
+        const relevant=peers.filter(r=>name==='x' ? Math.min(rect.bottom+dy,r.bottom)>Math.max(rect.top+dy,r.top) : Math.min(rect.right+dx,r.right)>Math.max(rect.left+dx,r.left));
+        const ranges=relevant.map(r=>name==='x'?[r.left,r.right]:[r.top,r.bottom]).sort((a,b)=>a[0]-b[0]);
+        for(let i=0;i<ranges.length-1;i++){
+            const a=ranges[i],b=ranges[i+1],gap=b[0]-a[1];
+            if(gap>=0){spacing.push({start:a[0]-gap-size,gap},{start:b[1]+gap,gap});}
+            const middle=(b[0]-a[1]-size)/2;
+            if(middle>=0)spacing.push({start:a[1]+middle,gap:middle});
+        }
         const values = [4, limit / 2, limit - 4, ...targets];
         for (const value of values) for (const edge of source) {
             const correction = value - edge;
@@ -65,8 +74,12 @@ function myntSnapMove(rect, dx, dy, peers, vw, vh, enabled) {
                 nearest = { correction, value };
             }
         }
+        for(const candidate of spacing){
+            const correction=candidate.start-proposed;
+            if(Math.abs(correction)<=MYNT_LAYOUT_LIMITS.snapDistance&&(!nearest||Math.abs(correction)<Math.abs(nearest.correction)))nearest={correction,value:candidate.start,kind:'spacing',gap:candidate.gap};
+        }
         if (nearest) {
-            guides.push({ axis: name, value: nearest.value, kind: "alignment" });
+            guides.push({ axis: name, value: nearest.value, kind: nearest.kind || "alignment", gap: nearest.gap });
             return delta + nearest.correction;
         }
         const grid = Math.round(proposed / MYNT_LAYOUT_LIMITS.grid) * MYNT_LAYOUT_LIMITS.grid;
@@ -116,6 +129,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     let layout = profiles ? profiles.load() : load();
     let editing = false, dirty = false, beforeEdit = null, history = null;
     let toolbar = null, dock, status, lockStatus, selected = null, activeDrag = null;
+    let saveButton, stateBadge, leavePending=false;
     let undoButton, redoButton, snapBox, selectedLabel, resetSelectedButton, editButton;
     let guideLayer = null, resizeObserver = null, frame = null;
     let preciseFields = null, warnings = null, sizePresets = null;
@@ -137,6 +151,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
     function announce(message) { if (status) status.textContent = message; }
     function save() {
+        if (!editing || !dirty) return false;
         const committed = myntNormalizeLayout({ ...layout, locked: true });
         try {
             if (typeof profiles !== "undefined" && profiles) profiles.save(committed);
@@ -156,6 +171,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
     function updateControls() {
         if (!editing) return;
+        saveButton.disabled = !dirty;
+        stateBadge.textContent = dirty ? t('layoutStateUnsaved','Unsaved changes') : t('layoutStateSaved','Saved · No changes');
+        toolbar.dataset.dirty = String(dirty);
         undoButton.disabled = !history.canUndo();
         redoButton.disabled = !history.canRedo();
         snapBox.checked = layout.snap;
@@ -282,7 +300,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             line.className = `myntLayoutGuide is-${guide.axis} is-${guide.kind}`;
             line.style[guide.axis === "x" ? "left" : "top"] = `${guide.value}px`;
             const label = document.createElement("span");
-            label.textContent = guide.kind === "alignment" ? t("layoutAligned", "Aligned") : "16px";
+            label.textContent = guide.kind === "spacing" ? t("layoutEqualGap", "Equal gap: {gap}px",{gap:Math.round(guide.gap)}) : guide.kind === "alignment" ? t("layoutAligned", "Aligned") : "16px";
             line.append(label); guideLayer.append(line);
         }
     }
@@ -437,9 +455,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         snapBox = document.createElement("input"); snapBox.type = "checkbox"; snapBox.id = "myntLayoutSnap";
         snapBox.addEventListener("change", () => { layout.snap = snapBox.checked; recordChange(); hideGuides(); });
         snapLabel.append(snapBox, document.createTextNode(t("layoutSnapAlignment", "Align / 16px grid")));
-        const cancel = button("myntLayoutCancel", t("dialogCancel", "Cancel"), cancelEditing);
-        const done = button("myntLayoutSave", t("layoutSaveLock", "Save and lock"), () => { activeDrag?.finish(); save(); }); done.className = "primary";
-        top.append(title, dockToggle, undoButton, redoButton, snapLabel, cancel, done);
+        const cancel = button("myntLayoutCancel", t("dialogCancel", "Cancel"), requestLeave);
+        const done = saveButton = button("myntLayoutSave", t("layoutSaveLock", "Save and lock"), () => { activeDrag?.finish(); save(); }); done.className = "primary";
+        stateBadge=document.createElement('span');stateBadge.id='myntLayoutState';stateBadge.setAttribute('role','status');stateBadge.setAttribute('aria-live','polite');
+        top.append(title, stateBadge, dockToggle, undoButton, redoButton, snapLabel, cancel, done);
         const bottom = document.createElement("div"); bottom.className = "myntLayoutToolbarRow myntLayoutHelp";
         selectedLabel = document.createElement("select"); selectedLabel.id = "myntLayoutTarget";
         selectedLabel.setAttribute("aria-label", t("layoutChooseBlock", "Select a component"));
@@ -508,10 +527,20 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         activeDrag?.cancel(); layout = copy(beforeEdit); clearDraft(); dirty = false; closeEditor();
         announce(t("layoutCancelled", "Cancelled · Previous layout and lock state restored"));
     }
+    async function requestLeave() {
+        if (!editing || leavePending) return;
+        activeDrag?.finish();
+        if (!dirty) return cancelEditing();
+        leavePending=true;
+        try {
+            const message=t('layoutLeaveConfirm','Discard unsaved layout changes? Your saved layout will be restored.');
+            if(window.myntDialog ? await window.myntDialog.confirm(message,{focusCancel:true}) : window.confirm(message)) cancelEditing();
+        } finally {leavePending=false;const box=document.getElementById('layoutEditCheckbox');if(box)box.checked=editing;}
+    }
     function setEditing(on, recovering=false) {
         if(on&&!recovering&&document.getElementById("myntDraftRecovery")){announce(t("layoutDraftFound","Restore or discard the existing draft first."));return false;}
         if (Boolean(on) === editing) return true;
-        if (!on) { cancelEditing(); return true; }
+        if (!on) { requestLeave(); return true; }
         if (profiles) { if (!profiles.reload()) return false; layout = profiles.load(); }
         // Reload can select a newer saved profile or viewport variant. Render it
         // before handles read pixel coordinates; never nudge stale screen offsets.
@@ -559,7 +588,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             if (typing) return;
             e.preventDefault(); setEditing(!editing);
         } else if (editing && e.key === "Escape" && !document.querySelector("dialog[open]")) {
-            e.preventDefault(); cancelEditing();
+            e.preventDefault(); requestLeave();
         } else if (editing && !typing && (e.ctrlKey || e.metaKey) && !e.altKey) {
             const key = e.key.toLowerCase();
             if (key === "z" || key === "y") {
@@ -572,7 +601,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     buildDock(); applyAll();
     // Legacy unlocked data stays intact, but dragging still requires an explicit edit session.
     setTimeout(applyAll, 800);
-    addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
     window.myntLayout = { reloadProfiles: () => { if(editing) throw Error("Layout draft active"); if(profiles && profiles.reload()){ layout=profiles.load(); applyAll(); } }, setEditing, isEditing: () => editing, get: () => myntNormalizeLayout(layout), applyAll, undo: () => changeHistory("undo"), redo: () => changeHistory("redo"), cancel: cancelEditing, replaceSaved: value => { if(editing)return; layout=myntNormalizeLayout(value); applyAll(); }, preview: value => {
         // A recovery prompt or failed reload can refuse editor entry. Do not
         // replace either the saved view or a draft already being edited.

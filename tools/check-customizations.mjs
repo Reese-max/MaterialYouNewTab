@@ -403,3 +403,9 @@ execFileSync(process.execPath, [resolve(root, "tools/check-component-visibility.
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-components.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-preferences.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-component-manager.cjs")], {stdio:"inherit"});
+
+execFileSync(process.execPath, [resolve(root, "tools/regress-control-sessions.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-background-adapters.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-background-power.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-layout-save.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-layout-stability.cjs")], {stdio:"inherit"});

@@ -9115,7 +9115,7 @@ body[data-bg="color"] .studyQuote { color: var(--darkerColor-blue, #333); text-s
 @media (max-width: 900px) { .studyQuote { max-width: 80vw; } .studyQuoteSource { display: none; } }
 
 /* Settings stays about settings; homepage tools return unchanged when it closes. */
-body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayoutSaveDock, #myntProfilesPanel, #myntAdaptivePanel, #myntLayoutToolbar, #myntLayoutGuides, .myntLayoutOverlay, #wallpaperGalleryBtn) {
+body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayoutSaveDock, #myntProfilesPanel, #myntLayoutToolbar, #myntLayoutGuides, .myntLayoutOverlay, #wallpaperGalleryBtn) {
  visibility: hidden !important; pointer-events: none !important;
 }
 #menuCont > .topDiv { height:88px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 20px; box-sizing:border-box; }

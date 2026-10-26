@@ -43,6 +43,7 @@ const frameMenu = callback => {
 };
 
 const closeMenuBar = () => {
+    globalThis.myntAdaptive?.cancelPreview();
     ++menuRevision;
     if (menuCont.contains(document.activeElement)) menuButton.focus({ preventScroll: true });
     menuButton.setAttribute("aria-expanded", "false");
@@ -130,7 +131,7 @@ menuCont.addEventListener("keydown", event => {
         }
         return;
     }
-    if (event.key !== "Escape") return;
+    if (event.key !== "Escape" || event.isComposing || event.keyCode === 229) return;
     event.preventDefault();
     event.stopPropagation();
     if (shortcutEditPage.style.display === "block") backButton.click();

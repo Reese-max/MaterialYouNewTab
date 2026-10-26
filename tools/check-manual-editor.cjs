@@ -78,7 +78,7 @@ function editor(raw) {
     const setting = document.createElement('input'); setting.id = 'layoutEditCheckbox'; document.body.append(setting);
     const globalEvents = new Map();
     const ctx = {
-        document, CustomEvent: class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } }, innerWidth: 1200, innerHeight: 800, setTimeout: () => 1, clearTimeout() {}, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
+        confirm:()=>true,document, CustomEvent: class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } }, innerWidth: 1200, innerHeight: 800, setTimeout: () => 1, clearTimeout() {}, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
         localStorage: { getItem: key => storage.get(key) || null, setItem(key, value) { if (blocked) throw Error('Storage full'); writes++; storage.set(key, value); } },
         getComputedStyle: el => ({ display: el.hidden ? 'none' : 'block', visibility: 'visible' }),
         addEventListener(type, fn) { if (!globalEvents.has(type)) globalEvents.set(type, new Set()); globalEvents.get(type).add(fn); },
@@ -99,6 +99,8 @@ app.id('myntLayoutEdit').click();
 assert.equal(app.ctx.myntLayout.isEditing(), true);
 assert.equal(app.writes(), 0);
 assert.equal(app.ctx.myntLayout.get().locked, false);
+assert.equal(app.id('myntLayoutSave').disabled,true);app.id('myntLayoutSave').click();assert.equal(app.writes(),0);
+assert.match(app.id('myntLayoutState').textContent,/Saved/);
 const beforeDockChange = clone(app.ctx.myntLayout.get());
 app.id('myntLayoutDockToggle').click(); assert.equal(app.id('myntLayoutToolbar').dataset.dock, 'top');
 app.id('myntLayoutDockToggle').click(); assert.equal(app.id('myntLayoutToolbar').dataset.dock, 'bottom');
@@ -271,3 +273,20 @@ bypass.handle().emit('pointermove', { clientX: 207, clientY: 200, altKey: true }
 bypass.handle().emit('pointerup');
 assert.equal(bypass.search.getBoundingClientRect().left, bypassStart + 7, 'Alt-drag still bypasses snapping');
 console.log('EDITOR_KEY_GUARDS_OK: IME/handled events preserve drafts, modified arrows/size keys remain native, plain/Shift editing and undo/redo/Escape work, Alt-drag bypass is preserved. Mock-only coverage.');
+
+const gaps=[{left:100,right:200,top:100,bottom:150,width:100,height:50},{left:500,right:600,top:100,bottom:150,width:100,height:50}];
+const gapRect={left:310,right:410,top:100,bottom:150,width:100,height:50};const originalPeers=JSON.stringify(gaps);
+const equal=myntSnapMove(gapRect,-7,0,gaps,1200,800,true);assert.equal(gapRect.left+equal.dx,300);assert(equal.guides.some(g=>g.kind==='spacing'&&g.gap===100));assert.equal(JSON.stringify(gaps),originalPeers);
+const into=myntSnapMove({...gapRect,top:0,bottom:50},-7,100,gaps,1200,800,true);assert.equal(gapRect.left+into.dx,300);assert(into.guides.some(g=>g.kind==='spacing'));
+const away=myntSnapMove(gapRect,-7,200,gaps,1200,800,true);assert(!away.guides.some(g=>g.kind==='spacing'));
+const cleanSave=editor(raw);cleanSave.ctx.myntLayout.setEditing(true);cleanSave.handle().emit('keydown',{key:'ArrowRight'});assert.equal(cleanSave.id('myntLayoutSave').disabled,false);cleanSave.ctx.myntLayout.undo();assert.equal(cleanSave.id('myntLayoutSave').disabled,true);cleanSave.id('myntLayoutSave').click();assert.equal(cleanSave.writes(),0);
+const refuse=editor(raw);let asked=0;refuse.ctx.confirm=()=>{asked++;return false;};refuse.ctx.myntLayout.setEditing(true);refuse.document.emit('keydown',{key:'Escape'});assert.equal(asked,0);assert.equal(refuse.ctx.myntLayout.isEditing(),false);refuse.ctx.myntLayout.setEditing(true);refuse.handle().emit('keydown',{key:'ArrowRight'});const pending=JSON.stringify(refuse.ctx.myntLayout.get());refuse.document.emit('keydown',{key:'Escape'});assert.equal(asked,1);assert.equal(refuse.ctx.myntLayout.isEditing(),true);assert.equal(JSON.stringify(refuse.ctx.myntLayout.get()),pending);
+console.log('EDITOR_STATES_OK: clean saves are disabled/zero-write, undo clears dirty, leave confirmation is dirty-only, equal spacing moves no peers');
+(async()=>{
+ const asyncApp=editor(raw);let resolve,calls=0;asyncApp.ctx.myntDialog={confirm(){calls++;return new Promise(r=>resolve=r);}};
+ asyncApp.ctx.myntLayout.setEditing(true);asyncApp.handle().emit('keydown',{key:'ArrowRight'});const pending=JSON.stringify(asyncApp.ctx.myntLayout.get());
+ asyncApp.id('layoutEditCheckbox').checked=false;asyncApp.id('layoutEditCheckbox').emit('change');asyncApp.document.emit('keydown',{key:'Escape'});assert.equal(calls,1);assert(asyncApp.ctx.myntLayout.isEditing());
+ resolve(false);await new Promise(setImmediate);assert.equal(asyncApp.id('layoutEditCheckbox').checked,true);assert.equal(JSON.stringify(asyncApp.ctx.myntLayout.get()),pending);
+ asyncApp.id('myntLayoutCancel').click();assert.equal(calls,2);resolve(true);await new Promise(setImmediate);assert.equal(asyncApp.ctx.myntLayout.isEditing(),false);assert.equal(asyncApp.storage.get('myntLayout'),raw);assert.equal(asyncApp.writes(),0);
+ console.log('ASYNC_LEAVE_OK: pending confirmation blocks repeated exits, declined toggle restores checkbox/draft, confirmed Cancel preserves saved bytes');
+})().catch(error=>{console.error(error);process.exitCode=1;});

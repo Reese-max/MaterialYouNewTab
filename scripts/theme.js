@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Check for custom color
     const storedCustomColor = localStorage.getItem(customThemeStorageKey);
     if (storedCustomColor) {
-        applyCustomTheme(storedCustomColor);
+        applyCustomTheme(storedCustomColor, false);
         // Uncheck all radio buttons
         radioButtons.forEach(radio => {
             radio.checked = false;
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else {
         const storedTheme = localStorage.getItem(themeStorageKey);
         if (storedTheme) {
-            applySelectedTheme(storedTheme);
+            applySelectedTheme(storedTheme, false);
             const selectedRadioButton = document.querySelector(`.colorPlate[value="${storedTheme}"]`);
             if (selectedRadioButton) {
                 selectedRadioButton.checked = true;
@@ -314,10 +314,7 @@ const applyCustomTheme = (color, persist = true) => {
 const handleThemeChange = function () {
     if (this.checked) {
         const colorValue = this.value;
-        localStorage.setItem(themeStorageKey, colorValue);
-        localStorage.removeItem(customThemeStorageKey); // Clear custom theme
-        applySelectedTheme(colorValue);
-        document.dispatchEvent(new Event('mynt:manual-theme'));
+        window.myntAdaptive?.previewTheme({selected:colorValue});
     }
 };
 
@@ -330,11 +327,7 @@ radioButtons.forEach(radioButton => {
 // Handle color picker changes
 const handleColorPickerChange = function (event) {
     const selectedColor = event.target.value;
-    resetDarkTheme(); // Clear dark theme if active
-    localStorage.setItem(customThemeStorageKey, selectedColor); // Save custom color
-    localStorage.removeItem(themeStorageKey); // Clear predefined theme
-    applyCustomTheme(selectedColor);
-    document.dispatchEvent(new Event('mynt:manual-theme'));
+    window.myntAdaptive?.previewTheme({custom:selectedColor});
 
     // Uncheck all radio buttons
     radioButtons.forEach(radio => {
@@ -364,14 +357,18 @@ const throttle = (func, limit) => {
 
 // Add listeners for color picker
 colorPicker.removeEventListener("input", handleColorPickerChange); // Ensure no duplicate listeners
-colorPicker.addEventListener("input", throttle(handleColorPickerChange, 10));
+colorPicker.addEventListener("input", handleColorPickerChange);
 
 // Local palette refresh without cache writes, network fetches or external navigation.
-window.myntThemePreferences = { reload() {
+window.myntThemePreferences = { preview(choice) {
+    if(choice.custom){resetDarkTheme();applyCustomTheme(choice.custom,false);colorPicker.value=choice.custom;}
+    else applySelectedTheme(choice.selected||'blue',false);
+    radioButtons.forEach(radio=>{radio.checked=!choice.custom&&radio.value===(choice.selected||'blue');});
+}, reload() {
     const custom = localStorage.getItem('customThemeColor');
     const selected = localStorage.getItem('selectedTheme') || 'blue';
     if (custom) { resetDarkTheme(); applyCustomTheme(custom, false); colorPicker.value = custom; }
-    else applySelectedTheme(selected, false);
+    else {applySelectedTheme(selected, false);colorPicker.value='#EA1010';}
     radioButtons.forEach(radio => { radio.checked = !custom && radio.value === selected; });
     window.myntAdaptive?.reload();
 } };

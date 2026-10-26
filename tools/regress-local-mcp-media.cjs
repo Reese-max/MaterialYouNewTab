@@ -250,8 +250,8 @@ const plain = x => JSON.parse(JSON.stringify(x));
     const galleryCode = gallerySource.slice(gallerySource.indexOf('    function remoteItemMetadata('), gallerySource.indexOf('    window.myntWallpaper ='));
     const galleryRecords = new Map([['custom', { id: 'custom', name: 'Fixture', source: 'custom', type: 'image', added: 1, blob: { size: 33, fixture: 'must survive removal' } }], ['bundled', { id: 'bundled', source: 'bundled', type: 'image' }]]);
     const gallerySettings = new Map([['current', 'none'], ['mode', 'fixed']]);
-    let galleryWrites = 0, abortNext = false;
-    const galleryContext = { Date, JSON, Error, Number, String, Boolean, Promise,
+    let galleryWrites = 0, galleryPauses=0, abortNext = false;
+    const galleryContext = { Date, JSON, Error, Number, String, Boolean, Promise,window:{myntDashboard:{pauseBackground(){galleryPauses++;}}},
         withGalleryWrite: fn => fn(), notifyGalleryChange() {},
         localStorage: { getItem: key => gallerySettings.get(key) ?? null, setItem: (key, value) => gallerySettings.set(key, value) },
         KEY_CURRENT: 'current', KEY_MODE: 'mode', KEY_HIDDEN: 'hidden', STORE: 'items', hiddenIds: () => new Set(JSON.parse(gallerySettings.get('hidden') || '[]')), saveHidden: set => gallerySettings.set('hidden', JSON.stringify([...set])),
@@ -289,7 +289,7 @@ const plain = x => JSON.parse(JSON.stringify(x));
     await assert.rejects(galleryContext.remoteEdit('remove', 'custom', undefined, galleryState.itemRevision, () => {}), /Cancel/);
     const cancelVersion = galleryContext.remoteCancelRevision();
     await galleryContext.remoteCancel(cancelVersion, () => {});
-    assert.equal(gallerySettings.get('current'), 'none'); assert(galleryRecords.has('custom'));
+    assert.equal(gallerySettings.get('current'), 'none'); assert(galleryRecords.has('custom'));assert.equal(galleryPauses,1,'Cancellation pauses the decorative video through its controller');
     const bundled = await galleryContext.remoteGet('bundled');
     await galleryContext.remoteEdit('remove', 'bundled', undefined, bundled.itemRevision, () => {});
     const hiddenBundled = await galleryContext.remoteGet('bundled'); assert.equal(hiddenBundled.item.hidden, true); assert.equal(galleryRecords.get('bundled').removedAt, undefined);
@@ -325,6 +325,7 @@ const plain = x => JSON.parse(JSON.stringify(x));
     await assert.rejects(musicFixture.api.remoteTrackEdit('restore', 'a', retainedAfter.find(t => t.id === 'a').itemRevision, revoked), /Disconnected/);
     assert(musicFixture.shared.records.get('a').removedAt);
     const reloadedMusic = await fixtureContext.makeMusicFixture({ shared: musicFixture.shared });
+    await fixtureContext.waitMusic(() => reloadedMusic.buttons.some(b => b.textContent === 'Restore track'));
     assert(reloadedMusic.buttons.some(b => b.textContent === 'Restore track'), 'Retained tracks have a normal UI restore after reload');
     reloadedMusic.buttons.find(b => b.textContent === 'Restore track').emit('click');
     await fixtureContext.waitMusic(() => !reloadedMusic.shared.records.get('a').removedAt);

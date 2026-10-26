@@ -148,22 +148,25 @@
         videoEl.setAttribute("aria-hidden", "true");
         videoEl.preload = "metadata";
         document.body.prepend(videoEl);
+        galleryPlayback=MyntBackgroundPlayback.create(videoEl,{key:'gallery:initial',storage:globalThis.sessionStorage,allowed:galleryCanPlay});
         return videoEl;
     }
+    let galleryPlayback=null,galleryFrozen=false;
+    function galleryCanPlay(){return !galleryFrozen&&document.visibilityState==='visible'&&document.body.dataset.galleryVideo==='on'&&!reducedMotion()&&!document.documentElement.classList.contains('myntReducedMotion')&&!document.documentElement.classList.contains('myntHighContrast')&&!navigator.connection?.saveData;}
     function syncVideoPlayback() {
         if (!videoEl || document.body.dataset.galleryVideo !== "on") return;
-        if (document.visibilityState !== "visible") { startGalleryWhenVisible=true;videoEl.pause(); return; }
+        if (document.visibilityState !== "visible") { startGalleryWhenVisible=true;galleryPlayback?.pause(); return; }
         startGalleryWhenVisible=false;
         if (reducedMotion() || document.documentElement.classList.contains("myntReducedMotion") || document.documentElement.classList.contains("myntHighContrast") || navigator.connection?.saveData) {
-            videoEl.pause();
+            galleryPlayback?.pause();
             if (videoEl.readyState >= 1 && videoEl.currentTime < 0.05) { try { videoEl.currentTime = 0.1; } catch (e) { /* ignore */ } }
             return;
         }
-        videoEl.play().catch(() => { /* autoplay blocked: first frame stays as poster */ });
+        galleryPlayback?.play();
     }
     let resumeGalleryAfterHidden=false;
     document.addEventListener("visibilitychange",()=>{
-        if(document.hidden){resumeGalleryAfterHidden=Boolean(videoEl&&!videoEl.paused);videoEl?.pause();}
+        if(document.hidden){resumeGalleryAfterHidden=resumeGalleryAfterHidden||Boolean(videoEl&&!videoEl.paused);galleryPlayback?.pause();}
         else {
             const resume = resumeGalleryAfterHidden || startGalleryWhenVisible;
             resumeGalleryAfterHidden=false;startGalleryWhenVisible=false;
@@ -174,7 +177,7 @@
     function stopGalleryVideo() {
         startGalleryWhenVisible=false;resumeGalleryAfterHidden=false;
         document.body.dataset.galleryVideo = "off";
-        if (videoEl) { videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load(); }
+        if (videoEl) { galleryPlayback?.pause(); videoEl.removeAttribute("src"); videoEl.load(); }
         if (videoUrl) { URL.revokeObjectURL(videoUrl); videoUrl = null; }
     }
 
@@ -198,7 +201,7 @@
                 localStorage.setItem(KEY_MODE, "fixed");
                 scheduleRotate();
                 clearGalleryBackground();
-                $("videoBg")?.pause();
+                window.myntDashboard?.pauseBackground();
                 const modeSelect = $("wallpaperModeSelect");
                 if (modeSelect) modeSelect.value = "fixed";
                 const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
@@ -245,14 +248,17 @@
             releaseGalleryImage();
             document.body.style.removeProperty("--bg-image");
             const v = ensureVideo();
+            galleryPlayback.setKey("gallery:"+item.id);
             const src = item.blob ? URL.createObjectURL(item.blob) : item.src;
             if (videoUrl) URL.revokeObjectURL(videoUrl);
             videoUrl = item.blob ? src : null;
+            galleryPlayback.pause();
+            delete v.dataset.myntWasPlaying;
             v.src = src;
             document.body.dataset.workspaceBackground = "video";
             document.body.dataset.galleryVideo = "on";
             const deco = document.getElementById("videoBg");
-            if (deco) deco.pause();
+            if (deco) window.myntDashboard?.pauseBackground();
             syncVideoPlayback();
         } else {
             stopGalleryVideo();
@@ -509,7 +515,7 @@
             const expected = purgeRevision(item);
             const fingerprint = await purgeFingerprint(item);
             const message = t("wallpaperPurgeConfirm", 'Permanently delete “{name}” from this gallery? Its saved original and thumbnail will be deleted and cannot be restored here. Original files, other features’ saved copies and exported backups are not deleted.').replace("{name}", displayName(item));
-            const accepted = await window.myntDialog.confirm(message, { danger: true, focusCancel: true, okText: t("wallpaperPurge", "Permanently delete") });
+            const accepted = await window.myntDialog.confirm(message, { danger: true, focusCancel: true, title: displayName(item), previewLabel:t('wallpaperNoPreview','No saved thumbnail is available for this media.'), previewBlob: item.thumb || (item.type === 'image' ? item.blob : null), okText: t("wallpaperPurge", "Permanently delete") });
             if (!accepted) return false;
             await withGalleryWrite(async () => {
                 const current = await getItem(id);
@@ -581,6 +587,8 @@
             const restore = document.createElement("button"); restore.type = "button";
             restore.textContent = t("wallpaperUndo", "Restore"); restore.setAttribute("aria-label", `${restore.textContent} ${displayName(item)}`);
             restore.addEventListener("click", () => undoRemove(item.id));
+            const blob=item.thumb||(item.type==='image'?item.blob:null);
+            if(blob){const img=document.createElement('img');img.className='wallpaperRecoveryThumb';img.alt='';img.src=URL.createObjectURL(blob);thumbUrls.push(img.src);row.appendChild(img);}
             row.appendChild(name); row.appendChild(size); row.appendChild(restore);
             if (item.source !== "bundled") {
                 const purge = document.createElement("button"); purge.type = "button"; purge.className = "wallpaperPurge";
@@ -603,8 +611,8 @@
         const items = records.filter(i => !i.removedAt && (showHidden || !hidden.has(i.id)));
         if (revision !== galleryRenderRevision) return;
         showUndo(records.filter(item => item.removedAt));
-        renderRecovery(records);
         releaseThumbs();
+        renderRecovery(records);
         grid.replaceChildren();
         const currentId = localStorage.getItem(KEY_CURRENT);
         for (const id of [...selected]) if (!items.some(i => i.id === id)) selected.delete(id);
@@ -860,12 +868,15 @@
     if (galleryChannel) galleryChannel.onmessage = event => { if (event.data?.type === "changed") refreshSharedGallery(); };
     window.addEventListener("storage", event => { if ([KEY_CURRENT, KEY_MODE, KEY_HIDDEN].includes(event.key)) refreshSharedGallery(); });
     window.addEventListener("focus", refreshSharedGallery);
+    document.addEventListener('freeze',()=>{galleryFrozen=true;resumeGalleryAfterHidden=resumeGalleryAfterHidden||Boolean(videoEl&&!videoEl.paused);galleryPlayback?.pause();});
+    document.addEventListener('resume',()=>{galleryFrozen=false;const resume=resumeGalleryAfterHidden||startGalleryWhenVisible;resumeGalleryAfterHidden=false;startGalleryWhenVisible=false;refreshSharedGallery(resume);});
     window.addEventListener("pagehide", event => {
-        if (event.persisted) { resumeGalleryAfterHidden = resumeGalleryAfterHidden || Boolean(videoEl && !videoEl.paused); videoEl?.pause(); return; }
+        if (event.persisted) { resumeGalleryAfterHidden = resumeGalleryAfterHidden || Boolean(videoEl && !videoEl.paused); galleryPlayback?.pause(); return; }
         releaseThumbs(); releaseGalleryImage(); stopGalleryVideo(); galleryChannel?.close();
     });
     window.addEventListener("pageshow", event => {
         if (event.persisted) {
+            galleryFrozen=false;
             const resume = resumeGalleryAfterHidden || startGalleryWhenVisible;
             resumeGalleryAfterHidden = false; startGalleryWhenVisible = false;
             refreshSharedGallery(resume);
@@ -910,7 +921,7 @@
             // Both local settings are verified; partial storage failures are reported, never hidden.
             localStorage.setItem(KEY_CURRENT, "none"); localStorage.setItem(KEY_MODE, "fixed");
             if (localStorage.getItem(KEY_CURRENT) !== "none" || localStorage.getItem(KEY_MODE) !== "fixed") throw Error("Wallpaper cancellation was not saved");
-            scheduleRotate(); clearGalleryBackground(); $("videoBg")?.pause();
+            scheduleRotate(); clearGalleryBackground(); window.myntDashboard?.pauseBackground();
             const modeSelect = $("wallpaperModeSelect"); if (modeSelect) modeSelect.value = "fixed";
             const interval = $("wallpaperIntervalGroup"); if (interval) interval.hidden = true;
             const minutesSelect = $("wallpaperMinutesSelect"); if (minutesSelect) minutesSelect.disabled = true;
@@ -979,7 +990,7 @@
         });
     }
 
-    window.myntWallpaper = { remoteGet, remoteEdit, remoteCancel, remoteCancelRevision, runRemote(action, beforeMutation) { if(typeof beforeMutation!=="function")throw Error("Guard required"); if(action==="next")return next(1,beforeMutation);if(action==="previous")return next(-1,beforeMutation);if(action==="random")return random(beforeMutation);throw Error("Unsupported action"); }, cancelApply, useLegacy, restore: undoRemove, remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
+    window.myntWallpaper = { pausePlayback:()=>galleryPlayback?.pause(),syncPlayback:syncVideoPlayback, remoteGet, remoteEdit, remoteCancel, remoteCancelRevision, runRemote(action, beforeMutation) { if(typeof beforeMutation!=="function")throw Error("Guard required"); if(action==="next")return next(1,beforeMutation);if(action==="previous")return next(-1,beforeMutation);if(action==="random")return random(beforeMutation);throw Error("Unsupported action"); }, cancelApply, useLegacy, restore: undoRemove, remove: removeItems, undo: undoRemove, all: allItems, next: () => next(1), previous: () => next(-1), random, open: openGallery, addFiles, addUrl, list: listItems };
 
     // Run after workspace restore (dashboard-tools) so our choice wins.
     if (document.readyState === "complete") setTimeout(init, 0);

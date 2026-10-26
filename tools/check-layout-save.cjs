@@ -15,7 +15,7 @@ for(const storage of [{getItem(){return '{invalid';}},{getItem(){throw Error('bl
  const c={localStorage:storage,KEY:'myntLayout',myntNormalizeLayout:normalize}; vm.createContext(c); vm.runInContext(load+'; result=load()',c); assert.equal(c.result.locked,true); assert.equal(Object.keys(c.result.blocks).length,0);
 }
 const save=source.match(/    function save\(\) \{[\s\S]*?\n    \}/)[0];
-const c={layout:{version:2,locked:true,blocks:{}},dirty:true,KEY:'myntLayout',myntNormalizeLayout:normalize,localStorage:{setItem(){throw Error('full')}},announce(m){c.message=m}};
+const c={editing:true,layout:{version:2,locked:true,blocks:{}},dirty:true,KEY:'myntLayout',myntNormalizeLayout:normalize,localStorage:{setItem(){throw Error('full')}},announce(m){c.message=m}};
 vm.createContext(c); vm.runInContext(save+'; result=save()',c);assert.equal(c.result,false);assert.match(c.message,/儲存失敗/);assert.equal(c.dirty,true);
 console.log('LAYOUT_SAVE_CHECK_OK: schema, malformed-storage and storage-failure assertions passed');
 

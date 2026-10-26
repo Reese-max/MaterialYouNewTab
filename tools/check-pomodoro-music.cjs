@@ -130,7 +130,8 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     const navigator = noLocks ? {} : { locks: { request: async (_name, _options, fn) => { lockRequests++; await fn(locked ? null : {}); lockReleased++; } } };
     shared.tabs.add(events);
     const context = { window, document, navigator, currentLanguage: 'en', localStorage: { getItem: key => values.get(key) || null, setItem(k, v) { const oldValue = values.get(k); values.set(k, v); if (shared.notify && oldValue !== v) for (const other of shared.tabs) if (other !== events) setTimeout(() => other.storage?.({ key: k, newValue: v }), 0); }, removeItem: k => values.delete(k) }, indexedDB: { open() { const req = { result: db }; setTimeout(() => req.onsuccess(), 0); return req; } }, Audio, URL: { createObjectURL: () => 'blob:local', revokeObjectURL: () => revoked++ }, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask, console };
-    vm.runInNewContext(source, context); await sleep(25);
+    vm.runInNewContext(source, context);
+    await until(() => window.myntPomoMusic?.getPlayback().status === (Array.from(shared.records.values()).some(track => !track.removedAt) ? 'ready' : 'empty'));
     const flat = el => [el, ...el.children.flatMap(flat)];
     return { api: window.myntPomoMusic, document, events, audios, shared, get revoked() { return revoked; }, get lockReleased() { return lockReleased; }, get lockRequests() { return lockRequests; }, get confirmations() { return confirmations; }, get buttons() { return flat(host).filter(x => x.tag === 'button'); }, get input() { return flat(host).find(x => x.type === 'file'); }, get seek() { return flat(host).find(x => x['aria-label'] === 'Playback position'); }, get volume() { return flat(host).find(x => x.type === 'range' && x['aria-label'] === 'Volume'); }, get current() { return flat(host).find(x => x.className === 'mynt-music-current'); }, get disclosure() { return flat(host).find(x => x.className === 'mynt-music-library'); }, get status() { return flat(host).find(x => x.role === 'status')?.textContent; }, host };
 }
@@ -143,7 +144,7 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     f.seek.value = '15'; f.seek.emit('input'); assert.equal(f.audios.length, 0);
     count++; console.log('✓ Compact selected title is safe text; library starts collapsed and unloaded seeking is disabled');
     assert.equal(f.api.getTracks()[0].name, '<script>safe.mp3');
-    f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    f.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => f.audios[0]?.paused === false);
     assert.equal(f.audios[0].paused, false); assert.equal(f.status, 'Playing'); count++; console.log('✓ Explicit play gesture acquires audio ownership');
     assert.equal(f.seek.disabled, false); assert.equal(f.seek.max, '30');
     assert.equal(f.buttons.find(x => x.textContent === 'Play').disabled, true); assert.equal(f.buttons.find(x => x.textContent === 'Pause').disabled, false);
@@ -166,20 +167,21 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     f.seek.value = '8'; f.seek.emit('input'); assert.equal(f.audios[0].currentTime, 8); assert.equal(f.audios[0].paused, true);
     assert.equal(f.audios[0].playCalls, 1); assert.equal(f.lockRequests, 1);
     count++; console.log('✓ Seeking a paused local track stays paused and does not acquire playback ownership');
-    f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    f.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => f.audios[0]?.paused === false);
     f.events['mynt:pomodoro-state']({ detail: { phase: 'shortBreak', isRunning: true } }); await sleep(290);
     assert.equal(f.audios[0].paused, true); count++; console.log('✓ Break policy pauses without automatic resume');
-    f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    f.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => f.audios[0]?.paused === false);
     f.events['mynt:pomodoro-state']({ detail: { phase: 'shortBreak', isRunning: true, timeRemaining: 100 } }); await sleep(290);
     assert.equal(f.audios[0].paused, false); count++; console.log('✓ Manual resume during a running break survives subsequent timer ticks');
     f.api.applySettings({ ...f.api.getSettings(), restPolicy: 'continue' });
-    f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    f.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => f.audios[0]?.paused === false);
     f.events['mynt:pomodoro-state']({ detail: { phase: 'shortBreak', isRunning: true } }); await sleep(10);
     assert.equal(f.audios[0].paused, false); count++; console.log('✓ Continue policy leaves break music playing');
     f.events.pagehide(); assert.equal(f.audios[0].paused, true); assert.equal(f.revoked, 1); count++; console.log('✓ Page exit stops sound and revokes blob URL');
-    const busy = await browserFixture({ locked: true }); busy.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    const busy = await browserFixture({ locked: true }); busy.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => busy.api.getPlayback().status === 'busy' && busy.lockReleased === 1);
     assert.equal(busy.audios.length, 0); assert.match(busy.status, /another tab/); count++; console.log('✓ Cross-tab lock conflict does not start audio');
-    const blocked = await browserFixture({ playError: 'NotAllowedError' }); blocked.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    const blocked = await browserFixture({ playError: 'NotAllowedError' }); blocked.buttons.find(x => x.textContent === 'Play').emit('click');
+    await until(() => blocked.api.getPlayback().status === 'gesture' && blocked.lockReleased === 1);
     assert.match(blocked.status, /Press Play again/); assert.equal(blocked.audios[0].paused, true); count++; console.log('✓ Autoplay rejection is explained and releases playback');
     const focusFixture = await browserFixture();
     const focusPlay = focusFixture.buttons.find(x => x.textContent === 'Play'), focusPause = focusFixture.buttons.find(x => x.textContent === 'Pause');
@@ -198,7 +200,7 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     assert.notEqual(focusFixture.document.activeElement, focusPlay);
     focusFixture.events.pagehide(); count++; console.log('✓ Moved focus and background playback events never trigger a transport focus handoff');
     assert.equal(busy.seek.disabled, true);
-    const switched = await browserFixture(); switched.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    const switched = await browserFixture(); switched.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => switched.audios[0]?.paused === false);
     const oldAudio = switched.audios[0]; oldAudio.currentTime = 15; oldAudio.emit('timeupdate');
     switched.buttons.find(x => x.textContent === 'second.mp3').emit('click');
     assert.equal(switched.current.textContent, 'second.mp3'); assert.equal(switched.seek.disabled, true); assert.equal(switched.seek['aria-valuetext'], '0:00 / 0:00');
@@ -206,7 +208,7 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     oldAudio.duration = 300; oldAudio.readyState = 1; oldAudio.emit('loadedmetadata'); oldAudio.emit('timeupdate'); oldAudio.emit('ended');
     await sleep(10); assert.equal(switched.audios.length, 1); assert.equal(switched.seek.max, '1'); assert.equal(switched.status, 'Ready. Press Play to listen.');
     count++; console.log('✓ Selection resets metadata without autoplay; detached audio events cannot alter the selected track');
-    const fallback = await browserFixture({ noLocks: true }); fallback.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(10);
+    const fallback = await browserFixture({ noLocks: true }); fallback.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => fallback.audios[0]?.paused === false);
     fallback.shared.values.set('myntPomoMusicOwnerV1', 'other-tab'); fallback.events.storage({ key: 'myntPomoMusicOwnerV1', newValue: 'other-tab' });
     assert.equal(fallback.audios[0].paused, true); assert.match(fallback.status, /another tab/);
     fallback.seek.value = '4'; fallback.seek.emit('input'); assert.equal(fallback.audios[0].currentTime, 4);
@@ -259,7 +261,7 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     assert.equal([...undoBytes.records.values()].reduce((sum, record) => sum + record.blob.size, 0), 250 * 1024 * 1024);
     assert.ok(!undoBytes.records.has('seed-0')); count++; console.log('✓ Stale-tab undo also observes the shared byte cap');
     const live = sharedLibrary(undefined, true), liveA = await browserFixture({ shared: live }), liveB = await browserFixture({ shared: live });
-    liveA.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(20);
+    liveA.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => liveA.audios[0]?.paused === false);
     const playing = liveA.audios[0]; assert.equal(playing.paused, false);
     liveB.api.applySettings({ ...liveB.api.getSettings(), selectedId: 'a', volume: .2 });
     await until(() => playing.volume === .2); assert.equal(playing.playCalls, 1);
@@ -268,7 +270,7 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     assert.equal(liveA.revoked, 1); assert.equal(playing.playCalls, 1); assert.equal(liveB.audios.length, 0);
     count++; console.log('✓ Remote settings do not restart audio; remote deletion stops and unloads stale playback');
     liveA.events.pagehide(); liveB.events.pagehide();
-    f.events.pageshow({ persisted: true }); f.buttons.find(x => x.textContent === 'Play').emit('click'); await sleep(20);
+    f.events.pageshow({ persisted: true }); f.buttons.find(x => x.textContent === 'Play').emit('click'); await until(() => f.audios.length === 2 && f.audios[1].paused === false);
     assert.equal(f.audios.length, 2); assert.equal(f.audios[1].paused, false);
     f.events.pagehide(); count++; console.log('✓ Returning from pagehide rebuilds unloaded audio before manual play');
     const resetShared=sharedLibrary();resetShared.values.set('myntPomoMusicSettingsV1',JSON.stringify({volume:.1,mode:'all'}));

@@ -20,3 +20,8 @@
 .myntAppDialogActions button:focus-visible, .myntAppDialogInput:focus-visible { outline: 2px solid var(--darkColor-blue, #4285f4); outline-offset: 2px; }
 .black-theme .myntAppDialog, .dark-theme .myntAppDialog { background: #1f2630; color: #eef1f5; }
 .black-theme .myntAppDialogInput, .dark-theme .myntAppDialogInput { background: rgba(0, 0, 0, 0.3); }
+
+.myntDialogPreview {display:block;max-width:100%;max-height:180px;object-fit:contain;border-radius:8px;margin:8px auto;}
+
+.myntAppDialog .myntDialogPreview {width:min(100%,240px);height:120px;object-fit:contain;border-radius:8px;}
+.myntDialogPreviewFallback {padding:16px;border:1px dashed currentColor;border-radius:8px;}

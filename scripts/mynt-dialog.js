@@ -8,7 +8,7 @@
     const t = (key, fallback) => (typeof translations !== "undefined" && (translations[lang()]?.[key] || translations.en?.[key])) || fallback;
     let seq = 0;
 
-    function open({ kind, message, title, defaultValue = "", okText, cancelText, danger = false, focusCancel = false, maxLength }) {
+    function open({ kind, message, title, defaultValue = "", okText, cancelText, danger = false, focusCancel = false, previewBlob, previewLabel, maxLength }) {
         return new Promise(resolve => {
             const id = `myntDialog${++seq}`;
             const dialog = document.createElement("dialog");
@@ -27,6 +27,11 @@
             msg.className = "myntAppDialogMessage";
             msg.textContent = String(message ?? "");
             form.append(heading, msg);
+            let previewUrl;
+            if(typeof Blob==='function' && previewBlob instanceof Blob && previewBlob.type.startsWith('image/')){
+                const image=document.createElement('img');image.className='myntDialogPreview';image.alt=String(title||message||'');
+                previewUrl=URL.createObjectURL(previewBlob);image.src=previewUrl;form.append(image);
+            } else if(previewLabel){const fallback=document.createElement("p");fallback.className="myntDialogPreviewFallback";fallback.textContent=String(previewLabel);form.append(fallback);}
             let input = null;
             if (kind === "prompt") {
                 input = document.createElement("input");
@@ -62,7 +67,7 @@
             const previous = document.activeElement;
             dialog.addEventListener("close", () => {
                 const accepted = dialog.returnValue === "ok";
-                dialog.remove();
+                dialog.remove();if(previewUrl)URL.revokeObjectURL(previewUrl);
                 if (previous && typeof previous.focus === "function" && document.contains(previous)) {
                     try { previous.focus({ preventScroll: true }); } catch {}
                 }
