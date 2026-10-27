@@ -218,59 +218,69 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
    html.black-theme 保留給黑色主題直接使用深色樣式。
    ========================================================================== */
 
-/* 淺色模式：加強 .pomodoro-bg-overlay 成為足夠不透明的淺色覆蓋層，保留背景影片，文字為高對比深色 */
+/* 僅在主面板固定可讀配色：!important 壓過 scripts/pomodoro-float.js paint()
+   寫入的 inline 變數；獨立小視窗仍使用原本的自動配色。
+   遮罩使用漸層語法，才能同時作為靜態背景的 background-image 圖層。 */
 #pomodoroPanel,
 .pomodoro-panel {
-	--pomo-fg: #1b1f24;
-	--pomo-muted: #495565;
-	--pomo-surface: rgba(255, 255, 255, 0.94);
-	--pomo-border: rgba(0, 0, 0, 0.14);
-	--pomo-overlay: rgba(248, 250, 252, 0.92);
-	--pomo-scheme: light;
-	background: transparent;
-	color: #1b1f24;
-	color-scheme: light;
+	--pomo-fg: #1b1f24 !important;
+	--pomo-muted: #35465e !important;
+	--pomo-surface: #ffffff !important;
+	--pomo-border: rgba(0, 0, 0, 0.18) !important;
+	--pomo-accent: #234c78 !important;
+	--pomo-on-accent: #ffffff !important;
+	--pomo-overlay: linear-gradient(rgba(248, 250, 252, 0.96), rgba(248, 250, 252, 0.96)) !important;
+	--pomo-float-scrim: var(--pomo-overlay) !important;
+	--pomo-scheme: light !important;
+	/* 壓過 pomodoro-float.css 的 .mynt-pomo-static background-color !important；
+	   只固定底色，不覆寫使用者的背景圖片／影片及其定位。 */
+	background-color: var(--pomo-surface) !important;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	color: var(--pomo-fg);
+	color-scheme: var(--pomo-scheme);
 	border: 1px solid rgba(0, 0, 0, 0.14);
 	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14);
 }
 
 /* 淺色覆蓋層：覆蓋在背景影片上方，高不透明度確保文字閱讀清晰，同時不移除背景影片 */
 #pomodoroPanel .pomodoro-bg-overlay,
+#pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-overlay,
 .pomodoro-panel .pomodoro-bg-overlay {
-	background: var(--pomo-overlay, rgba(248, 250, 252, 0.92));
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
+	background: var(--pomo-overlay);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
 }
 
 /* 番茄鐘內部文字高對比樣式（淺色模式，反相後在深色模式亦為高對比） */
 #pomodoroPanel .pomodoroPhaseLabel,
 .pomodoro-panel .pomodoroPhaseLabel {
-	color: #1b1f24;
+	color: var(--pomo-fg);
 	text-shadow: none;
 }
 
 #pomodoroPanel .pomodoroPhaseLabel.break-phase,
 .pomodoro-panel .pomodoroPhaseLabel.break-phase {
-	color: #137333;
+	color: var(--pomo-accent);
 }
 
 #pomodoroPanel .pomodoroTimeDisplay,
 .pomodoro-panel .pomodoroTimeDisplay {
-	color: #111827;
+	color: var(--pomo-fg);
 	text-shadow: none;
 }
 
 /* 輪次進度（如「1 / 4」）與提示文字：強化對比至 4.5:1 以上 */
 #pomodoroPanel .pomodoroRoundDisplay,
 .pomodoro-panel .pomodoroRoundDisplay {
-	color: #495565;
+	color: var(--pomo-muted);
 	text-shadow: none;
 	font-weight: 500;
 }
 
 #pomodoroPanel .pomodoroSessionsToday,
 .pomodoro-panel .pomodoroSessionsToday {
-	color: #495565;
+	color: var(--pomo-muted);
 	border-top: 1px solid rgba(0, 0, 0, 0.12);
 	text-shadow: none;
 }
@@ -279,14 +289,14 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 .pomodoro-panel .pomodoroFocusSummary,
 #pomodoroPanel .mynt-pomo-note,
 .pomodoro-panel .mynt-pomo-note {
-	color: #495565;
+	color: var(--pomo-muted);
 }
 
 #pomodoroPanel #pomodoroStatsBtn,
 .pomodoro-panel #pomodoroStatsBtn,
 #pomodoroPanel .mynt-pomo-settings summary,
 .pomodoro-panel .mynt-pomo-settings summary {
-	color: #1b1f24;
+	color: var(--pomo-fg);
 }
 
 /* 輸入框、選單與佔位文字（例：「例如：讀完第三章」） */
@@ -294,19 +304,27 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 .pomodoro-panel input,
 #pomodoroPanel select,
 .pomodoro-panel select {
-	color: #1b1f24;
+	color: var(--pomo-fg);
 }
 
 #pomodoroPanel input::placeholder,
 .pomodoro-panel input::placeholder {
-	color: #5a6878;
+	color: var(--pomo-muted);
 	opacity: 1;
+}
+
+/* 音樂選單原本另用主題色，連同原生選項一起固定成面板配色。 */
+#pomodoroPanel select option,
+#pomodoroPanel #myntPomoMusicMount select option {
+	background: var(--pomo-surface);
+	color: var(--pomo-fg);
 }
 
 /* 番茄鐘控制按鈕與圖標 */
 #pomodoroPanel .pomodoroBtn,
 .pomodoro-panel .pomodoroBtn {
 	background: rgba(0, 0, 0, 0.08);
+	color: var(--pomo-fg);
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -317,7 +335,7 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 
 #pomodoroPanel .pomodoroBtn svg,
 .pomodoro-panel .pomodoroBtn svg {
-	fill: #1b1f24;
+	fill: currentColor;
 }
 
 #pomodoroPanel .pomodoroBtn.pomodoroResetBtn,
@@ -328,7 +346,7 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 
 #pomodoroPanel .pomodoroBtn.pomodoroResetBtn svg,
 .pomodoro-panel .pomodoroBtn.pomodoroResetBtn svg {
-	fill: #1b1f24;
+	fill: currentColor;
 }
 
 /* 番茄鐘圓環 */
@@ -339,13 +357,13 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 
 #pomodoroPanel .pomodoroRingFg,
 .pomodoro-panel .pomodoroRingFg {
-	stroke: var(--darkColor-blue, #1a73e8);
+	stroke: var(--pomo-accent);
 	filter: drop-shadow(0 0 4px rgba(26, 115, 232, 0.25));
 }
 
 #pomodoroPanel .pomodoroRingFg.break-ring,
 .pomodoro-panel .pomodoroRingFg.break-ring {
-	stroke: #137333;
+	stroke: var(--pomo-accent);
 	filter: drop-shadow(0 0 4px rgba(19, 115, 51, 0.25));
 }
 
@@ -357,7 +375,7 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 
 #pomodoroPanel .pomodoro-drag-handle::before,
 .pomodoro-panel .pomodoro-drag-handle::before {
-	color: rgba(0, 0, 0, 0.6);
+	color: var(--pomo-muted);
 }
 
 /* 設定面版按鈕與控制項（淺色） */
@@ -366,7 +384,7 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 .pomodoro-panel .mynt-pomo-settings button,
 .pomodoro-panel .mynt-pomo-float button {
 	background: rgba(0, 0, 0, 0.05);
-	color: #1b1f24;
+	color: var(--pomo-fg);
 	border: 1px solid rgba(0, 0, 0, 0.14);
 }
 
@@ -374,21 +392,27 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 #pomodoroPanel .mynt-pomo-settings input:not([type="radio"]),
 .pomodoro-panel .mynt-pomo-settings select,
 .pomodoro-panel .mynt-pomo-settings input:not([type="radio"]) {
-	background: rgba(255, 255, 255, 0.9);
-	color: #1b1f24;
+	background: var(--pomo-surface);
+	color: var(--pomo-fg);
 	border: 1px solid rgba(0, 0, 0, 0.18);
 }
 
 #pomodoroPanel .pomodoroNumBtn,
 .pomodoro-panel .pomodoroNumBtn {
-	border: 2px solid var(--darkColor-blue, #1a73e8);
-	color: var(--darkColor-blue, #1a73e8);
+	border: 2px solid var(--pomo-accent);
+	color: var(--pomo-fg);
+}
+
+#pomodoroPanel .pomodoroNumBtn:hover,
+.pomodoro-panel .pomodoroNumBtn:hover {
+	background: var(--pomo-accent);
+	color: var(--pomo-on-accent);
 }
 
 #pomodoroPanel .pomodoroNumberInput input[type="number"],
 .pomodoro-panel .pomodoroNumberInput input[type="number"] {
-	color: var(--darkColor-blue, #1a73e8);
-	border-bottom-color: var(--darkColor-blue, #1a73e8);
+	color: var(--pomo-fg);
+	border-bottom-color: var(--pomo-accent);
 }
 
 /* --------------------------------------------------------------------------
@@ -397,16 +421,20 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
    -------------------------------------------------------------------------- */
 html.black-theme #pomodoroPanel,
 html.black-theme .pomodoro-panel {
-	--pomo-fg: var(--award-surface-dark-text);
-	--pomo-muted: var(--award-surface-dark-muted);
-	--pomo-surface: var(--award-surface-dark-opaque);
-	--pomo-border: var(--award-surface-dark-border);
-	--pomo-scheme: dark;
-	background: var(--award-surface-dark-opaque);
+	/* 同樣壓過 paint() 的 inline 配色，並覆寫上方的淺色強制變數。 */
+	--pomo-fg: #eef2f7 !important;
+	--pomo-muted: #abb5c2 !important;
+	--pomo-surface: #1b1f27 !important;
+	--pomo-border: var(--award-surface-dark-border) !important;
+	--pomo-accent: #b9d7fa !important;
+	--pomo-on-accent: #1b1f27 !important;
+	--pomo-overlay: linear-gradient(rgba(27, 31, 39, 0.96), rgba(27, 31, 39, 0.96)) !important;
+	--pomo-scheme: dark !important;
 	color: var(--award-surface-dark-text);
 	border: 1px solid var(--award-surface-dark-border);
 	box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
-	backdrop-filter: blur(16px);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
 }
 
 html.black-theme #pomodoroPanel .pomodoroPhaseLabel,
@@ -439,7 +467,7 @@ html.black-theme #pomodoroPanel .pomodoroRingBg {
 }
 
 html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
-	background: transparent;
+	background: var(--pomo-overlay);
 }
 
 /* ==========================================================================
