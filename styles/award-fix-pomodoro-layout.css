@@ -31,9 +31,55 @@
 	font-weight: 600;
 }
 
-/* 倒數計時圓環區塊置中與間距 */
+/* 倒數計時圓環區塊置中與定位容器 */
 #pomodoroPanel .pomodoroCircleWrap {
-	margin: 0 auto 8px;
+	position: relative !important;
+	box-sizing: border-box !important;
+	width: 160px !important;
+	height: 160px !important;
+	max-width: 160px !important;
+	max-height: 160px !important;
+	margin: 0 auto 8px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+#pomodoroPanel .pomodoroProgressRing {
+	display: block !important;
+	width: 160px !important;
+	height: 160px !important;
+	max-width: 100% !important;
+	max-height: 100% !important;
+	flex-shrink: 0 !important;
+}
+
+/* 倒數計時數字置中定位（水平與垂直絕對置中於圓環內，大小不超出圓環內徑） */
+#pomodoroPanel .pomodoroTimeDisplay {
+	position: absolute !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	max-width: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	text-align: center !important;
+	transform: none !important;
+	font-size: clamp(26px, 2rem, 32px) !important;
+	font-weight: 600 !important;
+	line-height: 1 !important;
+	font-variant-numeric: tabular-nums !important;
+	font-feature-settings: "tnum" !important;
+	letter-spacing: 0 !important;
+	white-space: nowrap !important;
+	color: var(--pomo-fg, inherit) !important;
 }
 
 /* 輪次進度（如「1 / 4」）與下方任務輸入框間距 */
@@ -305,6 +351,9 @@
 	#pomodoroPanel input {
 		transition: none !important;
 		animation: none !important;
+	}
+	#pomodoroPanel button:active,
+	#pomodoroPanel .pomodoroBtn:active {
 		transform: none !important;
 	}
 }
