@@ -1,1 +1,20 @@
 /* 第 1 輪：排版組合／背景配色浮動按鈕不壓住面板 */
+
+/* 兩顆浮動按鈕（details）原本是 position:fixed，z-index 高達
+   2147483001（#myntProfilesPanel）與 2147483003（#myntAdaptivePanel），
+   收合時仍壓在待辦（z-index:3）、便籤（z-index:100）與番茄鐘
+   （非編輯模式 z-index:2147483002）面板上方，把面板標題擠偏。
+   收合狀態（沒有 open 屬性）降到 z-index:2——與頁面其他角落按鈕
+   （.todoListCont、.bookmark-button、.googleAppsCont 皆為 2）同層；
+   所有面板、抽屜與彈層（z-index ≥3）一律蓋過收合按鈕。
+   兩顆 details 由 JS append 在 body 尾端，z-index 平手時仍排在
+   同層按鈕之後繪製，不會被角落按鈕遮住。 */
+body:not(.mynt-layout-editing) #myntProfilesPanel:not([open]),
+body:not(.mynt-layout-editing) #myntAdaptivePanel:not([open]) {
+    z-index: 2;
+}
+
+/* details[open] 不命中上方選擇器，維持原本的高 z-index，
+   展開內容照常位於最上層可操作。
+   限定 body:not(.mynt-layout-editing)：版面編輯模式的既有分層
+   （overlay 2147483000+、toolbar 2147483010）完全不改變。 */
