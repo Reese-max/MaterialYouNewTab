@@ -1,1 +1,7 @@
 /* 第 5 輪：預設（未自訂）版面在寬螢幕置中 */
+@media (width > 900px) {
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) {
+        --workspace-width: min(720px, 60vw);
+        --workspace-left: calc((100vw - var(--workspace-width)) / 2);
+    }
+}
