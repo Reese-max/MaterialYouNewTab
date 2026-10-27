@@ -1,1 +1,67 @@
 /* 第 5 輪：對話框遮罩、危險按鈕焦點框、便籤標題、待辦完成狀態 */
+
+/* ==========================================================================
+   1. 確認對話框遮罩（僅淺色模式）
+   評審：mynt-dialog.css 的 rgba(0,0,0,0.32) + blur(2px) 太暗太糊，
+   整頁幾乎看不見。改為較輕的 slate 藍黑 rgba(15,23,42,0.28)、
+   模糊降到 1.5px，背景頁面仍看得見。
+   深色情境（黑色主題／手動深色／跟隨系統深色）的 ::backdrop 由
+   award-fix-dark-surfaces.css 的高特異度 :is() 規則提供，這裡用三個
+   :not() 把適用範圍限死在淺色，完全不影響深色遮罩。
+   ========================================================================== */
+html:not(.black-theme):not(:has(.menuBar .themeSegment[data-active="dark"])):not(:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"])) dialog.myntAppDialog::backdrop {
+	background: rgba(15, 23, 42, 0.28);
+	backdrop-filter: blur(1.5px);
+	-webkit-backdrop-filter: blur(1.5px);
+}
+
+/* ==========================================================================
+   2. 危險按鈕的焦點框改成同色系紅
+   評審：mynt-dialog.css 對所有按鈕的 :focus-visible 一律用
+   --darkColor-blue 藍框，與紅色 .is-danger 按鈕撞色。
+   淺色：深紅 --darkerColor-red（#b23535，對淺底對比 ≈7:1）；
+   outline-offset 讓框落在對話框表面上、不貼著紅鈕邊，避免糊在一起。
+   深色（top layer 不被整頁反相，沿用 dark-surfaces 的三類情境選擇器）：
+   改用亮紅 #f28b82，對深色表面 #1b1f27 對比 ≈6:1。
+   ========================================================================== */
+dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visible,
+.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visible {
+	outline: 2px solid var(--darkerColor-red, #b23535);
+	outline-offset: 2px;
+}
+
+:is(
+	html.black-theme,
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visible {
+	outline-color: #f28b82;
+}
+
+/* ==========================================================================
+   3. 便籤標題不換行
+   評審：窄面板時「便籤」被擠成直排「便／籤」。
+   標題設 nowrap + flex-shrink:0，縮放空間全讓給右側
+   .scratchpadHeaderActions（本身 flex-wrap:wrap，會自動折行）；
+   父層的 space-between + align-items:center 不變，維持與工具列對齊。
+   ========================================================================== */
+.scratchpadHeader h2,
+#scratchpadHeading {
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+/* ==========================================================================
+   4. 已完成待辦：刪除線＋略淡文字
+   補回 text-decoration: line-through。actions 檔只對 ::before 與四枚
+   操作鈕設 none（絕對定位不吃文字裝飾傳遞），不影響項目文字；
+   style.css 的 .todolistitem.edit { text-decoration:none !important }
+   仍優先，編輯中不會出現刪除線。
+   文字沿用 award-fix-todo-inputs.css 的 --todo-item-checked-text：
+   淺色 #475569（對勾選底 ≈6.4:1）、黑主題 #94a3b8（≈6.8:1），
+   都比未完成態淡一階但 ≥4.5:1；刪除線跟隨 currentColor 同色。
+   ========================================================================== */
+.todolistitem.checked {
+	color: var(--todo-item-checked-text, #475569);
+	text-decoration: line-through;
+}
