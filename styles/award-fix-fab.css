@@ -5,29 +5,39 @@
    .wallpaperQuickActions 內的桌布圖庫鈕為 40px、right:80px、bottom:22px。
    兩者尺寸不一、垂直錯開，看起來不像同一組。
    統一為 44×44px、底部同對齊距視窗 20px 的水平列，
-   按鈕間距固定 12px（20＋44＋12＝桌布鈕容器 right:76px），
-   hover 放大與 focus-visible 外框也對齊桌布鈕既有語彙。 */
+   按鈕間距固定 12px（20＋44＋12＝桌布鈕容器 right:76px）。
+   視覺語言也統一：原本一顆是 --darkColor-blue 實心藍底、
+   一顆是淡色描邊靶心，改為同款「主題色淡底＋主題深色圖示＋1px 細框」，
+   hover 放大與 focus-visible 外框兩顆一致。 */
 
 #menuButton {
 	inset-inline-end: 20px;
 	bottom: 20px;
 	width: 44px;
 	height: 44px;
-	/* 保留原本三層內圈靶心圖樣，僅在前面補上與桌布鈕相同的浮起陰影 */
+	/* 淡底＋細框與桌布圖庫鈕一致；原本的 6px 淡色外框取消。
+	   靶心圖樣保留三層內圈結構，改用主題深色 --darkerColor-blue 重繪
+	   （1px 邊框下 padding box 為 42px，圈寬依原比例換算） */
+	background-color: var(--accentLightTint-blue);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 45%, transparent);
 	box-shadow:
 		0 2px 8px rgba(0, 0, 0, 0.25),
-		inset 0 0 0 4px var(--darkColor-blue),
-		inset 0 0 0 9.7px var(--accentLightTint-blue),
-		inset 0 0 0 40px var(--darkColor-blue);
+		inset 0 0 0 5px var(--darkerColor-blue),
+		inset 0 0 0 13px var(--accentLightTint-blue),
+		inset 0 0 0 40px var(--darkerColor-blue);
 	transition: transform 0.15s ease;
 }
 
-#menuButton:hover {
+/* hover 與 focus-visible 兩顆一致 */
+#menuButton:hover,
+.wallpaperQuickBtn:hover {
 	transform: scale(1.07);
 }
 
-#menuButton:focus-visible {
-	outline: 2px solid var(--accentLightTint-blue);
+#menuButton:focus-visible,
+.wallpaperQuickBtn:focus-visible {
+	/* 淡底上用主題深色描邊才看得見，對比約 5:1 */
+	outline: 2px solid var(--darkerColor-blue);
 	outline-offset: 2px;
 }
 
@@ -40,6 +50,11 @@
 .wallpaperQuickBtn {
 	width: 44px;
 	height: 44px;
+	/* 與設定鈕同一樣式：原本是 --darkColor-blue 實心藍底無框，
+	   改為主題色淡底、主題深色圖示（svg 用 currentColor）與 1px 細框 */
+	background: var(--accentLightTint-blue);
+	color: var(--darkerColor-blue);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 45%, transparent);
 }
 
 /* ===== 「開啟設定」提示 =====
@@ -51,8 +66,8 @@
    位置在設定鈕左側、以 translateY(-50%) 對鈕心垂直置中；
    因桌布鈕緊鄰其左，右緣需再讓出 12px 間距＋44px 桌布鈕寬＋10px
    呼吸距離（共 66px），提示才不會蓋到任何按鈕。
-   注意 inset-inline-end 的 100% 以扣除 6px border 的 padding box
-   （32px）為基準，故 calc 內要寫 66＋6＝72px。
+   注意 inset-inline-end 的 100% 以扣除 1px border 的 padding box
+   （42px）為基準，故 calc 內寫 68px 即可留出 69px 淨空。
    配色沿用 award-fix-home-actions.css 的 #settingsHintText 高對比規則
    （--darkerColor-blue 實心底＋白字 ≈5.5:1），本檔不更動顏色。 */
 
@@ -60,7 +75,7 @@
 	top: 50%;
 	bottom: auto;
 	inset-inline-start: auto;
-	inset-inline-end: calc(100% + 72px);
+	inset-inline-end: calc(100% + 68px);
 	transform: translateY(-50%);
 	max-width: 200px;
 	opacity: 0;
