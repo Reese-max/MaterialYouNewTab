@@ -165,8 +165,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         layout = committed;
         clearDraft();
         dirty = false;
-        closeEditor();
         announce(t("layoutSavedLocked", "Saved and locked · Stored in this browser only"));
+        closeEditor(true);
         return true;
     }
     function updateControls() {
@@ -503,7 +503,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         warnings=document.createElement('p');warnings.id='myntLayoutWarnings';warnings.setAttribute('role','status');precise.append(row,warnings);
         toolbar.append(top, bottom, precise, status); document.body.append(toolbar);
     }
-    function closeEditor() {
+    function closeEditor(showSaveStatus = false) {
         activeDrag?.cancel();
         editing = false; beforeEdit = null; history = null; selected = null;
         document.body.classList.remove("mynt-layout-editing", "mynt-layout-snap");
@@ -516,8 +516,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         resizeObserver?.disconnect(); resizeObserver = null;
         if (frame !== null) cancelAnimationFrame(frame); frame = null;
         removeEventListener("scroll", scheduleOverlays, true); removeEventListener("resize", scheduleOverlays);
-        editButton.setAttribute("aria-expanded", "false"); dock.hidden = true;
-        (document.getElementById("layoutEditInfo")?.parentElement || dock).append(status);
+        editButton.setAttribute("aria-expanded", "false");
+        const settingsStatusHost = document.getElementById("layoutEditInfo")?.parentElement || dock;
+        const showDockStatus = showSaveStatus && status.textContent.trim();
+        const statusHost = showDockStatus ? dock : settingsStatusHost;
+        dock.hidden = !showDockStatus;
+        statusHost.append(status);
         lockStatus.textContent = layout.locked ? t("layoutPositionsLocked", "Positions locked") : t("layoutEditOff", "Edit mode off");
         applyAll(); document.getElementById("menuButton")?.focus({ preventScroll: true });
         profiles?.finish();

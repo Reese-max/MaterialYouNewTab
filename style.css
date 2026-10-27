@@ -2949,6 +2949,7 @@ body[data-bg="wallpaper"] .aiModeIcon::before {
 
 #enterBtn {
 	height: 40px;
+	min-height: 44px;
 	border-radius: 100px;
 	padding: 0 23px;
 	border: none;
@@ -4256,6 +4257,8 @@ input:checked + .toggle:before {
 	align-items: center;
 	justify-content: space-between;
 	width: 100%;
+	min-height: 44px;
+	box-sizing: border-box;
 	padding: 6px 19px;
 	border: 0;
 	background: transparent;

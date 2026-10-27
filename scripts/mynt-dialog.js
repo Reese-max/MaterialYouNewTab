@@ -78,7 +78,8 @@
             dialog.addEventListener("cancel", () => { dialog.returnValue = "cancel"; });
             document.body.append(dialog);
             dialog.showModal();
-            (input || (focusCancel && cancel ? cancel : ok)).focus();
+            dialog.scrollTop = 0;
+            (input || (focusCancel && cancel ? cancel : ok)).focus({ preventScroll: true });
             if (focusCancel && cancel) dialog.addEventListener("keydown", event => {
                 if (event.key === "Enter" && event.target !== ok && event.target !== cancel) { event.preventDefault(); cancel.focus(); }
             });

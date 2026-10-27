@@ -1,7 +1,7 @@
 /* 今日考古題: collapsed chip bottom-left; expands upward into a compact card. */
 .examDaily { position: fixed; left: 20px; bottom: 20px; z-index: 6; max-width: min(420px, calc(100vw - 40px)); font-size: 0.85rem; color: var(--textColorDark-blue, #1f1f1f); }
 .examDaily[hidden] { display: none; }
-.examDailyChip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 999px; cursor: pointer; font: inherit; color: #fff; background: rgba(0, 0, 0, 0.28); backdrop-filter: blur(8px); }
+#examDailyChip, .examDailyChip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; box-sizing: border-box; padding: 6px 12px; border: 0; border-radius: 999px; cursor: pointer; font: inherit; color: #fff; background: rgba(0, 0, 0, 0.28); backdrop-filter: blur(8px); }
 .examDailyChip:hover, .examDailyChip:focus-visible { background: rgba(0, 0, 0, 0.42); }
 .examDailyPanel { position: absolute; left: 0; bottom: calc(100% + 8px); width: min(420px, calc(100vw - 40px)); max-height: min(60vh, 460px); overflow: auto; box-sizing: border-box; padding: 14px 16px; border-radius: 16px; background: var(--bg-color-blue, #e8f0fe); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); }
 .examDailyPanel[hidden] { display: none; }

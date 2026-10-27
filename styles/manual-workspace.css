@@ -136,7 +136,7 @@ body:is([data-workspace-background="video"],.mynt-manual-workspace) .searchbar-c
 body:is([data-workspace-background="video"],.mynt-manual-workspace) #searchQ { min-width: 0; width: 0; flex: 1 1 0; margin-inline-start: 54px; font-size: 16px; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .searchControls { flex: 0 0 auto; gap: 6px; margin-inline-start: 6px; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .micIcon, body:is([data-workspace-background="video"],.mynt-manual-workspace) .aiModeIcon:not(.hidden) { width: 44px; height: 44px; margin: 0; flex: 0 0 44px; box-sizing: border-box; }
-body:is([data-workspace-background="video"],.mynt-manual-workspace) #enterBtn { flex: 0 0 auto; width: auto; min-width: 68px; height: 42px; padding: 0 18px; white-space: nowrap; line-height: 42px; font-size: 15px; margin: 0 0 0 4px; }
+body:is([data-workspace-background="video"],.mynt-manual-workspace) #enterBtn { flex: 0 0 auto; width: auto; min-width: 68px; min-height: 44px; padding: 0 18px; white-space: nowrap; line-height: 44px; font-size: 15px; margin: 0 0 0 4px; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .aiToolsCont { position: fixed; left: var(--workspace-left); top: calc(53% + 52px); right: auto; width: var(--workspace-width); height: auto; max-width: none; margin: 0; transform: none; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .aiToolsCont .toolsCont { width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 10px !important; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .aiToolsCont .toolsCont a { background: rgba(238,245,255,.94); padding-inline: 14px 18px; height: 42px; border: 1px solid rgba(255,255,255,.6); }

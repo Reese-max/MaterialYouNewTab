@@ -108,11 +108,12 @@ body.mynt-layout-editing .myntLayoutOverlay button:focus-visible { outline: 3px 
 .myntLayoutPrecision label{display:flex;gap:5px;align-items:center}.myntLayoutPrecision input{width:75px;min-height:40px;font:inherit}#myntLayoutWarnings{margin:6px;max-width:100%;overflow-wrap:anywhere}
 #myntLayoutToolbar{max-height:calc(100dvh - 24px);overflow:auto}#myntProfilesPanel :focus-visible{outline:3px solid #3569ac;outline-offset:2px}
 html.myntHighContrast #myntProfilesPanel,html.myntHighContrast #myntProfilesPanel summary,html.myntHighContrast .myntProfilesContent,html.myntHighContrast .myntProfilesContent :is(button,input,select){background:Canvas!important;color:CanvasText!important;border-color:CanvasText!important}
-@media(max-width:480px){#myntProfilesPanel{left:16px;top:16px}}
+@media(max-width:480px){#myntProfilesPanel{left:auto;right:16px;top:16px;width:min(330px,calc(100vw - 32px))}#myntProfilesPanel summary{margin-inline-start:auto}.myntProfilesContent{width:100%;max-width:100%}}
 #myntLayoutToolbar .myntLayoutPrecision input{width:80px;min-width:80px;height:44px;min-height:44px;padding:6px;box-sizing:border-box;border:1px solid #8093a8;border-radius:8px;background:#fff;color:#213851;font:14px system-ui}
 #myntLayoutToolbar .myntLayoutPrecision .myntLayoutToolbarRow{flex-wrap:wrap}
 
 #myntEditorGuide {flex-basis:100%;font-size:.85rem;}
+#myntEditorGuide > summary, .myntLayoutPrecision > summary { min-height:44px; box-sizing:border-box; padding:8px; }
 #myntEditorGuide p {max-width:62ch;line-height:1.5;}
 #myntDraftRecovery {max-width:320px;font-size:.85rem;padding:8px;}
 #myntDraftRecovery button {min-height:44px;}
@@ -270,4 +271,22 @@ html.myntHighContrast #myntDraftRecovery button {
         width: min(320px, calc(100vw - 32px));
         max-width: calc(100vw - 32px);
     }
+}
+
+@media (max-width: 380px) {
+    body.mynt-layout-editing #myntLayoutToolbar {
+        max-height: 50dvh;
+        overflow-y: auto;
+        flex-wrap: nowrap;
+        padding: 6px;
+        gap: 4px;
+    }
+    #myntLayoutToolbar > .myntLayoutToolbarRow:first-child { order: 0; }
+    #myntLayoutToolbar > .myntLayoutToolbarRow:nth-child(2) { order: 2; }
+    #myntLayoutToolbar .myntLayoutToolbarRow { gap: 4px; }
+    #myntLayoutToolbar button, #myntLayoutToolbar label { padding: 6px 8px; }
+    #myntLayoutToolbar .myntLayoutHelp { padding-top: 4px; }
+    #myntLayoutToolbar > #myntLayoutSaveStatus { order: 1; }
+    #myntLayoutToolbar > .myntLayoutPrecision,
+    #myntLayoutToolbar > #myntEditorGuide { order: 3; }
 }

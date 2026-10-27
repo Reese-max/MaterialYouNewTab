@@ -248,7 +248,7 @@ test('Narrow editor entry keeps a 44px second-row control and yields to open uti
     assert.match(css, /#myntLayoutSaveDock #myntLayoutEdit\s*\{\s*min-height: 44px/);
 });
 
-test('Idle layout dock stays hidden; edit, save and cancel preserve the hidden idle state', () => {
+test('Idle layout dock stays hidden; save exposes confirmation while cancel preserves hidden idle state', () => {
     const app = fixture(), bytes = saved(app), rect = rectangle(app);
     assert.equal(app.id('myntLayoutSaveDock').hidden, true);
     app.api.setEditing(true);
@@ -260,7 +260,9 @@ test('Idle layout dock stays hidden; edit, save and cancel preserve the hidden i
     app.api.setEditing(true); assert.equal(app.id('myntLayoutSave').disabled,true);
     const beforeSaveWrites=app.writes();app.id('myntLayoutSave').click();assert.equal(app.writes(),beforeSaveWrites);
     app.handle().emit('keydown',{key:'ArrowRight'});app.id('myntLayoutSave').click();
-    assert.equal(app.id('myntLayoutSaveDock').hidden, true);
+    assert.equal(app.id('myntLayoutSaveDock').hidden, false);
+    assert.equal(app.id('myntLayoutSaveStatus').parentNode, app.id('myntLayoutSaveDock'));
+    assert.notEqual(app.id('myntLayoutSaveStatus').textContent, '');
     assert.equal(app.id('myntLayoutToolbar'), null);
 });
 test('Pending draft remains visible and discard hides the recovery-only dock without writes', () => {
