@@ -1,1 +1,161 @@
 /* 第 3 輪：待辦項目操作圖示、文字斷行與已完成狀態 */
+
+/* ==========================================================================
+   1. 四個操作鈕：32×32px 可點範圍、等距排列、視覺圖示約 18–20px
+   原因：svgs/ 下六枚圖示全是 #ffffff，第二輪改成淺色表面後整個隱形。
+   鉛筆／釘選改用 CSS mask 取形狀、用 --todo-icon-color 上色，
+   顏色 token 沿用 award-fix-todo-inputs.css 的定義，深淺主題自動切換。
+   ========================================================================== */
+
+.todolistitem .todoremovebtn,
+.todolistitem .todopinbtn,
+.todolistitem .todoeditbtn,
+.todolistitem .todoDaidaiBtn {
+	width: 32px;
+	height: 32px;
+	opacity: 1;
+	font-size: 20px; /* × 字元的視覺大小 */
+	line-height: 1;
+	transition: color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* 右側四鈕以 32px 節距排列（呆 → 鉛筆 → 釘選 → ×），並補足右側留白 */
+.todolistitem .todoremovebtn { inset-inline-end: 4px; }
+.todolistitem .todopinbtn { inset-inline-end: 36px; }
+.todolistitem .todoeditbtn { inset-inline-end: 68px; }
+.todolistitem .todoDaidaiBtn { inset-inline-end: 100px; }
+
+.todolistitem {
+	padding-inline-end: 136px; /* 100 + 32 + 4px 緩衝，文字不會伸到圖示底下 */
+	min-width: 0; /* .todolist 是 flex 欄容器，允許項目隨空間收窄 */
+}
+
+/* ==========================================================================
+   2. 鉛筆／釘選：白色 SVG 背景 → mask 形狀 + 變數填色（約 18px 視覺）
+   ========================================================================== */
+
+.todolistitem .todopinbtn,
+.todolistitem .todoeditbtn {
+	background-image: none; /* 移除原本看不見的白色 SVG 背景 */
+	background-color: var(--todo-icon-color); /* 遮罩內實際顯示的顏色 */
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-size: 18px 18px;
+	mask-size: 18px 18px;
+}
+
+.todolistitem .todoeditbtn {
+	-webkit-mask-image: url("../svgs/todo-edit-do.svg");
+	mask-image: url("../svgs/todo-edit-do.svg");
+}
+
+.todolistitem .todopinbtn {
+	-webkit-mask-image: url("../svgs/todo-pin-stroke.svg");
+	mask-image: url("../svgs/todo-pin-stroke.svg");
+}
+
+.todolistitem.edit .todoeditbtn {
+	-webkit-mask-image: url("../svgs/todo-edit-done.svg");
+	mask-image: url("../svgs/todo-edit-done.svg");
+}
+
+.todolistitem.pinned .todopinbtn {
+	-webkit-mask-image: url("../svgs/todo-pin-fill.svg");
+	mask-image: url("../svgs/todo-pin-fill.svg");
+	background-color: var(--todo-icon-hover-color); /* 已釘選＝啟用態，用較深色 */
+}
+
+/* 遮罩圖示的懸浮要改 background-color（color 對 mask 無效） */
+.todolistitem .todopinbtn:hover,
+.todolistitem .todoeditbtn:hover {
+	background-color: var(--todo-icon-hover-color);
+}
+
+/* 已完成列的操作圖示：上一輪降到 0.65 後對比低於 3:1，補回 0.8 */
+.todolistitem.checked .todoremovebtn,
+.todolistitem.checked .todopinbtn,
+.todolistitem.checked .todoeditbtn,
+.todolistitem.checked .todoDaidaiBtn {
+	opacity: 0.8;
+}
+
+/* ==========================================================================
+   3. 「呆」徽章：一致的圓形小標籤（22px 視覺 + 32×32 點擊範圍）
+   透明 border 是點擊區的一部分；background-clip 把底色限縮在內圈。
+   ========================================================================== */
+
+.todolistitem .todoDaidaiBtn {
+	padding: 0;
+	border: 5px solid transparent;
+	border-radius: 999px;
+	background-color: color-mix(in srgb, var(--todo-icon-hover-color) 15%, transparent);
+	background-clip: padding-box; /* 視覺圓徽 22px，外圈 5px 透明可點 */
+	color: var(--todo-icon-hover-color); /* 11px 小字用較深 token 保對比 */
+	font-size: 11px;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.todolistitem .todoDaidaiBtn:hover {
+	background-color: color-mix(in srgb, var(--todo-icon-hover-color) 26%, transparent);
+	/* 上游 hover 會畫 --whitishColor 白框（淺底看不見），改成可見的深色框 */
+	outline: 2px solid var(--todo-icon-hover-color);
+	outline-offset: 1px;
+}
+
+/* 鍵盤焦點框（原本用 --whitishColor 畫框，淺色底上看不到，換成深色 token） */
+.todolistitem .todoremovebtn:focus-visible,
+.todolistitem .todopinbtn:focus-visible,
+.todolistitem .todoeditbtn:focus-visible,
+.todolistitem .todoDaidaiBtn:focus-visible {
+	outline: 2px solid var(--todo-icon-hover-color);
+	outline-offset: 1px;
+}
+
+/* ==========================================================================
+   4. 任務文字斷行：避免「一／步」孤字
+   任務文字是 <li> 的直接文字節點（匿名 flex item），選不到也設不了
+   min-width，靠 overflow-wrap 讓它能收窄、text-wrap: pretty 改善斷行品質
+   （不支援的引擎自動退回一般斷行，屬漸進增強）。
+   ========================================================================== */
+
+.todolistitem {
+	word-break: normal; /* 還原 break-word 對拉丁字的任意斷點 */
+	overflow-wrap: break-word; /* 長字串仍會換行、不溢出 */
+	text-wrap: pretty; /* 讓瀏覽器避開孤字斷行 */
+	line-height: 1.45;
+}
+
+/* ==========================================================================
+   5. 已完成狀態：勾選圖示要清楚可見
+   todo-check-fill.svg 是純白實心勾，在淺色已完成表面直接隱形，
+   評審看到的「被刪除線蓋住」其實是白勾消失只剩刪除線。
+   淺色版用濾鏡把白勾染成主題深色；刪除線本就只畫在文字節點上
+   （::before 與四鈕皆絕對定位，不在裝飾傳遞範圍內），再明確補一刀防回歸。
+   ========================================================================== */
+
+:root:not(.black-theme) .todolistitem.checked::before {
+	filter: brightness(0.55) sepia(1) hue-rotate(195deg) saturate(3); /* 白勾 → 主題深藍 */
+	opacity: 1;
+}
+
+/* 覆蓋上一輪的 0.75；黑主題深底上白勾本身可見，同樣補回滿透明度 */
+.todolistitem.checked::before {
+	opacity: 1;
+}
+
+.todolistitem.checked::before,
+.todolistitem.checked .todoremovebtn,
+.todolistitem.checked .todopinbtn,
+.todolistitem.checked .todoeditbtn,
+.todolistitem.checked .todoDaidaiBtn {
+	text-decoration: none;
+}
+
+/* 編輯中狀態：上游 .todolistitem.edit 設了 color:white，
+   在第二輪的淺色表面上會讓編輯文字隱形，改回文字 token */
+.todolistitem.edit {
+	color: var(--todo-item-text);
+}
