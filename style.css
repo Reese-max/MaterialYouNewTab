@@ -9140,6 +9140,7 @@ body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayo
  visibility: hidden !important; pointer-events: none !important;
 }
 #menuCont > .topDiv { height:88px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 20px; box-sizing:border-box; }
+#menuCont > .topDiv::after { inset-inline-start:0; }
 #menuCont > .topDiv h1 { position:static; transform:none; margin:0; font-size:1.25rem; line-height:1.3; }
 #menuCont > .optCont { height:calc(100% - 88px); }
 #menuCont #menuCloseButton { position:static; width:44px; height:44px; min-width:44px; max-width:44px; flex:0 0 44px; margin:0; padding:0; border:0; justify-content:center; }
@@ -9155,6 +9156,58 @@ body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayo
 
 #menuBar #menuCont { max-width:100%; }
 @media (max-width:500px) { #menuBar { --gap:16px; } #menuCont > .topDiv { padding-inline:16px; } }
+@media (max-width:500px) {
+	#menuBar #menuCont,
+	#menuBar #optCont {
+		transition-duration: 0.3s;
+	}
+}
+
+/* Keep the settings surface inside a narrow viewport, including long zh-TW copy. */
+#menuBar #menuCont,
+#menuBar #optCont,
+#menuBar #optCont > .page,
+#menuBar #optCont .toggleTextsCont,
+#menuBar #optCont .section,
+#menuBar #optCont .sectionOuter,
+#menuBar #optCont .sectionInner,
+#menuBar #optCont .sectionInner .ttcont {
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+#menuBar #optCont .sectionInner .texts {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+#menuBar #optCont .sectionInner .settingsActionBtn {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+#menuBar .appearanceSection .themingStuff {
+	height: auto;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+#menuBar .appearanceSection .themingStuff .btn {
+	flex: 0 0 50px;
+	height: 50px;
+}
+
+#menuBar .appearanceSection .colorsContainer {
+	max-width: 100%;
+}
+
+.settingsGroupTabs button {
+	min-height: 44px;
+	line-height: 1.25;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
 
 /* The gallery keeps its header reachable while its own content scrolls. */
 #wallpaperGalleryDialog { overflow:auto; overscroll-behavior:contain; }

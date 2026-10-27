@@ -38,4 +38,7 @@ assert.match(core, /#dailyFocusToggle\s*\{[\s\S]*min-width: 44px;[\s\S]*min-heig
 assert.match(core, /\.wallpaperQuickBtn\s*\{[\s\S]*min-width: 44px;[\s\S]*min-height: 44px/);
 assert.match(core, /#menuButton\s*\{[\s\S]*min-width: 44px;[\s\S]*min-height: 44px/);
 assert.match(manualWorkspace, /\.micIcon,[\s\S]*\.aiModeIcon(?::not\(\.hidden\))? \{ width: 44px; height: 44px;[\s\S]*flex: 0 0 44px/);
+assert.match(core, /#menuBar #menuCont,[\s\S]*?#menuBar #optCont > \.page,[\s\S]*?box-sizing: border-box;[\s\S]*?min-width: 0;/);
+assert.match(core, /#menuBar #optCont \.sectionInner \.texts[\s\S]*?overflow-wrap: anywhere;/);
+assert.match(core, /\.settingsGroupTabs button[\s\S]*?min-height: 44px;/);
 console.log('USABILITY_STYLE_CONTRACTS_OK (source-level, not visual verification)');
