@@ -1,1 +1,85 @@
 /* 第 6 輪：設定選單標題列、關閉鈕焦點、停用文字對比、捲動提示 */
+
+/* ===== 1. 標題列與內容區銜接 =====
+   原本 .topDiv 用 --bg-color-blue、::after 再疊一條帶圓角的
+   --accentLightTint-blue 色條，兩色交接處在圓角位置露出缺角。
+   改為標題列與內容區共用同一表面色，接縫改以一條細分隔線收邊。 */
+#menuCont > .topDiv {
+	background-color: var(--accentLightTint-blue);
+	border-bottom: 1px solid color-mix(in srgb, var(--textColorDark-blue) 12%, transparent);
+}
+
+/* 移除原先用來假裝卡片圓角的 ::after 色條，缺角隨之消失 */
+#menuCont > .topDiv::after {
+	content: none;
+}
+
+/* 選單左上角外側的內凹圓角 SVG 填色跟隨標題列新表面色 */
+#menuCont .topRounder path.lessDark {
+	fill: var(--accentLightTint-blue);
+}
+
+/* ===== 2. 關閉鈕焦點框 =====
+   開啟選單時 JS 會對 #menuCloseButton 執行 .focus()，焦點框變成常駐。
+   只在 :focus-visible（鍵盤操作）時顯示焦點框，滑鼠／程式焦點不顯示。 */
+#menuCont #menuCloseButton:focus:not(:focus-visible) {
+	outline: none;
+}
+
+#menuCont #menuCloseButton:focus-visible {
+	outline: 2px solid var(--darkColor-blue);
+	outline-offset: 3px;
+}
+
+/* ===== 3. 停用狀態設定列對比 =====
+   原本 .ttcont.inactive 整列 opacity:0.5，文字對比降到約 2.8:1。
+   改為文字僅略淡（維持 ≥4.5:1），停用感改由開關與輸入框表達。 */
+#menuCont .ttcont.inactive {
+	opacity: 1;
+}
+
+#menuCont .ttcont.inactive .bigText {
+	opacity: 0.9; /* 有效對比約 5.6:1，仍保有略淡的停用感 */
+}
+
+#menuCont .ttcont.inactive .infoText {
+	opacity: 0.88; /* 有效對比約 5.1:1 */
+}
+
+/* 停用列的開關整體降不透明度，作為主要停用視覺線索 */
+#menuCont .ttcont.inactive .switch {
+	opacity: 0.45;
+}
+
+/* 停用的文字輸入框（如問候語姓名）：底色微沉、文字維持 ≥4.5:1 */
+#menuCont .ttcont input:disabled {
+	opacity: 1;
+	color: color-mix(in srgb, var(--textColorDark-blue) 88%, var(--whitishColor-blue));
+	background-color: color-mix(in srgb, var(--whitishColor-blue) 70%, var(--accentLightTint-blue));
+}
+
+/* ===== 4. 選單捲軸可見性 =====
+   原本 6px 透明軌道捲軸不易察覺；加寬並給淡主題色軌道與把手。 */
+#menuCont .optCont {
+	scrollbar-width: thin;
+	scrollbar-color:
+		color-mix(in srgb, var(--darkColor-blue) 55%, transparent)
+		color-mix(in srgb, var(--darkColor-blue) 10%, transparent);
+}
+
+#menuCont .optCont::-webkit-scrollbar {
+	width: 10px;
+}
+
+#menuCont .optCont::-webkit-scrollbar-track {
+	background: color-mix(in srgb, var(--darkColor-blue) 10%, transparent);
+}
+
+#menuCont .optCont::-webkit-scrollbar-thumb {
+	background: color-mix(in srgb, var(--darkColor-blue) 55%, transparent);
+	border-radius: 5px;
+}
+
+#menuCont .optCont::-webkit-scrollbar-thumb:hover {
+	background: var(--darkColor-blue);
+}
