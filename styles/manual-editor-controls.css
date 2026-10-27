@@ -167,3 +167,107 @@ html.myntHighContrast #myntLayoutToolbar :is(button, input, select) { background
 /* Theme and accessibility overrides also apply to the narrow feedback pill. */
 :is(.black-theme, .dark-theme) #myntLayoutSaveDock #myntLayoutSaveStatus:not(:empty) { background: #1f2630; color: #eef1f5; }
 html.myntHighContrast #myntLayoutSaveDock #myntLayoutSaveStatus:not(:empty) { background: Canvas; color: CanvasText; }
+
+/* Save feedback is an intentional status surface, not a low-contrast hint.
+   The status is moved beside the settings copy when the editor is closed and
+   is appended to the toolbar while editing. */
+.ttcont:has(#layoutEditCheckbox) .texts { min-width: 0; flex: 1 1 0; }
+#layoutEditInfo + #myntLayoutSaveStatus,
+#myntLayoutToolbar > #myntLayoutSaveStatus {
+    display: inline-block;
+    box-sizing: border-box;
+    max-width: 100%;
+    margin-top: 6px;
+    padding: 4px 8px;
+    border: 1px solid color-mix(in srgb, var(--textColorDark-blue, #213851) 22%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--textColorDark-blue, #213851) 10%, transparent);
+    color: var(--textColorDark-blue, #213851);
+    font-size: .8125rem;
+    font-weight: 600;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+#myntDraftRecovery {
+    width: min(100%, 320px);
+    box-sizing: border-box;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--bg-color-blue, #eef5ff) 86%, transparent);
+    color: inherit;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+#myntDraftRecovery p { margin: 0 0 8px; }
+#myntDraftRecovery button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--darkColor-blue, #3569ac) 12%, transparent);
+    color: inherit;
+    font: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+#myntDraftRecovery button + button { margin-inline-start: 6px; }
+
+:is(.black-theme, .dark-theme) #layoutEditInfo + #myntLayoutSaveStatus,
+:is(.black-theme, .dark-theme) #myntLayoutToolbar > #myntLayoutSaveStatus {
+    border-color: #8191a7;
+    background: #303d50;
+    color: #eef1f5;
+}
+:is(.black-theme, .dark-theme) #myntDraftRecovery {
+    border-color: #8191a7;
+    background: #283443;
+    color: #eef1f5;
+}
+:is(.black-theme, .dark-theme) #myntLayoutSaveDock:has(#myntDraftRecovery) {
+    background: #1f2630;
+    border-color: #8191a7;
+}
+:is(.black-theme, .dark-theme) #myntDraftRecovery button {
+    border-color: #8191a7;
+    background: #35455a;
+    color: #eef1f5;
+}
+
+html.myntHighContrast #layoutEditInfo + #myntLayoutSaveStatus,
+html.myntHighContrast #myntLayoutToolbar > #myntLayoutSaveStatus,
+html.myntHighContrast #myntDraftRecovery,
+html.myntHighContrast #myntLayoutSaveDock:has(#myntDraftRecovery),
+html.myntHighContrast #myntDraftRecovery button {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+}
+
+@media (max-width: 480px) {
+    #myntLayoutToolbar > #myntLayoutSaveStatus {
+        width: auto;
+        max-width: 100%;
+    }
+    #myntLayoutToolbar .myntLayoutToolbarRow,
+    #myntLayoutToolbar strong,
+    #myntLayoutToolbar #myntLayoutState {
+        min-width: 0;
+        max-width: 100%;
+    }
+    #myntLayoutToolbar #myntLayoutState { overflow-wrap: anywhere; white-space: normal; }
+    #myntLayoutSaveDock:has(#myntDraftRecovery) {
+        width: min(320px, calc(100vw - 32px));
+        max-width: calc(100vw - 32px);
+    }
+}
