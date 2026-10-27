@@ -1,1 +1,26 @@
 /* 第 4 輪：面板開啟時隱藏浮動按鈕、面板標題間距 */
+
+/* 待辦（.todo-container 有 backdrop-filter: blur(2px)＋半透明底）、
+   便籤與番茄鐘面板打開時，收合的浮動按鈕雖已被壓到下層
+   （z-index:2，見 award-fix-floating.css），模糊殘影仍透出面板邊緣。
+   三個面板都用 inline style 切換 display（grid／flex／block ↔ none，
+   由 el.style.display 寫入，序列化後一律是 "display: none;"），
+   因此用 :not([style*="display: none"]) 判定面板處於顯示狀態。
+   命中時把「未展開」的兩顆 details 設為 visibility:hidden＋
+   pointer-events:none，佔位保留（皆為 position:fixed，不影響版面），
+   面板關閉後自動恢復；已展開的 details[open] 不命中，照常顯示。 */
+body:not(.mynt-layout-editing):has(#todoContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
+body:not(.mynt-layout-editing):has(#scratchpadContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
+body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]) {
+    visibility: hidden;
+    pointer-events: none;
+}
+/* 同上輪一貫限定 body:not(.mynt-layout-editing)：版面編輯模式的
+   分層與操作完全不改變。 */
+
+/* 全域 * { margin: 0 } 讓「待辦清單」標題零邊距，貼在面板上緣、
+   與上方的功能圖示（待辦／便籤／番茄鐘按鈕列）幾乎相連。
+   面板本身 padding-top 已 12px，再加 12px 間距把標題往下推開。 */
+#todoListHeading {
+    margin-top: 12px;
+}
