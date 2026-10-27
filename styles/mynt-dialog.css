@@ -30,3 +30,31 @@
 .myntAppDialogTitle { overflow-wrap: anywhere; line-height: 1.5; }
 .myntAppDialogInput { min-height: 44px; }
 html.myntHighContrast .myntAppDialog, html.myntHighContrast .myntAppDialogInput, html.myntHighContrast .myntAppDialogActions button { background: Canvas; color: CanvasText; border: 1px solid CanvasText; }
+
+/* Keep generated app dialogs readable when an unbroken URL or a long zh-TW
+   message is shown in a narrow viewport. */
+.myntAppDialog { scrollbar-gutter: stable; overscroll-behavior: contain; }
+.myntAppDialog > form { min-width: 0; }
+.myntAppDialogMessage, .myntDialogPreviewFallback { word-break: break-word; }
+.myntAppDialogActions { min-width: 0; align-items: stretch; }
+.myntAppDialogActions button { flex: 0 1 auto; word-break: break-word; }
+
+.black-theme .myntAppDialog, .dark-theme .myntAppDialog {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.62);
+}
+.black-theme .myntAppDialogInput, .dark-theme .myntAppDialogInput {
+    border-color: rgba(255, 255, 255, 0.34);
+    color: #eef1f5;
+}
+
+html.myntHighContrast .myntAppDialogActions button:focus-visible,
+html.myntHighContrast .myntAppDialogInput:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+}
+
+@media (max-width: 380px) {
+    .myntAppDialog { padding: 18px 16px 14px; }
+    .myntAppDialogActions { gap: 6px; }
+}

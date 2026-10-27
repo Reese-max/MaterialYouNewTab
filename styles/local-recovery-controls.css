@@ -11,6 +11,7 @@
 }
 .myntRecoveryControl[hidden], .myntRecoveryUndo[hidden] { display: none; }
 .myntRecoveryUndo {
+    flex: 0 1 auto;
     border: 1px solid currentColor;
     border-radius: 18px;
     padding: 8px 12px;
@@ -30,3 +31,24 @@
 .myntRecoveryUndo:disabled { cursor: progress; opacity: 0.7; }
 .myntRecoveryStatus { font-size: 0.875rem; line-height: 1.4; overflow-wrap: anywhere; }
 .myntRecoveryStatus:empty { display: none; }
+
+/* A status can be much longer than the action label in zh-TW. Let it move to
+   its own line instead of squeezing or clipping the recovery action. */
+.myntRecoveryStatus { flex: 1 1 12rem; min-width: 0; }
+
+:is(.black-theme, .dark-theme) .myntRecoveryUndo {
+    background: #303d50;
+    color: #eef1f5;
+    border-color: #aebdd0;
+}
+
+html.myntHighContrast .myntRecoveryUndo {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+}
+
+@media (max-width: 380px) {
+    .myntRecoveryControl { align-items: stretch; gap: 6px 8px; }
+    .myntRecoveryStatus { flex-basis: 100%; }
+}
