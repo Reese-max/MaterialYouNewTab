@@ -1,1 +1,256 @@
-/* 第 1 輪：對話框、番茄鐘、便籤的深色模式與不透明表面 */
+/* ==========================================================================
+   第 1 輪修復：對話框、番茄鐘、便籤的深色模式與不透明表面樣式
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   表面與文字顏色變數定義
+   依規格在 :root 與 html.black-theme 各定義一套
+   不透明度至少 0.94，且深色文字對比度皆高於 4.5:1
+   -------------------------------------------------------------------------- */
+:root {
+	/* 淺色表面（不透明度 0.96，防止首頁內容透出） */
+	--award-surface-light-opaque: rgba(255, 255, 255, 0.96);
+	--award-surface-light-elevated: rgba(245, 247, 250, 0.96);
+	--award-surface-light-text: var(--textColorDark-blue, #1b3041);
+	--award-surface-light-muted: #536471;
+	--award-surface-light-border: rgba(0, 0, 0, 0.12);
+}
+
+html.black-theme {
+	/* 深色表面（不透明度 0.96，防止首頁內容透出） */
+	--award-surface-dark-opaque: rgba(27, 31, 39, 0.96);
+	--award-surface-dark-elevated: rgba(34, 39, 49, 0.96);
+	--award-surface-dark-text: #eef2f7;
+	--award-surface-dark-muted: #abb5c2;
+	--award-surface-dark-border: rgba(255, 255, 255, 0.14);
+}
+
+/* ==========================================================================
+   1. 對話框 (.myntAppDialog / .myntDialog)
+   ========================================================================== */
+
+/* 淺色模式：提升背景不透明度至 0.96，避免首頁文字透出 */
+dialog.myntAppDialog,
+dialog.myntDialog,
+.myntAppDialog,
+.myntDialog {
+	background: var(--award-surface-light-opaque);
+	color: var(--award-surface-light-text);
+	border: 1px solid var(--award-surface-light-border);
+	box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+	backdrop-filter: blur(16px);
+}
+
+dialog.myntAppDialog .myntAppDialogInput,
+.myntAppDialog .myntAppDialogInput {
+	background: rgba(255, 255, 255, 0.95);
+	color: inherit;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+dialog.myntAppDialog .myntAppDialogActions button,
+.myntAppDialog .myntAppDialogActions button {
+	background: rgba(0, 0, 0, 0.08);
+	color: inherit;
+}
+
+dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
+.myntAppDialog .myntAppDialogActions .myntAppDialogOk {
+	background: var(--darkColor-blue, #4382ec);
+	color: #ffffff;
+}
+
+/* 深色模式：使用高優先權選擇器確保覆蓋既有淺藍底規則，並設定深色表面與對比文字 */
+html.black-theme dialog.myntAppDialog,
+html.black-theme dialog.myntDialog,
+html.black-theme .myntAppDialog,
+html.black-theme .myntDialog {
+	background: var(--award-surface-dark-opaque);
+	color: var(--award-surface-dark-text);
+	border: 1px solid var(--award-surface-dark-border);
+	box-shadow: 0 28px 90px rgba(0, 0, 0, 0.7);
+	backdrop-filter: blur(16px);
+}
+
+html.black-theme dialog.myntAppDialog .myntAppDialogTitle,
+html.black-theme .myntAppDialog .myntAppDialogTitle {
+	color: var(--award-surface-dark-text);
+}
+
+html.black-theme dialog.myntAppDialog .myntAppDialogMessage,
+html.black-theme .myntAppDialog .myntAppDialogMessage {
+	color: var(--award-surface-dark-muted);
+}
+
+/* 深色模式對話框輸入框 */
+html.black-theme dialog.myntAppDialog .myntAppDialogInput,
+html.black-theme .myntAppDialog .myntAppDialogInput {
+	background: rgba(0, 0, 0, 0.45);
+	color: var(--award-surface-dark-text);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+html.black-theme dialog.myntAppDialog .myntAppDialogInput:focus-visible,
+html.black-theme .myntAppDialog .myntAppDialogInput:focus-visible {
+	border-color: var(--darkColor-blue, #4382ec);
+	outline: 2px solid var(--darkColor-blue, #4382ec);
+}
+
+/* 深色模式對話框動作按鈕 */
+html.black-theme dialog.myntAppDialog .myntAppDialogActions button,
+html.black-theme .myntAppDialog .myntAppDialogActions button {
+	background: rgba(255, 255, 255, 0.12);
+	color: var(--award-surface-dark-text);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.black-theme dialog.myntAppDialog .myntAppDialogActions button:hover,
+html.black-theme .myntAppDialog .myntAppDialogActions button:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+html.black-theme dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
+html.black-theme .myntAppDialog .myntAppDialogActions .myntAppDialogOk {
+	background: var(--darkColor-blue, #4382ec);
+	color: #ffffff;
+	border: none;
+}
+
+html.black-theme dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger,
+html.black-theme .myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger {
+	background: #d93025;
+	color: #ffffff;
+}
+
+/* ==========================================================================
+   2. 番茄鐘面板 (#pomodoroPanel)
+   ========================================================================== */
+
+/* 淺色模式：不透明度至少 0.94，防止底下首頁文字透出 */
+#pomodoroPanel,
+.pomodoro-panel {
+	background: var(--award-surface-light-opaque);
+	color: var(--award-surface-light-text);
+	border: 1px solid var(--award-surface-light-border);
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
+	backdrop-filter: blur(16px);
+}
+
+/* 深色模式：使用高優先權選擇器替換為深色表面與淺色文字（對比度 > 4.5:1） */
+html.black-theme #pomodoroPanel,
+html.black-theme .pomodoro-panel {
+	--pomo-fg: var(--award-surface-dark-text);
+	--pomo-muted: var(--award-surface-dark-muted);
+	--pomo-surface: var(--award-surface-dark-opaque);
+	--pomo-border: var(--award-surface-dark-border);
+	--pomo-scheme: dark;
+	background: var(--award-surface-dark-opaque);
+	color: var(--award-surface-dark-text);
+	border: 1px solid var(--award-surface-dark-border);
+	box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(16px);
+}
+
+/* 番茄鐘內部文字對比增強 */
+html.black-theme #pomodoroPanel .pomodoroPhaseLabel,
+html.black-theme #pomodoroPanel .pomodoroTimeDisplay,
+html.black-theme #pomodoroPanel #pomodoroStatsBtn,
+html.black-theme #pomodoroPanel .mynt-pomo-settings summary {
+	color: var(--award-surface-dark-text);
+}
+
+html.black-theme #pomodoroPanel .pomodoroRoundDisplay,
+html.black-theme #pomodoroPanel .pomodoroSessionsToday,
+html.black-theme #pomodoroPanel .pomodoroFocusSummary,
+html.black-theme #pomodoroPanel .mynt-pomo-note {
+	color: var(--award-surface-dark-muted);
+}
+
+/* 深色模式番茄鐘按鈕、選單與數字輸入框 */
+html.black-theme #pomodoroPanel .mynt-pomo-settings button,
+html.black-theme #pomodoroPanel .mynt-pomo-float button,
+html.black-theme #pomodoroPanel .mynt-pomo-settings select,
+html.black-theme #pomodoroPanel .mynt-pomo-settings input:not([type="radio"]),
+html.black-theme #pomodoroPanel .pomodoroNumBtn,
+html.black-theme #pomodoroPanel .pomodoroNumberInput input[type="number"] {
+	background-color: var(--award-surface-dark-elevated);
+	color: var(--award-surface-dark-text);
+	border: 1px solid var(--award-surface-dark-border);
+}
+
+html.black-theme #pomodoroPanel .pomodoroRingBg {
+	stroke: rgba(255, 255, 255, 0.12);
+}
+
+/* 清除深色模式下番茄鐘過時的疊加背景，確保純淨表面 */
+html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
+	background: transparent;
+}
+
+/* ==========================================================================
+   3. 便籤面板 (#scratchpadContainer)
+   ========================================================================== */
+
+/* 淺色模式：不透明度至少 0.94，防止底下首頁文字透出 */
+#scratchpadContainer,
+.scratchpadContainer {
+	background: var(--award-surface-light-opaque);
+	color: var(--award-surface-light-text);
+	border: 1px solid var(--award-surface-light-border);
+	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15);
+	backdrop-filter: blur(16px);
+}
+
+#scratchpadContainer textarea,
+#scratchpadContainer input,
+#scratchpadContainer select {
+	background: rgba(255, 255, 255, 0.92);
+	color: inherit;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* 深色模式：深色表面、淺色文字、不透出底下內容 */
+html.black-theme #scratchpadContainer,
+html.black-theme .scratchpadContainer {
+	background: var(--award-surface-dark-opaque);
+	color: var(--award-surface-dark-text);
+	border: 1px solid var(--award-surface-dark-border);
+	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+	backdrop-filter: blur(16px);
+}
+
+/* 深色模式便籤編輯區與輸入元件 */
+html.black-theme #scratchpadContainer textarea,
+html.black-theme #scratchpadContainer input,
+html.black-theme #scratchpadContainer select,
+html.black-theme #scratchpadContainer [contenteditable="true"] {
+	background-color: rgba(0, 0, 0, 0.35);
+	color: var(--award-surface-dark-text);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* 深色模式便籤操作按鈕 */
+html.black-theme #scratchpadContainer button {
+	background-color: rgba(255, 255, 255, 0.12);
+	color: var(--award-surface-dark-text);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.black-theme #scratchpadContainer button:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   4. 動畫偏好設定（prefers-reduced-motion）
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+	dialog.myntAppDialog,
+	dialog.myntDialog,
+	#pomodoroPanel,
+	.pomodoro-panel,
+	#scratchpadContainer,
+	.scratchpadContainer {
+		transition: none;
+		animation: none;
+	}
+}
