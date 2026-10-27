@@ -14,6 +14,8 @@
 
 /* Separate scan targets without changing component visibility or saved geometry. */
 #myntComponentManager label { box-sizing: border-box; padding: 8px; border-radius: 10px; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+#myntComponentManager label { min-width: 0; }
+#myntComponentManager label > span { min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
 #myntComponentManager .mynt-component-list { gap: 8px; }
 #myntComponentManager label:has(input:checked) { background: color-mix(in srgb, currentColor 8%, transparent); }
 #myntComponentManager label:focus-within { outline: 2px solid currentColor; outline-offset: 2px; }
