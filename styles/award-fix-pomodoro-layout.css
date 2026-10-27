@@ -1,45 +1,74 @@
 /* ==========================================================================
-   第 3 輪修復：番茄鐘面板排版、垂直節奏、次要按鈕與對齊改善
+   第 4 輪修復：番茄鐘面板視覺階層重塑、三鍵工具組橫列整併與主題色彩協調
    檔案：styles/award-fix-pomodoro-layout.css
    說明：
-   依據評審反饋，修正以下四大問題：
-   1. 面板垂直節奏（8px 倍數間距）與控制按鈕（開始／重設）水平置中對齊。
-   2. 次要動作按鈕（開啟懸浮番茄鐘、+5 分鐘、完整設定、統計）視覺化強化，
-      建立至少 32px 可點擊高度與淺色底／框線樣式。
-   3. 任務輸入框由單條底線改為具備辨識度之完整圓角框與藍色焦點光暈。
-   4. 底部統計數據（今日次數與專注時長／連續天數）統一左側基準線對齊，
-      並縮減面板底部過量留白。
+   依據評審最新反饋，修正以下四大核心問題：
+   1. 「開始」按鈕作為唯一主要動作按鈕：使用主題色實心底（var(--darkerColor-blue)）＋白字，
+      確保對比度 ≥ 4.5:1，並提供高質感 hover 亮化與 focus-visible 焦點狀態。
+   2. 次要操作按鈕（重設、開啟懸浮番茄鐘、+5 分鐘、完整設定、統計）視覺降階：
+      統一採用透明底＋細框，比主要按鈕明顯低一階；並透過 display: contents 與網格排版，
+      將「開啟懸浮番茄鐘」「+5 分鐘」「完整設定」整合成同一直列/橫列的三等分工具組，
+      有效消弭原本垂直堆疊多層的厚重灰色矩形，大幅精簡垂直層數。
+   3. 計時進度圓環改用主題色（var(--darkColor-blue)），背景軌道改用主題淡色（var(--accentLightTint-blue)），
+      與整體淺藍主題色調自然和諧。
+   4. 嚴格保留計時數字水平與垂直置中，維持 transform: none，避免任何覆蓋。
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. 面板容器尺寸與垂直節奏（消除底部過多留白）
+   1. 面板容器網格排版與垂直節奏（消除多層堆疊，精簡垂直層數）
    -------------------------------------------------------------------------- */
 #pomodoroPanel,
 .pomodoro-panel {
 	box-sizing: border-box;
 	/* 壓過 style.css 可能設定之固定面板高度，使面板高度隨內部內容自適應緊湊收合 */
 	height: auto !important;
-	/* 壓過既有樣式可能的 min-height，避免設定區收合時底部產生大片空曠區域 */
+	/* 壓過既有樣式可能的 min-height，避免收合時產生多餘空曠留白 */
 	min-height: 0 !important;
 	padding: 16px 14px 16px 14px;
 }
 
-/* 頂部階段標籤（工作／休息）與倒數時間環間距 */
-#pomodoroPanel .pomodoroPhaseLabel {
-	margin: 0 auto 8px;
-	text-align: center;
-	font-weight: 600;
+/* 當面板非 display: none 開啟時，啟用三等分自適應網格排版，以利次要工具按鈕並排 */
+#pomodoroPanel:not([style*="display: none"]) {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 6px !important;
 }
 
+/* 預設讓面板的所有直接子項目佔滿整橫列（全寬） */
+#pomodoroPanel > * {
+	grid-column: 1 / -1;
+}
+
+/* 頂部拖曳把手 */
+#pomodoroPanel .pomodoro-drag-handle {
+	grid-column: 1 / -1;
+	order: 1;
+}
+
+/* 頂部階段標籤（工作／休息） */
+#pomodoroPanel .pomodoroPhaseLabel {
+	grid-column: 1 / -1;
+	order: 2;
+	margin: 0 auto 6px;
+	text-align: center;
+	font-weight: 600;
+	color: var(--textColorDark-blue, #1b3041);
+}
+
+/* --------------------------------------------------------------------------
+   2. 計時圓環與數字置中（主題色協調與精準置中）
+   -------------------------------------------------------------------------- */
 /* 倒數計時圓環區塊置中與定位容器 */
 #pomodoroPanel .pomodoroCircleWrap {
+	grid-column: 1 / -1;
+	order: 3;
 	position: relative !important;
 	box-sizing: border-box !important;
 	width: 160px !important;
 	height: 160px !important;
 	max-width: 160px !important;
 	max-height: 160px !important;
-	margin: 0 auto 8px !important;
+	margin: 0 auto 6px !important;
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -54,7 +83,21 @@
 	flex-shrink: 0 !important;
 }
 
-/* 倒數計時數字置中定位（水平與垂直絕對置中於圓環內，大小不超出圓環內徑） */
+/* 計時圓環背景軌道：改用主題淡色（var(--accentLightTint-blue)），與整體淺藍主題和諧融合 */
+#pomodoroPanel .pomodoroRingBg {
+	stroke: var(--accentLightTint-blue, #e2eeff) !important;
+	fill: none !important;
+	opacity: 0.9;
+}
+
+/* 計時圓環進度前景：改用主題色（var(--darkColor-blue)），消除原先突兀的深藍色 */
+#pomodoroPanel .pomodoroRingFg {
+	stroke: var(--darkColor-blue, #4382ec) !important;
+	fill: none !important;
+	stroke-linecap: round;
+}
+
+/* 倒數計時數字置中定位（水平與垂直絕對置中於圓環內，大小不超出圓環內徑；嚴格保留 transform: none） */
 #pomodoroPanel .pomodoroTimeDisplay {
 	position: absolute !important;
 	top: 0 !important;
@@ -79,84 +122,45 @@
 	font-feature-settings: "tnum" !important;
 	letter-spacing: 0 !important;
 	white-space: nowrap !important;
-	color: var(--pomo-fg, inherit) !important;
+	color: var(--textColorDark-blue, #1b3041) !important;
 }
 
-/* 輪次進度（如「1 / 4」）與下方任務輸入框間距 */
+/* 輪次進度（如「1 / 4」） */
 #pomodoroPanel .pomodoroRoundDisplay {
-	margin: 0 auto 12px;
+	grid-column: 1 / -1;
+	order: 4;
+	margin: 0 auto 8px;
 	text-align: center;
-}
-
-/* --------------------------------------------------------------------------
-   2. 任務輸入框（由單一底線改為具備辨識度的輸入框與焦點狀態）
-   -------------------------------------------------------------------------- */
-.pomoStudioTask {
-	display: block;
-	margin: 0 0 12px;
-	width: 100%;
-}
-
-#pomodoroPanel #myntPomoTask {
-	box-sizing: border-box;
-	width: 100%;
-	min-width: 0;
-	min-height: 40px;
-	padding: 8px 12px;
-	/* 建立完整的四邊邊框與淡色底，不再僅是一條底線 */
-	background: rgba(0, 0, 0, 0.035);
-	border: 1px solid rgba(0, 0, 0, 0.16);
-	border-radius: 12px;
-	color: var(--pomo-fg, #1b1f24);
-	text-align: center;
-	font: inherit;
 	font-size: 13px;
-	line-height: 1.4;
-	transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-#pomodoroPanel #myntPomoTask::placeholder {
-	color: var(--pomo-muted, #35465e);
-	opacity: 0.75;
-}
-
-#pomodoroPanel #myntPomoTask:hover {
-	background: rgba(0, 0, 0, 0.05);
-	border-color: rgba(0, 0, 0, 0.28);
-}
-
-#pomodoroPanel #myntPomoTask:focus,
-#pomodoroPanel #myntPomoTask:focus-visible {
-	outline: none;
-	background: #ffffff;
-	border-color: var(--darkColor-blue, #4382ec);
-	box-shadow: 0 0 0 3px rgba(67, 130, 236, 0.2);
+	color: var(--textColorDark-blue, #1b3041);
 }
 
 /* --------------------------------------------------------------------------
-   3. 控制按鈕列置中對齊（開始／暫停／重設）
+   3. 控制按鈕列：主要按鈕（開始／暫停）與次要按鈕（重設）明確主次分層
    -------------------------------------------------------------------------- */
-/* 壓過 pomodoro-studio.css 的 display: grid 與 grid-template-columns: 48px minmax(0, 128px) 48px，
-   消除因第一欄 48px 空白導致按鈕整體偏右未置中的問題 */
+/* 控制按鈕列水平置中對齊 */
 #pomodoroPanel .pomodoroControls {
+	grid-column: 1 / -1;
+	order: 5;
 	display: flex !important;
 	justify-content: center;
 	align-items: center;
-	gap: 10px;
-	margin: 0 auto 12px;
+	gap: 12px;
+	margin: 0 auto 10px;
 	width: 100%;
 }
 
+/* 「開始」與「暫停」：面板中唯一的主要動作按鈕
+   主題色實心底（var(--darkerColor-blue)）＋白字，對比度 > 4.5:1，具備立體陰影與懸停反饋 */
 #pomodoroPanel :is(#pomodoroStartBtn, #pomodoroPauseBtn) {
-	/* 壓過 pomodoro-studio.css 中的 grid-column: 2 與 grid-row: 1 */
 	grid-column: auto !important;
 	grid-row: auto !important;
 	flex: 0 1 auto;
 	width: auto;
-	min-width: 124px;
+	min-width: 132px;
 	height: 44px;
 	min-height: 44px;
-	padding: 0 18px;
+	padding: 0 20px;
 	border-radius: 22px;
 	display: inline-flex;
 	align-items: center;
@@ -165,174 +169,313 @@
 	cursor: pointer;
 	font-size: 14px;
 	font-weight: 600;
+	/* 主要動作按鈕樣式：主題色實心底與白色內容 */
+	background: var(--darkerColor-blue, #3569b2) !important;
+	color: #ffffff !important;
+	border: 1px solid transparent !important;
+	box-shadow: 0 2px 6px rgba(53, 105, 178, 0.35);
 	transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+#pomodoroPanel :is(#pomodoroStartBtn, #pomodoroPauseBtn) svg {
+	fill: #ffffff !important;
+}
+
+#pomodoroPanel :is(#pomodoroStartBtn, #pomodoroPauseBtn):hover {
+	/* 懸停狀態：提亮主題色並提升陰影 */
+	background: var(--darkColor-blue, #4382ec) !important;
+	box-shadow: 0 4px 10px rgba(67, 130, 236, 0.4);
+	transform: translateY(-1px);
+}
+
+#pomodoroPanel :is(#pomodoroStartBtn, #pomodoroPauseBtn):active {
+	transform: translateY(0) scale(0.98);
+	box-shadow: 0 1px 3px rgba(53, 105, 178, 0.25);
+}
+
+#pomodoroPanel :is(#pomodoroStartBtn, #pomodoroPauseBtn):focus-visible {
+	outline: 2px solid var(--darkerColor-blue, #3569b2);
+	outline-offset: 2px;
+}
+
+/* 重設按鈕：降階為次要動作（透明底＋細框），比「開始」按鈕明顯低一階 */
 #pomodoroPanel .pomodoroResetBtn {
-	/* 壓過 pomodoro-studio.css 中的 grid-column: 3 與 grid-row: 1 */
 	grid-column: auto !important;
 	grid-row: auto !important;
-	flex: 0 0 44px;
-	width: 44px;
-	height: 44px;
-	min-height: 44px;
+	flex: 0 0 42px;
+	width: 42px;
+	height: 42px;
+	min-height: 42px;
 	padding: 0;
 	border-radius: 50%;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+	/* 次要按鈕樣式：透明底與細邊框 */
+	background: transparent !important;
+	border: 1px solid rgba(0, 0, 0, 0.16) !important;
+	color: var(--textColorDark-blue, #1b3041) !important;
+	box-shadow: none !important;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-#pomodoroPanel .pomodoroBtn:active {
-	transform: scale(0.97);
+#pomodoroPanel .pomodoroResetBtn svg {
+	fill: currentColor !important;
+}
+
+#pomodoroPanel .pomodoroResetBtn:hover {
+	background: var(--accentLightTint-blue, #e2eeff) !important;
+	border-color: rgba(67, 130, 236, 0.4) !important;
+	color: var(--darkerColor-blue, #3569b2) !important;
+}
+
+#pomodoroPanel .pomodoroResetBtn:active {
+	transform: scale(0.96);
+}
+
+#pomodoroPanel .pomodoroResetBtn:focus-visible {
+	outline: 2px solid var(--darkColor-blue, #4382ec);
+	outline-offset: 2px;
 }
 
 /* --------------------------------------------------------------------------
-   4. 次要操作按鈕（懸浮番茄鐘、+5 分鐘、完整設定、統計）
+   4. 環境音橫列（Ambient Row）
    -------------------------------------------------------------------------- */
-/* 懸浮按鈕掛載區間距 */
-#myntPomoFloatMount {
+#pomodoroPanel .pomodoroAmbientRow {
+	grid-column: 1 / -1;
+	order: 6;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 10px;
+	width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   5. 任務輸入框（微淡底、細框與焦點狀態）
+   -------------------------------------------------------------------------- */
+.pomoStudioTask {
+	grid-column: 1 / -1 !important;
+	order: 10;
+	display: block;
 	margin: 0 0 8px;
 	width: 100%;
 }
 
-/* Studio 次要操作按鈕橫列（+5 分鐘、完整設定）間距 */
-.pomoStudioRow {
-	display: flex;
-	gap: 8px;
-	margin: 0 0 12px;
+#pomodoroPanel #myntPomoTask {
+	box-sizing: border-box;
 	width: 100%;
+	min-width: 0;
+	min-height: 38px;
+	padding: 6px 12px;
+	background: rgba(0, 0, 0, 0.025);
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	border-radius: 10px;
+	color: var(--textColorDark-blue, #1b3041);
+	text-align: center;
+	font: inherit;
+	font-size: 13px;
+	line-height: 1.4;
+	transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.pomoStudioRow > button {
-	flex: 1;
+#pomodoroPanel #myntPomoTask::placeholder {
+	color: var(--textColorDark-blue, #1b3041);
+	opacity: 0.65;
 }
 
-/* 壓過 pomodoro-studio.css line 165-167 的 background: transparent; border-color: transparent;
-   使次要動作具備清晰的按鈕外觀、邊框、觸控高度（≥ 32px）與懸停回饋 */
+#pomodoroPanel #myntPomoTask:hover {
+	background: rgba(0, 0, 0, 0.045);
+	border-color: rgba(0, 0, 0, 0.25);
+}
+
+#pomodoroPanel #myntPomoTask:focus,
+#pomodoroPanel #myntPomoTask:focus-visible {
+	outline: none;
+	background: #ffffff;
+	border-color: var(--darkColor-blue, #4382ec);
+	box-shadow: 0 0 0 2px rgba(67, 130, 236, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   6. 次要操作群組：「開啟懸浮番茄鐘」「+5 分鐘」「完整設定」整理成同一直列/橫列
+   -------------------------------------------------------------------------- */
+/* 利用 display: contents 將外部掛載容器的盒子解開，使其內部按鈕直接參與面板三等分網格 */
+#pomodoroPanel #myntPomoFloatMount {
+	grid-column: 1 / -1;
+	order: 20;
+	display: contents !important;
+}
+
+#pomodoroPanel #myntPomoStudioMount {
+	grid-column: 1 / -1;
+	order: 21;
+	display: contents !important;
+}
+
+#pomodoroPanel .pomoStudioRow {
+	grid-column: 1 / -1;
+	order: 22;
+	display: contents !important;
+}
+
+/* 次要按鈕通用降階樣式：透明底＋細框，比「開始」明顯低一階，消除原先堆疊的灰色圓角厚塊 */
 #pomodoroPanel #myntPomoFloatMount > button,
 #pomodoroPanel .pomoStudioRow > button,
-#pomodoroPanel #myntPomoStudioMount button,
+#pomodoroPanel #myntPomoStudioMount button:not(#myntPomoTask),
 #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 36px;
-	padding: 7px 14px;
-	background: rgba(0, 0, 0, 0.04);
-	border: 1px solid rgba(0, 0, 0, 0.14);
-	border-radius: 18px;
-	color: var(--textColorDark-blue, #1b3041);
+	box-sizing: border-box;
+	min-height: 32px;
+	height: 32px;
+	padding: 4px 6px;
+	/* 次要按鈕樣式：透明底色與細緻邊框 */
+	background: transparent !important;
+	border: 1px solid rgba(0, 0, 0, 0.15) !important;
+	border-radius: 8px;
+	color: var(--textColorDark-blue, #1b3041) !important;
 	font: inherit;
-	font-size: 13px;
+	font-size: 11.5px;
 	font-weight: 500;
-	line-height: 1.25;
+	line-height: 1.2;
 	text-align: center;
 	cursor: pointer;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-	transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+	box-shadow: none !important;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
+/* 三個次要按鈕在同一列各佔 1/3 寬度，整合成緊湊的一列工具組 */
 #pomodoroPanel #myntPomoFloatMount > button {
-	width: 100%;
+	grid-column: span 1 !important;
+	order: 25;
+	width: 100% !important;
+	margin: 0 !important;
 }
 
+#pomodoroPanel .pomoStudioRow > button:first-child {
+	grid-column: span 1 !important;
+	order: 26;
+	width: 100% !important;
+	margin: 0 !important;
+}
+
+#pomodoroPanel .pomoStudioRow > button:last-child {
+	grid-column: span 1 !important;
+	order: 27;
+	width: 100% !important;
+	margin: 0 !important;
+}
+
+/* 次要按鈕懸停狀態：透出主題淡色（--accentLightTint-blue）與主題深字（--darkerColor-blue） */
 #pomodoroPanel #myntPomoFloatMount > button:hover,
 #pomodoroPanel .pomoStudioRow > button:hover,
-#pomodoroPanel #myntPomoStudioMount button:hover,
+#pomodoroPanel #myntPomoStudioMount button:not(#myntPomoTask):hover,
 #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup:hover {
-	background: rgba(0, 0, 0, 0.08);
-	border-color: rgba(0, 0, 0, 0.22);
-	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+	background: var(--accentLightTint-blue, #e2eeff) !important;
+	border-color: rgba(67, 130, 236, 0.4) !important;
+	color: var(--darkerColor-blue, #3569b2) !important;
 }
 
 #pomodoroPanel #myntPomoFloatMount > button:active,
 #pomodoroPanel .pomoStudioRow > button:active,
-#pomodoroPanel #myntPomoStudioMount button:active,
+#pomodoroPanel #myntPomoStudioMount button:not(#myntPomoTask):active,
 #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup:active {
-	background: rgba(0, 0, 0, 0.12);
+	background: rgba(67, 130, 236, 0.15) !important;
 	transform: scale(0.98);
 }
 
 #pomodoroPanel #myntPomoFloatMount > button:focus-visible,
 #pomodoroPanel .pomoStudioRow > button:focus-visible,
-#pomodoroPanel #myntPomoStudioMount button:focus-visible,
+#pomodoroPanel #myntPomoStudioMount button:not(#myntPomoTask):focus-visible,
 #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup:focus-visible {
 	outline: 2px solid var(--darkColor-blue, #4382ec);
 	outline-offset: 2px;
 }
 
-/* 預設情境卡片按鈕邊框與背景強化 */
+/* 預設情境卡片（如有顯示）全寬與次要細框樣式 */
+#pomodoroPanel .pomoStudioPresets {
+	grid-column: 1 / -1;
+	order: 28;
+}
+
 #pomodoroPanel .pomoStudioCard {
-	background: rgba(0, 0, 0, 0.04);
-	border: 1px solid rgba(0, 0, 0, 0.14);
+	background: transparent;
+	border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 #pomodoroPanel .pomoStudioCard:hover {
-	background: rgba(0, 0, 0, 0.08);
-	border-color: rgba(0, 0, 0, 0.22);
+	background: var(--accentLightTint-blue, #e2eeff);
+	border-color: rgba(67, 130, 236, 0.3);
 }
 
 /* --------------------------------------------------------------------------
-   5. 底部統計區對齊與留白優化
+   7. 底部統計區（今日次數、專注時長與統計按鈕）
    -------------------------------------------------------------------------- */
-/* 統計區頂部分隔線與整體間距 */
 #pomodoroPanel .pomodoroSessionsToday {
+	grid-column: 1 / -1 !important;
+	order: 30;
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	padding: 10px 6px 0;
-	margin-top: 10px;
-	border-top: 1px solid rgba(0, 0, 0, 0.12);
+	padding: 8px 4px 0;
+	margin-top: 6px;
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
 	font-size: 12px;
 	line-height: 1.4;
-	color: var(--pomo-muted, #35465e);
+	color: var(--textColorDark-blue, #1b3041);
 	font-variant-numeric: tabular-nums;
 	text-shadow: none;
 }
 
 #pomodoroPanel .pomodoroFocusSummary {
+	grid-column: 1 / -1 !important;
+	order: 31;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 0 6px;
-	margin-top: 6px;
+	padding: 0 4px;
+	margin-top: 4px;
 	font-size: 12px;
 	line-height: 1.4;
-	color: var(--pomo-muted, #35465e);
+	color: var(--textColorDark-blue, #1b3041);
 	font-variant-numeric: tabular-nums;
 	text-shadow: none;
 }
 
-/* 統計按鈕（Stats）樣式強化：具備膠囊按鈕外觀與 ≥ 32px 點擊範圍 */
+/* 統計按鈕（Stats）：統一為次要膠囊按鈕樣式（透明底＋細框） */
 #pomodoroPanel #pomodoroStatsBtn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 32px;
-	padding: 4px 12px;
-	background: rgba(0, 0, 0, 0.04);
-	border: 1px solid rgba(0, 0, 0, 0.14);
-	border-radius: 16px;
-	font-size: 12px;
+	min-height: 28px;
+	padding: 2px 10px;
+	/* 次要按鈕樣式：透明底與細邊框 */
+	background: transparent !important;
+	border: 1px solid rgba(0, 0, 0, 0.15) !important;
+	border-radius: 14px;
+	font-size: 11.5px;
 	font-weight: 500;
-	line-height: 1.25;
-	color: var(--textColorDark-blue, #1b3041);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+	line-height: 1.2;
+	color: var(--textColorDark-blue, #1b3041) !important;
+	box-shadow: none !important;
 	cursor: pointer;
-	transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 #pomodoroPanel #pomodoroStatsBtn:hover {
-	background: rgba(0, 0, 0, 0.08);
-	border-color: rgba(0, 0, 0, 0.22);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+	background: var(--accentLightTint-blue, #e2eeff) !important;
+	border-color: rgba(67, 130, 236, 0.4) !important;
+	color: var(--darkerColor-blue, #3569b2) !important;
 }
 
 #pomodoroPanel #pomodoroStatsBtn:active {
-	background: rgba(0, 0, 0, 0.12);
+	background: rgba(67, 130, 236, 0.15) !important;
 	transform: scale(0.97);
 }
 
@@ -342,7 +485,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   6. 無障礙動畫偏好（prefers-reduced-motion）
+   8. 無障礙動畫偏好（prefers-reduced-motion）
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
 	#pomodoroPanel,
