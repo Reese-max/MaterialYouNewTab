@@ -92,7 +92,9 @@
 	border-radius: 999px;
 	background-color: color-mix(in srgb, var(--todo-icon-hover-color) 15%, transparent);
 	background-clip: padding-box; /* 視覺圓徽 22px，外圈 5px 透明可點 */
-	color: var(--todo-icon-hover-color); /* 11px 小字用較深 token 保對比 */
+	/* 淺色模式 ≈ #234163（文字色混入 30% 主色藍），對淡藍徽章底對比 ≈ 7.8:1，
+	   checked 0.8 透明度下仍 ≈ 4.8:1；深色模式兩 token 同為 #f1f5f9，結果不變 */
+	color: color-mix(in srgb, var(--todo-item-text) 70%, var(--todo-icon-hover-color));
 	font-size: 11px;
 	font-weight: 700;
 	text-decoration: none;
@@ -100,6 +102,8 @@
 
 .todolistitem .todoDaidaiBtn:hover {
 	background-color: color-mix(in srgb, var(--todo-icon-hover-color) 26%, transparent);
+	/* 覆蓋 inputs.css 的 hover 還原色，維持與一般狀態相同的深色文字（≈ 6.7:1） */
+	color: color-mix(in srgb, var(--todo-item-text) 70%, var(--todo-icon-hover-color));
 	/* 上游 hover 會畫 --whitishColor 白框（淺底看不見），改成可見的深色框 */
 	outline: 2px solid var(--todo-icon-hover-color);
 	outline-offset: 1px;

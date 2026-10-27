@@ -128,3 +128,31 @@
     outline: 2px solid var(--darkColor-blue);
     outline-offset: 2px;
 }
+
+/* ===== 右下角「開啟設定」提示對比 =====
+   .tooltip-text 的 rgba(255,255,255,0.9) 白字在 --darkColor-blue(#4382ec) 底上
+   只有約 3.3:1；改用較深的 --darkerColor-blue 實心底（ID 優先權同時蓋過
+   桌布模式的半透明底色規則）配純白字，對比約 5.5:1（AA ≥ 4.5）。 */
+#settingsHintText {
+    background-color: var(--darkerColor-blue);
+    color: #ffffff;
+}
+
+/* ===== 淺色模式對話框「確定」按鈕對比 =====
+   白字在 --darkColor-blue 底上只有 3.72:1，改用 --darkerColor-blue ≈ 5.5:1。
+   選擇器刻意與 award-fix-dark-surfaces.css 的淺色基底規則同形
+   （本檔較晚載入，同優先權時後者勝出），但仍低於該檔深色 :is() 規則鏈
+   的優先權，深色模式的對話框配色不受影響。 */
+dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
+.myntAppDialog .myntAppDialogActions .myntAppDialogOk {
+    background: var(--darkerColor-blue, #3569b2);
+    color: #ffffff;
+}
+
+/* 危險操作按鈕維持紅色語意：#d93025 白字約 4.78:1，略加深為 #c5221f ≈ 5.8:1。
+   必須在此重設，否則會被上一條同/低優先權規則蓋成藍色。 */
+dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger,
+.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger {
+    background: #c5221f;
+    color: #ffffff;
+}
