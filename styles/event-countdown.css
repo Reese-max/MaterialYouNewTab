@@ -104,6 +104,9 @@ html.myntHighContrast .event-countdown-meta, html.myntHighContrast .event-countd
 .event-countdown-dialog .event-countdown-primary { background:#28588c; color:#fff; }
 .event-countdown-dialog .event-countdown-primary:hover { background:#204a78; }
 .event-countdown-dialog:has(.event-countdown-form:not([hidden])) > .event-countdown-items { display:none; }
+.event-countdown-toggle { box-sizing:border-box; min-width:44px; min-height:44px; padding:8px 10px; border-radius:12px; }
+.event-countdown-field { box-sizing:border-box; }
+.event-countdown-field > span { min-width:0; overflow-wrap:anywhere; line-height:1.5; }
 @media(min-width:441px) {
  .event-countdown-dialog .event-countdown-row .event-countdown-icon,
  .event-countdown-dialog .event-countdown-row .event-countdown-details { grid-row:1 / 3; }
