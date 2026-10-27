@@ -12,6 +12,15 @@
 - 有 11 種主題色（`--bg-color-blue` 等）、深淺色模式、使用者自訂桌布與自適應取色。
 - 2026-09 產品稽核的定位：要比 Momentum、Tabliss、Bonjourr 更好用，**不要為了極簡把工作流功能藏起來**。
 
+## 深色模式的實際機制（實作前必讀）
+
+- MYNT 的深色模式是在 `html` 上套 `filter: invert(1) hue-rotate(180deg)`，把淺色畫面整個反相（style.css 第 399–460 行）。啟用選擇器：
+  - 手動深色：`html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked))`
+  - 跟隨系統：`html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))`
+  - 有桌布時（`body[data-bg="wallpaper"]`）改為對 body 的子元素反相。
+- `html.black-theme` 是 11 種主題色中的「黑色主題」（`#darkTheme` 勾選），不是深色模式。
+- 結論：一般元件只要淺色版正確，深色版就會正確；但用 `showModal` 開在頂層（top layer）的 `<dialog>` 不會被反相，必須在上述選擇器底下另外給深色配色。
+
 ## 不能動的東西（任何一項違反，該輪直接作廢）
 
 1. 功能與行為：不刪功能、不改互動流程、不改 JavaScript。
