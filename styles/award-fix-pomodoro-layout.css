@@ -27,16 +27,22 @@
 	padding: 16px 14px 16px 14px;
 }
 
-/* 當面板非 display: none 開啟時，啟用三等分自適應網格排版，以利次要工具按鈕並排 */
+/* 當面板非 display: none 開啟時，啟用二等分自適應網格排版，讓兩顆次要工具按鈕各佔一半 */
 #pomodoroPanel:not([style*="display: none"]) {
 	display: grid !important;
-	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 	gap: 6px !important;
 }
 
 /* 預設讓面板的所有直接子項目佔滿整橫列（全寬） */
 #pomodoroPanel > * {
 	grid-column: 1 / -1;
+}
+
+/* JS（pomodoro-studio.js）注入的 .pomoStudioBackdrop 是整版背景層：
+   讓它橫跨所有網格列覆蓋整個面板，不獨占一個零高度列而在頂端產生多餘空隙 */
+#pomodoroPanel > .pomoStudioBackdrop {
+	grid-row: 1 / -1;
 }
 
 /* 頂部拖曳把手 */
@@ -320,6 +326,25 @@
 	display: contents !important;
 }
 
+/* JS 動態注入的元素預設 order 為 0，若未指派會排到面板最頂端（階段標籤之前）。
+   逐一補上排序，維持由上而下：次要按鈕 → 狀態訊息 → 完整設定展開區 → 統計區（最底部） */
+#pomodoroPanel .pomoStudioStatus {
+	grid-column: 1 / -1;
+	order: 29;
+}
+
+#pomodoroPanel #myntPomoExtras {
+	grid-column: 1 / -1;
+	order: 30;
+}
+
+/* pomodoro-studio.js 會把「今日次數／專注摘要」兩區塊包進 .pomoStudioStats 再掛到面板尾端，
+   必須對此外層容器排序，統計區才會留在最底部而非跳到頂端 */
+#pomodoroPanel > .pomoStudioStats {
+	grid-column: 1 / -1;
+	order: 40;
+}
+
 /* 次要按鈕通用降階樣式：透明底＋細框，比「開始」明顯低一階，消除原先堆疊的灰色圓角厚塊 */
 #pomodoroPanel #myntPomoFloatMount > button,
 #pomodoroPanel .pomoStudioRow > button,
@@ -350,12 +375,19 @@
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-/* 三個次要按鈕在同一列各佔 1/3 寬度，整合成緊湊的一列工具組 */
+/* 「開啟懸浮番茄鐘」獨占整列：全寬顯示並保留足夠內距與高度，文字不再被擠壓省略 */
 #pomodoroPanel #myntPomoFloatMount > button {
-	grid-column: span 1 !important;
+	grid-column: 1 / -1 !important;
 	order: 25;
+	box-sizing: border-box;
 	width: 100% !important;
+	min-height: 36px;
+	height: auto;
+	padding: 6px 12px;
 	margin: 0 !important;
+	white-space: normal;
+	overflow: visible;
+	text-overflow: clip;
 }
 
 #pomodoroPanel .pomoStudioRow > button:first-child {
