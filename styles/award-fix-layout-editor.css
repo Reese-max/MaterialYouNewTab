@@ -36,36 +36,66 @@ body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
     z-index: 2;
 }
 
-/* 評審扣分項 3：右下角「設定」按鈕標籤置於元件上方靠右對齊，避免超出螢幕邊界 */
-body.mynt-layout-editing .myntLayoutOverlay[data-block="menu"] :is(.myntLayoutMove, .myntLayoutLabel) {
-    top: -24px;
-    bottom: auto;
-    left: auto;
-    right: 0;
-    transform: none;
+/* overlay 是 body 的獨立子元素；以實際 data-block 辨識小工具，不能 :has() 本體。
+   預設只顯示 24px 把手，互動時才展開；原文字與 aria-label 保留給輔助技術。
+   大型焦點卡、搜尋區與捷徑列不套用此規則。 */
+body.mynt-layout-editing .myntLayoutOverlay:is(
+    [data-block="pomodoro"],
+    [data-block="scratchpad"],
+    [data-block="bookmarks"],
+    [data-block="wallpaper"],
+    [data-block="menu"]
+) {
+    & > .myntLayoutLabel {
+        top: auto;
+        bottom: calc(100% + 6px);
+        left: 0;
+        width: 24px;
+        padding: 0;
+        font-size: 0;
+        justify-content: center;
+    }
+
+    & > .myntLayoutLabel::before {
+        content: "⠿";
+        font-size: 12px;
+    }
+
+    &:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel {
+        width: max-content;
+        padding-inline: 8px;
+        font-size: 12px;
+    }
+
+    &:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel::before {
+        content: none;
+    }
+
+    /* 小圖示下方留出縮放操作區，不再把縮放鈕壓在圖示上。
+       鍵盤聚焦也會顯示；點選後由既有 is-selected 維持可操作。 */
+    & > .myntLayoutResize {
+        top: calc(100% + 6px);
+        bottom: auto;
+        right: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &:is(:hover, :focus-within, .is-selected) > .myntLayoutResize {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
-/* 評審扣分項 3：右下角「桌布」按鈕緊鄰設定按鈕，標籤改置於元件左側（垂直置中），
-   與上方「設定」標籤徹底錯開，兩者互不重疊，且完全不壓在設定按鈕上 */
-body.mynt-layout-editing .myntLayoutOverlay:is(
-    [data-block="wallpaper"],
-    [data-block="changeBg"],
-    [data-block="bg"],
-    [data-block="background"],
-    [data-block="theme"],
-    [data-block="wallpaperCont"],
-    :has(#changeBg),
-    :has([id*="wallpaper" i]),
-    :has(#wallpaperGalleryBtn),
-    :has(#wallpaperQuickActions)
-) :is(.myntLayoutMove, .myntLayoutLabel) {
-    top: 50%;
-    bottom: auto;
+/* 右側工具向左展開；底部兩鈕的縮放把手改放在標籤上方，避開視窗底緣。 */
+body.mynt-layout-editing .myntLayoutOverlay:is([data-block="bookmarks"], [data-block="wallpaper"], [data-block="menu"]) > .myntLayoutLabel {
     left: auto;
-    right: calc(100% + 6px);
-    transform: translateY(-50%);
-    z-index: 4;
-    white-space: nowrap;
+    right: 0;
+}
+
+body.mynt-layout-editing .myntLayoutOverlay:is([data-block="wallpaper"], [data-block="menu"]) > .myntLayoutResize {
+    top: auto;
+    bottom: calc(100% + 36px);
 }
 
 /* 被選取與拖曳中的標籤樣式 */
