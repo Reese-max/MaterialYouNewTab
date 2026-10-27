@@ -2803,6 +2803,14 @@ body[data-bg="wallpaper"] #searchQ::placeholder {
 	border: 2px solid transparent;
 }
 
+.micIcon,
+.aiModeIcon:not(.hidden) {
+	width: 44px;
+	height: 44px;
+	min-width: 44px;
+	min-height: 44px;
+}
+
 body[data-bg="wallpaper"] .micIcon {
 	background-color: color-mix(
 		in srgb,
@@ -5127,6 +5135,8 @@ option:checked {
 	bottom: var(--gap);
 	width: 50px;
 	height: 50px;
+	min-width: 44px;
+	min-height: 44px;
 	background-color: var(--accentLightTint-blue);
 	border-radius: 50%;
 	border: 6px solid var(--accentLightTint-blue);
@@ -5216,6 +5226,11 @@ option:checked {
 .dropdown-btn {
 	background: none;
 	border: none;
+	min-width: 44px;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .dropdown {
@@ -5629,6 +5644,9 @@ body[data-bg="wallpaper"] .dropdown-content {
 	#menuButton {
 		transform-origin: bottom right;
 		scale: 0.8;
+		/* Preserve a 44px rendered target after the mobile visual scale. */
+		width: 55px;
+		height: 55px;
 	}
 	.aiToolsCont {
 		transform-origin: bottom left;
@@ -8329,8 +8347,9 @@ html.myntHighContrast button {
 
 #dailyFocusToggle {
 	flex: 0 0 auto;
-	min-height: 30px;
-	padding: 4px 11px;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 10px 11px;
 	border: 0;
 	border-radius: 999px;
 	background: var(--darkColor-blue);
@@ -8987,6 +9006,8 @@ body[data-gallery-video="on"] #videoBg { visibility: hidden; }
 	position: relative;
 	width: 44px;
 	height: 44px;
+	min-width: 44px;
+	min-height: 44px;
 	border: 0;
 	border-radius: 50%;
 	display: grid;
@@ -9041,7 +9062,7 @@ body[data-gallery-video="on"] #videoBg { visibility: hidden; }
 
 /* === MYNT study round: calmer layout === */
 .wallpaperQuickActions { right: 80px; bottom: 22px; }
-.wallpaperQuickBtn { width: 40px; height: 40px; opacity: 0.8; }
+.wallpaperQuickBtn { width: 44px; height: 44px; opacity: 0.8; }
 .wallpaperQuickBtn:hover, .wallpaperQuickBtn:focus-visible { opacity: 1; }
 /* Tooltip above the button and aligned to its right edge so it never clips at the screen edge */
 .wallpaperQuickBtn .tooltip-text {

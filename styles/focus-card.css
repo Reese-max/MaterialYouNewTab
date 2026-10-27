@@ -2,9 +2,11 @@
 .dailyFocusActions { flex-wrap: wrap; }
 #dailyFocusTools { display: inline-flex; gap: 2px; align-items: center; }
 .dailyFocusIcon {
-    border: 0; background: transparent; color: inherit; cursor: pointer;
-    font: inherit; font-size: 0.8rem; line-height: 1; padding: 4px 6px;
-    border-radius: 999px; opacity: 0.6; min-width: 24px;
+	border: 0; background: transparent; color: inherit; cursor: pointer;
+	font: inherit; font-size: 0.8rem; line-height: 1; padding: 10px;
+	display: inline-flex; align-items: center; justify-content: center;
+	box-sizing: border-box; border-radius: 999px; opacity: 0.6;
+	min-width: 44px; min-height: 44px;
 }
 .dailyFocusIcon:hover, .dailyFocusIcon:focus-visible, .dailyFocusIcon[aria-expanded="true"] { opacity: 1; background: rgba(127, 127, 127, 0.16); }
 #dailyFocusCounter { font-size: 0.72rem; opacity: 0.6; font-variant-numeric: tabular-nums; }
