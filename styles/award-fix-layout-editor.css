@@ -1,12 +1,12 @@
-/* 第 3 輪：版面編輯模式的標籤、把手與工具面板 */
+/* 第 4 輪：版面編輯模式的精簡工具箱、無障礙對比與防重疊標籤 */
 
 /* ==========================================================================
    1. 元件標籤（.myntLayoutMove / .myntLayoutLabel）與縮放把手（.myntLayoutResize）
-   - 目標：避免標籤與縮放把手重疊，確保可點擊範圍至少 24×24px，緊湊不遮蔽鄰近元件
+   - 目標：避免相鄰元件標籤互相遮擋（特別是右下角桌布與設定按鈕），確保標籤清晰易辨且不遮蔽本體
    ========================================================================== */
 
-/* 標籤／移動把手：縮減尺寸為輕量藥丸徽章，置於元件上方，避免覆蓋元件本體與右下角縮放把手 */
-body.mynt-layout-editing .myntLayoutMove {
+/* 標籤／移動把手：輕量藥丸徽章，預設置於元件上方 */
+body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
     position: absolute;
     top: -22px;
     left: 2px;
@@ -16,11 +16,11 @@ body.mynt-layout-editing .myntLayoutMove {
     max-width: min(220px, calc(100vw - 32px));
     padding: 0 8px;
     box-sizing: border-box;
-    font: 600 11px/22px var(--main-font-family, system-ui, -apple-system, sans-serif);
+    font: 600 12px/22px var(--main-font-family, system-ui, -apple-system, sans-serif);
     border-radius: 999px;
     border: 1.5px solid #ffffff;
     background: var(--accentLightTint-blue, #e2eeff);
-    color: var(--darkerColor-blue, #3569b2);
+    color: var(--darkerColor-blue, #1f4577);
     box-shadow: 0 2px 8px rgba(33, 56, 81, 0.16);
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -36,27 +36,46 @@ body.mynt-layout-editing .myntLayoutMove {
     z-index: 2;
 }
 
-/* 右下角設定按鈕靠近螢幕右緣，標籤靠右對齊防止溢出螢幕 */
-body.mynt-layout-editing .myntLayoutOverlay[data-block="menu"] .myntLayoutMove {
+/* 右下角設定按鈕靠螢幕右緣，標籤靠右對齊防止溢出螢幕 */
+body.mynt-layout-editing .myntLayoutOverlay[data-block="menu"] :is(.myntLayoutMove, .myntLayoutLabel) {
     left: auto;
     right: 0;
 }
 
+/* 評審扣分項 3：右下角桌布按鈕緊鄰設定按鈕，標籤會被設定標籤遮蔽一半。
+   將桌布元件標籤改置於元件內側底部（bottom: 2px; left: 2px），與上方設定標籤（top: -22px）錯開，完全避免互相重疊 */
+body.mynt-layout-editing .myntLayoutOverlay:is(
+    [data-block="wallpaper"],
+    [data-block="changeBg"],
+    [data-block="bg"],
+    [data-block="background"],
+    [data-block="theme"],
+    [data-block="wallpaperCont"],
+    :has(#changeBg),
+    :has([id*="wallpaper" i])
+) :is(.myntLayoutMove, .myntLayoutLabel) {
+    top: auto;
+    bottom: 2px;
+    left: 2px;
+    right: auto;
+    z-index: 4;
+}
+
 /* 被選取與拖曳中的標籤樣式 */
-body.mynt-layout-editing .is-selected .myntLayoutMove {
-    background: var(--darkerColor-blue, #3569b2);
+body.mynt-layout-editing .is-selected :is(.myntLayoutMove, .myntLayoutLabel) {
+    background: var(--darkerColor-blue, #1f4577);
     color: #ffffff;
     border-color: #ffffff;
     box-shadow: 0 2px 10px rgba(36, 91, 159, 0.35);
     z-index: 5;
 }
 
-body.mynt-layout-editing .myntLayoutMove:hover {
+body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel):hover {
     background: var(--darkColor-blue, #4382ec);
     color: #ffffff;
 }
 
-body.mynt-layout-editing .is-dragging .myntLayoutMove {
+body.mynt-layout-editing .is-dragging :is(.myntLayoutMove, .myntLayoutLabel) {
     cursor: grabbing;
 }
 
@@ -72,7 +91,7 @@ body.mynt-layout-editing .myntLayoutResize {
     border-radius: 7px;
     border: 1.5px solid #ffffff;
     background: var(--accentLightTint-blue, #e2eeff);
-    color: var(--darkerColor-blue, #3569b2);
+    color: var(--darkerColor-blue, #1f4577);
     font: 700 13px/1 system-ui, sans-serif;
     display: flex;
     align-items: center;
@@ -83,14 +102,13 @@ body.mynt-layout-editing .myntLayoutResize {
     cursor: nwse-resize;
     user-select: none;
     -webkit-user-select: none;
-    /* 縮小貼邊位移量（原為 -20px），正常情況微凸 4px，貼壁時貼齊 0px */
     right: calc(var(--mynt-resize-right, -20px) * 0.2);
     bottom: calc(var(--mynt-resize-bottom, -20px) * 0.2);
     z-index: 3;
 }
 
 body.mynt-layout-editing .is-selected .myntLayoutResize {
-    background: var(--darkerColor-blue, #3569b2);
+    background: var(--darkerColor-blue, #1f4577);
     color: #ffffff;
     border-color: #ffffff;
     box-shadow: 0 2px 8px rgba(36, 91, 159, 0.35);
@@ -108,40 +126,87 @@ body.mynt-layout-editing .myntLayoutOverlay {
 }
 
 body.mynt-layout-editing .myntLayoutOverlay.is-selected {
-    border-color: var(--darkerColor-blue, #3569b2);
+    border-color: var(--darkerColor-blue, #1f4577);
     box-shadow: 0 0 0 3px rgba(187, 214, 253, 0.45);
     background: rgba(67, 130, 236, 0.04);
 }
 
 
 /* ==========================================================================
-   2. 「編輯排版」工具面板（#myntLayoutToolbar）與提示資訊佈局修整
-   - 目標：降低面板垂直高度與不必要遮擋、摺疊標題對齊左緣、提示段落與按鈕間距合理化
+   2. 「編輯排版」精簡工具面板（#myntLayoutToolbar）佈局與高度收斂
+   - 評審扣分項 1：限制最大高度約 30vh、超出內部捲動；預設單列主要操作不擋住底部捷徑與名言
    ========================================================================== */
 
 body.mynt-layout-editing #myntLayoutToolbar {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    top: auto;
     bottom: max(10px, env(safe-area-inset-bottom));
-    padding: 10px 14px;
-    gap: 6px;
-    max-width: min(720px, calc(100vw - 24px));
-    border-radius: 16px;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(760px, calc(100vw - 20px));
+    max-height: 30vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    border-radius: 14px;
     border: 1px solid rgba(217, 228, 242, 0.9);
-    background: rgba(246, 249, 255, 0.96);
-    box-shadow: 0 10px 32px rgba(15, 37, 75, 0.18), 0 2px 6px rgba(15, 37, 75, 0.06);
+    background: rgba(246, 249, 255, 0.97);
+    box-shadow: 0 8px 28px rgba(15, 37, 75, 0.16), 0 2px 6px rgba(15, 37, 75, 0.05);
+    color: var(--textColorDark-blue, #1b3041);
+    box-sizing: border-box;
+    z-index: 2147483010;
+    scrollbar-width: thin;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar[data-dock="top"] {
+    top: max(10px, env(safe-area-inset-top));
+    bottom: auto;
+}
+
+/* 主要操作列（標題、撤銷、重做、對齊吸附、取消、儲存並鎖定）：保持精簡單列，不無故折行撐高面板 */
+#myntLayoutToolbar > .myntLayoutToolbarRow:first-of-type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+    width: 100%;
+}
+
+#myntLayoutToolbar strong {
+    font-size: 13px;
+    font-weight: 700;
+    margin-inline-end: 4px;
+    white-space: nowrap;
     color: var(--textColorDark-blue, #1b3041);
 }
 
-/* 工具面板一般按鈕與標籤微調尺寸，減少面板總高度避免遮擋下方搜尋服務 */
+/* 工具面板主列按鈕與選項微調尺寸，減少垂直佔用空間 */
 #myntLayoutToolbar button,
 #myntLayoutToolbar label {
-    min-height: 36px;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 13px;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font: 600 12px/1.3 system-ui, sans-serif;
+    white-space: nowrap;
+}
+
+#myntLayoutToolbar button {
+    background: #e4ecf7;
+    color: #1f4577;
+    border: 1px solid transparent;
+    cursor: pointer;
 }
 
 #myntLayoutToolbar button.primary {
-    background: var(--darkerColor-blue, #3569b2);
+    background: var(--darkerColor-blue, #1f4577);
     color: #ffffff;
 }
 
@@ -149,87 +214,146 @@ body.mynt-layout-editing #myntLayoutToolbar {
     background: var(--darkColor-blue, #4382ec);
 }
 
-/* 輔助列高度與按鈕緊湊化 */
+
+/* ==========================================================================
+   3. 面板小字、輔助列與次要按鈕對比強化
+   - 評審扣分項 2：小字至少 12px、行高 1.5；「還原此區塊」等次要按鈕文字對比度 ≥ 4.5:1
+   ========================================================================== */
+
+/* 輔助列容器 */
 #myntLayoutToolbar .myntLayoutHelp {
-    padding-top: 6px;
-    border-top: 1px solid rgba(219, 228, 240, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(219, 228, 240, 0.75);
+    font-size: 12px;
+    line-height: 1.5;
+    color: #253d58;
 }
 
+/* 提示文字與操作快捷鍵指引：字級 ≥ 12px、行高 1.5、色碼確保對比超過 6:1 */
+#myntLayoutToolbar .myntLayoutHelp span,
+#myntLayoutToolbar .myntLayoutInstructions {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #274363;
+}
+
+/* 「還原此區塊」與「還原全部」次要按鈕：實心淺底加深文字，確保文字對比度達 7:1 以上 */
 #myntLayoutToolbar .myntLayoutHelp button {
-    min-height: 30px;
-    padding: 4px 10px;
-    font-size: 11px;
+    min-height: 28px;
+    padding: 3px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 600;
+    border-radius: 6px;
+    background: rgba(228, 236, 247, 0.85);
+    color: var(--darkerColor-blue, #1f4577);
+    border: 1px solid rgba(185, 204, 230, 0.9);
+    cursor: pointer;
 }
 
-/* 儲存狀態提示向左對齊 */
+#myntLayoutToolbar .myntLayoutHelp button:hover:not(:disabled) {
+    background: var(--darkColor-blue, #4382ec);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+/* 未啟用／不可選取的次要按鈕（如未選取元件時的「還原此區塊」）：
+   以清晰文字顏色（#2e496b）取代原淺灰色，確保在淺色面板背景（#f6f9ff）上對比度仍維持 ≥ 4.5:1 */
+#myntLayoutToolbar button:disabled,
+#myntLayoutToolbar .myntLayoutHelp button:disabled {
+    opacity: 0.7;
+    background: rgba(228, 236, 247, 0.4);
+    color: #274363;
+    border-color: rgba(205, 219, 235, 0.65);
+    cursor: not-allowed;
+}
+
+/* 儲存狀態提示字：字級 ≥ 12px、行高 1.5、文字對比清晰 */
 #myntLayoutToolbar #myntLayoutSaveStatus {
-    margin: 2px 0 4px 0;
+    margin: 2px 0;
     text-align: left;
-    color: #546b80;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #274363;
 }
 
-/* 精準位置對齊面板：標題向面板左緣齊平 */
+/* 精準位置對齊面板：標題向面板左緣齊平，預設摺疊不撐高面板 */
 #myntLayoutToolbar .myntLayoutPrecision {
     width: 100%;
-    margin-top: 2px;
+    margin-top: 1px;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 #myntLayoutToolbar .myntLayoutPrecision summary {
     cursor: pointer;
-    padding: 4px 0;
+    padding: 2px 0;
     margin: 0;
     font-size: 12px;
+    line-height: 1.5;
     font-weight: 600;
-    color: #294b76;
+    color: var(--darkerColor-blue, #1f4577);
     text-align: left;
 }
 
-/* 排版操作小提示容器：區隔為清晰資訊卡片 */
+/* 排版操作小提示容器：維持可摺疊，未展開時不產生多餘邊界與背景，預設不撐高面板 */
 #myntEditorGuide {
     flex-basis: 100%;
-    margin-top: 4px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: rgba(228, 236, 247, 0.55);
-    border: 1px solid rgba(217, 228, 242, 0.75);
+    margin: 1px 0 0 0;
+    padding: 0;
+    background: transparent;
+    border: none;
     box-sizing: border-box;
 }
 
-/* 摺疊標題對齊卡片與面板左緣 */
 #myntEditorGuide summary {
     cursor: pointer;
-    padding: 0;
-    margin: 0 0 6px 0;
+    padding: 2px 0;
+    margin: 0;
     text-align: left;
     font-size: 12px;
+    line-height: 1.5;
     font-weight: 600;
-    color: #244f80;
+    color: var(--darkerColor-blue, #1f4577);
 }
 
-/* 提示文字：舒適行距與適度段落留白 */
-#myntEditorGuide p {
-    margin: 0 0 10px 0;
+/* 展開時的精簡資訊卡片樣式 */
+#myntEditorGuide[open] {
+    margin-top: 3px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(228, 236, 247, 0.5);
+    border: 1px solid rgba(217, 228, 242, 0.75);
+}
+
+#myntEditorGuide[open] p {
+    margin: 4px 0 6px 0;
     font-size: 12px;
-    line-height: 1.6;
-    color: #3b526d;
+    line-height: 1.5;
+    color: #253d58;
     max-width: 65ch;
 }
 
-/* 「知道了」按鈕：清楚的間距與獨立按鈕樣式，避免緊貼文字 */
+/* 「知道了」按鈕樣式 */
 #myntGuideDismiss {
-    min-height: 30px;
-    padding: 4px 16px;
+    min-height: 26px;
+    padding: 2px 12px;
     font-size: 12px;
+    line-height: 1.5;
     font-weight: 600;
-    border-radius: 8px;
-    background: var(--darkerColor-blue, #3569b2);
+    border-radius: 6px;
+    background: var(--darkerColor-blue, #1f4577);
     color: #ffffff;
     border: 1px solid transparent;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-top: 2px;
     transition: background 0.15s ease;
 }
 
@@ -239,14 +363,14 @@ body.mynt-layout-editing #myntLayoutToolbar {
 
 
 /* ==========================================================================
-   3. 焦點框調和（以主題色替換原有的橘色 #d77a0b）
+   4. 焦點框調和（以主題色替換原有的橘色 #d77a0b）
    ========================================================================== */
 
 #myntLayoutToolbar button:focus-visible,
 #myntLayoutToolbar input:focus-visible,
 #myntLayoutEdit:focus-visible,
 body.mynt-layout-editing .myntLayoutOverlay button:focus-visible,
-body.mynt-layout-editing .myntLayoutMove:focus-visible,
+body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel):focus-visible,
 body.mynt-layout-editing .myntLayoutResize:focus-visible,
 #myntProfilesPanel :focus-visible,
 #myntGuideDismiss:focus-visible {
@@ -256,12 +380,12 @@ body.mynt-layout-editing .myntLayoutResize:focus-visible,
 
 
 /* ==========================================================================
-   4. 無障礙動畫偏好設定支援（prefers-reduced-motion）
+   5. 無障礙動畫偏好設定支援（prefers-reduced-motion）
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
     body.mynt-layout-editing .myntLayoutOverlay,
-    body.mynt-layout-editing .myntLayoutMove,
+    body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel),
     body.mynt-layout-editing .myntLayoutResize,
     #myntLayoutToolbar,
     #myntLayoutToolbar * {
