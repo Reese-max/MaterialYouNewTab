@@ -3,7 +3,7 @@
 .event-countdown-card[hidden], .event-countdown-dialog [hidden] { display:none !important; }
 .event-countdown-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .event-countdown-head h2 { font-size:1rem; margin:0; }
-.event-countdown-card button, .event-countdown-dialog button { font:inherit; color:inherit; border:1px solid transparent; border-radius:999px; background:rgba(127,127,127,.14); padding:8px 12px; cursor:pointer; min-height:40px; }
+.event-countdown-card button, .event-countdown-dialog button { font:inherit; color:inherit; border:1px solid transparent; border-radius:999px; background:rgba(127,127,127,.14); padding:8px 12px; cursor:pointer; min-height:44px; }
 .event-countdown-card button:hover, .event-countdown-dialog button:hover { background:rgba(127,127,127,.23); }
 .event-countdown-dialog button:disabled { opacity:.45; cursor:not-allowed; }
 .event-countdown-card :focus-visible, .event-countdown-dialog :focus-visible { outline:3px solid var(--darkColor-blue,#4285f4); outline-offset:3px; }
@@ -54,9 +54,9 @@
 
 /* Detail polish: keep geometry user-controlled; improve the content rhythm only. */
 .event-countdown-card, .event-countdown-dialog { font-size:.875rem; line-height:1.5; }
-.event-countdown-head { min-height:40px; flex-wrap:wrap; }
+.event-countdown-head { min-height:44px; flex-wrap:wrap; }
 .event-countdown-head h2 { font-size:1rem; font-weight:700; line-height:1.5; min-width:0; overflow-wrap:anywhere; }
-.event-countdown-card button, .event-countdown-dialog button { display:inline-flex; align-items:center; justify-content:center; gap:6px; line-height:1.4; min-height:40px; transition:background-color .14s ease, box-shadow .14s ease; }
+.event-countdown-card button, .event-countdown-dialog button { display:inline-flex; align-items:center; justify-content:center; gap:6px; line-height:1.4; min-height:44px; transition:background-color .14s ease, box-shadow .14s ease; }
 .event-countdown-card .event-countdown-head button { font-size:.8125rem; padding-inline:12px; }
 .event-countdown-items { gap:10px; margin-top:14px; }
 .event-countdown-row { padding:12px; gap:8px 10px; }
@@ -79,7 +79,7 @@
 #eventCountdownCount { margin:8px 0 0; }
 .event-countdown-dialog .event-countdown-row { background:rgba(127,127,127,.045); }
 .event-countdown-row .event-countdown-actions { gap:6px; margin-top:2px; }
-.event-countdown-row .event-countdown-actions button { background:transparent; font-size:.8125rem; min-height:40px; }
+.event-countdown-row .event-countdown-actions button { background:transparent; font-size:.8125rem; min-height:44px; }
 .event-countdown-row .event-countdown-actions button:hover { background:rgba(127,127,127,.14); }
 .event-countdown-empty { list-style:none; padding:24px 16px; margin:0; text-align:center; border:1px dashed #8885; border-radius:16px; opacity:1; }
 .event-countdown-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px 16px; padding:16px; }

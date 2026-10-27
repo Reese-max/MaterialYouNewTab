@@ -15,7 +15,7 @@
     border-radius: 18px;
     padding: 8px 12px;
     max-width: 100%;
-    min-height: 36px;
+    min-height: 44px;
     background: var(--bg-color-blue, #e7eaf7);
     color: var(--darkColor-blue, #28324b);
     font: inherit;
@@ -28,5 +28,5 @@
 }
 .myntRecoveryUndo:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .myntRecoveryUndo:disabled { cursor: progress; opacity: 0.7; }
-.myntRecoveryStatus { font-size: 0.8rem; line-height: 1.4; overflow-wrap: anywhere; }
+.myntRecoveryStatus { font-size: 0.875rem; line-height: 1.4; overflow-wrap: anywhere; }
 .myntRecoveryStatus:empty { display: none; }

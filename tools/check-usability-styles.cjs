@@ -1,0 +1,22 @@
+'use strict';
+// Source contracts only: these are not browser layout or visual assertions.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const read = name => fs.readFileSync(path.join(__dirname, '../styles', name), 'utf8');
+const dialog = read('mynt-dialog.css');
+assert.match(dialog, /box-sizing: border-box; max-height: calc\(100dvh - 32px\); overflow-y: auto/);
+assert.match(dialog, /flex-direction: row-reverse; flex-wrap: wrap/);
+assert.match(dialog, /min-height: 44px; min-width: 44px/);
+assert.match(dialog, /white-space: pre-line; overflow-wrap: anywhere/);
+assert.match(dialog, /html\.myntHighContrast/);
+assert.match(read('local-recovery-controls.css'), /min-height: 44px/);
+assert.doesNotMatch(read('event-countdown.css'), /min-height:40px/);
+const editor = read('manual-editor-controls.css');
+assert.match(editor, /#myntLayoutSaveStatus:not\(:empty\)/);
+assert.match(editor, /clip-path: none/);
+assert.match(editor, /:is\(\.black-theme, \.dark-theme\)/);
+assert.match(editor, /html\.myntHighContrast body\.mynt-layout-editing/);
+assert.match(read('component-manager.css'), /label:focus-within/);
+assert.match(read('component-manager.css'), /@media \(max-width: 600px\)/);
+console.log('USABILITY_STYLE_CONTRACTS_OK (source-level, not visual verification)');

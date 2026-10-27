@@ -11,3 +11,10 @@
 #myntComponentManager :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
 #myntComponentManager .mynt-component-status:empty { display: none; }
 @media(max-width:420px) { #myntComponentManager .mynt-component-list { grid-template-columns: 1fr; } }
+
+/* Separate scan targets without changing component visibility or saved geometry. */
+#myntComponentManager label { box-sizing: border-box; padding: 8px; border-radius: 10px; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+#myntComponentManager .mynt-component-list { gap: 8px; }
+#myntComponentManager label:has(input:checked) { background: color-mix(in srgb, currentColor 8%, transparent); }
+#myntComponentManager label:focus-within { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (max-width: 600px) { #myntComponentManager .mynt-component-list { grid-template-columns: 1fr; } }

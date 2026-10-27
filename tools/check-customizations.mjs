@@ -409,3 +409,5 @@ execFileSync(process.execPath, [resolve(root, "tools/regress-background-adapters
 execFileSync(process.execPath, [resolve(root, "tools/check-background-power.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-layout-save.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-layout-stability.cjs")], {stdio:"inherit"});
+
+execFileSync(process.execPath, [resolve(root, "tools/check-usability-styles.cjs")], {stdio:"inherit"});

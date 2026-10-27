@@ -131,3 +131,39 @@ html.myntHighContrast #myntProfilesPanel,html.myntHighContrast #myntProfilesPane
 /* The settings switch is the primary editor entry, including keyboard users. */
 #layoutEditCheckbox { display: block; position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
 .switch:has(#layoutEditCheckbox:focus-visible) .toggle { outline: 3px solid var(--accentColor, #244f8d); outline-offset: 3px; }
+
+/* Control surfaces follow the user's palette, never the saved workspace coordinates. */
+#myntLayoutSaveDock, body.mynt-layout-editing #myntLayoutToolbar,
+#myntProfilesPanel summary, .myntProfilesContent {
+    background: var(--bg-color-blue, #eef5ff); color: var(--textColorDark-blue, #213851);
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+}
+#myntLayoutLock, #myntLayoutToolbar .myntLayoutHelp { color: inherit; }
+#myntProfilesPanel { color: var(--textColorDark-blue, #213851); }
+#myntProfilesPanel summary { min-height: 44px; box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
+#myntLayoutSaveStatus, .myntLayoutInstructions { font-size: .8125rem; line-height: 1.5; overflow-wrap: anywhere; }
+#myntLayoutToolbar button, .myntProfilesContent button { white-space: normal; overflow-wrap: anywhere; }
+:is(.black-theme, .dark-theme) #myntLayoutSaveDock,
+:is(.black-theme, .dark-theme) body.mynt-layout-editing #myntLayoutToolbar,
+:is(.black-theme, .dark-theme) #myntProfilesPanel summary,
+:is(.black-theme, .dark-theme) .myntProfilesContent { background: #1f2630; color: #eef1f5; }
+:is(.black-theme, .dark-theme) #myntLayoutToolbar :is(button, input, select),
+:is(.black-theme, .dark-theme) .myntProfilesContent :is(button, input, select) { background: #303d50; color: #eef1f5; border-color: #8191a7; }
+:is(.black-theme, .dark-theme) #myntLayoutToolbar button.primary,
+:is(.black-theme, .dark-theme) #myntLayoutSizePresets button[aria-pressed="true"] { background: #bbd6fd; color: #1b3041; }
+html.myntHighContrast #myntLayoutSaveDock,
+html.myntHighContrast body.mynt-layout-editing #myntLayoutToolbar,
+html.myntHighContrast #myntLayoutToolbar :is(button, input, select) { background: Canvas; color: CanvasText; border: 1px solid CanvasText; }
+@media (max-width: 480px) {
+    /* Feedback remains readable; empty live regions do not consume screen space. */
+    #myntLayoutSaveDock #myntLayoutSaveStatus:not(:empty) {
+        position: static; width: auto; height: auto; max-width: min(260px, calc(100vw - 56px));
+        margin: 6px 0 0; padding: 6px 10px; overflow: visible; clip-path: none;
+        white-space: normal; border-radius: 10px; background: var(--bg-color-blue, #eef5ff); color: var(--textColorDark-blue, #213851);
+    }
+    #myntLayoutToolbar .myntLayoutInstructions { font-size: .8125rem; }
+}
+
+/* Theme and accessibility overrides also apply to the narrow feedback pill. */
+:is(.black-theme, .dark-theme) #myntLayoutSaveDock #myntLayoutSaveStatus:not(:empty) { background: #1f2630; color: #eef1f5; }
+html.myntHighContrast #myntLayoutSaveDock #myntLayoutSaveStatus:not(:empty) { background: Canvas; color: CanvasText; }
