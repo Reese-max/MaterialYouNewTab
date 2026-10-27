@@ -4,4 +4,23 @@
         --workspace-width: min(720px, 60vw);
         --workspace-left: calc((100vw - var(--workspace-width)) / 2);
     }
+
+    /* 三種面板以行內 display 切換；預留左側 20px、面板 372px 與間距 24px。
+       保留原本的置中位置，空間不足才縮欄，最小寬度為 480px。 */
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])):has(:is(#todoContainer, #scratchpadContainer, #pomodoroPanel):not([style*="display: none"])) {
+        --workspace-left: max(416px, calc((100vw - min(720px, 60vw)) / 2));
+        --workspace-width: max(480px, min(720px, 60vw, calc(100vw - var(--workspace-left) - 24px)));
+    }
+
+    /* 搜尋服務列跟隨搜尋框的正常排版；54px 輸入框邊距加上 2px 文字內距。 */
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) .searchWithCont {
+        margin-top: 10px;
+        margin-inline-start: 56px;
+        max-width: calc(100% - 56px);
+        gap: 8px;
+    }
+
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) .searchWithCont .hint {
+        padding-inline-start: 0;
+    }
 }
