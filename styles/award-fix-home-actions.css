@@ -1,1 +1,130 @@
 /* 第 3 輪：首頁焦點卡動作按鈕與搜尋服務 */
+
+/* ===== 焦點卡動作列 =====
+   「完成」按鈕與 ▶ ✦ ⋯ 三個圖示按鈕統一為 32px 高；
+   圖示可點範圍放大到 32×32px、glyph 至少 16px，
+   hover／focus 狀態與主按鈕一致。 */
+
+#dailyFocusToggle {
+    /* 由 30px 改為 32px，與右側圖示按鈕同高 */
+    min-height: 32px;
+    padding: 4px 14px;
+}
+
+#dailyFocusToggle:hover {
+    /* 與圖示按鈕的 hover 回饋等量：輕微提亮，不位移 */
+    filter: brightness(1.08);
+}
+
+#dailyFocusTools {
+    gap: 4px;
+    align-items: center;
+}
+
+#dailyFocusTools .dailyFocusIcon {
+    /* 覆蓋 focus-card.css 的 padding 定位，改為 flex 置中，
+       讓三個圖示按鈕與「完成」等高、且有一致的可點範圍 */
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* glyph（▶ ✦ ⋯）至少 16px；原本 0.8rem 只有約 12.8px */
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0.72;
+}
+
+#dailyFocusTools .dailyFocusIcon:hover,
+#dailyFocusTools .dailyFocusIcon:focus-visible,
+#dailyFocusTools .dailyFocusIcon[aria-expanded="true"] {
+    opacity: 1;
+    background: rgba(127, 127, 127, 0.22);
+}
+
+#dailyFocusTools .dailyFocusIcon:active {
+    background: rgba(127, 127, 127, 0.3);
+}
+
+#dailyFocusTools .dailyFocusIcon:focus-visible {
+    /* 與 #dailyFocusToggle 相同的焦點框，四個動作一致 */
+    outline: 2px solid var(--darkColor-blue);
+    outline-offset: 1px;
+}
+
+/* ===== 搜尋服務列 =====
+   原本是 100px 高的素色標籤方塊（.hint）加上無外框的 Google 晶片，
+   看不出是「目前選用的搜尋引擎」。改為同高的分段控制外觀：
+   .hint 作為區塊標籤，.searchEnginesContainer 加上外框，
+   .search-engine 以內框線呈現選中狀態。 */
+
+.searchWithCont {
+    align-items: center;
+}
+
+.searchWithCont .hint {
+    /* 原本固定 100px、min-width 120px，看起來像一個空的方塊；
+       收斂為與引擎晶片同高的標籤格 */
+    height: auto;
+    min-height: 40px;
+    min-width: 0;
+    max-width: none;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    opacity: 0.8;
+    /* 它是純標籤（無點擊行為），移除暗示可點的游標 */
+    cursor: default;
+}
+
+/* 語系尚未填入文字時不殘留空色塊 */
+.searchWithCont .hint:empty {
+    display: none;
+}
+
+.searchEnginesContainer {
+    gap: 6px;
+    padding: 4px;
+    padding-inline-start: 4px;
+    align-items: center;
+    border-radius: 999px;
+    /* 淡淡的分段外框，讓整組像一個控制元件而不是散落的晶片 */
+    border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 24%, transparent);
+    background: color-mix(in srgb, var(--whitishColor-blue) 45%, transparent);
+}
+
+.searchEnginesContainer .search-engine {
+    gap: 8px;
+    padding-inline: 4px 14px;
+    border-radius: 999px;
+    /* 目前選用狀態：主色內框線（此版本固定為 Google，
+       上游多引擎時 :checked 也走同一外觀） */
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--darkColor-blue) 70%, transparent);
+}
+
+.searchEnginesContainer .search-engine:has(input[type="radio"]:checked) {
+    box-shadow: inset 0 0 0 1.5px var(--darkColor-blue);
+}
+
+/* 圖示與標籤改用 gap 對齊，移除原本分散的 margin */
+.searchEnginesContainer .search-engine .search-engine-icon {
+    margin-inline-start: 0;
+    flex: 0 0 auto;
+}
+
+.searchEnginesContainer .search-engine .engine-name {
+    margin-inline: 0;
+    line-height: 1;
+}
+
+.searchEnginesContainer .search-engine:hover,
+.searchEnginesContainer .search-engine:focus-within {
+    background-color: var(--darkColor-blue);
+    color: var(--onActionColor-blue);
+}
+
+.searchEnginesContainer .search-engine:focus-visible {
+    outline: 2px solid var(--darkColor-blue);
+    outline-offset: 2px;
+}
