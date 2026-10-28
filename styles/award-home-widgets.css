@@ -19,13 +19,13 @@
         color: #20334c;
         font: .875rem/1.5 "Poppins", "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
     }
-    /* 自訂與編輯共用原點，拖曳不跳位；右側留 200px、底部至少留 160px，既存座標／縮放由版面引擎套用。 */
+    /* 自訂與編輯共用原點；右側沒有名言列，內容可用到底部 16px。 */
     body:is(:has([data-mynt-layout]), .mynt-layout-editing) #myntHomeWidgets:not([hidden]):not([data-mynt-component-hidden]) {
         left: calc(100vw - 520px);
         top: 180px;
         width: 320px;
-        height: min(640px, calc(100dvh - 340px));
-        max-height: max(0px, calc(100dvh - 340px));
+        height: min(640px, calc(100dvh - 196px));
+        max-height: max(0px, calc(100dvh - 196px));
         align-content: start;
     }
 }

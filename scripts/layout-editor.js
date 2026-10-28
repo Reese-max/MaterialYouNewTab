@@ -49,6 +49,31 @@ function myntClampOffset(rect, dx, dy, vw, vh, margin = 4) {
     return { x, y };
 }
 
+function myntOverlapRatio(rect, other) {
+    const area = Math.max(0, Math.min(rect.right, other.right) - Math.max(rect.left, other.left))
+        * Math.max(0, Math.min(rect.bottom, other.bottom) - Math.max(rect.top, other.top));
+    return rect.width * rect.height > 0 ? area / (rect.width * rect.height) : 0;
+}
+
+// 只回傳顯示用偏移；原始儲存區塊不變，拖曳沿用 currentBlock 的畫面座標。
+function myntClockFallback(block, clock, focus, obstacles, controls, vw, vh) {
+    if (!focus || !obstacles.some(rect => myntOverlapRatio(clock, rect) > .2)) return { ...block };
+    let left = focus.left + (focus.width - clock.width) / 2, top = focus.top - clock.height - 16;
+    const above = { left, top, right: left + clock.width, bottom: top + clock.height, width: clock.width, height: clock.height };
+    if (top < 8 || controls.some(rect => myntOverlapRatio(above, rect) > 0)) {
+        left = focus.right + 16; top = focus.top + (focus.height - clock.height) / 2;
+    }
+    return { ...block, x: block.x + (left - clock.left) / vw, y: block.y + (top - clock.top) / vh };
+}
+
+function myntClockDatePosition(clock, width, height, obstacles) {
+    const left = clock.left + (clock.width - width) / 2, top = clock.bottom + 8;
+    const below = { left, top, right: left + width, bottom: top + height, width, height };
+    return obstacles.some(rect => myntOverlapRatio(below, rect) > 0)
+        ? { left: clock.right + 8, top: clock.top + (clock.height - height) / 2 }
+        : { left, top };
+}
+
 // Snap the visible rectangle, not its offset from an unrelated natural origin.
 // Nearby object/viewport alignment takes precedence over the optional 16px grid.
 function myntSnapMove(rect, dx, dy, peers, vw, vh, enabled) {
@@ -98,7 +123,7 @@ function myntLayoutHistory(initial, limit = 100) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { MYNT_LAYOUT_BLOCKS, MYNT_LAYOUT_LIMITS, myntNormalizeLayout, myntClampOffset, myntSnapMove, myntLayoutHistory };
+    module.exports = { MYNT_LAYOUT_BLOCKS, MYNT_LAYOUT_LIMITS, myntNormalizeLayout, myntClampOffset, myntSnapMove, myntLayoutHistory, myntOverlapRatio, myntClockFallback, myntClockDatePosition };
 }
 
 if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", () => {
@@ -220,7 +245,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const pixels = (el.style.translate || "0 0").split(/\s+/).map(parseFloat);
         return { ...saved, x: (Number.isFinite(pixels[0]) ? pixels[0] : 0) / innerWidth, y: (Number.isFinite(pixels[1]) ? pixels[1] : 0) / innerHeight };
     }
-    function applyBlock(id) {
+    function applyBlock(id, settle = true) {
         const entry = MYNT_LAYOUT_BLOCKS.find(item => item[0] === id), block = layout.blocks[id];
         for (const el of elementsFor(entry[1])) {
             if (!block) {
@@ -242,8 +267,37 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 if (fixed.x !== dx || fixed.y !== dy) { el.style.translate = `${fixed.x}px ${fixed.y}px`; el.dataset.myntLayoutConstrained = "true"; }
             }
         }
+        if (settle) settleClock();
     }
-    function applyAll() { MYNT_LAYOUT_BLOCKS.forEach(([id]) => applyBlock(id)); if (editing) placeOverlays(); document.dispatchEvent(new CustomEvent("mynt:layout-applied")); }
+    function settleClock() {
+        // 同一輪先定位所有遮擋區塊，再以存檔位置判斷；不把回退寫入 layout。
+        applyBlock("clock", false);
+        if (!editing && !Object.keys(layout.blocks).length) {
+            for (const date of elementsFor(".mynt-clock-date")) {
+                delete date.dataset.myntLayoutDate;
+                for (const key of ["--mynt-clock-scale", "--mynt-date-x", "--mynt-date-y"]) date.style.removeProperty(key);
+            }
+            return;
+        }
+        const clock = elementFor("clock");
+        if (!clock) return;
+        const peers = ["focus", "search", "aiTools"].map(elementFor).filter(Boolean).map(el => el.getBoundingClientRect());
+        const focus = elementFor("focus"), block = layout.blocks.clock;
+        if (block) {
+            const controls = elementsFor("#pomodoroCont, #scratchpadCont, #myntProfilesPanel").filter(visible).map(el => el.getBoundingClientRect());
+            const display = myntClockFallback(currentBlock("clock", clock), clock.getBoundingClientRect(), focus?.getBoundingClientRect(), peers, controls, innerWidth, innerHeight);
+            clock.style.translate = `${display.x * innerWidth}px ${display.y * innerHeight}px`;
+        }
+        const date = clock.querySelector(".mynt-clock-date");
+        if (!date) return;
+        const rect = clock.getBoundingClientRect(), scale = rect.width / clock.offsetWidth;
+        date.dataset.myntLayoutDate = "true";
+        date.style.setProperty("--mynt-clock-scale", String(scale));
+        const size = date.getBoundingClientRect(), position = myntClockDatePosition(rect, size.width, size.height, peers);
+        date.style.setProperty("--mynt-date-x", `${(position.left - rect.left) / scale}px`);
+        date.style.setProperty("--mynt-date-y", `${(position.top - rect.top) / scale}px`);
+    }
+    function applyAll() { MYNT_LAYOUT_BLOCKS.forEach(([id]) => applyBlock(id, false)); settleClock(); if (editing) placeOverlays(); document.dispatchEvent(new CustomEvent("mynt:layout-applied")); }
     function placeOverlays() {
         for (const [id, overlay] of overlays) {
             const el = elementFor(id);

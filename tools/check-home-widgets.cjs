@@ -206,7 +206,7 @@ async function main() {
     assert.match(css, /@media \(min-width: 1500px\)/); assert.match(css, /body #myntHomeWidgets:not/);
     assert.doesNotMatch(css, /:not\(\.mynt-layout-editing\)|:not\(:has\(\[data-mynt-layout\]\)\)/);
     assert.match(css, /:not\(\[hidden\]\):not\(\[data-mynt-component-hidden\]\)/);
-    assert.match(css, /top: 180px/); assert.match(css, /max-height: max\(0px, calc\(100dvh - 340px\)\)/);
+    assert.match(css, /top: 180px/); assert.match(css, /max-height: max\(0px, calc\(100dvh - 196px\)\)/);
     assert.match(css, /max-height: max\(0px, calc\(100dvh - 308px - var\(--shortcut-size, 50px\) - var\(--gap, 30px\) \* 2\)\)/, 'The default layout keeps its existing shortcut clearance');
     assert.match(css, /overflow: auto/);
     const { MYNT_LAYOUT_BLOCKS, myntNormalizeLayout } = require('../scripts/layout-editor.js');
@@ -227,7 +227,7 @@ async function main() {
     for (const [vw, vh, obstacles] of cases) {
         const left = vw - rightSpace, height = Math.min(cap, vh - reserve), right = left + width, bottom = top + height;
         assert(left >= 0 && top >= 0 && right <= vw && bottom <= vh);
-        assert(bottom <= vh - 68 - 16, 'Keep the quote row clear vertically');
+        assert(bottom <= vh - 16, 'The custom right column can reach 16px above the viewport bottom; quote clearance is checked by rectangles below');
         for (const [x1,y1,x2,y2] of obstacles) assert(right + 16 <= x1 || left >= x2 + 16 || bottom + 16 <= y1 || top >= y2 + 16, `Widget overlaps the 16px clearance at ${vw}x${vh}: ${[x1,y1,x2,y2]}`);
         console.log(`HOME_WIDGETS_GEOMETRY ${vw}x${vh}: x=${left} y=${top} width=${width} height=${height}`);
     }

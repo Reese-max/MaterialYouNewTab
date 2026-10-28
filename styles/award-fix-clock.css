@@ -21,7 +21,7 @@
 body[data-workspace-background="video"]:has([data-mynt-layout]):has(#hideClock:checked) .leftDiv :is(#analogClock, #digitalClock)[data-mynt-component-display="block"]:not([data-mynt-component-hidden]) {
     display: block !important;
 }
-/* 日期跟著既有類比鐘區塊縮放；不另設座標或新增第二個日期元件。 */
+/* 日期保留在既有類比鐘區塊內；自訂版面由引擎補償字級及避開主欄。 */
 body[data-workspace-background="video"]:has([data-mynt-layout]) #analogClock .mynt-clock-date { display: block; }
 /* 關閉顯示時鐘時，所有版面皆隱藏；優先於歷史樣式與元件顯示規則。 */
 body:has(#hideClock:not(:checked)) .leftDiv :is(#analogClock, #digitalClock) {
@@ -30,6 +30,16 @@ body:has(#hideClock:not(:checked)) .leftDiv :is(#analogClock, #digitalClock) {
 /* 非影片工作區的類比日期已顯示在焦點卡，避免未自訂版面出現兩份日期。 */
 body.mynt-manual-workspace:not([data-workspace-background="video"]) #analogClock .mynt-clock-date {
     display: none;
+}
+
+/* 只補償自訂／編輯版面，未自訂版面的日期與流向維持原樣。 */
+body #analogClock .mynt-clock-date[data-mynt-layout-date] {
+    display: block;
+    font-size: max(calc(14px * var(--mynt-font-scale, 1)), calc(12px / var(--mynt-clock-scale, 1)));
+    max-width: calc((100vw - 16px) / var(--mynt-clock-scale, 1));
+    left: var(--mynt-date-x, 50%);
+    top: var(--mynt-date-y, calc(100% + 8px));
+    transform: none;
 }
 
 html:has(> body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout]))) {
