@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
-import { contrastRatio, freezeWallpaper, isLargeText, parseArgs, shotName, summarize, wallpaperSeed } from "./capture-ui-core.mjs";
+import { contrastRatio, freezeWallpaper, inspectStateVisibility, isLargeText, parseArgs, shotName, summarize, wallpaperSeed } from "./capture-ui-core.mjs";
 
 const defaults = parseArgs(["--out", "dist/ui-shots/base"]);
 assert.equal(defaults.states.length, 6);
@@ -128,4 +128,89 @@ assert.match(broken.videos[1].error, /timed out/u);
 assert.match(broken.videos[2].error, /timed out/u);
 assert.match(broken.images[0].error, /failed to load/u);
 assert.match(broken.images[1].error, /timed out/u);
+
+function visibilityEnvironment({ missing = false, width = 200, height = 100, display = "grid", visibility = "visible", opacity = "1", ancestorOpacity = "1", ancestorDisplay = "block", hit = "self" } = {}) {
+    const ancestor = { parentElement: null, style: { display: ancestorDisplay, visibility: "visible", opacity: ancestorOpacity } };
+    const child = {};
+    const element = { parentElement: ancestor, style: { display, visibility, opacity },
+        getBoundingClientRect: () => ({ left: 10, top: 20, width, height }),
+        contains: node => node === element || node === child };
+    return {
+        getComputedStyle: node => node.style,
+        document: {
+            querySelector: () => missing ? null : element,
+            elementFromPoint: (x, y) => {
+                assert.equal(x, 10 + width / 2);
+                assert.equal(y, 20 + height / 2);
+                return hit === "self" ? element : hit === "child" ? child : hit === "outside" ? null : { id: "videoBg" };
+            },
+        },
+    };
+}
+const inspect = options => runInNewContext(`(${inspectStateVisibility.toString()})("#todoContainer")`, visibilityEnvironment(options));
+for (const hit of ["self", "child"]) assert.equal(inspect({ hit }).visible, true);
+assert.equal(inspect({ opacity: "0.051" }).visible, true);
+for (const [options, reason] of [
+    [{ missing: true }, /missing/u], [{ width: 0 }, /width\/height/u], [{ height: -1 }, /width\/height/u],
+    [{ display: "none" }, /display: none/u], [{ ancestorDisplay: "none" }, /display: none/u],
+    [{ visibility: "hidden" }, /visibility: hidden/u], [{ visibility: "collapse" }, /visibility: collapse/u],
+    [{ opacity: "0.05" }, /opacity/u], [{ opacity: "0" }, /opacity/u],
+    [{ opacity: "0.2", ancestorOpacity: "0.2" }, /opacity/u],
+    [{ hit: "covered" }, /covered by #videoBg/u], [{ hit: "outside" }, /outside the viewport/u],
+]) {
+    const result = inspect(options);
+    assert.equal(result.visible, false, JSON.stringify(options));
+    assert.match(result.reason, reason);
+}
+
+// Execute the real capture pipeline with CDP doubles; never import its browser-launching main().
+const captureSource = readFileSync(new URL("./capture-ui.mjs", import.meta.url), "utf8");
+const captureFunction = captureSource.slice(captureSource.indexOf("async function captureShot("), captureSource.indexOf("\nconst consoleMessages ="));
+async function capture(mode, state, closeDuringInspection = false) {
+    const events = [];
+    let open = false;
+    const result = { state, theme: "light", viewport: { width: 1920, height: 1080 },
+        selector: state === "todo" ? "#todoContainer" : "#pomodoroPanel", filename: "test.png", stateOpened: false };
+    const context = {
+        result, mode, freezeWallpaper, inspectStateVisibility, FIXED_TIME: "fixed", STILL_CSS: "", seedDocument() {},
+        consoleMessages: [], runtimeExceptions: [], wallpaperMessages: [], outputDir: ".", Buffer,
+        resolve: (...parts) => parts.join("/"), console: { log() {} },
+        writeFileSync: (_path, data) => assert.equal(data.toString(), "screenshot"),
+        pageClient: { waitForEvent: async () => ({}), send: async method => {
+            if (method === "Page.captureScreenshot") { events.push("screenshot"); return { data: Buffer.from("screenshot").toString("base64") }; }
+            return { identifier: "seed" };
+        } },
+        waitForUi: async () => {}, delay: async () => {},
+        enterState: async () => { events.push("open"); open = true; },
+        inspectContrast: async () => { events.push("contrast"); if (closeDuringInspection) open = false; return {}; },
+        evaluate: async expression => {
+            if (expression.includes("cancelApply()")) events.push("cancel");
+            if (expression.startsWith(`(${freezeWallpaper.toString()})`)) { events.push("freeze"); return { videos: [], images: [] }; }
+            if (expression.includes("#myntAdaptiveAnalyze")) { events.push("analyze"); open = false; }
+            if (expression.startsWith(`(${inspectStateVisibility.toString()})`)) {
+                events.push("visibility");
+                return runInNewContext(expression, visibilityEnvironment({ display: open ? "grid" : "none" }));
+            }
+        },
+    };
+    await runInNewContext(`${captureFunction}\ncaptureShot(result, {}, null, mode)`, context);
+    return { result, events };
+}
+for (const state of ["todo", "pomodoro"]) {
+    const normal = await capture("none", state);
+    assert.deepEqual(normal.events, ["cancel", "open", "contrast", "visibility", "screenshot"]);
+    assert.equal(normal.result.success, true);
+    const wallpaper = await capture("default", state);
+    assert.deepEqual(wallpaper.events, ["freeze", "analyze", "open", "contrast", "visibility", "screenshot"]);
+    assert.equal(wallpaper.result.stateOpened, true);
+    assert.equal(wallpaper.result.success, true);
+    const hidden = await capture("default", state, true);
+    assert.equal(hidden.result.stateOpened, false);
+    assert.equal(hidden.result.success, false);
+    assert.equal(hidden.result.screenshotSaved, true);
+    assert.match(hidden.result.error, /State visibility:.*display: none/u);
+    const failedReport = summarize([hidden.result]);
+    assert.equal(failedReport.success, false);
+    assert.match(failedReport.shots[0].stateVisibility.reason, /display: none/u);
+}
 console.log("CAPTURE_UI_CORE_OK");

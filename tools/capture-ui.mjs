@@ -6,7 +6,7 @@ import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
-import { contrastRatio, freezeWallpaper, isLargeText, parseArgs, shotName, summarize, wallpaperSeed } from "./capture-ui-core.mjs";
+import { contrastRatio, freezeWallpaper, inspectStateVisibility, isLargeText, parseArgs, shotName, summarize, wallpaperSeed } from "./capture-ui-core.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const profileDir = mkdtempSync(resolve(tmpdir(), "mynt-ui-capture-"));
@@ -351,7 +351,7 @@ async function waitForUi(expression, description, timeoutMs = 15_000) {
 const stateSelectors = {
     home: "#shortcutsContainer .shortcuts",
     menu: '#menuBar #menuCont',
-    todo: '#todoContainer #todoullist .todolistitem',
+    todo: '#todoContainer',
     pomodoro: '#pomodoroPanel',
     layout: 'body.mynt-layout-editing #myntLayoutToolbar',
     dialog: 'dialog.myntAppDialog[open]',
@@ -540,20 +540,20 @@ async function captureShot(result, seed, axeSource, wallpaperMode) {
                 };
             })()`);
         }
+        if (wallpaperMode === "default") {
+            try {
+                result.wallpaper = await evaluate(`(${freezeWallpaper.toString()})()`);
+                // This click bubbles to the panels' outside-click handlers: do it before opening them.
+                await evaluate("document.querySelector('#myntAdaptiveAnalyze')?.click()");
+                await delay(300);
+            } catch (error) { result.wallpaper = { error: error.message }; }
+        }
         await enterState(result.state);
         // 設定選單等入口另有 setTimeout；CSS 關閉動畫不會取消這些回呼。
         await delay(700);
         result.stateOpened = true;
     } catch (error) {
         result.error = error.message;
-    }
-    if (wallpaperMode === "default") {
-        try {
-            result.wallpaper = await evaluate(`(${freezeWallpaper.toString()})()`);
-            // Use MYNT's existing reanalysis entry after seeking so cards match the fixed frame.
-            await evaluate("document.querySelector('#myntAdaptiveAnalyze')?.click()");
-            await delay(300);
-        } catch (error) { result.wallpaper = { error: error.message }; }
     }
     if (result.stateOpened) {
         try {
@@ -569,6 +569,18 @@ async function captureShot(result, seed, axeSource, wallpaperMode) {
         } catch (error) {
             result.error = error.message;
         }
+    }
+    try {
+        // Recheck after every asynchronous preparation/inspection, immediately before capture.
+        result.stateVisibility = await evaluate(`(${inspectStateVisibility.toString()})(${JSON.stringify(result.selector)})`);
+        result.stateOpened = result.stateOpened && result.stateVisibility.visible;
+        if (!result.stateVisibility.visible) {
+            result.error = [result.error, `State visibility: ${result.stateVisibility.reason}`].filter(Boolean).join("; ");
+        }
+    } catch (error) {
+        result.stateOpened = false;
+        result.stateVisibility = { visible: false, selector: result.selector, reason: error.message };
+        result.error = [result.error, `State visibility: ${error.message}`].filter(Boolean).join("; ");
     }
     try {
         const { data } = await pageClient.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false });

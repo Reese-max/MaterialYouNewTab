@@ -122,6 +122,29 @@ export function shotName(state, theme, viewport) {
     return `${state}--${theme}--${viewport.width}x${viewport.height}.png`;
 }
 
+// Self-contained so the screenshot-time check and its browser-free tests use identical code.
+export function inspectStateVisibility(selector) {
+    const element = document.querySelector(selector);
+    const fail = reason => ({ visible: false, selector, reason });
+    if (!element) return fail("Target element is missing");
+    const box = element.getBoundingClientRect();
+    if (!(box.width > 0 && box.height > 0)) return fail("Target has no positive width/height");
+    let opacity = 1;
+    for (let current = element; current; current = current.parentElement) {
+        const style = getComputedStyle(current);
+        if (style.display === "none") return fail("Target or ancestor has display: none");
+        if (current === element && ["hidden", "collapse"].includes(style.visibility)) return fail(`Target has visibility: ${style.visibility}`);
+        opacity *= Number(style.opacity);
+    }
+    if (!(opacity > 0.05)) return fail(`Target effective opacity ${opacity} is not > 0.05`);
+    const x = box.left + box.width / 2, y = box.top + box.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    if (!hit || !element.contains(hit)) {
+        return fail(`Target center (${x}, ${y}) is ${hit ? `covered by ${hit.id ? `#${hit.id}` : hit.localName}` : "outside the viewport or not hit-testable"}`);
+    }
+    return { visible: true, selector, reason: null };
+}
+
 function parseColor(value) {
     const match = /^rgba?\(\s*(.*?)\s*\)$/iu.exec(String(value));
     if (!match) throw new Error(`Invalid rgb()/rgba() color: ${value}`);
