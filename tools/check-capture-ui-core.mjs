@@ -1,19 +1,26 @@
 import assert from "node:assert/strict";
-import { contrastRatio, isLargeText, parseArgs, shotName, summarize } from "./capture-ui-core.mjs";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import { contrastRatio, freezeWallpaper, isLargeText, parseArgs, shotName, summarize, wallpaperSeed } from "./capture-ui-core.mjs";
 
 const defaults = parseArgs(["--out", "dist/ui-shots/base"]);
 assert.equal(defaults.states.length, 6);
 assert.deepEqual(defaults.themes, ["light", "dark"]);
 assert.deepEqual(defaults.viewports, [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]);
+assert.equal(defaults.wallpaper, "none");
+for (const mode of ["none", "default"]) assert.equal(parseArgs(["--out", "shots", "--wallpaper", mode]).wallpaper, mode);
 assert.deepEqual(parseArgs(["--out", "shots", "--states", "todo,dialog", "--themes", "dark", "--viewports", "320x640", "--axe", "axe.min.js", "--only-changed"]), {
-    out: "shots", states: ["todo", "dialog"], themes: ["dark"], viewports: [{ width: 320, height: 640 }], axe: "axe.min.js",
+    out: "shots", states: ["todo", "dialog"], themes: ["dark"], viewports: [{ width: 320, height: 640 }], axe: "axe.min.js", wallpaper: "none",
 });
 for (const args of [[], ["--out"], ["--out", ""], ["--out", "--themes"], ["--unknown"],
     ["--out", "a", "--out", "b"], ["--out", "a", "--states", "bogus"], ["--out", "a", "--states", "home,"],
     ["--out", "a", "--themes", "system"], ["--out", "a", "--themes", "dark,dark"],
     ["--out", "a", "--viewports", "0x768"], ["--out", "a", "--viewports", "1920"],
     ["--out", "a", "--viewports", "1.5x768"], ["--out", "a", "--viewports", "999999999999999999x768"],
-    ["--out", "a", "--axe"], ["--out", "a", "--only-changed", "yes"]]) {
+    ["--out", "a", "--axe"], ["--out", "a", "--only-changed", "yes"],
+    ["--out", "a", "--wallpaper"], ["--out", "a", "--wallpaper", ""], ["--out", "a", "--wallpaper", "--themes"],
+    ["--out", "a", "--wallpaper", "random"], ["--out", "a", "--wallpaper", "none,default"],
+    ["--out", "a", "--wallpaper", "DEFAULT"], ["--out", "a", "--wallpaper", "none", "--wallpaper", "default"]]) {
     assert.throws(() => parseArgs(args), Error, JSON.stringify(args));
 }
 assert.equal(shotName("home", "dark", { width: 1366, height: 768 }), "home--dark--1366x768.png");
@@ -47,4 +54,78 @@ assert.equal(summarize([input[0]]).success, true);
 assert.equal(summarize([{ ...input[0], consoleErrors: ["error"] }]).success, false);
 assert.equal(summarize([{ ...input[0], exceptions: ["exception"] }]).success, false);
 assert.equal(summarize([]).totals.shots, 0);
+
+const seed = JSON.parse(readFileSync(new URL("./fixtures/ui-seed.json", import.meta.url), "utf8"));
+const originalSeed = JSON.stringify(seed);
+assert.deepEqual(wallpaperSeed(seed, "none"), seed);
+const freshSeed = wallpaperSeed(seed, "default");
+for (const key of ["myntWallpaperCurrent", "myntWallpaperMode", "myntWallpaperSeeded"]) {
+    assert.equal(Object.hasOwn(freshSeed, key), false);
+}
+assert.deepEqual({ ...freshSeed, myntWallpaperCurrent: "none", myntWallpaperMode: "fixed", myntWallpaperSeeded: "1" }, seed);
+assert.equal(JSON.stringify(seed), originalSeed);
+
+// Exercise the exact serialized page function using media doubles; no browser or dependencies.
+class Video extends EventTarget {
+    constructor({ lazy = false, duration = 5, fail = false, neverLoad = false, neverSeek = false, empty = false, ready = 0 } = {}) {
+        super();
+        Object.assign(this, { id: "videoBg", duration, fail, neverLoad, neverSeek, readyState: ready, paused: false, seeking: false, error: null, time: 0, loads: 0 });
+        this.source = { dataset: { src: "./videos/bg.mp4?v=2" }, src: lazy ? "" : "./videos/bg.mp4?v=2", getAttribute: () => this.source.src };
+        this.empty = empty;
+    }
+    pause() { this.paused = true; }
+    getAttribute() { return ""; }
+    querySelectorAll() { return this.empty ? [] : [this.source]; }
+    querySelector() { return !this.empty && this.source.src ? this.source : null; }
+    load() {
+        this.loads += 1;
+        if (this.neverLoad) return;
+        setTimeout(() => {
+            if (this.fail) this.error = { code: 4, message: "unsupported" };
+            else this.readyState = 2;
+        }, 1);
+    }
+    get currentTime() { return this.time; }
+    set currentTime(value) {
+        this.time = value; this.seeking = true; this.readyState = 1;
+        if (!this.neverSeek) setTimeout(() => { this.seeking = false; this.readyState = 2; }, 1);
+    }
+}
+class WallpaperImage {
+    set src(value) {
+        this.complete = false; this.naturalWidth = 0;
+        if (value === "pending.jpg") return;
+        setTimeout(() => { this.complete = true; this.naturalWidth = value === "bad.jpg" ? 0 : 1920; }, 1);
+    }
+}
+const freeze = (videos, backgroundImage = "none") => runInNewContext(`(${freezeWallpaper.toString()})({timeoutMs: 150})`, {
+    document: { querySelectorAll: () => videos, body: {} },
+    getComputedStyle: () => ({ backgroundImage }), Image: WallpaperImage, setTimeout, clearTimeout,
+    // The actual capture page freezes Date.now(); timeout handling must not depend on it.
+    Date: { now: () => 1793151000000 },
+});
+const lazyVideo = new Video({ lazy: true });
+const shortVideo = new Video({ duration: 0.5, ready: 2 });
+const noSource = new Video({ empty: true });
+const media = await freeze([lazyVideo, shortVideo, noSource], 'url("good.jpg")');
+assert.equal(lazyVideo.source.src, "./videos/bg.mp4?v=2");
+assert.equal(lazyVideo.preload, "auto");
+assert.equal(lazyVideo.loads, 1);
+assert.equal(media.videos[0].currentTime, 1);
+assert.equal(media.videos[0].paused, true);
+assert.equal(media.videos[0].readyState, 2);
+assert.equal(shortVideo.loads, 0);
+assert.equal(media.videos[1].currentTime, 0.49);
+assert.equal(media.videos[2].skipped, true);
+assert.equal(noSource.paused, true);
+assert.equal(media.images[0].loaded, true);
+lazyVideo.paused = false;
+lazyVideo.dispatchEvent(new Event("play"));
+assert.equal(lazyVideo.paused, true);
+const broken = await freeze([new Video({ fail: true }), new Video({ neverLoad: true }), new Video({ neverSeek: true })], 'url("bad.jpg"), url("pending.jpg")');
+assert.match(broken.videos[0].error, /Video error 4/u);
+assert.match(broken.videos[1].error, /timed out/u);
+assert.match(broken.videos[2].error, /timed out/u);
+assert.match(broken.images[0].error, /failed to load/u);
+assert.match(broken.images[1].error, /timed out/u);
 console.log("CAPTURE_UI_CORE_OK");

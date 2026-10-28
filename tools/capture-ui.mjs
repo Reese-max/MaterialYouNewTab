@@ -6,7 +6,7 @@ import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
-import { contrastRatio, isLargeText, parseArgs, shotName, summarize } from "./capture-ui-core.mjs";
+import { contrastRatio, freezeWallpaper, isLargeText, parseArgs, shotName, summarize, wallpaperSeed } from "./capture-ui-core.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const profileDir = mkdtempSync(resolve(tmpdir(), "mynt-ui-capture-"));
@@ -502,7 +502,7 @@ async function inspectContrast() {
     };
 }
 
-async function captureShot(result, seed, axeSource) {
+async function captureShot(result, seed, axeSource, wallpaperMode) {
     let scriptId;
     const consoleStart = consoleMessages.length, exceptionStart = runtimeExceptions.length;
     try {
@@ -524,8 +524,8 @@ async function captureShot(result, seed, axeSource) {
             && document.querySelectorAll('#shortcutsContainer .shortcuts').length === 6
             && document.querySelector('#themeSegment').dataset.active === ${JSON.stringify(result.theme)}
             && getComputedStyle(document.querySelector('#LoadingScreen')).display === 'none'`, "seeded MYNT page");
-        // 等畫廊 IndexedDB 初始化完成，並經既有入口停用影片。
-        await evaluate("window.myntWallpaper.cancelApply()");
+        // none 保留原本的種子與取消入口；default 讓新安裝的背景自行初始化。
+        if (wallpaperMode === "none") await evaluate("window.myntWallpaper.cancelApply()");
         await evaluate("document.fonts.ready.then(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))");
         await delay(700);
         if (result.state === "home") {
@@ -544,17 +544,31 @@ async function captureShot(result, seed, axeSource) {
         // 設定選單等入口另有 setTimeout；CSS 關閉動畫不會取消這些回呼。
         await delay(700);
         result.stateOpened = true;
-        Object.assign(result, await inspectContrast());
-        if (axeSource !== null) {
-            await evaluate(`${axeSource}\n; Boolean(globalThis.axe?.run)`);
-            result.axe = await evaluate(`(async () => {
-                if (!globalThis.axe?.run) throw Error('The --axe file did not expose axe.run');
-                const report = await axe.run(document, { resultTypes: ['violations'] });
-                return { version: axe.version, violations: report.violations.filter(item => ['serious', 'critical'].includes(item.impact)) };
-            })()`);
-        }
     } catch (error) {
         result.error = error.message;
+    }
+    if (wallpaperMode === "default") {
+        try {
+            result.wallpaper = await evaluate(`(${freezeWallpaper.toString()})()`);
+            // Use MYNT's existing reanalysis entry after seeking so cards match the fixed frame.
+            await evaluate("document.querySelector('#myntAdaptiveAnalyze')?.click()");
+            await delay(300);
+        } catch (error) { result.wallpaper = { error: error.message }; }
+    }
+    if (result.stateOpened) {
+        try {
+            Object.assign(result, await inspectContrast());
+            if (axeSource !== null) {
+                await evaluate(`${axeSource}\n; Boolean(globalThis.axe?.run)`);
+                result.axe = await evaluate(`(async () => {
+                    if (!globalThis.axe?.run) throw Error('The --axe file did not expose axe.run');
+                    const report = await axe.run(document, { resultTypes: ['violations'] });
+                    return { version: axe.version, violations: report.violations.filter(item => ['serious', 'critical'].includes(item.impact)) };
+                })()`);
+            }
+        } catch (error) {
+            result.error = error.message;
+        }
     }
     try {
         const { data } = await pageClient.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false });
@@ -568,19 +582,20 @@ async function captureShot(result, seed, axeSource) {
         catch (error) { result.error = [result.error, `Remove seed script: ${error.message}`].filter(Boolean).join("; "); }
     }
     result.consoleErrors = consoleMessages.slice(consoleStart);
+    if (wallpaperMode === "default") result.wallpaperLog = wallpaperMessages.splice(0);
     result.exceptions = runtimeExceptions.slice(exceptionStart);
     result.success = result.stateOpened && result.screenshotSaved && !result.error && !result.consoleErrors.length && !result.exceptions.length;
     console.log(`${result.success ? "OK" : "FAIL"} ${result.filename}${result.error ? `: ${result.error}` : ""}`);
 }
 
-const consoleMessages = [], runtimeExceptions = [];
+const consoleMessages = [], runtimeExceptions = [], wallpaperMessages = [];
 let outputDir;
 let report;
 
 async function main() {
     const options = parseArgs(process.argv.slice(2));
     outputDir = resolve(options.out);
-    const seed = JSON.parse(readFileSync(new URL("./fixtures/ui-seed.json", import.meta.url), "utf8"));
+    const seed = wallpaperSeed(JSON.parse(readFileSync(new URL("./fixtures/ui-seed.json", import.meta.url), "utf8")), options.wallpaper);
     const axeSource = options.axe ? readFileSync(resolve(options.axe), "utf8") : null;
     mkdirSync(outputDir, { recursive: true });
     const results = options.themes.flatMap(theme => options.viewports.flatMap(viewport => options.states.map(state => ({
@@ -632,10 +647,14 @@ async function main() {
             runtimeExceptions.push(exceptionDetails.exception?.description || exceptionDetails.text || "Unknown exception");
         });
         pageClient.on("Log.entryAdded", ({ entry }) => {
-            if (entry.level === "error" && entry.source !== "console-api") consoleMessages.push(`${entry.source}: ${entry.text}`);
+            if (entry.level !== "error" || entry.source === "console-api") return;
+            const message = `${entry.source}: ${entry.text}`;
+            if (options.wallpaper === "default" && (entry.source === "media" || /\/videos\/bg\.mp4(?:[?#]|$)/u.test(entry.url || ""))) {
+                wallpaperMessages.push(message);
+            } else consoleMessages.push(message);
         });
         // 新分頁初次註冊只供辨識 extension；每張圖都另行注入、重載及量測。
-        for (const result of results) await captureShot(result, seed, axeSource);
+        for (const result of results) await captureShot(result, seed, axeSource, options.wallpaper);
         report = { ...summarize(results), browser: chromeBinary, extensionId, fixedTime: FIXED_TIME };
     } catch (error) {
         for (const result of results) {
@@ -643,6 +662,7 @@ async function main() {
         }
         report = { ...summarize(results), success: false, error: error.message, chromeOutput: chromeOutput.slice(-40), fixedTime: FIXED_TIME };
     }
+    report.wallpaperMode = options.wallpaper;
     report.metricsNote = "Home only; first seeded reload per theme/viewport, navigation-relative milliseconds. Other states have metrics=null.";
     report.contrastNote = "Computed RGB foreground and composited ancestor background colors. Images, gradients, opacity and blending are listed as unmeasured; pseudo-elements and overlapping/backdrop layers require visual review.";
     writeFileSync(resolve(outputDir, "report.json"), `${JSON.stringify(report, null, 2)}\n`);

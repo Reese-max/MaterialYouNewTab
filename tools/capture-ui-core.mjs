@@ -8,12 +8,13 @@ export function parseArgs(argv) {
         themes: [...THEMES],
         viewports: [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }],
         axe: null,
+        wallpaper: "none",
     };
     const seen = new Set();
     for (let index = 0; index < argv.length; index += 1) {
         const flag = argv[index];
         if (flag === "--only-changed") continue; // 保留相容參數；固定矩陣不略過任何圖。
-        if (!["--out", "--states", "--themes", "--viewports", "--axe"].includes(flag)) {
+        if (!["--out", "--states", "--themes", "--viewports", "--axe", "--wallpaper"].includes(flag)) {
             throw new Error(`Unknown argument: ${flag}`);
         }
         if (seen.has(flag)) throw new Error(`Duplicate argument: ${flag}`);
@@ -21,6 +22,11 @@ export function parseArgs(argv) {
         const value = argv[++index];
         if (!value?.trim() || value.startsWith("--")) throw new Error(`${flag} requires a value`);
         const key = flag.slice(2);
+        if (key === "wallpaper") {
+            if (!["none", "default"].includes(value)) throw new Error(`Invalid wallpaper: ${value}; expected none,default`);
+            options.wallpaper = value;
+            continue;
+        }
         if (key === "out" || key === "axe") {
             options[key] = value;
             continue;
@@ -45,6 +51,71 @@ export function parseArgs(argv) {
     }
     if (!options.out) throw new Error("--out <dir> is required");
     return options;
+}
+
+export function wallpaperSeed(seed, mode) {
+    const result = { ...seed };
+    // Missing preferences preserve index.html's video workspace and let the gallery seed itself.
+    if (mode === "default") {
+        delete result.myntWallpaperCurrent;
+        delete result.myntWallpaperMode;
+        delete result.myntWallpaperSeeded;
+    }
+    return result;
+}
+
+// Self-contained: serialized into the capture page; also checked without launching a browser.
+export async function freezeWallpaper({ time = 1, timeoutMs = 10_000 } = {}) {
+    const waitFor = (ready, failure) => new Promise((resolve, reject) => {
+        let poll;
+        const timer = setTimeout(() => { clearTimeout(poll); reject(new Error("Media timed out")); }, timeoutMs);
+        const check = () => {
+            const error = failure();
+            if (error || ready()) {
+                clearTimeout(timer);
+                if (error) reject(new Error(error));
+                else resolve();
+            } else poll = setTimeout(check, 25);
+        };
+        check();
+    });
+    const videos = await Promise.all([...document.querySelectorAll("video")].map(async video => {
+        const pause = () => video.pause();
+        pause();
+        video.addEventListener("play", pause);
+        const result = { id: video.id, source: video.currentSrc || video.getAttribute("src") || "" };
+        try {
+            let hydrated = false;
+            for (const source of video.querySelectorAll("source[data-src]")) {
+                if (!source.getAttribute("src")) { source.src = source.dataset.src; hydrated = true; }
+            }
+            result.source ||= video.querySelector("source[src]")?.src || "";
+            if (!result.source) return { ...result, skipped: true };
+            // reduced-motion prevents MYNT's lazy loader from running; load its existing source here.
+            video.preload = "auto";
+            if (hydrated || video.readyState === 0) video.load();
+            const failure = () => video.error ? `Video error ${video.error.code}: ${video.error.message || "decode/load failed"}` : "";
+            await waitFor(() => video.readyState >= 1, failure);
+            const target = Number.isFinite(video.duration) ? Math.min(time, Math.max(0, video.duration - 0.01)) : time;
+            video.currentTime = target;
+            await waitFor(() => video.readyState >= 2 && !video.seeking && Math.abs(video.currentTime - target) < 0.01, failure);
+            return { ...result, currentTime: video.currentTime, readyState: video.readyState, paused: video.paused };
+        } catch (error) {
+            return { ...result, error: error.message };
+        } finally { pause(); }
+    }));
+    // Gallery/legacy image wallpapers are applied as CSS backgrounds, not <img> elements.
+    const urls = [...getComputedStyle(document.body).backgroundImage.matchAll(/url\(["']?(.*?)["']?\)/gu)].map(match => match[1]);
+    const images = await Promise.all(urls.map(async source => {
+        const image = new Image();
+        image.src = source;
+        try {
+            await waitFor(() => image.complete && image.naturalWidth > 0,
+                () => image.complete && !image.naturalWidth ? "Image failed to load" : "");
+            return { source, loaded: true };
+        } catch (error) { return { source, error: error.message }; }
+    }));
+    return { videos, images };
 }
 
 export function shotName(state, theme, viewport) {
