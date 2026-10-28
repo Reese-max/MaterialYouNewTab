@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition } = require('../scripts/pomodoro-float.js');
+const { validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition, avoidingPanelPosition } = require('../scripts/pomodoro-float.js');
 const settings = validate({ mode: 'gradient', color: '#abcdef' });
 assert.equal(settings.version, 1); assert.equal(settings.color, '#abcdef');
 assert.deepEqual(Object.keys(settings).sort(), ['version','mode','color','color2','fit','position'].sort());
@@ -123,6 +123,30 @@ async function checkPanelAnchor(delayedReady) {
         assert(pos.left >= 8 && pos.top >= 8 && pos.left + size.width <= viewport.innerWidth - 8 && pos.top + size.height <= viewport.innerHeight - 8, 'All four viewport margins are at least 8px');
     }
     for (const rect of [undefined, {}, { top: NaN, left: 20, bottom: 30 }, { top: 10, left: Infinity, bottom: 30 }]) assert.equal(anchoredPanelPosition(rect, size, viewport), null);
+    const storedRect = { ...size, top: 90, left: 151 };
+    const mainRects = [
+        { left: 79, top: 232, width: 564, height: 122 },
+        { left: 92, top: 360, width: 560, height: 64 },
+        { left: 92, top: 444, width: 560, height: 42 }
+    ];
+    const widgetsRect = { left: 1016, top: 180, width: 320, height: 544 };
+    assert.deepEqual(avoidingPanelPosition(storedRect, mainRects, widgetsRect, viewport), { top: 90, left: 668 }, 'Overlap above 20% moves to the overlapping union right edge plus 16px');
+    for (const left of [407, 408]) assert.equal(avoidingPanelPosition(storedRect, [{ left, top: 200, width: 320, height: 100 }], null, viewport), null, 'Overlap at or below 20% keeps the saved position');
+    assert.deepEqual(avoidingPanelPosition(storedRect, [{ left: 406, top: 200, width: 320, height: 100 }], null, viewport), { top: 90, left: 742 }, 'Overlap just above 20% triggers avoidance');
+    assert.equal(avoidingPanelPosition(storedRect, [], null, viewport), null, 'Missing blocks keep the saved position');
+    assert.deepEqual(avoidingPanelPosition(storedRect, [...mainRects, { left: 450, top: 200, width: 800, height: 100 }], null, viewport), { top: 90, left: 668 }, 'Minor overlaps do not enlarge the union');
+    assert.deepEqual(avoidingPanelPosition(storedRect, mainRects, { ...widgetsRect, left: 950 }, viewport), { top: 90, left: 614 }, 'Widget collision places the panel right edge 16px before the widget');
+    assert.equal(avoidingPanelPosition(storedRect, mainRects, { ...widgetsRect, left: 300, width: 800 }, viewport), null, 'No room to the widget left keeps the saved position');
+    const edgeRect = { ...storedRect, top: 600, left: 1400 };
+    assert.deepEqual(avoidingPanelPosition(edgeRect, [{ left: 1400, top: 600, width: 100, height: 100 }], null, viewport), { top: 232, left: 1208 }, 'Avoidance uses the same four 8px viewport margins as anchored placement');
+    // 真實設定未指定面板縮放；以下採 100% 與 CSS 寬高上限，並非瀏覽器實測。
+    for (const [width, height, right] of [[1536, 740, 652.16], [1920, 1080, 656]]) {
+        const geometry = { ...storedRect, top: 90.1199951171875, left: 151.30999755859375, width: 280, height: height - 112 };
+        const blocks = [{ left: right - 560, top: height * .53 - 32, width: 560, height: 64 }];
+        const pos = avoidingPanelPosition(geometry, blocks, { ...widgetsRect, left: width - 520 }, { innerWidth: width, innerHeight: height });
+        assert.deepEqual(pos, { top: geometry.top, left: right + 16 }, 'Both real-seed viewport estimates preserve top and clear the main column');
+        assert(pos.left + geometry.width <= width - 520 - 16 && pos.top + geometry.height <= height - 8);
+    }
     const document = doc(), panel = document.createElement('div'), trigger = document.createElement('button'), handle = document.createElement('div');
     panel.id = 'pomodoroPanel'; trigger.id = 'pomodoroCont'; handle.id = 'pomodoroDragHandle'; panel.append(handle); document.body.append(panel, trigger);
     panel.offsetWidth = 320; panel.offsetHeight = 500;
@@ -138,7 +162,7 @@ async function checkPanelAnchor(delayedReady) {
     const observers = [];
     const context = { document, window, localStorage, PANEL_POS_KEY: 'pomodoroPanelPosition', pomodoroPanel: panel, pomodoroCont: trigger, pomodoroDragHandle: handle,
         pomodoroCheckbox: { checked: true }, pomodoroBgVideo: { play: () => Promise.resolve() }, setTimeout() {}, console,
-        getComputedStyle: () => ({ boxSizing: 'border-box' }), MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} } };
+        getComputedStyle: node => ({ boxSizing: 'border-box', ...node.style }), MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} } };
     const source = fs.readFileSync(require.resolve('../scripts/pomodoro.js'), 'utf8');
     const drag = source.slice(source.indexOf('// --- Panel drag functionality ---'), source.indexOf('// --- Icon drag functionality ---'));
     const open = source.slice(source.indexOf('function openPanel()'), source.indexOf('function getCurrentPanelScale()'));
@@ -184,7 +208,48 @@ async function checkPanelAnchor(delayedReady) {
     window.myntPomodoro.open({ anchorRect: anchor }); close();
     assert.equal(panel.classList.contains('pomodoro-dragged'), false, 'Closing restores the default undragged layout when no position was saved');
     window.myntPomodoro.open(); assert.equal(panel.style.top, ''); assert.equal(panel.style.left, '');
+    close();
+    saved.set('pomodoroPanelPosition', '{"top":90,"left":151}'); writes.length = 0;
+    const blocks = mainRects.map((rect, index) => {
+        const node = document.createElement('div');
+        if (index === 0) node.className = 'ttteexxtt'; else node.id = index === 1 ? 'rightDiv' : 'aiToolsCont';
+        node.getBoundingClientRect = () => rect; document.body.append(node); return node;
+    });
+    const widgets = document.createElement('section'); widgets.id = 'myntHomeWidgets';
+    let widgetGeometry = widgetsRect;
+    widgets.getBoundingClientRect = () => widgetGeometry; document.body.append(widgets);
+    const unchanged = () => { assert.equal(saved.get('pomodoroPanelPosition'), '{"top":90,"left":151}'); assert.deepEqual(writes, [], 'Temporary avoidance never writes storage'); };
+    window.myntPomodoro.open(); assertPosition(90, 668); unchanged(); close(); assertPosition(90, 151);
+    window.openFromIconForTest(); for (const notify of observers) notify();
+    assertPosition(90, 668); unchanged(); close();
+    window.myntPomodoro.open({ anchorRect: anchor }); assertPosition(180, 680); unchanged(); close();
+    widgetGeometry = { ...widgetsRect, left: 950 };
+    window.myntPomodoro.open(); assertPosition(90, 614); unchanged(); close();
+    widgetGeometry = { ...widgetsRect, left: 300, width: 800 };
+    window.myntPomodoro.open(); assertPosition(90, 151); unchanged(); close();
+    widgets.hidden = true;
+    window.myntPomodoro.open(); assertPosition(90, 668); unchanged(); close();
+    for (const node of blocks) node.style.display = 'none';
+    window.myntPomodoro.open(); assertPosition(90, 151); unchanged(); close();
+    for (const node of blocks) node.style.display = '';
+    blocks[0].getBoundingClientRect = () => ({ left: 407, top: 200, width: 320, height: 100 });
+    blocks[1].style.visibility = 'hidden'; blocks[2].getBoundingClientRect = () => ({ left: 92, top: 444, width: 0, height: 0 });
+    window.myntPomodoro.open(); assertPosition(90, 151); unchanged(); close();
+    blocks.forEach((node, index) => { node.style.visibility = ''; node.getBoundingClientRect = () => mainRects[index]; });
+    scale = 1.04; panel.style.transform = 'scale(1.04)'; widgets.hidden = false; widgetGeometry = widgetsRect;
+    window.myntPomodoro.open(); assertPosition(90, 668);
+    assert.equal(panel.style.transform, 'scale(1.04)', 'Avoidance preserves the saved scale'); unchanged(); close();
+    scale = 1; panel.style.transform = '';
+    window.myntPomodoro.open();
+    await handle.emit('pointerdown', { button: 0, clientX: 678, clientY: 100 });
+    await document.emit('pointermove', { clientX: 410, clientY: 110 });
+    unchanged(); await document.emit('pointerup');
+    assert.deepEqual(writes, ['pomodoroPanelPosition'], 'Only manual drag completion saves an avoided panel');
+    assert.equal(saved.get('pomodoroPanelPosition'), '{"top":100,"left":400}');
+    close(); window.myntPomodoro.open(); assertPosition(100, 668);
+    assert.equal(saved.get('pomodoroPanelPosition'), '{"top":100,"left":400}', 'The latest dragged position is the next avoidance starting point'); close();
     console.log('Pomodoro anchor placement, scaled viewport bounds, transient storage, saved fallback, and original drag persistence passed');
+    console.log('Pomodoro main-column avoidance, exact 20% boundary, widget fallback, icon entry, and latest drag persistence passed');
 }
 (async () => { for (const delayedReady of [false, true]) await checkPanelAnchor(delayedReady); })()
     .catch(error => { console.error(error); process.exitCode = 1; });

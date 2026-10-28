@@ -2366,7 +2366,8 @@ body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp > span:first-child {
 	margin: 0 auto 8px;
 	text-align: center;
 	font-size: 13px;
-	color: var(--pomo-fg, #17243b);
+	color: var(--pomo-muted, #35465e);
+	font-weight: 500;
 }
 
 /* --------------------------------------------------------------------------
@@ -3184,11 +3185,13 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
 @media (max-height: 800px) {
     #pomodoroPanel.pomodoro-panel:not([style*="display: none"]) { --pomo-diameter: 96px; }
     #pomodoroPanel :is(.pomodoroPhaseLabel, .pomodoroRoundDisplay) {
-        flex: 1 0 calc(50% - 2px);
+        flex: 1 0 calc(50% - 4px);
         width: auto;
         order: 2;
+        align-self: baseline;
     }
-    #pomodoroPanel .pomodoroPhaseLabel { text-align: right; margin: 0; }
+    /* 既有列距 2px 加上右外距 6px，讓標題與輪次相隔 8px。 */
+    #pomodoroPanel .pomodoroPhaseLabel { text-align: right; margin: 0 6px 0 0; }
     #pomodoroPanel .pomodoroRoundDisplay { text-align: left; }
     #pomodoroPanel #myntPomoMusicMount :is(.mynt-music-now, .mynt-music-controls) { grid-row: 2; }
     #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:has(.mynt-music-library[open]) .mynt-music-controls { grid-row: auto; }

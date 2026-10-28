@@ -133,16 +133,34 @@
         return { width: 320 + chrome(win.outerWidth, win.innerWidth), height: 420 + chrome(win.outerHeight, win.innerHeight) };
     }
     function isCompactWindow(win) { return win.innerWidth > 0 && win.innerWidth <= 336 && win.innerHeight > 0 && win.innerHeight <= 436; }
+    function clampPanelToViewport(position, panel, viewport) {
+        const clamp = (value, size, limit) => Math.max(8, Math.min(value, limit - size - 8));
+        return { top: clamp(position.top, panel.height, viewport.innerHeight), left: clamp(position.left, panel.width, viewport.innerWidth) };
+    }
     function anchoredPanelPosition(anchor, panel, viewport) {
         if (!anchor || !['top', 'left', 'bottom'].every(key => Number.isFinite(anchor[key]))) return null;
-        const clamp = (value, size, limit) => Math.max(8, Math.min(value, limit - size - 8));
         let left = anchor.left - panel.width - 16, top = anchor.top;
         if (left < 8) {
             left = anchor.left;
             const above = anchor.top - panel.height - 16;
             top = above >= 8 || anchor.top - 8 >= viewport.innerHeight - anchor.bottom - 8 ? above : anchor.bottom + 16;
         }
-        return { top: clamp(top, panel.height, viewport.innerHeight), left: clamp(left, panel.width, viewport.innerWidth) };
+        return clampPanelToViewport({ top, left }, panel, viewport);
+    }
+    function overlapArea(a, b) {
+        return Math.max(0, Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left)) *
+            Math.max(0, Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top));
+    }
+    function avoidingPanelPosition(panel, blocks, widgets, viewport) {
+        const overlapped = blocks.filter(rect => rect.width > 0 && rect.height > 0 && overlapArea(panel, rect) > rect.width * rect.height * .2);
+        if (!overlapped.length) return null;
+        const position = clampPanelToViewport({ top: panel.top, left: Math.max(...overlapped.map(rect => rect.left + rect.width)) + 16 }, panel, viewport);
+        if (widgets && overlapArea({ ...panel, ...position }, widgets) > 0) {
+            const left = widgets.left - panel.width - 16;
+            if (left < 8 || left + panel.width > viewport.innerWidth - 8) return null;
+            position.left = left;
+        }
+        return position;
     }
     function installPanelAnchor(api, panel, trigger, viewport) {
         if (!api?.open || !panel || !trigger) return;
@@ -156,12 +174,18 @@
             if (!temporary.dragged) panel.classList.toggle('pomodoro-dragged', temporary.wasDragged);
             temporary = null;
         };
-        api.open = function (options) {
-            restore();
-            const result = originalOpen.call(this);
-            const anchor = options?.anchorRect;
-            if (!anchor || !['top', 'left', 'bottom'].every(key => Number.isFinite(anchor[key]))) return result;
-            // 錨點位置與尺寸限制只供本次顯示；拖曳存檔仍由原模組處理。
+        const visibleRect = selector => {
+            const node = document.querySelector(selector);
+            if (!node || node.hidden) return null;
+            const css = getComputedStyle(node), rect = node.getBoundingClientRect();
+            return css.display !== 'none' && !['hidden', 'collapse'].includes(css.visibility) && css.opacity !== '0' && rect.width > 0 && rect.height > 0 ? rect : null;
+        };
+        const place = anchor => {
+            const anchored = anchor && ['top', 'left', 'bottom'].every(key => Number.isFinite(anchor[key]));
+            const blocks = anchored ? [] : ['.ttteexxtt', '#rightDiv', '#aiToolsCont'].map(visibleRect).filter(Boolean);
+            const widgets = anchored ? null : visibleRect('#myntHomeWidgets');
+            if (!anchored && !avoidingPanelPosition(panel.getBoundingClientRect(), blocks, widgets, viewport)) return;
+            // 錨點、避讓與尺寸限制只供本次顯示；拖曳存檔仍由原模組處理。
             const keys = ['top', 'left', 'maxWidth', 'maxHeight', 'minWidth'];
             temporary = { style: Object.fromEntries(keys.map(key => [key, panel.style[key]])), wasDragged: panel.classList.contains('pomodoro-dragged'), dragged: false };
             panel.classList.add('pomodoro-dragged');
@@ -173,18 +197,28 @@
                 panel.style.maxWidth = Math.max(0, (viewport.innerWidth - 16) / scale - extra(['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'])) + 'px';
             }
             if (rect.height > viewport.innerHeight - 16) panel.style.maxHeight = Math.max(0, (viewport.innerHeight - 16) / scale - extra(['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'])) + 'px';
-            const pos = anchoredPanelPosition(anchor, panel.getBoundingClientRect(), viewport);
+            const pos = anchored ? anchoredPanelPosition(anchor, panel.getBoundingClientRect(), viewport) : avoidingPanelPosition(panel.getBoundingClientRect(), blocks, widgets, viewport);
+            if (!pos) { restore(); return; }
             panel.style.top = pos.top + 'px'; panel.style.left = pos.left + 'px';
+        };
+        api.open = function (options) {
+            restore();
+            const result = originalOpen.call(this);
+            place(options?.anchorRect);
             return result;
         };
         panel.querySelector('#pomodoroDragHandle')?.addEventListener('pointerdown', event => {
             if (event.button === 0 && temporary) temporary.dragged = true;
         });
-        new MutationObserver(() => { if (trigger.getAttribute('aria-expanded') !== 'true') restore(); })
+        // 左上按鈕直接呼叫原模組；屬性變更後共用同一套暫時定位。
+        new MutationObserver(() => {
+            if (trigger.getAttribute('aria-expanded') !== 'true') restore();
+            else if (!temporary) place();
+        })
             .observe(trigger, { attributes: true, attributeFilter: ['aria-expanded'] });
     }
     // 匯出供無相依套件的回歸檢查使用，不新增儲存資料。
-    if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition }; return; }
+    if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition, avoidingPanelPosition }; return; }
     let settings = { ...defaults }, imageUrl = '', floating = null, opening = false, unsubscribe = null;
     let status, appearanceForm, floatVideo;
     const imageSamples = new Map(), modeChoices = new Map(), settingGroups = new Map(), thumbnailCache = new WeakMap();
