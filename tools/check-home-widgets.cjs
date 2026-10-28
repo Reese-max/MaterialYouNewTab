@@ -32,7 +32,7 @@ class Element extends Target {
     hasAttribute(key) { return this.attrs.has(key); }
     removeAttribute(key) { this.attrs.delete(key); }
     contains(node) { return node === this || this.children.some(child => child.contains(node)); }
-    focus() { this.doc.activeElement = this; }
+    focus(options) { this.lastFocusOptions = options; this.doc.activeElement = this; }
     click() { if (this.type === 'checkbox') this.checked = !this.checked; this.dispatchEvent({ type: 'click', stopPropagation() {} }); }
     querySelector() { return null; }
 }
@@ -59,7 +59,8 @@ function environment(seed = {}) {
         disconnect() { this.connected = false; }
     }
     const window = new Target(); window.innerWidth = 1920; window.localStorage = localStorage;
-    const idle = []; window.requestIdleCallback = fn => idle.push(fn); window.setTimeout = fn => idle.push(fn);
+    const idle = []; window.requestIdleCallback = fn => idle.push(fn); window.setTimeout = fn => { idle.push(fn); return fn; };
+    window.clearTimeout = fn => { const index = idle.indexOf(fn); if (index !== -1) idle.splice(index, 1); };
     const CustomEvent = class { constructor(type, options) { this.type = type; this.detail = options?.detail; } };
     const context = { document, window, localStorage, MutationObserver, CustomEvent, console, translations: { en, zh_TW: zh, ja: {} }, setTimeout: window.setTimeout, clearTimeout() {} };
     return { document, window, values, context, idle, node, observers, localStorage };
@@ -68,12 +69,24 @@ function setup(options = {}) {
     const app = environment({ selectedLanguage: options.language || 'en', ...options.storage });
     const { document, window, context, node } = app;
     const host = node('myntHomeWidgets', 'aside'); host.hidden = true;
-    node('todoInput', 'input'); node('pomodoroStartBtn', 'button');
+    node('todoInput', 'input');
+    const panel = node('pomodoroPanel');
+    panel.append(node('pomodoroStartBtn', 'button'), node('pomodoroPauseBtn', 'button'));
+    Object.assign(panel.style, { top: '90px', left: '151px', transform: 'scale(1.04)' });
+    const pomoTrigger = node('pomodoroCont', 'button');
+    let panelOpen = options.panelOpen === true;
+    pomoTrigger.setAttribute('aria-expanded', String(panelOpen));
+    const setPanelOpen = open => {
+        panelOpen = open; pomoTrigger.setAttribute('aria-expanded', String(open));
+        if (open) document.getElementById('myntComponent-pomodoro').checked = true;
+        for (const observer of app.observers) if (observer.connected && observer.target === pomoTrigger && observer.options.attributeFilter.includes('aria-expanded')) observer.callback([]);
+    };
     const trigger = node('todoListCont', 'button'); trigger.setAttribute('aria-expanded', 'false');
     let todoOpens = 0, pomoOpens = 0, started = 0, paused = 0, added = [], toggled = [];
     trigger.addEventListener('click', () => { todoOpens++; trigger.setAttribute('aria-expanded', 'true'); });
     for (const kind of ['todo', 'pomodoro']) {
         const control = node(`myntComponent-${kind}`, 'input'); control.type = 'checkbox';
+        if (kind === 'pomodoro' && panelOpen) control.checked = true;
         control.addEventListener('click', () => { app.values.set(`${kind}Enabled`, String(control.checked)); });
     }
     let items = Array.from({ length: 8 }, (_, index) => ({ id: `t${index}`, title: index === 1 ? '<img src=x onerror=alert(1)>' : `Task ${index}`, status: index === 0 ? 'completed' : 'pending', pinned: index === 6 || index === 7 }));
@@ -94,7 +107,8 @@ function setup(options = {}) {
         getState: () => ({ ...state }), subscribe(fn) { pomoListeners.add(fn); fn(state); return () => pomoListeners.delete(fn); },
         async startInline() { started++; state.isRunning = true; for (const fn of [...pomoListeners]) fn(state); },
         async pause() { paused++; state.isRunning = false; for (const fn of [...pomoListeners]) fn(state); },
-        open() { pomoOpens++; }
+        open() { pomoOpens++; setPanelOpen(true); },
+        isOpen: () => panelOpen
     };
     if (options.width) window.innerWidth = options.width;
     if (options.hidden) document.hidden = true;
@@ -108,7 +122,7 @@ function setup(options = {}) {
     const find = predicate => descendants(host).find(predicate);
     const button = title => find(node => node.tagName === 'BUTTON' && node.textContent === title);
     const list = () => find(node => node.className === 'home-widget-todos');
-    return Object.assign(app, { host, find, button, list, todoListeners, pomoListeners, added, toggled,
+    return Object.assign(app, { host, find, button, list, todoListeners, pomoListeners, added, toggled, setPanelOpen,
         counters: () => ({ todoOpens, pomoOpens, started, paused, layoutApplications }),
         setState(next) { state = { ...state, ...next }; for (const fn of [...pomoListeners]) fn(state); },
         setItems(next) { items = next; for (const fn of [...todoListeners]) fn(); }
@@ -172,6 +186,46 @@ async function main() {
     await unavailable.document.emit('mynt:components-changed'); assert(unavailable.find(node => node.tagName === 'FORM').firstChild.disabled);
     unavailable.window.myntTodoApi.list = () => []; await unavailable.document.emit('mynt:components-changed');
     assert.equal(unavailable.find(node => node.className === 'home-widget-note').textContent, en.homeWidgetsEmpty);
+
+    // 開關面板本身不會觸發計時訂閱，必須沿用入口的開關屬性通知。
+    const panelApp = setup({ width: 1536 });
+    const panelTime = panelApp.find(node => node.className === 'home-widget-time');
+    const panelToggle = panelApp.button('Start');
+    const panelPhase = panelApp.find(node => node.getAttribute('aria-live') === 'polite');
+    const panel = panelApp.document.getElementById('pomodoroPanel');
+    const originalGeometry = JSON.stringify(panel.style), originalStorage = [...panelApp.values];
+    assert.equal(panelTime.hidden, false);
+    panelApp.setPanelOpen(true);
+    assert.equal(panelTime.hidden, true, 'Opening externally hides the duplicate timer without a timer tick');
+    assert.equal(panelToggle.hidden, true, 'The compact card has no duplicate timer controls');
+    assert.equal(panelPhase.textContent, en.homeWidgetsPomodoroOpen);
+    assert(panelApp.button(en.homeWidgetsFocusPanel), 'The compact card offers a return button');
+    panelApp.setState({ isRunning: true, timeRemaining: 1499 });
+    const returned = await panelApp.button(en.homeWidgetsFocusPanel).emit('click');
+    assert(returned.stopped, 'Returning does not bubble to the outside-click close handler');
+    assert.equal(panelApp.counters().pomoOpens, 1, 'Return uses the existing open API');
+    assert.equal(panelApp.document.activeElement, panelApp.document.getElementById('pomodoroPauseBtn'), 'Focus the visible running control');
+    assert.equal(panelApp.document.activeElement.lastFocusOptions.preventScroll, true);
+    assert(panel.hasAttribute('data-home-widget-highlight'), 'Return briefly emphasizes the panel outline');
+    await panelApp.button(en.homeWidgetsFocusPanel).emit('click');
+    assert.equal(panelApp.idle.length, 1, 'Repeated return renews one highlight timeout');
+    panelApp.idle.shift()();
+    assert(!panel.hasAttribute('data-home-widget-highlight'), 'The outline clears after the timeout');
+    assert.equal(JSON.stringify(panel.style), originalGeometry, 'Return preserves saved position and scale');
+    assert.deepEqual([...panelApp.values], originalStorage, 'Return never rewrites stored settings');
+    panelApp.setPanelOpen(false);
+    assert.equal(panelTime.hidden, false, 'Closing externally restores the widget timer without a timer tick');
+    assert.equal(panelToggle.hidden, false);
+    assert.equal(panelTime.textContent, '24:59');
+    assert.equal(panelPhase.textContent, en.pomodoroWork);
+    assert(panelApp.button(en.homeWidgetsOpenPomodoro)); assert(panelApp.button(en.homeWidgetsPause));
+    panelApp.setState({ timeRemaining: 1498 }); assert.equal(panelTime.textContent, '24:58', 'The closed panel keeps the shared countdown');
+    const initiallyOpen = setup({ panelOpen: true, language: 'zh_TW' });
+    assert(initiallyOpen.find(node => node.className === 'home-widget-time').hidden, 'An already-open panel initializes compact');
+    assert.equal(initiallyOpen.find(node => node.getAttribute('aria-live') === 'polite').textContent, '番茄鐘面板已開啟');
+    await initiallyOpen.button('回到面板').emit('click');
+    assert.equal(initiallyOpen.document.activeElement, initiallyOpen.document.getElementById('pomodoroStartBtn'), 'Focus the paused control');
+    assert(setup({ panelOpen: true, language: 'ja' }).button(en.homeWidgetsFocusPanel), 'Missing new locale keys fall back to English');
 
     // 執行真實待辦模組，驗證 API 沿用儲存、事件與清單 DOM。
     const real = environment({ todoLastUpdateDate: new Date().toLocaleDateString(), todoList: JSON.stringify({ p: { title: 'Pinned', status: 'pending', pinned: true } }) });

@@ -8,6 +8,8 @@ const zh_TW = {
     "homeWidgetsAdd": "新增任務",
     "homeWidgetsOpenTodo": "開啟完整清單",
     "homeWidgetsOpenPomodoro": "開啟番茄鐘",
+    "homeWidgetsPomodoroOpen": "番茄鐘面板已開啟",
+    "homeWidgetsFocusPanel": "回到面板",
     "homeWidgetsComplete": "完成：{title}",
     "homeWidgetsPinned": "已釘選：{title}",
     "homeWidgetsStart": "開始",

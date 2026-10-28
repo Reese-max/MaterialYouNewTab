@@ -34,13 +34,23 @@
         form.append(input, add);
         const status = el('p', '', 'home-widget-note'); status.setAttribute('role', 'status');
         const reportError = () => { status.textContent = t('homeWidgetsError'); };
+        let panelHighlightTimeout;
         const openPanel = kind => {
             // 透過既有元件設定開啟入口，避免面板仍被元件管理隱藏。
             const control = document.getElementById(`myntComponent-${kind}`);
             if (control && !control.checked && !control.disabled) control.click();
             if (kind === 'pomodoro') {
                 window.myntPomodoro?.open();
-                document.getElementById('pomodoroStartBtn')?.focus();
+                const running = window.myntPomodoro?.getState().isRunning;
+                document.getElementById(running ? 'pomodoroPauseBtn' : 'pomodoroStartBtn')?.focus({ preventScroll: true });
+                const panel = document.getElementById('pomodoroPanel');
+                if (panel) {
+                    // 獨立屬性不觸發既有樣式／類別的版面觀察器；靜態外框不移動面板。
+                    panel.setAttribute('data-home-widget-highlight', '');
+                    window.clearTimeout(panelHighlightTimeout);
+                    panelHighlightTimeout = window.setTimeout(() => panel.removeAttribute('data-home-widget-highlight'), 1200);
+                }
+                renderPomodoro();
             } else {
                 const trigger = document.getElementById('todoListCont');
                 if (trigger?.getAttribute('aria-expanded') !== 'true') trigger?.click();
@@ -70,6 +80,9 @@
         focusCard.append(focusTitle, phase, time, toggle, openPomodoro);
         host.append(title, todoCard, focusCard);
         let active = false, unsubscribeTodo = null, unsubscribePomodoro = null;
+        // 開關面板不會發出計時更新；只觀察既有入口的開關屬性。
+        const panelTrigger = document.getElementById('pomodoroCont');
+        if (panelTrigger) new MutationObserver(renderPomodoro).observe(panelTrigger, { attributes: true, attributeFilter: ['aria-expanded'] });
 
         function renderTodos() {
             if (!active) return;
@@ -107,13 +120,17 @@
         }
         function renderPomodoro() {
             if (!active) return;
+            const panelOpen = window.myntPomodoro?.isOpen() === true;
+            time.hidden = panelOpen;
+            toggle.hidden = panelOpen;
+            openPomodoro.textContent = t(panelOpen ? 'homeWidgetsFocusPanel' : 'homeWidgetsOpenPomodoro');
             const state = window.myntPomodoro?.getState();
             toggle.disabled = !state;
             if (!state) { phase.textContent = t('homeWidgetsUnavailable'); return; }
             const seconds = Math.max(0, Math.ceil(state.timeRemaining));
             const nextTime = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
             if (time.textContent !== nextTime) time.textContent = nextTime;
-            const nextPhase = t(state.phase === 'work' ? 'pomodoroWork' : state.phase === 'shortBreak' ? 'pomodoroShortBreak' : 'pomodoroLongBreak');
+            const nextPhase = t(panelOpen ? 'homeWidgetsPomodoroOpen' : state.phase === 'work' ? 'pomodoroWork' : state.phase === 'shortBreak' ? 'pomodoroShortBreak' : 'pomodoroLongBreak');
             if (phase.textContent !== nextPhase) phase.textContent = nextPhase;
             toggle.textContent = t(state.isRunning ? 'homeWidgetsPause' : 'homeWidgetsStart');
         }

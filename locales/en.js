@@ -8,6 +8,8 @@ const en = {
     "homeWidgetsAdd": "Add a task",
     "homeWidgetsOpenTodo": "Open full list",
     "homeWidgetsOpenPomodoro": "Open Pomodoro",
+    "homeWidgetsPomodoroOpen": "Pomodoro panel is open",
+    "homeWidgetsFocusPanel": "Back to panel",
     "homeWidgetsComplete": "Complete: {title}",
     "homeWidgetsPinned": "Pinned: {title}",
     "homeWidgetsStart": "Start",

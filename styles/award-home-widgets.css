@@ -50,7 +50,8 @@
     cursor: pointer;
     overflow-wrap: anywhere;
 }
-#myntHomeWidgets button + button { margin-inline-start: 6px; }
+#myntHomeWidgets button:not([hidden]) + button { margin-inline-start: 6px; }
+#myntHomeWidgets .home-widget-card > [hidden] { display: none; }
 #myntHomeWidgets button:hover { background: #e5efff; }
 #myntHomeWidgets :disabled { opacity: .6; cursor: default; }
 #myntHomeWidgets :focus-visible { outline: 3px solid #265a91; outline-offset: 2px; }
@@ -65,6 +66,8 @@
 #myntHomeWidgets .home-widget-note { margin: 8px 0 12px; color: #405976; overflow-wrap: anywhere; }
 #myntHomeWidgets .home-widget-note:empty { display: none; }
 #myntHomeWidgets .home-widget-time { margin: 8px 0 16px; font-size: 2.25rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+/* 回到面板時只強調外框，不影響使用者保存的位置、縮放或減少動畫設定。 */
+#pomodoroPanel[data-home-widget-highlight] { outline: 3px solid #265a91; outline-offset: 3px; }
 /* 使用既有反相深色機制；不加入動效，亦尊重系統與專案減少動畫設定。 */
 @media (prefers-reduced-motion: reduce) {
     #myntHomeWidgets * { animation: none; transition: none; }
@@ -73,4 +76,5 @@
 @media (forced-colors: active) {
     #myntHomeWidgets .home-widget-card { border-color: CanvasText; background: Canvas; color: CanvasText; }
     #myntHomeWidgets :focus-visible { outline-color: Highlight; }
+    #pomodoroPanel[data-home-widget-highlight] { outline-color: Highlight; }
 }
