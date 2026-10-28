@@ -602,3 +602,63 @@ html.black-theme #scratchpadContainer button:hover {
 		& #pomodoroPanel button:disabled { opacity: 1; }
 	}
 }
+
+/* 第 17 輪：色票外框與 2px 間隔環不占版面空間，保留原色與勾選圖示。 */
+@media (forced-colors: none) {
+	html:not(.myntHighContrast) #menuCont #colorsContainer {
+		--award-swatch-edge: #6b7787;
+		--award-swatch-gap: var(--whitishColor-blue, #ffffff);
+		--award-swatch-ring: var(--darkerColor-blue, #3569b2);
+
+		& .colorPlate {
+			border: 1px solid var(--award-swatch-edge);
+			box-shadow: 0 0 0 2px var(--award-swatch-gap);
+		}
+		& .colorPlate:checked,
+		&:not(:has(input[type="radio"]:checked)) .colorPickerLabel {
+			outline: 2px solid var(--award-swatch-ring);
+			outline-offset: 2px;
+		}
+		/* 鍵盤焦點另用虛線，未選中的色票也可辨識焦點。 */
+		& .colorPlate:focus-visible {
+			outline: 2px dashed var(--award-swatch-ring);
+			outline-offset: 4px;
+		}
+	}
+
+	/* 反相前 #d2dcea → #1b2533；選中 #c6d2e1 → #24303f。
+	   沿用 r14c 文字色，僅在手動／系統深色啟用，不改淺色表面。 */
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
+		/* 用既有 ID 提高特異度，覆蓋後載入的日期與今日膠囊色票。 */
+		& :is(#analogClock .mynt-clock-date, #myntHomeWidgets #homeWidgetsTitle) {
+			background: var(--award-filter-elevated);
+			color: var(--award-filter-text);
+			border-color: var(--award-filter-border);
+		}
+		& #menuCont :is(.settingsGroupTabs, #themeSegment) {
+			background: var(--award-filter-elevated);
+		}
+		& #menuCont :is(.settingsGroupTabs button, #themeSegment .themeSegBtn) {
+			color: var(--award-filter-text);
+		}
+		& #menuCont :is(.settingsGroupTabs button[aria-selected="true"], #themeSegment .themeIndicator) {
+			background: #c6d2e1;
+			box-shadow: inset 0 0 0 1px var(--award-filter-border);
+		}
+		/* 外觀切換器原本另做一次反相；取消該層，與其他元件共用色票。 */
+		& #menuCont #themeSegment {
+			filter: none;
+			-webkit-filter: none;
+		}
+		& #menuCont #colorsContainer {
+			--award-swatch-gap: var(--award-filter-elevated);
+		}
+		/* 黑色色票原有抵銷反相，邊線與間隔環須直接指定深色顯示值。 */
+		& #menuCont #colorsContainer #darkTheme {
+			--award-swatch-edge: #8b98a9;
+			--award-swatch-gap: #1b2533;
+			--award-swatch-ring: color-mix(in srgb, var(--darkColor-blue, #4382ec) 60%, #ffffff);
+		}
+	}
+}
