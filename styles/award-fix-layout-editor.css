@@ -793,3 +793,223 @@ body.mynt-layout-editing #myntLayoutToolbar:not([data-dock="top"]) {
         }
     }
 }
+
+/* 第 15 輪：只重排工具盒內部；保留第 14 輪停靠與所有使用者區塊位置。
+   兩個無語意的列容器攤平為網格項目，沿用原按鈕、文字與事件。 */
+body.mynt-layout-editing #myntLayoutToolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, .25fr) minmax(0, .8fr) minmax(0, 1.55fr);
+    grid-template-areas:
+        "title title title title dock"
+        "status status status status status"
+        "undo redo . cancel save"
+        "snap snap snap snap snap"
+        "selected selected selected selected selected"
+        "resetSelected resetSelected resetSelected reset reset"
+        "keys keys keys keys keys"
+        "precision precision precision precision precision"
+        "guide guide guide guide guide";
+    gap: 12px 6px;
+    padding: 16px;
+    align-items: center;
+    background: #f6f9ff;
+    color: #1b3041;
+    backdrop-filter: none;
+    overflow-wrap: anywhere;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar[data-dock] {
+    width: min(320px, calc(100vw - 32px));
+    max-width: min(320px, calc(100vw - 32px));
+}
+
+/* 同時涵蓋置頂與非置頂的既有列規則，不改變停靠座標。 */
+body.mynt-layout-editing #myntLayoutToolbar[data-dock] > .myntLayoutToolbarRow:first-of-type,
+body.mynt-layout-editing #myntLayoutToolbar > .myntLayoutHelp {
+    display: contents;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar strong {
+    grid-area: title;
+    width: auto;
+    margin: 0;
+    font-size: 15px;
+    text-align: start;
+    color: #1b3041;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutSaveStatus {
+    grid-area: status;
+    max-width: none;
+    margin: -8px 0 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #d9e4f2;
+    font: 400 12px/1.5 var(--main-font-family, system-ui, sans-serif);
+    color: #536174;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle {
+    grid-area: dock;
+    justify-self: end;
+    width: 32px;
+    min-height: 32px;
+    padding: 0;
+    font-size: 0;
+}
+
+/* 原文字仍是按鈕的可及名稱；圖示隨既有 aria-pressed 切換停靠方向。 */
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle::before {
+    content: "↥";
+    font: 600 20px/1 system-ui, sans-serif;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle[aria-pressed="true"]::before {
+    content: "↧";
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutUndo { grid-area: undo; }
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutRedo { grid-area: redo; }
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutCancel { grid-area: cancel; }
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutSave { grid-area: save; }
+
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutUndo, #myntLayoutRedo, #myntLayoutCancel, #myntLayoutSave) {
+    min-width: 0;
+    min-height: 36px;
+    padding: 5px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 16px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    align-self: stretch;
+}
+
+/* 次要操作以中性色退後；主要按鈕使用可維持白字對比的深主色。 */
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutUndo, #myntLayoutRedo, #myntLayoutCancel, #myntLayoutDockToggle),
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle[aria-pressed="true"] {
+    background: #edf2f9;
+    color: #35465c;
+    border-color: #c5d1e0;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutUndo, #myntLayoutRedo, #myntLayoutCancel, #myntLayoutDockToggle):hover:not(:disabled),
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle[aria-pressed="true"]:hover:not(:disabled) {
+    background: #e2eaf5;
+    color: #1b3041;
+    border-color: #8093a8;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutSave,
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutSave:hover:not(:disabled) {
+    background: var(--darkerColor-blue, #1f4577);
+    border-color: var(--darkerColor-blue, #1f4577);
+    color: #ffffff;
+}
+
+/* 吸附是次要區起點；整個標籤都是至少 32px 高的點選範圍。 */
+body.mynt-layout-editing #myntLayoutToolbar > .myntLayoutToolbarRow:first-of-type > label {
+    grid-area: snap;
+    min-width: 0;
+    min-height: 44px;
+    padding: 12px 0 0;
+    border-top: 1px solid #d9e4f2;
+    border-radius: 0;
+    color: #35465c;
+    white-space: normal;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutSnap {
+    appearance: auto;
+    -webkit-appearance: auto;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    background: initial;
+    border: initial;
+    border-radius: initial;
+    accent-color: var(--darkerColor-blue, #1f4577);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutSnap::after {
+    content: none;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp > span:first-child {
+    grid-area: selected;
+    color: #536174;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutResetSelected { grid-area: resetSelected; }
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutReset { grid-area: reset; }
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp button {
+    min-width: 0;
+    min-height: 32px;
+    padding: 4px 0;
+    border-color: transparent;
+    background: transparent;
+    text-align: start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp button:hover:not(:disabled) {
+    background: #e2eaf5;
+    border-color: transparent;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar button:disabled {
+    opacity: 1;
+    color: #536174;
+}
+
+/* 快捷鍵目前只有純文字，不以偽元素假造按鍵或拆改原說明。 */
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutInstructions {
+    grid-area: keys;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: start;
+    color: #536174;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision { grid-area: precision; }
+body.mynt-layout-editing #myntLayoutToolbar #myntEditorGuide { grid-area: guide; }
+
+body.mynt-layout-editing #myntLayoutToolbar :is(.myntLayoutPrecision, #myntEditorGuide) {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow-wrap: anywhere;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar :is(.myntLayoutPrecision, #myntEditorGuide) > summary {
+    min-height: 32px;
+    padding: 6px 0;
+    box-sizing: border-box;
+    font: 600 12px/20px var(--main-font-family, system-ui, sans-serif);
+    color: #35465c;
+}
+
+/* 展開後仍可在 320px 工具盒內換行，不把精準輸入欄或長字串推出面板。 */
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision .myntLayoutToolbarRow {
+    justify-content: start;
+    gap: 8px;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision label {
+    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0;
+    white-space: normal;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision button {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
