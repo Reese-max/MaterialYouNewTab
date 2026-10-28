@@ -500,3 +500,258 @@ body.mynt-layout-editing #myntLayoutToolbar:not([data-dock="top"]) {
         max-width: min(560px, calc(100vw - 32px));
     }
 }
+
+
+/* ==========================================================================
+   7. 第 13 輪：控制項精緻化
+   - checkbox 自訂外觀、按鈕統一為主要實心／次要細框兩種
+   - 橘色焦點框用更高特異性選擇器覆寫為主色
+   - 所有區塊覆蓋框統一 1.5px 主色虛線、12px 圓角
+   - 標籤／縮放把手間距與小區塊標籤縮圖示
+   - 非置頂面板上下留白加大到 88px，不蓋右下設定／桌布鈕
+   ========================================================================== */
+
+/* --- 7.1 橘色焦點框的正本與覆寫 -----------------------------------------
+   「工具列置頂」等按鈕的橘黃／棕色粗外框來源是
+   styles/manual-editor-controls.css 第 69–70 行：
+   `#myntLayoutToolbar button:focus-visible, … { outline: 3px solid #d77a0b }`。
+   本檔第 4 節的覆寫在 `#myntLayoutToolbar button:focus-visible` 上沒有
+   body 前綴，特異性與原規則完全相同（1 個 id＋1 個偽類＋1 個元素），
+   只靠載入順序取勝；這裡補上 body.mynt-layout-editing 前綴提高權重，
+   主色焦點框不再被翻案，鍵盤焦點仍清晰可見。 */
+body.mynt-layout-editing #myntLayoutToolbar button:focus-visible,
+body.mynt-layout-editing #myntLayoutToolbar input:focus-visible,
+body.mynt-layout-editing #myntLayoutToolbar label:focus-visible,
+body.mynt-layout-editing #myntLayoutToolbar summary:focus-visible,
+body.mynt-layout-editing .myntLayoutOverlay button:focus-visible,
+body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel):focus-visible,
+body.mynt-layout-editing .myntLayoutResize:focus-visible,
+#myntLayoutEdit:focus-visible {
+    outline: 2.5px solid var(--darkColor-blue, #4382ec);
+    outline-offset: 2px;
+}
+
+/* --- 7.2 按鈕體系：次要＝主色細框、主要＝主色實心；圓角 11px、高 34px ---- */
+body.mynt-layout-editing #myntLayoutToolbar button {
+    min-height: 34px;
+    padding: 5px 12px;
+    border-radius: 11px;
+    border: 1.5px solid rgba(63, 118, 196, 0.45);
+    background: rgba(238, 244, 252, 0.9);
+    color: var(--darkerColor-blue, #1f4577);
+    font: 600 12.5px/1.3 var(--main-font-family, system-ui, sans-serif);
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar button:hover:not(:disabled) {
+    background: rgba(67, 130, 236, 0.16);
+    border-color: var(--darkColor-blue, #4382ec);
+    color: var(--darkerColor-blue, #1f4577);
+}
+
+/* 主要按鈕：主色實心。「工具列置頂」的啟用態（aria-pressed="true"）比照
+   主要樣式，取代原本的橘棕色框感。 */
+body.mynt-layout-editing #myntLayoutToolbar button.primary,
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle[aria-pressed="true"] {
+    background: var(--darkerColor-blue, #1f4577);
+    border-color: var(--darkerColor-blue, #1f4577);
+    color: #ffffff;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar button.primary:hover:not(:disabled),
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle[aria-pressed="true"]:hover:not(:disabled) {
+    background: var(--darkColor-blue, #4382ec);
+    border-color: var(--darkColor-blue, #4382ec);
+    color: #ffffff;
+}
+
+/* 輔助列次要按鈕（還原此區塊／還原全部）套用同一套細框語言、32px 高 */
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp button {
+    min-height: 32px;
+    padding: 4px 12px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(63, 118, 196, 0.45);
+    background: rgba(238, 244, 252, 0.9);
+    color: var(--darkerColor-blue, #1f4577);
+    font: 600 12px/1.3 var(--main-font-family, system-ui, sans-serif);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp button:hover:not(:disabled) {
+    background: rgba(67, 130, 236, 0.16);
+    border-color: var(--darkColor-blue, #4382ec);
+    color: var(--darkerColor-blue, #1f4577);
+}
+
+/* --- 7.3 核取方塊：自訂 18px、5px 圓角、主色勾選 -------------------------
+   目標的 #myntLayoutSnap 是工具列唯一的 checkbox；label 的 min-height
+   34px 提供 ≥32px 的可點範圍，inline-flex 置中對齊文字基線。 */
+body.mynt-layout-editing #myntLayoutToolbar label {
+    min-height: 34px;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 11px;
+    align-items: center;
+    font: 500 12.5px/1.3 var(--main-font-family, system-ui, sans-serif);
+    color: var(--darkerColor-blue, #1f4577);
+    cursor: pointer;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border: 1.5px solid #93a8c4;
+    border-radius: 5px;
+    background: #ffffff;
+    /* 不支援 appearance:none 的環境仍以主色呈現勾選 */
+    accent-color: var(--darkerColor-blue, #1f4577);
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar input[type="checkbox"]::after {
+    content: "";
+    width: 9px;
+    height: 5px;
+    border-left: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    transform: rotate(-45deg) translate(0.5px, -1px);
+    opacity: 0;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar input[type="checkbox"]:checked {
+    background: var(--darkerColor-blue, #1f4577);
+    border-color: var(--darkerColor-blue, #1f4577);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar input[type="checkbox"]:checked::after {
+    opacity: 1;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar input[type="checkbox"]:hover {
+    border-color: var(--darkColor-blue, #4382ec);
+}
+
+/* --- 7.4 精準面板數字欄位：與按鈕同高 34px、同細框語言 ------------------ */
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision input[type="number"] {
+    height: 34px;
+    min-height: 34px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1.5px solid #93a8c4;
+    background: #ffffff;
+    color: var(--darkerColor-blue, #1f4577);
+    font: 500 13px/1.3 var(--main-font-family, system-ui, sans-serif);
+    box-sizing: border-box;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision input[type="number"]:focus {
+    border-color: var(--darkColor-blue, #4382ec);
+}
+
+/* 快捷鍵提示列再淡化，減少工程感 */
+#myntLayoutToolbar .myntLayoutInstructions {
+    font-size: 11.5px;
+    color: #4a617e;
+}
+
+/* --- 7.5 所有區塊覆蓋框同一種框樣式 --------------------------------------
+   現況三個來源各改了一部分：layout-editor.css 給 1.5px/12px、
+   manual-editor-controls.css 改成 2px/#5280b9/14px、選取態再切成
+   3px 實線——「時鐘」與其他區塊看起來框不一致即此疊加結果。
+   這裡用 [data-block] 屬性選擇器統一（含 #myntHomeWidgets 新區塊），
+   選取態維持同款虛線，改以深色＋外環表示。 */
+body.mynt-layout-editing .myntLayoutOverlay[data-block] {
+    border: 1.5px dashed var(--darkColor-blue, #4382ec);
+    border-radius: 12px;
+}
+
+body.mynt-layout-editing .myntLayoutOverlay[data-block].is-selected {
+    border: 1.5px dashed var(--darkerColor-blue, #1f4577);
+    box-shadow: 0 0 0 3px rgba(187, 214, 253, 0.55);
+    background: rgba(67, 130, 236, 0.05);
+}
+
+/* --- 7.6 標籤／把手間距 --------------------------------------------------
+   一般區塊：標籤完整移到框外上緣並留 4px 間隙（不再壓框線 2px）。
+   JS 在區塊距視窗頂 <48px 時會把 --mynt-handle-top 改為 0px，
+   此時標籤落在框內上緣，仍維持可操作。 */
+body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
+    top: calc(var(--mynt-handle-top, -24px) - 4px);
+}
+
+/* icon 區塊（番茄鐘／隨手記／書籤）的縮放把手原先伸出區塊下方，
+   會壓到它下面那個區塊的上緣標籤（例如左下「今日考古題」）。
+   比照桌布／設定鈕的做法改放到標籤上方：標籤離框 6px、
+   把手再離標籤 6px（間距 ≥4px），區塊下方不再伸出任何控制項。 */
+body.mynt-layout-editing .myntLayoutOverlay:is(
+    [data-block="pomodoro"],
+    [data-block="scratchpad"],
+    [data-block="bookmarks"]
+) > .myntLayoutResize {
+    top: auto;
+    bottom: calc(100% + 36px);
+}
+
+/* --- 7.7 小型區塊的標籤自動縮為把手圖示 ----------------------------------
+   用容器查詢取代逐區塊列舉：寬度 <110px 的覆蓋框（含今日小工具
+   #myntHomeWidgets 等新區塊）標籤縮成 24px ⠿ 圖示，互動時再展開。 */
+body.mynt-layout-editing .myntLayoutOverlay[data-block] {
+    container-type: size;
+    container-name: myntlayoutblock;
+}
+
+@container myntlayoutblock (max-width: 110px) {
+    .myntLayoutOverlay > .myntLayoutLabel {
+        top: auto;
+        bottom: calc(100% + 6px);
+        left: 0;
+        width: 24px;
+        padding: 0;
+        font-size: 0;
+        justify-content: center;
+    }
+
+    .myntLayoutOverlay > .myntLayoutLabel::before {
+        content: "⠿";
+        font-size: 12px;
+    }
+
+    .myntLayoutOverlay:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel {
+        width: max-content;
+        padding-inline: 8px;
+        font-size: 12px;
+    }
+
+    .myntLayoutOverlay:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel::before {
+        content: none;
+    }
+}
+
+/* --- 7.8 非置頂面板上下留白加到 88px -------------------------------------
+   右側置中停靠原本上下各留 80px；加大到 88px，右下的設定鈕與
+   桌布鈕完全不會被面板下緣蓋到。窄螢幕底部置中停靠也同步抬高。 */
+body.mynt-layout-editing #myntLayoutToolbar:not([data-dock="top"]) {
+    max-height: calc(100dvh - 176px);
+}
+
+@media (max-width: 1099.98px) {
+    body.mynt-layout-editing #myntLayoutToolbar:not([data-dock="top"]) {
+        bottom: max(88px, env(safe-area-inset-bottom));
+        max-height: calc(100dvh - 176px);
+    }
+}
+
+/* 高對比模式：本節的 border shorthand 會覆寫 manual-editor-controls.css 的
+   Highlight 規則，這裡用同特異性選擇器補回系統色，維持原有高對比行為。 */
+@media (forced-colors: active) {
+    body.mynt-layout-editing .myntLayoutOverlay[data-block] {
+        border-color: Highlight;
+    }
+}
