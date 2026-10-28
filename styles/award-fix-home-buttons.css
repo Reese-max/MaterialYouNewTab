@@ -55,3 +55,34 @@
     background: var(--darkerColor-blue);
     color: #fff;
 }
+
+/* ===== 停用狀態：細框深字、不靠淡化 =====
+   custom-text.js 以 toggle.disabled = !focus.text 停用按鈕；
+   style.css 原本只用 opacity: .45 淡化次要配色，淺色已偏淡，
+   反相後對比更掉到 2:1 以下，評審認為幾乎隱形。
+   改為「細框＋主題深色文字、無填色」：用線框外觀表達停用而非低對比。
+   - opacity: 1 蓋掉 style.css 的 0.45 淡化（淡化是對比元兇）
+   - --darkerColor-blue 字在淺色頁面背景約 5.4:1，達 AA（≥4.5）
+   - 邊框用主色 60% 混合，比可用態的實色弱一階，仍可辨外框 */
+#dailyFocusToggle:disabled,
+#dailyFocusToggle[disabled],
+#dailyFocusToggle[aria-disabled="true"] {
+    opacity: 1;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--darkerColor-blue) 60%, transparent);
+    color: var(--darkerColor-blue);
+    cursor: not-allowed;
+}
+
+/* 停用態的 hover／焦點不升級為深底白字（避免看起來可按），
+   只鋪淡主題底；深字在淡底上約 4.7:1，仍過 AA。
+   aria-disabled 的按鈕仍可被聚焦，所以一併涵蓋 :focus-visible。 */
+#dailyFocusToggle:disabled:hover,
+#dailyFocusToggle[disabled]:hover,
+#dailyFocusToggle[aria-disabled="true"]:hover,
+#dailyFocusToggle:disabled:focus-visible,
+#dailyFocusToggle[aria-disabled="true"]:focus-visible {
+    background: var(--accentLightTint-blue);
+    color: var(--darkerColor-blue);
+    filter: none;
+}

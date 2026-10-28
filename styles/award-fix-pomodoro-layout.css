@@ -532,3 +532,33 @@
 		transform: none !important;
 	}
 }
+
+/* --------------------------------------------------------------------------
+   9. 任務輸入框改為明確的輸入欄外觀（與膠囊按鈕區隔）
+   --------------------------------------------------------------------------
+   原本底色、邊框、圓角與下方「開啟懸浮番茄鐘」「+5 分鐘」「完整設定」
+   幾乎相同，評審看不出那是可輸入的欄位。
+   改為：白色內嵌底＋1px 實線框＋較小圓角（8px，按鈕維持膠囊）＋
+   文字靠左、左側內距 12px；按鈕樣式一律不動。
+   文字色用 --textColorDark-blue 蓋過 pomodoro-studio.css 的 --pomo-fg 白字，
+   白底深字對比遠高於 4.5:1；深色模式整頁反相後依舊成立。
+   註：#myntPomoTask 由 JS 建立且無 type 屬性，input[type="text"] 選不到，
+   故沿用本檔的 ID 選擇器。 */
+#pomodoroPanel #myntPomoTask {
+	background: #ffffff;
+	border: 1px solid rgba(0, 0, 0, 0.28);
+	border-radius: 8px;
+	padding: 6px 12px;
+	text-align: left;
+	color: var(--textColorDark-blue, #1b3041);
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 鍵盤焦點：主題色 2px 外框，明確標示目前所在的輸入欄。
+   box-shadow: none 移除滑鼠聚焦用的光暈，避免與外框疊成雙圈；
+   滑鼠聚焦（:focus 非 :focus-visible）仍保留原光暈回饋。 */
+#pomodoroPanel #myntPomoTask:focus-visible {
+	outline: 2px solid var(--darkColor-blue, #4382ec);
+	outline-offset: 2px;
+	box-shadow: none;
+}
