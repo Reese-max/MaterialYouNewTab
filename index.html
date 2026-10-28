@@ -108,6 +108,7 @@
     <link href="styles/award-fix-dark-shadows.css" rel="stylesheet">
     <link href="styles/award-fix-wallpaper.css" rel="stylesheet">
     <link href="styles/award-fix-home-hierarchy.css" rel="stylesheet">
+    <link href="styles/award-fix-clock.css" rel="stylesheet">
     <link href="styles/award-system.css" rel="stylesheet">
     <script defer src="scripts/adaptive-core.js"></script>
     <script defer src="scripts/adaptive-background.js"></script>
@@ -1503,12 +1504,12 @@
                                 <div class="sectionInner" id="clockSectionContent">
                                     <div class="ttcont" id="clockHidden">
                                         <div class="texts">
-                                            <div class="bigText" id="hideClockBox">Hide Clock</div>
-                                            <div class="infoText" id="hideClockBoxInfo">Show or hide the clock and date
+                                            <div class="bigText" id="showClockBox">Show clock</div>
+                                            <div class="infoText" id="showClockBoxInfo">Show the clock and date on the home page
                                             </div>
                                         </div>
                                         <label class="switch">
-                                            <input id="hideClock" type="checkbox">
+                                            <input id="hideClock" type="checkbox" aria-labelledby="showClockBox" aria-describedby="showClockBoxInfo">
                                             <span class="toggle"></span>
                                         </label>
                                     </div>

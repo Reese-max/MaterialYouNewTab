@@ -190,6 +190,8 @@
         for (const id of LEGACY_DEFAULT_IDS) decode(byId.get(id), values);
         const previous = {}, writes = [], migrated = [];
         for (const id of options.hiddenByLegacyStyles) {
+            // 時鐘現在預設顯示；舊 previous:null 無法辨識使用者後續關閉，既有值一律保留。
+            if (id === 'clock') continue;
             const key = byId.get(id).key;
             if (values.get(key) !== null) continue;
             previous[key] = null;

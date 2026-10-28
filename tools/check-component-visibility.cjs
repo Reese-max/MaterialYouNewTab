@@ -124,18 +124,27 @@ assert.equal(core.validateMigration(null), null);
 const migrationStore = storage({ unrelatedPersonalData: 'retain' });
 const legacyDefaults = core.planMigration(migrationStore, { hiddenByLegacyStyles: ['clock', 'weather'] });
 assert.deepEqual([...migrationStore.data], [['unrelatedPersonalData', 'retain']], 'Migration planning never writes.');
-assert.deepEqual(legacyDefaults.migrated, ['clock', 'weather']);
+assert.deepEqual(legacyDefaults.migrated, ['weather']);
 assert.deepEqual(legacyDefaults.expected.map(value => value.key), [...core.storageKeys, core.MIGRATION_KEY]);
-assert.deepEqual(legacyDefaults.writes.slice(0, 2), [{ key: 'hideClockVisible', value: 'true' }, { key: 'hideWeatherVisible', value: 'true' }]);
+assert.deepEqual(legacyDefaults.writes.slice(0, -1), [{ key: 'hideWeatherVisible', value: 'true' }]);
 const marker = core.validateMigration(legacyDefaults.writes.at(-1).value);
-assert.deepEqual(marker, { version: 1, previous: { hideClockVisible: null, hideWeatherVisible: null } });
+assert.deepEqual(marker, { version: 1, previous: { hideWeatherVisible: null } });
 apply(migrationStore, legacyDefaults);
-assert.equal(item(migrationStore, 'clock').visible, false);
+assert.equal(item(migrationStore, 'clock').visible, true, 'Legacy CSS no longer auto-hides a new-install clock.');
+assert.equal(migrationStore.data.has('hideClockVisible'), false);
 assert.equal(item(migrationStore, 'weather').visible, false);
 assert.deepEqual(core.planMigration(migrationStore, { hiddenByLegacyStyles: ['clock', 'weather'] }).writes, []);
 apply(migrationStore, core.plan(migrationStore, 'clock', true));
 assert.equal(item(migrationStore, 'clock').visible, true, 'Intentional edits use only canonical preferences.');
 assert.deepEqual(core.planMigration(migrationStore, { hiddenByLegacyStyles: ['clock'] }).writes, [], 'Marker never reapplies CSS defaults.');
+// The old marker records an initial preimage, never later user intent.
+for (const hidden of ['true', 'false']) {
+    const old = storage({ hideClockVisible: hidden, [core.MIGRATION_KEY]: '{"version":1,"previous":{"hideClockVisible":null}}' });
+    const before = [...old.data];
+    for (let run = 0; run < 3; run++) apply(old, core.planMigration(old, { hiddenByLegacyStyles: ['clock'] }));
+    assert.deepEqual([...old.data], before, 'Old auto-initialized and later explicitly edited values are indistinguishable; preserve both.');
+    assert.equal(item(old, 'clock').visible, hidden === 'false');
+}
 for (const clock of ['true', 'false']) for (const weather of ['true', 'false']) {
     const store = storage({ hideClockVisible: clock, hideWeatherVisible: weather });
     const plan = core.planMigration(store, { hiddenByLegacyStyles: ['clock', 'weather'] });

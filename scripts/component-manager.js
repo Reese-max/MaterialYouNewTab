@@ -16,7 +16,7 @@
             if (input) { input.disabled = !item.valid; input.checked = item.visible === true; input.setAttribute('aria-invalid', String(!item.valid)); }
             if (!item.valid) continue;
             const original = item.checkboxId && document.getElementById(item.checkboxId);
-            if (original) original.checked = item.kind === 'inverse' ? !item.visible : item.visible;
+            if (original) original.checked = item.kind === 'inverse' && item.id !== 'clock' ? !item.visible : item.visible;
             // Keep dependent settings usable without dispatching legacy handlers,
             // which persist caches or reinitialize content during a pure refresh.
             const settingsRows = item.id === 'shortcuts' ? ['shortcutEditField', 'adaptiveIconField']

@@ -461,6 +461,8 @@ const zh_TW = {
     // Clock
     "hideClockBox": "隱藏時鐘",
     "hideClockBoxInfo": "顯示或隱藏時鐘和日期",
+    "showClockBox": "顯示時鐘",
+    "showClockBoxInfo": "在首頁顯示時鐘與日期",
     "digitalclocktitle": "數位時鐘",
     "digitalclockinfo": "切換到數位時鐘",
     "timeformattitle": "12 小時制",
