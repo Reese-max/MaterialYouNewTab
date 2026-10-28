@@ -154,20 +154,39 @@ test('Clock fallback uses the strict 20% threshold, preserves scale and never mu
     for (const [vw, vh, old, card] of [[1536, 740, clock, focus], [1920, 1080, rect(544,447,150,150), rect(79,386,566,158)]]) {
         const next = fallback(block, old, card, [card], [], vw, vh);
         const display = rect(old.left + (next.x-block.x)*vw, old.top + (next.y-block.y)*vh,150,150);
-        const date = datePosition(display, 108, 21, [card]);
+        const date = datePosition(display, 108, 21, [card], vw);
         assert.equal(display.left, 287); assert.equal(display.top, vh === 740 ? 32 : 220);
-        assert.equal(date.left, 445); assert.equal(date.top, vh === 740 ? 96.5 : 284.5);
+        assert.equal(date.left, 449); assert.equal(date.top, vh === 740 ? 96.5 : 284.5);
+        assert.equal(date.left - display.right, 12);
+        assert.equal(date.top + 21 / 2, display.top + display.height / 2);
         assert.equal(overlap(rect(date.left,date.top,108,21), card), 0);
         console.log(`CLOCK_FALLBACK_GEOMETRY ${vw}x${vh}: clock=${display.left},${display.top},150,150 date~=${date.left},${date.top},108,21`);
     }
     const side = rect(661,202,150,150), search = rect(92,360,560,64);
-    const date = datePosition(side,108,21,[focus,search]);
-    assert.deepEqual(date,{left:682,top:360});
+    const date = datePosition(side,108,21,[focus,search],1536);
+    // 日期改為優先置右；舊版的下方優先斷言由中軸與間距斷言取代。
+    assert.deepEqual(date,{left:823,top:266.5});
     for (const obstacle of [focus,search]) assert.equal(overlap(rect(date.left,date.top,108,21),obstacle),0);
     assert.equal(JSON.stringify(block), bytes);
     const css = fs.readFileSync(path.join(root, 'styles/award-fix-clock.css'), 'utf8');
     assert.match(css, /\[data-mynt-layout-date\][^{]*\{[^}]*font-size: max\(calc\(13px \* var\(--mynt-font-scale, 1\)\), calc\(13px \* var\(--mynt-font-scale, 1\) \/ var\(--mynt-clock-scale, 1\)\)\)/);
     for (const scale of [.1,.5,.75,1,2]) assert(Math.max(14,12/scale)*scale >= 12);
+});
+
+test('Clock date uses the right-hand midpoint, then the lower midpoint when space is insufficient', () => {
+    const { myntClockDatePosition: datePosition } = require(path.join(root, 'scripts/layout-editor.js'));
+    const rect = (left, top, width, height) => Object.freeze({ left, top, width, height, right: left + width, bottom: top + height });
+    for (const vw of [375,1536,1920]) for (const scale of [.5,1,2]) for (const [width,height] of [[108,21],[240,42]]) {
+        const clock = rect(vw - 150*scale - 12 - width, 32, 150*scale, 150*scale);
+        const bytes = JSON.stringify(clock), obstacles = Object.freeze([]);
+        const side = {left:clock.right+12,top:clock.top+(clock.height-height)/2};
+        const below = {left:clock.left+(clock.width-width)/2,top:clock.bottom+8};
+        assert.deepEqual(datePosition(clock,width,height,obstacles,vw),side,'Exact viewport fit stays on the right');
+        assert.deepEqual(datePosition(clock,width,height,obstacles,vw-1),below,'One pixel short moves below');
+        assert.deepEqual(datePosition(clock,width,height,[rect(side.left,side.top,width,height)],vw),below,'Occupied right-hand space moves below');
+        assert.deepEqual(datePosition(clock,width,height,[rect(below.left,below.top,width,height)],vw),side,'A lower obstacle does not displace the right-hand date');
+        assert.equal(JSON.stringify(clock),bytes);
+    }
 });
 
 test('Rendered clock fallback is editable, saves only on Save, and respects the newly saved position', () => {
@@ -185,9 +204,14 @@ test('Rendered clock fallback is editable, saves only on Save, and respects the 
     app.document.body.append(clock,focus); app.api.applyAll();
     assert.equal(clock.getBoundingClientRect().left,287); assert(Math.abs(clock.getBoundingClientRect().top-32)<1e-9);
     assert.equal(date.style['--mynt-clock-scale'],'0.5');
-    assert.equal(Number.parseFloat(date.style['--mynt-date-x']),316);
+    assert.equal(Number.parseFloat(date.style['--mynt-date-x']),324);
     assert.equal(Number.parseFloat(date.style['--mynt-date-y']),129);
     assert.deepEqual(clone(app.api.get()),old); assert.equal(saved(app),bytes); assert.equal(app.writes(),0);
+    app.context.innerWidth=540; app.api.applyAll();
+    assert.equal(Number.parseFloat(date.style['--mynt-date-x']),42);
+    assert.equal(Number.parseFloat(date.style['--mynt-date-y']),316);
+    assert.deepEqual(clone(app.api.get()),old); assert.equal(saved(app),bytes); assert.equal(app.writes(),0);
+    app.context.innerWidth=1200; app.api.applyAll();
     app.api.setEditing(true);
     const handle = () => app.document.all().find(node=>node.dataset.block==='clock').querySelector('.myntLayoutMove');
     assert.equal(clock.getBoundingClientRect().left,287);

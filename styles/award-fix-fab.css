@@ -135,8 +135,12 @@
         justify-content: center;
     }
 
-    /* 保留 summary 的原生標記與文字內容，長字串可在既有容器內換行。 */
+    /* 兩個邊角膠囊改用右側箭頭；保留原生展開操作與長字串換行。 */
     &:is(summary) {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        list-style: none;
         min-height: 48px;
         padding: 12px 14px;
         font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
@@ -144,6 +148,20 @@
         line-height: 1.5;
         max-width: 100%;
         overflow-wrap: anywhere;
+
+        &::marker { content: ""; }
+        &::-webkit-details-marker { display: none; }
+        &::after {
+            content: "";
+            flex: 0 0 12px;
+            width: 12px;
+            height: 12px;
+            background: currentColor;
+            clip-path: polygon(0 30%, 12% 18%, 50% 56%, 88% 18%, 100% 30%, 50% 80%);
+            forced-color-adjust: none;
+            /* 直接切換方向，減少動畫設定下也不產生過渡。 */
+            transition: none;
+        }
     }
 
     & > svg {
@@ -167,6 +185,10 @@
         outline: 2px solid var(--mynt-fab-focus);
         outline-offset: 2px;
     }
+}
+
+:root body :is(#myntProfilesPanel, #myntAdaptivePanel)[open] > summary::after {
+    transform: rotate(180deg);
 }
 
 /* 鐘面、指針與刻度同色；不改指針的旋轉與計時行為。 */

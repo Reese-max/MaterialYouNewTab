@@ -66,11 +66,12 @@ function myntClockFallback(block, clock, focus, obstacles, controls, vw, vh) {
     return { ...block, x: block.x + (left - clock.left) / vw, y: block.y + (top - clock.top) / vh };
 }
 
-function myntClockDatePosition(clock, width, height, obstacles) {
-    const left = clock.left + (clock.width - width) / 2, top = clock.bottom + 8;
-    const below = { left, top, right: left + width, bottom: top + height, width, height };
-    return obstacles.some(rect => myntOverlapRatio(below, rect) > 0)
-        ? { left: clock.right + 8, top: clock.top + (clock.height - height) / 2 }
+function myntClockDatePosition(clock, width, height, obstacles, vw) {
+    const left = clock.right + 12, top = clock.top + (clock.height - height) / 2;
+    const side = { left, top, right: left + width, bottom: top + height, width, height };
+    // 以畫面像素對齊鐘面中軸；右側放不下時改置下方，不改儲存座標。
+    return side.right > vw || obstacles.some(rect => myntOverlapRatio(side, rect) > 0)
+        ? { left: clock.left + (clock.width - width) / 2, top: clock.bottom + 8 }
         : { left, top };
 }
 
@@ -293,7 +294,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const rect = clock.getBoundingClientRect(), scale = rect.width / clock.offsetWidth;
         date.dataset.myntLayoutDate = "true";
         date.style.setProperty("--mynt-clock-scale", String(scale));
-        const size = date.getBoundingClientRect(), position = myntClockDatePosition(rect, size.width, size.height, peers);
+        const size = date.getBoundingClientRect(), position = myntClockDatePosition(rect, size.width, size.height, peers, innerWidth);
         date.style.setProperty("--mynt-date-x", `${(position.left - rect.left) / scale}px`);
         date.style.setProperty("--mynt-date-y", `${(position.top - rect.top) / scale}px`);
     }
