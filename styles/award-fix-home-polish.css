@@ -171,3 +171,54 @@ body .ttteexxtt #date {
     text-align: start;
     pointer-events: none;
 }
+
+/* 第 17 輪：狀態在操作列內，不能直接與問候共用網格；只將非互動文字定位到卡片頂列。
+   預留等高空間，問候隱藏時也不壓住標題；標題與按鈕的 Tab 順序維持不變。 */
+body:is([data-workspace-background="video"], .mynt-manual-workspace) .ttteexxtt:has(> #dailyFocusActions:not([style*="display: none"])) {
+    --focus-header-top: 20px;
+    --focus-header-side: 24px;
+    position: relative;
+    padding-block-start: calc(var(--focus-header-top) + max(19.5px, calc(19.5px * var(--mynt-font-scale, 1))) + 10px);
+
+    & #dailyFocusStatus,
+    & #date {
+        position: absolute;
+        inset-block-start: var(--focus-header-top);
+        width: calc(50% - var(--focus-header-side) - 8px);
+        max-width: none;
+        font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+        line-height: 1.5;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    & #dailyFocusStatus {
+        inset-inline-start: var(--focus-header-side);
+        font-weight: 600;
+        letter-spacing: .06em;
+    }
+
+    & #date {
+        inset-inline-end: var(--focus-header-side);
+        font-weight: 400;
+        letter-spacing: normal;
+        text-align: end;
+    }
+
+    & #dailyFocusActions {
+        position: static;
+        justify-content: flex-end;
+    }
+
+    /* 操作列不再作為定位容器，提示改錨定圖示組；寬度留在窄版卡片內。 */
+    & #dailyFocusTools { position: relative; }
+    & #dailyFocusTools .dailyFocusIcon::after {
+        max-width: min(260px, calc(100vw - 96px));
+    }
+
+    @media (max-width: 900px) {
+        --focus-header-top: 18px;
+        --focus-header-side: 20px;
+    }
+}
