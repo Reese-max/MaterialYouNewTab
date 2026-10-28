@@ -37,6 +37,7 @@
         entry('pomodoro', '番茄鐘', 'Pomodoro', 'pomodoroCheckboxState', 'checked', false, 'pomodoroCheckbox', ['#pomodoroCont'], {
             display: 'flex', caches: [cache('pomodoroDisplayStatus')], panelSelectors: ['#pomodoroPanel']
         }),
+        entry('homeWidgets', '首頁今日小工具', 'Homepage Today widgets', 'myntHomeWidgetsVisible', 'boolean', true, null, ['#myntHomeWidgets'], { newPreference: true }),
         entry('bongo', '鍵盤貓', 'Bongo cat', 'bongoCatCheckboxState', 'checked', false, 'bongoCatCheckbox', ['#bongoCatWidget'], {
             display: 'block', caches: [cache('bongoCatDisplayStatus', 'block')]
         }),
@@ -190,6 +191,8 @@
         for (const id of LEGACY_DEFAULT_IDS) decode(byId.get(id), values);
         const previous = {}, writes = [], migrated = [];
         for (const id of options.hiddenByLegacyStyles) {
+            // 時鐘現在預設顯示；舊 previous:null 無法辨識使用者後續關閉，既有值一律保留。
+            if (id === 'clock') continue;
             const key = byId.get(id).key;
             if (values.get(key) !== null) continue;
             previous[key] = null;

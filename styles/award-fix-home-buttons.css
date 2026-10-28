@@ -1,0 +1,219 @@
+/* 第 4 輪：首頁主要／次要按鈕一致（淺色做對，深色反相後一致） */
+
+/* ===== 兩種按鈕語言 =====
+   深色模式是把整頁 invert(1) hue-rotate(180deg) 反相（見 docs/design/brief.md），
+   深色交由既有反相機制處理，這裡先把淺色模式做對：
+   - 主要按鈕：主題深色底 var(--darkerColor-blue) + 白字（藍主題約 5.5:1）
+   - 次要按鈕：主題淺底 var(--accentLightTint-blue) + 主題深字
+     var(--darkerColor-blue)（藍主題約 4.5:1），互動時升級為主要配色。
+   顏色全部走既有主題變數，11 種主題色自動跟隨；
+   高對比模式下這些變數被換成系統色，語意仍然成立。 */
+
+/* ===== 主要按鈕：搜尋列「搜尋」（#enterBtn） =====
+   重申基準配色（style.css 已是同值，這裡作為規格錨點，避免
+   其他主題或既有規則漂移），並補上原本缺少的 focus-visible 焦點框。 */
+#enterBtn {
+    background-color: var(--darkerColor-blue);
+    color: #fff;
+}
+
+#enterBtn:focus-visible {
+    /* 與下方次要按鈕相同的焦點框語言；darkerColor 在淺色頁面
+       背景上的可見度比 darkColor 好 */
+    outline: 2px solid var(--darkerColor-blue);
+    outline-offset: 2px;
+}
+
+/* ===== 次要按鈕：焦點卡「完成」（#dailyFocusToggle） =====
+   原本是 --darkColor-blue 底 + 白字（藍主題約 3.5:1，不足 AA），
+   反相後又變成深底黑字。改為淺底深字的次要配色；
+   尺寸沿用上一輪（32px 高、padding 不動），只統一顏色。 */
+#dailyFocusToggle {
+    background: var(--accentLightTint-blue);
+    color: var(--darkerColor-blue);
+}
+
+/* hover／鍵盤焦點時升級為主要按鈕配色（深底白字），回饋明確。
+   filter: none 用來蓋掉上一輪遺留的 brightness(1.08)——
+   那是為舊的深色底設計的，留在新配色上會把 hover 對比拉到邊界。 */
+#dailyFocusToggle:hover,
+#dailyFocusToggle:focus-visible {
+    background: var(--darkerColor-blue);
+    color: #fff;
+    filter: none;
+}
+
+#dailyFocusToggle:focus-visible {
+    /* 焦點框用深主題色，在淺色卡片背景上清楚可見 */
+    outline: 2px solid var(--darkerColor-blue);
+    outline-offset: 2px;
+}
+
+/* 已標記完成（aria-pressed="true"，由 custom-text.js 切換）維持
+   主要配色，讓「已完成」狀態一眼可辨 */
+#dailyFocusToggle[aria-pressed="true"] {
+    background: var(--darkerColor-blue);
+    color: #fff;
+}
+
+/* ===== 停用狀態：細框深字、不靠淡化 =====
+   custom-text.js 以 toggle.disabled = !focus.text 停用按鈕；
+   style.css 原本只用 opacity: .45 淡化次要配色，淺色已偏淡，
+   反相後對比更掉到 2:1 以下，評審認為幾乎隱形。
+   改為「細框＋主題深色文字、無填色」：用線框外觀表達停用而非低對比。
+   - opacity: 1 蓋掉 style.css 的 0.45 淡化（淡化是對比元兇）
+   - --darkerColor-blue 字在淺色頁面背景約 5.4:1，達 AA（≥4.5）
+   - 邊框用主色 60% 混合，比可用態的實色弱一階，仍可辨外框 */
+#dailyFocusToggle:disabled,
+#dailyFocusToggle[disabled],
+#dailyFocusToggle[aria-disabled="true"] {
+    opacity: 1;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--darkerColor-blue) 60%, transparent);
+    color: var(--darkerColor-blue);
+    cursor: not-allowed;
+}
+
+/* 停用態的 hover／焦點不升級為深底白字（避免看起來可按），
+   只鋪淡主題底；深字在淡底上約 4.7:1，仍過 AA。
+   aria-disabled 的按鈕仍可被聚焦，所以一併涵蓋 :focus-visible。 */
+#dailyFocusToggle:disabled:hover,
+#dailyFocusToggle[disabled]:hover,
+#dailyFocusToggle[aria-disabled="true"]:hover,
+#dailyFocusToggle:disabled:focus-visible,
+#dailyFocusToggle[aria-disabled="true"]:focus-visible {
+    background: var(--accentLightTint-blue);
+    color: var(--darkerColor-blue);
+    filter: none;
+}
+
+/* 第 15 輪：首頁膠囊沿用 r13 浮動工具的表面、細框、陰影與焦點。
+   只調整元件本身；外層定位、使用者縮放與隱藏狀態仍由原規則管理。
+   祖先 ID 提高具體性，覆蓋影片工作區與自動取色的舊表面。 */
+:root body :is(#examDaily #examDailyChip, #studyQuote, #aiToolsCont #toolsCont a) {
+    --mynt-fab-ink: var(--textColorDark-blue);
+    --mynt-fab-focus: color-mix(in srgb, var(--darkerColor-blue) 65%, var(--textColorDark-blue));
+    box-sizing: border-box;
+    min-height: 42px;
+    border-radius: 999px;
+    background: var(--accentLightTint-blue);
+    color: var(--mynt-fab-ink);
+    border: 1px solid color-mix(in srgb, var(--mynt-fab-ink) 24%, var(--accentLightTint-blue));
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    text-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: color-mix(in srgb, var(--accentLightTint-blue) 94%, var(--mynt-fab-ink));
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--mynt-fab-focus);
+        outline-offset: 2px;
+    }
+}
+
+:root body :is(#examDaily #examDailyChip, #aiToolsCont #toolsCont a) {
+    height: 42px;
+    padding-block: 0;
+}
+
+/* 名言的按鈕在容器內，將焦點框放在同一個膠囊外緣。
+   保留文字的既有省略與來源顯示規則，不擴張外層寬度。 */
+:root body #studyQuote {
+    padding-block: 9px;
+
+    &:has(#studyQuoteText:focus-visible) {
+        outline: 2px solid var(--mynt-fab-focus);
+        outline-offset: 2px;
+    }
+}
+:root body #studyQuote :is(#studyQuoteText, #studyQuoteSource, #studyQuoteExam) {
+    color: inherit;
+    opacity: 1;
+    transition: none;
+}
+:root body #studyQuote #studyQuoteText:focus-visible {
+    outline: none;
+}
+
+/* 移除圖示內的深色圓底，保留原 SVG 輪廓及其既有縮放。 */
+:root body #aiToolsCont #toolsCont .tIcon .aiDarkIcons {
+    fill: transparent;
+}
+:root body #aiToolsCont #toolsCont .tIcon .bgLightTint {
+    fill: currentColor;
+}
+
+/* 手機既有直排圖示會超出 42px 膠囊，改為內部橫排並沿用文字省略。
+   不更動工具列的欄數、座標或外層縮放。 */
+@media (max-width: 500px) {
+    :root body #aiToolsCont #toolsCont.mobileToolsLayout a {
+        flex-direction: row;
+    }
+    :root body #aiToolsCont #toolsCont.mobileToolsLayout .tIcon {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        margin: 0;
+        margin-inline-end: 6px;
+    }
+    :root body #aiToolsCont #toolsCont.mobileToolsLayout .tLabel {
+        min-width: 0;
+    }
+}
+
+/* 搜尋沿用「完成」的深主題色語彙，加深以讓黃／蜜桃主題白字也達 AA。
+   不採用自動取色的灰黑 accent；不改麥克風、AI 搜尋或按鈕尺寸。
+   高對比模式保留既有系統色，黑色主題另用已驗證的藍色主動作底。 */
+@media (forced-colors: none) {
+    :root:not(.myntHighContrast) body #searchbar #enterBtn {
+        --mynt-home-primary: color-mix(in srgb, var(--darkerColor-blue) 65%, var(--textColorDark-blue));
+        background: var(--mynt-home-primary);
+        color: #fff;
+
+        &:hover {
+            background: color-mix(in srgb, var(--mynt-home-primary) 84%, #000);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--mynt-home-primary);
+            outline-offset: 2px;
+        }
+    }
+    :root.black-theme:not(.myntHighContrast) body #searchbar #enterBtn {
+        --mynt-home-primary: #3569b2;
+    }
+}
+
+/* 深色只沿用浮動工具的反相陰影補償；表面仍取相同主題變數。
+   多一層 body 與元件祖先 ID，覆蓋 r14 的 AI 區域色票及後載入陰影。 */
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
+    & body :is(#examDaily #examDailyChip, #studyQuote, #aiToolsCont #toolsCont a) {
+        --textColorDark-blue: inherit;
+        --accentLightTint-blue: inherit;
+        --darkerColor-blue: inherit;
+        background: var(--accentLightTint-blue);
+        color: var(--mynt-fab-ink);
+        border: 1px solid color-mix(in srgb, var(--mynt-fab-ink) 24%, var(--accentLightTint-blue));
+
+        &, &:hover { box-shadow: 0 2px 6px rgb(255 255 255 / 0.1); }
+
+        &:hover {
+            background-color: color-mix(in srgb, var(--accentLightTint-blue) 94%, var(--mynt-fab-ink));
+        }
+    }
+}
+
+html.myntReducedMotion body :is(#examDaily #examDailyChip, #studyQuote, #aiToolsCont #toolsCont a) {
+    transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    :root body :is(#examDaily #examDailyChip, #studyQuote, #aiToolsCont #toolsCont a) {
+        transition: none;
+    }
+}

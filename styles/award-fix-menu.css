@@ -1,0 +1,442 @@
+/* 第 6 輪：設定選單標題列、關閉鈕焦點、停用文字對比、捲動提示 */
+
+/* ===== 1. 標題列與內容區銜接 =====
+   原本 .topDiv 用 --bg-color-blue、::after 再疊一條帶圓角的
+   --accentLightTint-blue 色條，兩色交接處在圓角位置露出缺角。
+   改為標題列與內容區共用同一表面色，接縫改以一條細分隔線收邊。 */
+#menuCont > .topDiv {
+	background-color: var(--accentLightTint-blue);
+	border-bottom: 1px solid color-mix(in srgb, var(--textColorDark-blue) 12%, transparent);
+}
+
+/* 移除原先用來假裝卡片圓角的 ::after 色條，缺角隨之消失 */
+#menuCont > .topDiv::after {
+	content: none;
+}
+
+/* 選單左上角外側的內凹圓角 SVG 填色跟隨標題列新表面色 */
+#menuCont .topRounder path.lessDark {
+	fill: var(--accentLightTint-blue);
+}
+
+/* ===== 2. 關閉鈕焦點框 =====
+   開啟選單時 JS 會對 #menuCloseButton 執行 .focus()，焦點框變成常駐。
+   只在 :focus-visible（鍵盤操作）時顯示焦點框，滑鼠／程式焦點不顯示。 */
+#menuCont #menuCloseButton:focus:not(:focus-visible) {
+	outline: none;
+}
+
+#menuCont #menuCloseButton:focus-visible {
+	outline: 2px solid var(--darkColor-blue);
+	outline-offset: 3px;
+}
+
+/* ===== 3. 停用列與一般關閉狀態分開辨識 =====
+   只讓列本身接收滑鼠以顯示游標，子元素維持不可操作。 */
+#menuCont .ttcont.inactive,
+#menuCont .ttcont:has(input:disabled) {
+	opacity: 1;
+	cursor: not-allowed;
+	pointer-events: auto;
+}
+
+#menuCont .ttcont.inactive > *,
+#menuCont .ttcont:has(input:disabled) > * {
+	pointer-events: none;
+}
+
+/* 停用文字保留中性灰對比；原有停用與焦點邏輯不變。 */
+#menuCont .ttcont:is(.inactive, :has(input:disabled)) :is(.bigText, .infoText) {
+	color: var(--menu-row-muted);
+}
+
+#menuCont .ttcont:is(.inactive, :has(input:disabled)) .switch {
+	opacity: 1;
+}
+
+/* ===== 4. 捲動區內縮，避免捲軸貼住面板圓角 ===== */
+#menuCont > .optCont {
+	position: relative;
+	width: calc(100% - 8px);
+	height: calc(100% - 80px);
+	margin-inline-end: 8px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	scrollbar-color: var(--darkerColor-silver) transparent;
+}
+
+#menuCont .optCont::-webkit-scrollbar {
+	width: 6px;
+}
+
+#menuCont .optCont::-webkit-scrollbar-track {
+	background: transparent;
+	margin-block: 8px;
+}
+
+#menuCont .optCont::-webkit-scrollbar-thumb {
+	background: var(--darkerColor-silver);
+	border-radius: 3px;
+}
+
+#menuCont .optCont::-webkit-scrollbar-thumb:hover {
+	background: var(--textColorDark-silver);
+}
+
+/* ===== 5. 移除全畫面霧化，保留桌布與選單的明暗分界 ===== */
+#menuBar {
+	background-color: rgb(0 0 0 / 28%);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+
+/* ===== 6. 所有開關共用灰底關閉、主色開啟；保留寬度並補足觸控高度 ===== */
+#menuCont .switch {
+	flex-shrink: 0;
+	height: 44px;
+}
+
+/* 透明原生輸入框保留鍵盤與輔助技術操作，視覺軌道仍為 60 × 34px。 */
+#menuCont .switch input[type="checkbox"] {
+	display: block;
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+/* 舊停用列靠不可點擊停用；不把它們加入新的鍵盤焦點順序。 */
+#menuCont .ttcont.inactive .switch input[type="checkbox"] {
+	display: none;
+}
+
+#menuCont .switch .toggle {
+	inset: 5px 0;
+	background-color: var(--accentLightTint-silver);
+	border: 1px solid var(--darkerColor-silver);
+}
+
+#menuCont .switch .toggle::before {
+	background-color: var(--textColorDark-silver);
+	inset-inline-start: 8px;
+	bottom: 8px;
+}
+
+#menuCont .switch input:checked + .toggle {
+	background-color: var(--darkColor-blue);
+	border-color: var(--darkerColor-blue);
+}
+
+#menuCont .switch input:checked + .toggle::before {
+	background-color: #fff;
+	inset-inline-start: 4px;
+	bottom: 4px;
+}
+
+/* 第 18 輪：停用優先於勾選配色；圓點置中，與可操作的左右狀態區分。
+   同時涵蓋舊版 inactive 列與原生 disabled，不改儲存的勾選值。 */
+#menuCont .ttcont.inactive .switch .toggle,
+#menuCont .switch input:disabled + .toggle {
+	background-color: #e5e5e5;
+	border-color: #b5b5b5;
+	transition: none;
+}
+
+#menuCont .ttcont.inactive .switch .toggle::before,
+#menuCont .switch input:disabled + .toggle::before {
+	background-color: #808080;
+	width: 16px;
+	height: 16px;
+	inset-inline-start: calc(50% - 8px);
+	bottom: 8px;
+	transform: none;
+	transition: none;
+}
+
+#menuCont .switch input:focus-visible + .toggle {
+	outline: 2px solid var(--darkerColor-blue);
+	outline-offset: 3px;
+}
+
+/* ===== 7. 姓名欄沿用現有表面變數；一般深色模式由整頁反相處理 ===== */
+#menuCont #greetingNameInput {
+	min-height: 44px;
+	padding: 8px 12px;
+	border: 1px solid var(--menu-input-border);
+	border-radius: 12px;
+	background-color: var(--menu-input-bg);
+	color: var(--menu-input-text);
+}
+
+#menuCont #greetingNameInput::placeholder {
+	color: var(--award-surface-light-muted);
+	opacity: 1;
+}
+
+html.black-theme #menuCont #greetingNameInput::placeholder {
+	color: var(--award-surface-dark-muted);
+}
+
+#menuCont #greetingNameInput:focus {
+	outline: 2px solid var(--darkerColor-blue);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+/* ===== 8. 筆電高度減少留白，長字串仍可換行並隨文字縮放增高 ===== */
+#menuCont > .topDiv {
+	height: 72px;
+}
+
+#menuCont .settingsGroupTabs {
+	margin-bottom: 8px;
+}
+
+#menuCont .settingsGroupTabs button,
+#menuCont .sectionHeader {
+	min-height: 44px;
+}
+
+#menuCont .section + .section {
+	margin-top: 12px;
+}
+
+#menuCont .sectionHeader {
+	padding: 6px 12px;
+}
+
+#menuCont .sectionTitle {
+	font-size: 1.05rem;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+#menuCont .sectionInner {
+	padding-inline: 10px;
+}
+
+#menuCont .section.expanded .sectionInner {
+	margin-top: 4px;
+}
+
+#menuCont .sectionInner .ttcont {
+	min-height: 64px;
+	padding: 8px 4px;
+	gap: 8px;
+}
+
+#menuCont .sectionInner .ttcont:not(:last-child) {
+	border-bottom: 1px solid var(--menu-row-divider);
+}
+
+#menuCont .ttcont .texts {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+#menuCont .ttcont .bigText {
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+#menuCont .ttcont .infoText {
+	font-size: 0.8125rem;
+	color: var(--menu-row-muted);
+	opacity: 1;
+	line-height: 1.4;
+	margin-top: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#menuCont .switch .toggle,
+	#menuCont .switch .toggle::before {
+		transition: none;
+	}
+}
+
+/* ===== 9. 捲動收邊：頁面採絕對定位，末端留白也須放在內容頁 ===== */
+#menuCont > .optCont {
+	height: calc(100% - 72px);
+	padding-bottom: 32px;
+	scroll-padding-bottom: 32px;
+}
+
+#menuCont > .optCont > .page {
+	padding-bottom: max(32px, var(--gap));
+}
+
+/* ===== 10. 分頁以字色、表面與陰影共同標示選取，保留文字縮放 ===== */
+#menuCont .settingsGroupTabs button {
+	font-size: max(14px, 0.875rem);
+	line-height: 1.5;
+	color: var(--textColorDark-silver);
+	overflow-wrap: anywhere;
+}
+
+#menuCont .settingsGroupTabs button[aria-selected="true"] {
+	background: #fff;
+	color: color-mix(in srgb, var(--darkerColor-blue) 60%, var(--textColorDark-blue));
+	box-shadow: 0 1px 4px rgb(13 39 71 / 14%);
+}
+
+/* 黑色主題有自己的深色表面，與整頁反相的深色模式分開處理。 */
+html.black-theme #menuCont .settingsGroupTabs button {
+	color: var(--award-surface-dark-text);
+}
+
+html.black-theme #menuCont .settingsGroupTabs button[aria-selected="true"] {
+	color: var(--textColorDark-silver);
+}
+
+#menuCont .settingsGroupTabs button:focus-visible,
+#menuCont .sectionHeader:focus-visible,
+#menuCont #myntComponentManager > summary:focus-visible {
+	outline: 2px solid var(--textColorDark-blue);
+	outline-offset: 2px;
+}
+
+/* ===== 11. 元件管理沿用區塊卡片表面與標題尺寸，保留原生開合 ===== */
+#menuCont #myntComponentManager {
+	padding: 7px;
+	border: 0;
+	border-radius: 20px;
+	background-color: color-mix(in srgb, var(--accentLightTint-blue) 60%, var(--bg-color-blue));
+}
+
+#menuCont #myntComponentManager[open] {
+	border-radius: 25px;
+}
+
+#menuCont #myntComponentManager:hover {
+	background-color: color-mix(in srgb, var(--accentLightTint-blue) 40%, var(--bg-color-blue));
+}
+
+html.black-theme #menuCont #myntComponentManager {
+	background-color: #222;
+}
+
+html.black-theme #menuCont #myntComponentManager:hover {
+	background-color: #1e1e1e;
+}
+
+#menuCont .sectionHeader,
+#menuCont #myntComponentManager > summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 44px;
+	padding: 6px 12px;
+	font-size: 1.05rem;
+	font-weight: 600;
+	line-height: 1.4;
+	color: var(--textColorDark-blue);
+	background: transparent;
+	text-align: start;
+	overflow-wrap: anywhere;
+}
+
+#menuCont #myntComponentManager > summary {
+	list-style: none;
+}
+
+#menuCont #myntComponentManager > summary::-webkit-details-marker {
+	display: none;
+}
+
+#menuCont .sectionChevron,
+#menuCont #myntComponentManager > summary::after {
+	content: "";
+	flex: 0 0 10px;
+	width: 10px;
+	height: 10px;
+	border-right: 3px solid var(--textColorDark-blue);
+	border-bottom: 3px solid var(--textColorDark-blue);
+	transform: rotate(45deg) translate(-3px, -2px);
+}
+
+#menuCont .section.expanded .sectionChevron,
+#menuCont #myntComponentManager[open] > summary::after {
+	transform: rotate(-135deg) translateY(-3px);
+}
+
+/* 第 16 輪：中性文字不隨主題色變淡；黑色主題使用直接配色。 */
+#menuCont {
+	--menu-row-muted: #595959;
+	--menu-row-divider: #d5d9df;
+	/* 沿用首頁主動作的加深主色，讓黃／蜜桃主題的白字也達 AA。 */
+	--menu-selected: color-mix(in srgb, var(--darkerColor-blue) 65%, var(--textColorDark-blue));
+}
+
+html.black-theme #menuCont {
+	--menu-row-muted: #c4c4c4;
+	--menu-row-divider: #555;
+	--menu-selected: #3569b2;
+}
+
+/* 窄螢幕保留文字空間；其他尺寸用縮排與連續細線表示數位時鐘子選項。 */
+@media (min-width: 360px) {
+	#menuCont :is(#timeformatField, #greetingField) {
+		margin-inline-start: 16px;
+		border-inline-start: 2px solid var(--menu-row-divider);
+		padding-inline-start: 12px;
+	}
+}
+
+/* 保留原有滑塊定位與切換流程，選中文字與主色滑塊同步。 */
+#menuCont .themeSegment {
+	background: #e5e5e5;
+}
+
+#menuCont .themeIndicator {
+	background: var(--menu-selected);
+}
+
+#menuCont .themeSegBtn {
+	background: transparent;
+	color: var(--menu-row-muted);
+	min-width: 0;
+	height: auto;
+	min-height: 44px;
+	padding: 6px 4px;
+	font-size: 0.9375rem;
+	line-height: 1.4;
+	overflow-wrap: anywhere;
+}
+
+#menuCont .themeSegment[data-active="light"] [data-theme="light"],
+#menuCont .themeSegment[data-active="dark"] [data-theme="dark"],
+#menuCont .themeSegment[data-active="system"] [data-theme="system"] {
+	color: #fff;
+	font-weight: 600;
+}
+
+#menuCont .themeSegBtn[data-theme="dark"]::after {
+	content: none;
+}
+
+/* 深色軌道比主色滑塊暗；只對小型切換器抵銷祖先反相，保留白字與主色。 */
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)) #menuCont .themeSegment,
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)) #menuCont .themeSegment {
+	filter: invert(1) hue-rotate(180deg);
+	background: #181c22;
+	--menu-row-muted: #c4c4c4;
+}
+
+html.black-theme #menuCont .themeSegment {
+	background: #181c22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#menuCont .themeSegment,
+	#menuCont .themeIndicator {
+		transition: none;
+	}
+}

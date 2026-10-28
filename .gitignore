@@ -12,6 +12,7 @@
 # Local QA / tooling artifacts
 dist/
 .impeccable/
+dist/ui-shots/
 .wrangler/
 *.bak-*
 

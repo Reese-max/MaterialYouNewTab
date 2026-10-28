@@ -18,7 +18,7 @@ function apply(store, plan) { plan.writes.forEach(({ key, value }) => store.data
 function item(store, id) { return core.read(store).find(value => value.id === id); }
 function throwsCode(fn, code) { assert.throws(fn, error => error.code === code); }
 
-const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'bongo', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
+const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'bongo', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
 assert.deepEqual(core.definitions.map(value => value.id), ids);
 assert.equal(new Set(core.definitions.map(value => value.key)).size, ids.length);
 assert.deepEqual(core.definitions.find(value => value.id === 'clock').selectors, ['#analogClock', '#digitalClock', '#date']);
@@ -26,11 +26,11 @@ assert.deepEqual(core.definitions.find(value => value.id === 'countdowns').panel
 assert.ok(Object.isFrozen(core.definitions));
 assert.ok(Object.isFrozen(core.storageKeys));
 assert.ok(core.definitions.every(value => Object.isFrozen(value) && Object.isFrozen(value.keys) && Object.isFrozen(value.selectors)));
-assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value => value.key), ['myntSearchVisible', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible']);
+assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value => value.key), ['myntSearchVisible', 'myntHomeWidgetsVisible', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible']);
 assert.ok(core.definitions.filter(value => value.newPreference).every(value => !value.key.startsWith('myntWallpaper')),
     'New entry preferences must survive settings-only backup media filtering.');
 const empty = storage();
-const defaultsOn = new Set(['clock', 'weather', 'focus', 'search', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
+const defaultsOn = new Set(['clock', 'weather', 'focus', 'search', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
 for (const value of core.read(empty)) {
     assert.equal(value.valid, true, value.id);
     assert.equal(value.visible, defaultsOn.has(value.id), value.id);
@@ -124,18 +124,27 @@ assert.equal(core.validateMigration(null), null);
 const migrationStore = storage({ unrelatedPersonalData: 'retain' });
 const legacyDefaults = core.planMigration(migrationStore, { hiddenByLegacyStyles: ['clock', 'weather'] });
 assert.deepEqual([...migrationStore.data], [['unrelatedPersonalData', 'retain']], 'Migration planning never writes.');
-assert.deepEqual(legacyDefaults.migrated, ['clock', 'weather']);
+assert.deepEqual(legacyDefaults.migrated, ['weather']);
 assert.deepEqual(legacyDefaults.expected.map(value => value.key), [...core.storageKeys, core.MIGRATION_KEY]);
-assert.deepEqual(legacyDefaults.writes.slice(0, 2), [{ key: 'hideClockVisible', value: 'true' }, { key: 'hideWeatherVisible', value: 'true' }]);
+assert.deepEqual(legacyDefaults.writes.slice(0, -1), [{ key: 'hideWeatherVisible', value: 'true' }]);
 const marker = core.validateMigration(legacyDefaults.writes.at(-1).value);
-assert.deepEqual(marker, { version: 1, previous: { hideClockVisible: null, hideWeatherVisible: null } });
+assert.deepEqual(marker, { version: 1, previous: { hideWeatherVisible: null } });
 apply(migrationStore, legacyDefaults);
-assert.equal(item(migrationStore, 'clock').visible, false);
+assert.equal(item(migrationStore, 'clock').visible, true, 'Legacy CSS no longer auto-hides a new-install clock.');
+assert.equal(migrationStore.data.has('hideClockVisible'), false);
 assert.equal(item(migrationStore, 'weather').visible, false);
 assert.deepEqual(core.planMigration(migrationStore, { hiddenByLegacyStyles: ['clock', 'weather'] }).writes, []);
 apply(migrationStore, core.plan(migrationStore, 'clock', true));
 assert.equal(item(migrationStore, 'clock').visible, true, 'Intentional edits use only canonical preferences.');
 assert.deepEqual(core.planMigration(migrationStore, { hiddenByLegacyStyles: ['clock'] }).writes, [], 'Marker never reapplies CSS defaults.');
+// The old marker records an initial preimage, never later user intent.
+for (const hidden of ['true', 'false']) {
+    const old = storage({ hideClockVisible: hidden, [core.MIGRATION_KEY]: '{"version":1,"previous":{"hideClockVisible":null}}' });
+    const before = [...old.data];
+    for (let run = 0; run < 3; run++) apply(old, core.planMigration(old, { hiddenByLegacyStyles: ['clock'] }));
+    assert.deepEqual([...old.data], before, 'Old auto-initialized and later explicitly edited values are indistinguishable; preserve both.');
+    assert.equal(item(old, 'clock').visible, hidden === 'false');
+}
 for (const clock of ['true', 'false']) for (const weather of ['true', 'false']) {
     const store = storage({ hideClockVisible: clock, hideWeatherVisible: weather });
     const plan = core.planMigration(store, { hiddenByLegacyStyles: ['clock', 'weather'] });
@@ -174,4 +183,4 @@ const unloaded = unloadedBrowser.MYNTComponentVisibilityCore.read(storage());
 assert.equal(unloaded.find(value => value.id === 'countdowns').error.code, 'UNAVAILABLE');
 assert.equal(unloaded.find(value => value.id === 'focus').valid, true);
 assert.ok(!/\b(?:document|fetch|XMLHttpRequest|location)\s*\./.test(source), 'Core must remain independent of DOM and network.');
-console.log('Component visibility core checks passed: 19 entries, legacy keys, cache plans, safe defaults, absent-only migration, malformed preservation, countdown revisions and browser UMD.');
+console.log('Component visibility core checks passed: 20 entries, legacy keys, cache plans, safe defaults, absent-only migration, malformed preservation, countdown revisions and browser UMD.');

@@ -1,0 +1,664 @@
+/* ==========================================================================
+   修復：對話框、番茄鐘、便籤的深色模式與淺色高對比表面樣式
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   表面與文字顏色變數定義
+   依規格在 :root 與 html.black-theme 各定義一套
+   不透明度至少 0.94，且文字對比度皆高於 4.5:1
+   -------------------------------------------------------------------------- */
+:root {
+	/* 淺色表面（不透明度 0.96，防止首頁內容透出） */
+	--award-surface-light-opaque: rgba(255, 255, 255, 0.96);
+	--award-surface-light-elevated: rgba(245, 247, 250, 0.96);
+	--award-surface-light-text: var(--textColorDark-blue, #1b3041);
+	--award-surface-light-muted: #495565;
+	--award-surface-light-border: rgba(0, 0, 0, 0.12);
+}
+
+html.black-theme {
+	/* 黑色主題深色表面（不透明度 0.96，防止首頁內容透出） */
+	--award-surface-dark-opaque: rgba(27, 31, 39, 0.96);
+	--award-surface-dark-elevated: rgba(34, 39, 49, 0.96);
+	--award-surface-dark-text: #eef2f7;
+	--award-surface-dark-muted: #abb5c2;
+	--award-surface-dark-border: rgba(255, 255, 255, 0.14);
+}
+
+/* ==========================================================================
+   1. 對話框 (.myntAppDialog / .myntDialog)
+   說明：
+   <dialog> 由 showModal() 開啟於瀏覽器 top layer，不會被 html 的 filter 反相，
+   因此在深色模式（手動深色與跟隨系統深色）以及黑色主題下，皆需直接提供深色配色。
+   淺色模式維持現狀（高不透明度淺色表面＋深色文字）。
+   ========================================================================== */
+
+/* 淺色模式：提升背景不透明度至 0.96，避免首頁文字透出 */
+dialog.myntAppDialog,
+dialog.myntDialog,
+.myntAppDialog,
+.myntDialog {
+	background: var(--award-surface-light-opaque);
+	color: var(--award-surface-light-text);
+	border: 1px solid var(--award-surface-light-border);
+	box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+	backdrop-filter: blur(16px);
+}
+
+dialog.myntAppDialog .myntAppDialogInput,
+.myntAppDialog .myntAppDialogInput {
+	background: rgba(255, 255, 255, 0.95);
+	color: inherit;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+dialog.myntAppDialog .myntAppDialogActions button,
+.myntAppDialog .myntAppDialogActions button {
+	background: rgba(0, 0, 0, 0.08);
+	color: inherit;
+}
+
+dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
+.myntAppDialog .myntAppDialogActions .myntAppDialogOk {
+	background: var(--darkColor-blue, #4382ec);
+	color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   深色模式與黑色主題：
+   包含：
+   - 黑色主題：html.black-theme
+   - 手動深色（純色背景）：html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked))
+   - 跟隨系統深色（純色背景）：html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+   - 手動深色（桌布背景）：html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked))
+   - 跟隨系統深色（桌布背景）：html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+   - 通用備援選擇器：html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked))
+   -------------------------------------------------------------------------- */
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, dialog.myntDialog, .myntAppDialog, .myntDialog) {
+	background: #1b1f27;
+	color: #eef2f7;
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	box-shadow: 0 28px 90px rgba(0, 0, 0, 0.7);
+	backdrop-filter: blur(16px);
+}
+
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogTitle {
+	color: #ffffff;
+}
+
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogMessage {
+	color: #c4cdd8;
+}
+
+/* 深色模式對話框輸入框 */
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogInput {
+	background: rgba(0, 0, 0, 0.45);
+	color: #eef2f7;
+	border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogInput:focus-visible {
+	border-color: var(--darkColor-blue, #4382ec);
+	outline: 2px solid var(--darkColor-blue, #4382ec);
+}
+
+/* 深色模式對話框動作按鈕 */
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogActions button {
+	background: rgba(255, 255, 255, 0.14);
+	color: #eef2f7;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogActions button:hover {
+	background: rgba(255, 255, 255, 0.22);
+}
+
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogActions .myntAppDialogOk {
+	background: var(--darkColor-blue, #4382ec);
+	color: #ffffff;
+	border: none;
+}
+
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogActions .myntAppDialogOk.is-danger {
+	background: #d93025;
+	color: #ffffff;
+}
+
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) :is(dialog.myntAppDialog, dialog.myntDialog)::backdrop {
+	background: rgba(0, 0, 0, 0.65);
+}
+
+/* ==========================================================================
+   2. 番茄鐘面板 (#pomodoroPanel)
+   說明：
+   MYNT 深色模式使用 html filter: invert(1) hue-rotate(180deg) 反相。
+   在淺色模式下，將 .pomodoro-bg-overlay / --pomo-overlay 設為足夠不透明的淺色遮罩（不破壞背景影片），
+   並將面板內所有文字、倒數計時、提示文字、按鈕改為深色（對比度 > 4.5:1）。
+   當深色模式反相後，面板自然變為深色表面＋淺色文字，雙模式皆符合無障礙標準。
+   html.black-theme 保留給黑色主題直接使用深色樣式。
+   ========================================================================== */
+
+/* 僅在主面板固定可讀配色：!important 壓過 scripts/pomodoro-float.js paint()
+   寫入的 inline 變數；獨立小視窗仍使用原本的自動配色。
+   遮罩使用漸層語法，才能同時作為靜態背景的 background-image 圖層。 */
+#pomodoroPanel,
+.pomodoro-panel {
+	--pomo-fg: #1b1f24 !important;
+	--pomo-muted: #35465e !important;
+	--pomo-surface: #ffffff !important;
+	--pomo-border: rgba(0, 0, 0, 0.18) !important;
+	--pomo-accent: #234c78 !important;
+	--pomo-on-accent: #ffffff !important;
+	--pomo-overlay: linear-gradient(rgba(248, 250, 252, 0.96), rgba(248, 250, 252, 0.96)) !important;
+	--pomo-float-scrim: var(--pomo-overlay) !important;
+	--pomo-scheme: light !important;
+	/* 壓過 pomodoro-float.css 的 .mynt-pomo-static background-color !important；
+	   只固定底色，不覆寫使用者的背景圖片／影片及其定位。 */
+	background-color: var(--pomo-surface) !important;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	color: var(--pomo-fg);
+	color-scheme: var(--pomo-scheme);
+	border: 1px solid rgba(0, 0, 0, 0.14);
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14);
+}
+
+/* 淺色覆蓋層：覆蓋在背景影片上方，高不透明度確保文字閱讀清晰，同時不移除背景影片 */
+#pomodoroPanel .pomodoro-bg-overlay,
+#pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-overlay,
+.pomodoro-panel .pomodoro-bg-overlay {
+	background: var(--pomo-overlay);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+
+/* 番茄鐘內部文字高對比樣式（淺色模式，反相後在深色模式亦為高對比） */
+#pomodoroPanel .pomodoroPhaseLabel,
+.pomodoro-panel .pomodoroPhaseLabel {
+	color: var(--pomo-fg);
+	text-shadow: none;
+}
+
+#pomodoroPanel .pomodoroPhaseLabel.break-phase,
+.pomodoro-panel .pomodoroPhaseLabel.break-phase {
+	color: var(--pomo-accent);
+}
+
+#pomodoroPanel .pomodoroTimeDisplay,
+.pomodoro-panel .pomodoroTimeDisplay {
+	color: var(--pomo-fg);
+	text-shadow: none;
+}
+
+/* 輪次進度（如「1 / 4」）與提示文字：強化對比至 4.5:1 以上 */
+#pomodoroPanel .pomodoroRoundDisplay,
+.pomodoro-panel .pomodoroRoundDisplay {
+	color: var(--pomo-muted);
+	text-shadow: none;
+	font-weight: 500;
+}
+
+#pomodoroPanel .pomodoroSessionsToday,
+.pomodoro-panel .pomodoroSessionsToday {
+	color: var(--pomo-muted);
+	border-top: 1px solid rgba(0, 0, 0, 0.12);
+	text-shadow: none;
+}
+
+#pomodoroPanel .pomodoroFocusSummary,
+.pomodoro-panel .pomodoroFocusSummary,
+#pomodoroPanel .mynt-pomo-note,
+.pomodoro-panel .mynt-pomo-note {
+	color: var(--pomo-muted);
+}
+
+#pomodoroPanel #pomodoroStatsBtn,
+.pomodoro-panel #pomodoroStatsBtn,
+#pomodoroPanel .mynt-pomo-settings summary,
+.pomodoro-panel .mynt-pomo-settings summary {
+	color: var(--pomo-fg);
+}
+
+/* 輸入框、選單與佔位文字（例：「例如：讀完第三章」） */
+#pomodoroPanel input,
+.pomodoro-panel input,
+#pomodoroPanel select,
+.pomodoro-panel select {
+	color: var(--pomo-fg);
+}
+
+#pomodoroPanel input::placeholder,
+.pomodoro-panel input::placeholder {
+	color: var(--pomo-muted);
+	opacity: 1;
+}
+
+/* 音樂選單原本另用主題色，連同原生選項一起固定成面板配色。 */
+#pomodoroPanel select option,
+#pomodoroPanel #myntPomoMusicMount select option {
+	background: var(--pomo-surface);
+	color: var(--pomo-fg);
+}
+
+/* 番茄鐘控制按鈕與圖標 */
+#pomodoroPanel .pomodoroBtn,
+.pomodoro-panel .pomodoroBtn {
+	background: rgba(0, 0, 0, 0.08);
+	color: var(--pomo-fg);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+#pomodoroPanel .pomodoroBtn:hover,
+.pomodoro-panel .pomodoroBtn:hover {
+	background: rgba(0, 0, 0, 0.14);
+}
+
+#pomodoroPanel .pomodoroBtn svg,
+.pomodoro-panel .pomodoroBtn svg {
+	fill: currentColor;
+}
+
+#pomodoroPanel .pomodoroBtn.pomodoroResetBtn,
+.pomodoro-panel .pomodoroBtn.pomodoroResetBtn {
+	background: rgba(0, 0, 0, 0.05);
+	border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+#pomodoroPanel .pomodoroBtn.pomodoroResetBtn svg,
+.pomodoro-panel .pomodoroBtn.pomodoroResetBtn svg {
+	fill: currentColor;
+}
+
+/* 番茄鐘圓環 */
+#pomodoroPanel .pomodoroRingBg,
+.pomodoro-panel .pomodoroRingBg {
+	stroke: rgba(0, 0, 0, 0.12);
+}
+
+#pomodoroPanel .pomodoroRingFg,
+.pomodoro-panel .pomodoroRingFg {
+	stroke: var(--pomo-accent);
+	filter: drop-shadow(0 0 4px rgba(26, 115, 232, 0.25));
+}
+
+#pomodoroPanel .pomodoroRingFg.break-ring,
+.pomodoro-panel .pomodoroRingFg.break-ring {
+	stroke: var(--pomo-accent);
+	filter: drop-shadow(0 0 4px rgba(19, 115, 51, 0.25));
+}
+
+/* 拖曳握把 */
+#pomodoroPanel .pomodoro-drag-handle,
+.pomodoro-panel .pomodoro-drag-handle {
+	background: rgba(0, 0, 0, 0.08);
+}
+
+#pomodoroPanel .pomodoro-drag-handle::before,
+.pomodoro-panel .pomodoro-drag-handle::before {
+	color: var(--pomo-muted);
+}
+
+/* 設定面版按鈕與控制項（淺色） */
+#pomodoroPanel .mynt-pomo-settings button,
+#pomodoroPanel .mynt-pomo-float button,
+.pomodoro-panel .mynt-pomo-settings button,
+.pomodoro-panel .mynt-pomo-float button {
+	background: rgba(0, 0, 0, 0.05);
+	color: var(--pomo-fg);
+	border: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+#pomodoroPanel .mynt-pomo-settings select,
+#pomodoroPanel .mynt-pomo-settings input:not([type="radio"]),
+.pomodoro-panel .mynt-pomo-settings select,
+.pomodoro-panel .mynt-pomo-settings input:not([type="radio"]) {
+	background: var(--pomo-surface);
+	color: var(--pomo-fg);
+	border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+#pomodoroPanel .pomodoroNumBtn,
+.pomodoro-panel .pomodoroNumBtn {
+	border: 2px solid var(--pomo-accent);
+	color: var(--pomo-fg);
+}
+
+#pomodoroPanel .pomodoroNumBtn:hover,
+.pomodoro-panel .pomodoroNumBtn:hover {
+	background: var(--pomo-accent);
+	color: var(--pomo-on-accent);
+}
+
+#pomodoroPanel .pomodoroNumberInput input[type="number"],
+.pomodoro-panel .pomodoroNumberInput input[type="number"] {
+	color: var(--pomo-fg);
+	border-bottom-color: var(--pomo-accent);
+}
+
+/* --------------------------------------------------------------------------
+   黑色主題下的番茄鐘面板（html.black-theme，非 filter 反相模式）
+   保留給黑色主題（#darkTheme 勾選時）使用，不要刪除
+   -------------------------------------------------------------------------- */
+html.black-theme #pomodoroPanel,
+html.black-theme .pomodoro-panel {
+	/* 同樣壓過 paint() 的 inline 配色，並覆寫上方的淺色強制變數。 */
+	--pomo-fg: #eef2f7 !important;
+	--pomo-muted: #abb5c2 !important;
+	--pomo-surface: #1b1f27 !important;
+	--pomo-border: var(--award-surface-dark-border) !important;
+	--pomo-accent: #b9d7fa !important;
+	--pomo-on-accent: #1b1f27 !important;
+	--pomo-overlay: linear-gradient(rgba(27, 31, 39, 0.96), rgba(27, 31, 39, 0.96)) !important;
+	--pomo-scheme: dark !important;
+	color: var(--award-surface-dark-text);
+	border: 1px solid var(--award-surface-dark-border);
+	box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+
+html.black-theme #pomodoroPanel .pomodoroPhaseLabel,
+html.black-theme #pomodoroPanel .pomodoroTimeDisplay,
+html.black-theme #pomodoroPanel #pomodoroStatsBtn,
+html.black-theme #pomodoroPanel .mynt-pomo-settings summary {
+	color: var(--award-surface-dark-text);
+}
+
+html.black-theme #pomodoroPanel .pomodoroRoundDisplay,
+html.black-theme #pomodoroPanel .pomodoroSessionsToday,
+html.black-theme #pomodoroPanel .pomodoroFocusSummary,
+html.black-theme #pomodoroPanel .mynt-pomo-note {
+	color: var(--award-surface-dark-muted);
+}
+
+html.black-theme #pomodoroPanel .mynt-pomo-settings button,
+html.black-theme #pomodoroPanel .mynt-pomo-float button,
+html.black-theme #pomodoroPanel .mynt-pomo-settings select,
+html.black-theme #pomodoroPanel .mynt-pomo-settings input:not([type="radio"]),
+html.black-theme #pomodoroPanel .pomodoroNumBtn,
+html.black-theme #pomodoroPanel .pomodoroNumberInput input[type="number"] {
+	background-color: var(--award-surface-dark-elevated);
+	color: var(--award-surface-dark-text);
+	border: 1px solid var(--award-surface-dark-border);
+}
+
+html.black-theme #pomodoroPanel .pomodoroRingBg {
+	stroke: rgba(255, 255, 255, 0.12);
+}
+
+html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
+	background: var(--pomo-overlay);
+}
+
+/* ==========================================================================
+   3. 便籤面板 (#scratchpadContainer)
+   ========================================================================== */
+
+/* 淺色模式：不透明度至少 0.94，防止底下首頁文字透出 */
+#scratchpadContainer,
+.scratchpadContainer {
+	background: var(--award-surface-light-opaque);
+	color: var(--award-surface-light-text);
+	border: 1px solid var(--award-surface-light-border);
+	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15);
+	backdrop-filter: blur(16px);
+}
+
+#scratchpadContainer textarea,
+#scratchpadContainer input,
+#scratchpadContainer select {
+	background: rgba(255, 255, 255, 0.92);
+	color: inherit;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* 黑色主題：深色表面、淺色文字、不透出底下內容 */
+html.black-theme #scratchpadContainer,
+html.black-theme .scratchpadContainer {
+	background: var(--award-surface-dark-opaque);
+	color: var(--award-surface-dark-text);
+	border: 1px solid var(--award-surface-dark-border);
+	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+	backdrop-filter: blur(16px);
+}
+
+/* 黑色主題便籤編輯區與輸入元件 */
+html.black-theme #scratchpadContainer textarea,
+html.black-theme #scratchpadContainer input,
+html.black-theme #scratchpadContainer select,
+html.black-theme #scratchpadContainer [contenteditable="true"] {
+	background-color: rgba(0, 0, 0, 0.35);
+	color: var(--award-surface-dark-text);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* 黑色主題便籤操作按鈕 */
+html.black-theme #scratchpadContainer button {
+	background-color: rgba(255, 255, 255, 0.12);
+	color: var(--award-surface-dark-text);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.black-theme #scratchpadContainer button:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   4. 動畫偏好設定（prefers-reduced-motion）
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+	dialog.myntAppDialog,
+	dialog.myntDialog,
+	#pomodoroPanel,
+	.pomodoro-panel,
+	#scratchpadContainer,
+	.scratchpadContainer {
+		transition: none;
+		animation: none;
+	}
+}
+
+/* 第 14 輪：只調整反相模式的首頁表面；純色與桌布共用反相前色票。
+   #dde5f0 → 約 #141c27；#d2dcea → 約 #1b2533。
+   不涵蓋黑色主題、頂層對話框或高對比模式，淺色外觀維持原樣。 */
+@media (forced-colors: none) {
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
+		--award-filter-surface: rgba(221, 229, 240, 0.96);
+		--award-filter-elevated: #d2dcea;
+		--award-filter-text: #1b1f24;
+		--award-filter-muted: #35465e;
+		/* 反相後為約 rgba(176, 190, 208, .18) 的淺色細線。 */
+		--award-filter-border: rgba(54, 68, 86, 0.18);
+
+		/* 半透明底色保留桌布層次；不依賴模糊或新增動效。 */
+		& :is(.ttteexxtt, #searchbar, .aiToolsCont .toolsCont a,
+			#dailyFocusPanel, #myntHomeWidgets .home-widget-card) {
+			background: var(--award-filter-surface);
+			color: var(--award-filter-text);
+			border: 1px solid var(--award-filter-border);
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			--textColorDark-blue: var(--award-filter-text);
+			--accentLightTint-blue: var(--award-filter-elevated);
+			--darkerColor-blue: #234c78;
+			/* 真實設定啟用自動取色；讓其提示文字與搜尋按鈕也使用已驗證色票。 */
+			--adaptive-text: var(--award-filter-text);
+			--adaptive-accent: #234c78;
+			--adaptive-accent-text: #ffffff;
+		}
+
+		/* 搜尋列維持既有外尺寸；輸入文字與小工具標頭同步離開純黑底。 */
+		& #searchbar { box-sizing: border-box; }
+		& #userText { background: transparent; color: var(--award-filter-text); }
+		& #searchQ { color: var(--award-filter-text); }
+		& #myntHomeWidgets h2 {
+			background: var(--award-filter-surface);
+			color: var(--award-filter-text);
+		}
+		& :is(#dailyFocusStepInput, #dailyFocusPaste,
+			#myntHomeWidgets button, #myntHomeWidgets .home-widget-add input) {
+			background: var(--award-filter-elevated);
+			color: var(--award-filter-text);
+			border-color: var(--award-filter-border);
+		}
+		& #myntHomeWidgets button:hover { background: var(--award-filter-surface); }
+		& :is(#searchQ, #dailyFocusStepInput, #dailyFocusPaste)::placeholder {
+			color: var(--award-filter-muted);
+			opacity: 1;
+		}
+		& .ttteexxtt .dailyFocusStepRemove { opacity: 0.72; }
+		& #myntHomeWidgets :disabled { opacity: 1; }
+
+		/* 只覆寫既存強制變數，故需 !important；壓過本檔舊值及 paint()
+		   的行內色票。保留 12px 透明安全區及 1px outline，不改座標與縮放。
+		   ::after、統計底板與控制項會沿用 --pomo-surface，避免白底反相成黑塊。 */
+		& #pomodoroPanel {
+			--pomo-surface: var(--award-filter-elevated) !important;
+			--pomo-border: var(--award-filter-border) !important;
+			--pomo-overlay: linear-gradient(rgba(210, 220, 234, 0.96), rgba(210, 220, 234, 0.96)) !important;
+		}
+		/* 停用仍由游標與原本狀態表示，文字不因半透明而低於 AA。 */
+		& #pomodoroPanel button:disabled { opacity: 1; }
+	}
+}
+
+/* 第 17 輪：色票外框與 2px 間隔環不占版面空間，保留原色與勾選圖示。 */
+@media (forced-colors: none) {
+	html:not(.myntHighContrast) #menuCont #colorsContainer {
+		--award-swatch-edge: #6b7787;
+		--award-swatch-gap: var(--whitishColor-blue, #ffffff);
+		--award-swatch-ring: var(--darkerColor-blue, #3569b2);
+
+		& .colorPlate {
+			border: 1px solid var(--award-swatch-edge);
+			box-shadow: 0 0 0 2px var(--award-swatch-gap);
+		}
+		& .colorPlate:checked,
+		&:not(:has(input[type="radio"]:checked)) .colorPickerLabel {
+			outline: 2px solid var(--award-swatch-ring);
+			outline-offset: 2px;
+		}
+		/* 鍵盤焦點另用虛線，未選中的色票也可辨識焦點。 */
+		& .colorPlate:focus-visible {
+			outline: 2px dashed var(--award-swatch-ring);
+			outline-offset: 4px;
+		}
+	}
+
+	/* 反相前 #d2dcea → #1b2533；選中 #c6d2e1 → #24303f。
+	   沿用 r14c 文字色，僅在手動／系統深色啟用，不改淺色表面。 */
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
+		/* 用既有 ID 提高特異度，覆蓋後載入的日期與今日膠囊色票。 */
+		& :is(#analogClock .mynt-clock-date, #myntHomeWidgets #homeWidgetsTitle) {
+			background: var(--award-filter-elevated);
+			color: var(--award-filter-text);
+			border-color: var(--award-filter-border);
+		}
+		& #menuCont :is(.settingsGroupTabs, #themeSegment) {
+			background: var(--award-filter-elevated);
+		}
+		& #menuCont :is(.settingsGroupTabs button, #themeSegment .themeSegBtn) {
+			color: var(--award-filter-text);
+		}
+		& #menuCont :is(.settingsGroupTabs button[aria-selected="true"], #themeSegment .themeIndicator) {
+			background: #c6d2e1;
+			box-shadow: inset 0 0 0 1px var(--award-filter-border);
+		}
+		/* 外觀切換器原本另做一次反相；取消該層，與其他元件共用色票。 */
+		& #menuCont #themeSegment {
+			filter: none;
+			-webkit-filter: none;
+		}
+		& #menuCont #colorsContainer {
+			--award-swatch-gap: var(--award-filter-elevated);
+		}
+		/* 黑色色票原有抵銷反相，邊線與間隔環須直接指定深色顯示值。 */
+		& #menuCont #colorsContainer #darkTheme {
+			--award-swatch-edge: #8b98a9;
+			--award-swatch-gap: #1b2533;
+			--award-swatch-ring: color-mix(in srgb, var(--darkColor-blue, #4382ec) 60%, #ffffff);
+		}
+	}
+}

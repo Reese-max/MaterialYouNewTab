@@ -21,6 +21,15 @@ const hideClockCheckbox = document.getElementById("hideClock");
 const clockHidden = document.getElementById("clockHidden");
 const clockOptions = document.querySelector(".clockOptions");
 
+// 語言切換會重新載入；新鍵在此套用，避免舊的隱藏標籤翻譯覆蓋正向語意。
+for (const key of ['showClockBox', 'showClockBoxInfo']) {
+    const label = document.getElementById(key);
+    if (label) label.textContent = translations[getLanguageStatus('selectedLanguage') || 'en']?.[key] ?? translations.en[key];
+}
+const analogDate = document.createElement('div');
+analogDate.className = 'mynt-clock-date';
+document.getElementById('analogClock').append(analogDate);
+
 function toggleHideState(isHidden) {
     clockOptions.classList.toggle("not-applicable", isHidden);
 
@@ -38,6 +47,8 @@ function applyClockState(isHidden) {
 }
 
 function handleClockVisibility() {
+    const isClockHidden = localStorage.getItem("hideClockVisible") === "true";
+    hideClockCheckbox.checked = !isClockHidden;
     if (window.matchMedia("(max-width: 500px)").matches) {
         initializeClock();
 
@@ -45,10 +56,6 @@ function handleClockVisibility() {
         rightDiv.classList.remove("clock-padding-adjusted");
     }
     else {
-        // Retrieve saved state from localStorage
-        const isClockHidden = localStorage.getItem("hideClockVisible") === "true";
-        hideClockCheckbox.checked = isClockHidden;
-
         // Apply initial state
         applyClockState(isClockHidden);
         toggleHideState(isClockHidden);
@@ -64,11 +71,11 @@ function handleClockVisibility() {
 handleClockVisibility();
 // Bind once, not once per resize. The clock runtime itself is also reused.
 hideClockCheckbox.addEventListener("change", function () {
-    const isChecked = hideClockCheckbox.checked;
-    localStorage.setItem("hideClockVisible", isChecked);
-    applyClockState(isChecked);
-    toggleHideState(isChecked);
-    if (!isChecked) initializeClock();
+    const isHidden = !hideClockCheckbox.checked;
+    localStorage.setItem("hideClockVisible", String(isHidden));
+    applyClockState(isHidden);
+    toggleHideState(isHidden);
+    if (!isHidden) initializeClock();
     else window.myntClockPreferences?.refreshVisibility();
 });
 // Update on window resize
@@ -180,9 +187,11 @@ function initializeClock() {
                 default: `${dayName.substring(0, 3)}, ${monthName.substring(0, 3)} ${dayOfMonth}`	// Sun, Dec 22
             };
 
+            const formattedDate = dateDisplay[currentLanguage] || dateDisplay.default;
+            if (analogDate.textContent !== formattedDate) analogDate.textContent = formattedDate;
             const newDateString = document.body.dataset.workspaceBackground === "video"
                 ? getGreeting()
-                : dateDisplay[currentLanguage] || dateDisplay.default;
+                : formattedDate;
             // Update date if date actually changed or if it's the first time
             if (newDateString !== lastDateString) {
                 document.getElementById("date").innerText = newDateString;
@@ -451,7 +460,7 @@ function initializeClock() {
         if (![null, 'analog', 'digital'].includes(mode) || ![null, 'true', 'false'].includes(hidden)) return false;
         clocktype = mode || 'analog';
         const digital = clocktype === 'digital', greeting = localStorage.getItem('greetingEnabled') !== 'false';
-        hideClockCheckbox.checked = hidden === 'true';
+        hideClockCheckbox.checked = hidden !== 'true';
         const digitalBox = document.getElementById('digitalCheckbox');
         const hourBox = document.getElementById('12hourcheckbox');
         const greetingBox = document.getElementById('greetingcheckbox');
@@ -477,7 +486,7 @@ function initializeClock() {
         clocktype = localStorage.getItem('clocktype') || 'analog';
         const digital = clocktype === 'digital';
         const hidden = localStorage.getItem('hideClockVisible') === 'true';
-        hideClockCheckbox.checked = hidden; applyClockState(hidden); toggleHideState(hidden);
+        hideClockCheckbox.checked = !hidden; applyClockState(hidden); toggleHideState(hidden);
         const digitalBox = document.getElementById('digitalCheckbox');
         const hourBox = document.getElementById('12hourcheckbox');
         const greetingBox = document.getElementById('greetingcheckbox');

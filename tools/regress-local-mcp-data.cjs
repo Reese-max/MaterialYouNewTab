@@ -2,6 +2,11 @@
 const assert=require('node:assert/strict');
 const {webcrypto}=require('node:crypto');
 const adapter=require('../scripts/local-mcp-data.js');
+const layoutTool = tools => tools.find(tool => tool.name === 'mynt_layouts_mutate');
+const layoutSchema = layoutTool(adapter.tools).inputSchema.properties.layout.properties.blocks;
+assert.deepEqual(layoutSchema, layoutTool(require('../local-mcp/data-tools.json')).inputSchema.properties.layout.properties.blocks, 'Published layout schemas match the runtime allowlist');
+assert.deepEqual(Object.keys(layoutSchema.properties).sort(), require('../scripts/layout-editor.js').MYNT_LAYOUT_BLOCKS.map(([id]) => id).sort(), 'MCP accepts exactly the editor block IDs');
+assert.deepEqual(layoutSchema.properties.homeWidgets, layoutSchema.properties.clock);
 function fixture(initial={}){
  const values=new Map(Object.entries(initial));let failKey=null,failOnce=false;
  const storage={getItem:k=>values.has(k)?values.get(k):null,setItem(k,v){if(k===failKey&&failOnce){failOnce=false;throw Error('quota');}values.set(k,v);},removeItem:k=>values.delete(k)};
@@ -33,6 +38,11 @@ function fixture(initial={}){
  const carried=fixture({myntDailyFocus:JSON.stringify({version:1,date:'2026-10-23',text:'unfinished',completed:false,carriedFrom:null})});get=await carried.call('mynt_focus_get',{});assert.equal((await carried.call('mynt_focus_update',{text:'overwrite',expectedRevision:get.revision})).code,'action_required');
  get=await f.call('mynt_layouts_get',{});assert(get.ok);result=await f.call('mynt_layouts_mutate',{operation:'create',id:'ptest',name:'Study',expectedRevision:get.revision});assert(result.ok);assert.equal(result.data.active,'ptest');
  result=await f.call('mynt_layouts_mutate',{operation:'save',id:'ptest',size:'wide',layout:{version:2,snap:true,locked:true,blocks:{clock:{x:.1,y:.2,s:1.2}}},expectedRevision:result.revision});assert(result.ok);assert.equal(result.data.profiles[1].layouts.wide.blocks.clock.x,.1);
+ result=await f.call('mynt_layouts_mutate',{operation:'save',id:'ptest',size:'wide',layout:{version:2,snap:true,locked:true,blocks:{clock:{x:.1,y:.2,s:1.2},homeWidgets:{x:-.1,y:.15,s:.8}}},expectedRevision:result.revision});assert(result.ok);assert.deepEqual(result.data.profiles[1].layouts.wide.blocks.homeWidgets,{x:-.1,y:.15,s:.8});
+ const widgetRevision=result.revision, widgetBytes=f.storage.getItem('myntLayoutProfiles');
+ for(const patch of [{homeWidgets:{x:2,y:0,s:1}},{unknown:{x:0,y:0,s:1}}]) {
+  const rejected=await f.call('mynt_layouts_mutate',{operation:'save',id:'ptest',size:'wide',layout:{version:2,snap:true,locked:true,blocks:patch},expectedRevision:widgetRevision});assert.equal(rejected.code,'invalid_arguments');assert.equal(f.storage.getItem('myntLayoutProfiles'),widgetBytes);
+ }
  result=await f.call('mynt_layouts_mutate',{operation:'trash',id:'ptest',expectedRevision:result.revision});assert(result.ok);result=await f.call('mynt_layouts_mutate',{operation:'undo',expectedRevision:result.revision});assert(result.ok);assert.equal(result.data.active,'ptest');
  get=await f.call('mynt_settings_get',{});assert(!JSON.stringify(get).includes('SECRET'));assert.equal((await f.call('mynt_settings_update',{patch:{weatherApiKey:'leak'},expectedRevision:get.revision})).code,'invalid_arguments');result=await f.call('mynt_settings_update',{patch:{preferredTheme:'dark'},expectedRevision:get.revision});assert(result.ok);assert.equal(f.storage.getItem('preferredTheme'),'dark');
  assert((await f.call('mynt_backup_preview',{})).actionRequired);assert.equal((await f.call('mynt_backup_restore',{})).code,'unknown_tool');

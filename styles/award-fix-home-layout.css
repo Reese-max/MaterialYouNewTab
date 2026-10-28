@@ -1,0 +1,87 @@
+/* 第 5 輪：預設（未自訂）版面在寬螢幕置中 */
+@media (width > 900px) {
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) {
+        --workspace-width: min(720px, 60vw);
+        --workspace-left: calc((100vw - var(--workspace-width)) / 2);
+    }
+
+    /* 三種面板以行內 display 切換；預留左側 20px、面板 372px 與間距 24px。
+       保留原本的置中位置，空間不足才縮欄，最小寬度為 480px。 */
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])):has(:is(#todoContainer, #scratchpadContainer, #pomodoroPanel):not([style*="display: none"])) {
+        --workspace-left: max(416px, calc((100vw - min(720px, 60vw)) / 2));
+        --workspace-width: max(480px, min(720px, 60vw, calc(100vw - var(--workspace-left) - 24px)));
+    }
+
+    /* 搜尋服務列跟隨搜尋框的正常排版；54px 輸入框邊距加上 2px 文字內距。 */
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) .searchWithCont {
+        margin-top: 10px;
+        margin-inline-start: 56px;
+        max-width: calc(100% - 56px);
+        gap: 8px;
+    }
+
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) .searchWithCont .hint {
+        padding-inline-start: 0;
+    }
+}
+
+/* ===== 搜尋服務列對齊與膠囊外觀 =====
+   上一輪為了對齊輸入文字把 .hint 的 inline-start 內距歸零、整排縮排 56px，
+   導致標籤文字貼著膠囊左緣、整排左緣也沒對齊搜尋列卡片。
+   改為：整排左緣對齊搜尋列卡片左緣、標籤恢復左右內距並與 Google 膠囊同高；
+   Google 膠囊由「容器外框＋膠囊內框」的雙層外框改為膠囊本身的單層細框，
+   選中狀態用主題色淡底。 */
+
+/* 標籤膠囊：恢復左右至少 12px 內距、min-height 40px 與 .search-engine
+   膠囊同高；垂直置中由容器的 align-items 與 .hint 本身的 flex 置中負責。
+   標籤與膠囊間距固定 8px，改由容器 gap 控制，移除原本 margin-inline-end。 */
+.searchWithCont {
+    align-items: center;
+    gap: 8px;
+}
+
+.searchWithCont .hint {
+    min-height: 40px;
+    margin-inline-end: 0;
+    padding-inline: 14px;
+}
+
+/* 移除外層容器的分段框、底色與內距（它與膠囊內框疊成雙層外框），
+   改由膠囊本身的 1px 細框呈現 */
+.searchWithCont .searchEnginesContainer {
+    padding: 0;
+    padding-inline-start: 0;
+    border: 0;
+    background: transparent;
+}
+
+.searchWithCont .searchEnginesContainer .search-engine {
+    /* 原本的 inset box-shadow 內框移除，改為單層細框 */
+    box-shadow: none;
+    border: 1px solid color-mix(in srgb, var(--darkColor-blue) 45%, transparent);
+}
+
+.searchWithCont .searchEnginesContainer .search-engine:has(input[type="radio"]:checked) {
+    /* 選中狀態：主題色淡底＋主色細框 */
+    border-color: var(--darkColor-blue);
+    background-color: var(--accentLightTint-blue);
+}
+
+@media (width > 900px) {
+    /* 名言為 20px 單行＋20px 內距＋2px 邊框，距底 26px；捷徑底緣留 16px。 */
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) {
+        & #studyQuote { line-height: 20px; }
+        & #shortcuts-section { bottom: 84px; }
+    }
+
+    /* 覆蓋上方同媒體查詢的 56px 縮排：整排左緣改對齊搜尋列卡片左緣 */
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) .searchWithCont {
+        margin-inline-start: 0;
+        max-width: 100%;
+    }
+
+    /* 恢復標籤膠囊的 inline-start 內距（上方曾歸零） */
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) .searchWithCont .hint {
+        padding-inline-start: 14px;
+    }
+}

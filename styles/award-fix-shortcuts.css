@@ -1,0 +1,43 @@
+/* 第 1 輪：首頁名言列與捷徑列不重疊 */
+
+/* ==========================================================================
+   首頁名言列與捷徑列佈局修復
+   問題：在 1366×768 與 1920×1080 解析度下，#shortcuts-section 原設為 bottom: 0，
+   導致捷徑名稱標籤（.shortcuts .shortcut-name）與底部的名言列（.quotesCont / #motivationalQuotesCont）重疊，
+   使捷徑文字被名言列背景遮蓋。
+   修復：同步 style.css 響應式規則（如第 5528 行與第 5814 行）採用一致的 bottom: 62px，
+   使捷徑列固定在名言列上方，保持捷徑名稱與名言列皆完整可讀，且兩者垂直間距一致。
+   ========================================================================== */
+
+/* 捷徑區塊底部位移修復：將桌面版底部位移由 0 改為 62px，為底部的名言列保留垂直空間 */
+#shortcuts-section {
+	bottom: 62px;
+}
+
+/* 確保捷徑列容器具有適當圖層層級，不與底部的名言列發生層疊遮擋 */
+.shortcutsContainer {
+	position: relative;
+	z-index: 2;
+}
+
+/* 名言列維持於捷徑列下方，並確保圖層順序正常 */
+.quotesCont,
+#motivationalQuotesCont {
+	position: relative;
+	z-index: 1;
+}
+
+/* 確保捷徑名稱標籤在深色模式與有桌布時可正確點擊與顯示 */
+.shortcuts .shortcut-name {
+	pointer-events: auto;
+}
+
+/* 尊重使用者減少動畫偏好設定（prefers-reduced-motion） */
+@media (prefers-reduced-motion: reduce) {
+	#shortcuts-section,
+	.shortcutsContainer,
+	.shortcuts,
+	.shortcuts .shortcut-name {
+		transition: none;
+	}
+}

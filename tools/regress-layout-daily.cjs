@@ -94,6 +94,10 @@ function fixture(options = {}) {
     document.dispatchEvent = event => document.emit(event.type, event);
     const search = document.createElement('section'); search.id = 'rightDiv';
     search.rect = { left: 100, top: 180, width: 300, height: 60 }; document.body.append(search);
+    if (options.widgets) {
+        const widgets = document.createElement('aside'); widgets.id = 'myntHomeWidgets';
+        widgets.rect = { left: 680, top: 180, width: 320, height: 400 }; document.body.append(widgets);
+    }
     const setting = document.createElement('input'); setting.id = 'layoutEditCheckbox'; document.body.append(setting);
     const events = new Map(); let writes = 0, blocked = false, readBlocked = false, profileReadsLeft = Infinity;
     const context = {
@@ -123,6 +127,142 @@ const tests = [];
 const test = (name, run) => tests.push({ name, run });
 const saved = app => app.storage.get('myntLayoutProfiles');
 const rectangle = app => clone(app.search.getBoundingClientRect());
+
+test('Clock fallback uses the strict 20% threshold, preserves scale and never mutates saved data', () => {
+    const { myntClockFallback: fallback, myntOverlapRatio: overlap, myntClockDatePosition: datePosition } = require(path.join(root, 'scripts/layout-editor.js'));
+    const rect = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height });
+    const block = Object.freeze({ x: .233, y: .358, s: .5 }), bytes = JSON.stringify(block);
+    const clock = rect(450, 145, 150, 150), focus = rect(79, 198, 566, 158);
+    const partial = rect(450, 265, 150, 100);
+    assert.equal(overlap(clock, partial), .2);
+    for (const height of [0, 29, 30]) {
+        assert.deepEqual(fallback(block, clock, focus, [rect(450, 295 - height, 150, height)], [], 1536, 740), block, '<=20% retains saved offsets');
+    }
+    for (const obstacle of [focus, rect(450, 264, 150, 31)]) {
+        const next = fallback(block, clock, focus, [obstacle], [], 1536, 740);
+        assert.equal(next.s, .5);
+        assert.equal(clock.left + (next.x - block.x) * 1536, 287);
+        assert.equal(clock.top + (next.y - block.y) * 740, 32);
+    }
+    const high = rect(79, 150, 566, 158), right = fallback(block, clock, high, [clock], [], 1536, 740);
+    assert.equal(clock.left + (right.x - block.x) * 1536, 661);
+    assert.equal(clock.top + (right.y - block.y) * 740, 154);
+    for (const control of [rect(287, 32, 46, 46), rect(320, 40, 57, 57), rect(400, 100, 119, 42)]) {
+        const next = fallback(block, clock, focus, [focus], [control], 1536, 740);
+        assert.equal(clock.left + (next.x - block.x) * 1536, 661, 'Any visible upper control forces the right-hand position');
+    }
+    for (const [vw, vh, old, card] of [[1536, 740, clock, focus], [1920, 1080, rect(544,447,150,150), rect(79,386,566,158)]]) {
+        const next = fallback(block, old, card, [card], [], vw, vh);
+        const display = rect(old.left + (next.x-block.x)*vw, old.top + (next.y-block.y)*vh,150,150);
+        const date = datePosition(display, 108, 21, [card], vw);
+        assert.equal(display.left, 287); assert.equal(display.top, vh === 740 ? 32 : 220);
+        assert.equal(date.left, 449); assert.equal(date.top, vh === 740 ? 96.5 : 284.5);
+        assert.equal(date.left - display.right, 12);
+        assert.equal(date.top + 21 / 2, display.top + display.height / 2);
+        assert.equal(overlap(rect(date.left,date.top,108,21), card), 0);
+        console.log(`CLOCK_FALLBACK_GEOMETRY ${vw}x${vh}: clock=${display.left},${display.top},150,150 date~=${date.left},${date.top},108,21`);
+    }
+    const side = rect(661,202,150,150), search = rect(92,360,560,64);
+    const date = datePosition(side,108,21,[focus,search],1536);
+    // 日期改為優先置右；舊版的下方優先斷言由中軸與間距斷言取代。
+    assert.deepEqual(date,{left:823,top:266.5});
+    for (const obstacle of [focus,search]) assert.equal(overlap(rect(date.left,date.top,108,21),obstacle),0);
+    assert.equal(JSON.stringify(block), bytes);
+    const css = fs.readFileSync(path.join(root, 'styles/award-fix-clock.css'), 'utf8');
+    assert.match(css, /\[data-mynt-layout-date\][^{]*\{[^}]*font-size: max\(calc\(13px \* var\(--mynt-font-scale, 1\)\), calc\(13px \* var\(--mynt-font-scale, 1\) \/ var\(--mynt-clock-scale, 1\)\)\)/);
+    for (const scale of [.1,.5,.75,1,2]) assert(Math.max(14,12/scale)*scale >= 12);
+});
+
+test('Clock date uses the right-hand midpoint, then the lower midpoint when space is insufficient', () => {
+    const { myntClockDatePosition: datePosition } = require(path.join(root, 'scripts/layout-editor.js'));
+    const rect = (left, top, width, height) => Object.freeze({ left, top, width, height, right: left + width, bottom: top + height });
+    for (const vw of [375,1536,1920]) for (const scale of [.5,1,2]) for (const [width,height] of [[108,21],[240,42]]) {
+        const clock = rect(vw - 150*scale - 12 - width, 32, 150*scale, 150*scale);
+        const bytes = JSON.stringify(clock), obstacles = Object.freeze([]);
+        const side = {left:clock.right+12,top:clock.top+(clock.height-height)/2};
+        const below = {left:clock.left+(clock.width-width)/2,top:clock.bottom+8};
+        assert.deepEqual(datePosition(clock,width,height,obstacles,vw),side,'Exact viewport fit stays on the right');
+        assert.deepEqual(datePosition(clock,width,height,obstacles,vw-1),below,'One pixel short moves below');
+        assert.deepEqual(datePosition(clock,width,height,[rect(side.left,side.top,width,height)],vw),below,'Occupied right-hand space moves below');
+        assert.deepEqual(datePosition(clock,width,height,[rect(below.left,below.top,width,height)],vw),side,'A lower obstacle does not displace the right-hand date');
+        assert.equal(JSON.stringify(clock),bytes);
+    }
+});
+
+test('Rendered clock fallback is editable, saves only on Save, and respects the newly saved position', () => {
+    const data = profileData();
+    data.profiles[0].layouts.wide = { version:2,snap:false,locked:true,blocks:{clock:{x:.233,y:.358,s:.5}} };
+    const app = fixture({ data }), bytes = saved(app), old = clone(app.api.get());
+    const clock = app.document.createElement('section'); clock.id = 'analogClock';
+    clock.rect = {left:450-.233*1200,top:145-.358*800,width:300,height:300};
+    Object.defineProperty(clock,'offsetWidth',{value:300});
+    const date = app.document.createElement('div'); date.className='mynt-clock-date';
+    // 日期尺寸以 CSS px 提供；此 VM 只驗證引擎和 DOM 的座標交接，不模擬字型排版。
+    date.rect={left:0,top:0,width:108,height:21}; clock.append(date);
+    const focus = app.document.createElement('section'); focus.className = 'ttteexxtt';
+    focus.rect = {left:79,top:198,width:566,height:158};
+    app.document.body.append(clock,focus); app.api.applyAll();
+    assert.equal(clock.getBoundingClientRect().left,287); assert(Math.abs(clock.getBoundingClientRect().top-32)<1e-9);
+    assert.equal(date.style['--mynt-clock-scale'],'0.5');
+    assert.equal(Number.parseFloat(date.style['--mynt-date-x']),324);
+    assert.equal(Number.parseFloat(date.style['--mynt-date-y']),129);
+    assert.deepEqual(clone(app.api.get()),old); assert.equal(saved(app),bytes); assert.equal(app.writes(),0);
+    app.context.innerWidth=540; app.api.applyAll();
+    assert.equal(Number.parseFloat(date.style['--mynt-date-x']),42);
+    assert.equal(Number.parseFloat(date.style['--mynt-date-y']),316);
+    assert.deepEqual(clone(app.api.get()),old); assert.equal(saved(app),bytes); assert.equal(app.writes(),0);
+    app.context.innerWidth=1200; app.api.applyAll();
+    app.api.setEditing(true);
+    const handle = () => app.document.all().find(node=>node.dataset.block==='clock').querySelector('.myntLayoutMove');
+    assert.equal(clock.getBoundingClientRect().left,287);
+    handle().emit('pointerdown',{clientX:287,clientY:32});
+    handle().emit('pointermove',{clientX:387,clientY:32}); handle().emit('pointerup');
+    assert.equal(clock.getBoundingClientRect().left,387);
+    assert.equal(saved(app),bytes); assert.equal(app.writes(),0);
+    app.id('myntLayoutSave').click();
+    assert.equal(app.writes(),1); assert.equal(clock.getBoundingClientRect().left,387);
+    app.api.applyAll(); assert.equal(clock.getBoundingClientRect().left,387);
+    app.api.setEditing(true); handle().emit('keydown',{key:'ArrowRight'});
+    assert.equal(clock.getBoundingClientRect().left,388);
+    const stored = saved(app); app.api.cancel(); assert.equal(saved(app),stored);
+    assert.equal(clock.getBoundingClientRect().left,387); assert.equal(app.writes(),1);
+    // 搜尋列、AI 工具列同樣觸發；隱藏區塊不得觸發。
+    focus.rect.top=400; app.search.rect={left:450,top:145,width:150,height:150};
+    app.api.replaceSaved(old); assert.equal(clock.getBoundingClientRect().left,287);
+    app.search.hidden=true; app.api.applyAll(); assert.equal(clock.getBoundingClientRect().left,450);
+    const ai=app.document.createElement('section'); ai.id='aiToolsCont'; ai.rect={...app.search.rect}; app.document.body.append(ai);
+    app.api.applyAll(); assert.equal(clock.getBoundingClientRect().left,287);
+    ai.hidden=true; app.api.applyAll(); assert.equal(clock.getBoundingClientRect().left,450);
+    focus.hidden=true; app.search.hidden=false; app.api.applyAll();
+    assert.equal(clock.getBoundingClientRect().left,450, 'No visible focus card means no fallback anchor');
+    assert.equal(saved(app),stored); assert.equal(app.writes(),1);
+    clock.hidden=true; app.api.replaceSaved({version:2,blocks:{}});
+    assert.equal(date.dataset.myntLayoutDate,undefined, 'Removing custom layout also clears a hidden clock date override');
+    for(const key of ['--mynt-clock-scale','--mynt-date-x','--mynt-date-y']) assert.equal(date.style[key],undefined);
+});
+
+test('Today widgets keep defaults until moved, save in the existing profile and restore without extra storage keys', () => {
+    const app = fixture({ widgets: true }), bytes = saved(app), keys = [...app.storage.keys()];
+    const widgets = app.id('myntHomeWidgets');
+    assert.equal(widgets.style.translate, undefined); assert.equal(widgets.dataset.myntLayout, undefined);
+    app.api.setEditing(true);
+    const handle = app.document.all().find(node => node.dataset.block === 'homeWidgets')?.querySelector('.myntLayoutMove');
+    assert(handle, 'The enabled widget has a drag handle in editing mode');
+    handle.emit('keydown', { key: 'ArrowLeft', shiftKey: true });
+    assert.equal(widgets.style.translate, '-10px 0px'); assert.equal(saved(app), bytes);
+    app.id('myntLayoutSave').click();
+    const stored = JSON.parse(saved(app));
+    assert.equal(stored.profiles[0].layouts.wide.blocks.homeWidgets.x, -10 / 1200);
+    assert.equal(stored.profiles[0].layouts.wide.locked, true);
+    assert.deepEqual([...app.storage.keys()], keys);
+    const restored = fixture({ widgets: true, data: stored });
+    assert.equal(restored.id('myntHomeWidgets').style.translate, '-10px 0px');
+    restored.api.setEditing(true);
+    restored.document.all().find(node => node.dataset.block === 'homeWidgets').querySelector('.myntLayoutMove').emit('keydown', { key: 'ArrowDown', shiftKey: true });
+    restored.api.cancel();
+    assert.equal(restored.id('myntHomeWidgets').style.translate, '-10px 0px');
+    assert.equal(restored.writes(), 0);
+});
 
 test('A recoverable draft blocks previous-version preview without changing any layout', () => {
     const app = fixture({ draft: true }), before = clone(app.api.get()), rect = rectangle(app);

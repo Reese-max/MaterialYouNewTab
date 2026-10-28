@@ -16,7 +16,7 @@
             if (input) { input.disabled = !item.valid; input.checked = item.visible === true; input.setAttribute('aria-invalid', String(!item.valid)); }
             if (!item.valid) continue;
             const original = item.checkboxId && document.getElementById(item.checkboxId);
-            if (original) original.checked = item.kind === 'inverse' ? !item.visible : item.visible;
+            if (original) original.checked = item.kind === 'inverse' && item.id !== 'clock' ? !item.visible : item.visible;
             // Keep dependent settings usable without dispatching legacy handlers,
             // which persist caches or reinitialize content during a pure refresh.
             const settingsRows = item.id === 'shortcuts' ? ['shortcutEditField', 'adaptiveIconField']
@@ -113,7 +113,7 @@
         const list = document.createElement('div'); list.className = 'mynt-component-list';
         for (const item of core.definitions) {
             const label = document.createElement('label'), input = document.createElement('input'), name = document.createElement('span');
-            input.type = 'checkbox'; input.id = `myntComponent-${item.id}`; name.textContent = text(item.labelZh, item.labelEn);
+            input.type = 'checkbox'; input.id = `myntComponent-${item.id}`; name.textContent = item.id === 'homeWidgets' ? translated('homeWidgetsSetting', item.labelZh, item.labelEn) : text(item.labelZh, item.labelEn);
             input.addEventListener('change', () => { try { change(item.id, input.checked); } catch (error) { status.textContent = error.rollbackFailed ? text('瀏覽器儲存空間無法使用，部分顯示設定可能尚未回復。請勿清除資料，重新開啟後檢查。', 'Storage is unavailable; some visibility settings may not have rolled back. Do not clear data. Reopen and check.') : text('儲存失敗或資料格式異常，原有資料已保留。請重試或檢查備份。', 'Could not save, or stored data is invalid. Existing data was preserved. Retry or check your backup.'); refresh(); } });
             label.append(name, input); list.append(label); controls.set(item.id, input);
         }

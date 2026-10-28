@@ -1,0 +1,149 @@
+/* 今日欄位於 720px 主欄右側；上下留給浮動入口，不更動既有主欄。 */
+#myntHomeWidgets { display: none; }
+@media (min-width: 1500px) {
+    body #myntHomeWidgets:not([hidden]):not([data-mynt-component-hidden]) {
+        display: grid;
+        position: fixed;
+        left: calc(var(--workspace-left, calc(50vw - 360px)) + var(--workspace-width, 720px) + 24px);
+        top: 180px;
+        width: min(320px, calc(100vw - var(--workspace-left, calc(50vw - 360px)) - var(--workspace-width, 720px) - 48px));
+        /* 上緣 180px；底部留捷徑偏移 84px、捷徑列高度與 16px 間距。 */
+        max-height: max(0px, calc(100dvh - 308px - var(--shortcut-size, 50px) - var(--gap, 30px) * 2));
+        overflow: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        gap: 14px;
+        padding: 4px;
+        box-sizing: border-box;
+        z-index: 1;
+        color: #20334c;
+        font: .875rem/1.5 "Poppins", "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    }
+    /* 自訂與編輯共用原點；右側沒有名言列，內容可用到底部 16px。 */
+    body:is(:has([data-mynt-layout]), .mynt-layout-editing) #myntHomeWidgets:not([hidden]):not([data-mynt-component-hidden]) {
+        left: calc(100vw - 520px);
+        top: 180px;
+        width: 320px;
+        height: min(640px, calc(100dvh - 196px));
+        max-height: max(0px, calc(100dvh - 196px));
+        align-content: start;
+    }
+}
+#myntHomeWidgets, #myntHomeWidgets * { box-sizing: border-box; }
+#myntHomeWidgets h2 { width: fit-content; margin: 0 4px; padding: 4px 10px; border-radius: 10px; background: #f3f7fc; font-size: 1.125rem; font-weight: 600; }
+#myntHomeWidgets h3 { margin: 0 0 12px; font-size: .9375rem; font-weight: 600; }
+#myntHomeWidgets .home-widget-card {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #d5dfeb;
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--accentLightTint-blue, #e5efff) 35%, #fff);
+    box-shadow: 0 4px 14px #20334c12;
+}
+#myntHomeWidgets button, #myntHomeWidgets input { font: inherit; color: inherit; }
+#myntHomeWidgets button {
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #a1b2c6;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+#myntHomeWidgets button:not([hidden]) + button { margin-inline-start: 6px; }
+#myntHomeWidgets .home-widget-card > [hidden] { display: none; }
+#myntHomeWidgets button:hover { background: #e5efff; }
+#myntHomeWidgets :disabled { opacity: .6; cursor: default; }
+#myntHomeWidgets :focus-visible { outline: 3px solid #265a91; outline-offset: 2px; }
+#myntHomeWidgets .home-widget-todos { list-style: none; padding: 0; margin: 0 0 12px; }
+#myntHomeWidgets .home-widget-todos label { display: flex; align-items: flex-start; gap: 10px; min-height: 40px; padding-block: 8px; cursor: pointer; }
+#myntHomeWidgets .home-widget-todos input { position: static; opacity: 1; flex: 0 0 18px; width: 18px; height: 18px; margin: 2px 0; accent-color: #265a91; }
+#myntHomeWidgets .home-widget-todos span { min-width: 0; overflow-wrap: anywhere; }
+#myntHomeWidgets .home-widget-add { display: flex; gap: 8px; margin-bottom: 12px; }
+#myntHomeWidgets .home-widget-add input { width: 0; min-width: 0; flex: 1; border: 1px solid #a1b2c6; border-radius: 12px; padding: 8px 10px; background: #fff; }
+#myntHomeWidgets input::placeholder { color: #4b6078; opacity: 1; }
+#myntHomeWidgets .home-widget-add button { flex: 0 0 40px; }
+#myntHomeWidgets .home-widget-note { margin: 8px 0 12px; color: #405976; overflow-wrap: anywhere; }
+#myntHomeWidgets .home-widget-note:empty { display: none; }
+#myntHomeWidgets .home-widget-time { margin: 8px 0 16px; font-size: 2.25rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+/* 回到面板時只強調外框，不影響使用者保存的位置、縮放或減少動畫設定。 */
+#pomodoroPanel[data-home-widget-highlight] { outline: 3px solid #265a91; outline-offset: 3px; }
+/* 使用既有反相深色機制；不加入動效，亦尊重系統與專案減少動畫設定。 */
+@media (prefers-reduced-motion: reduce) {
+    #myntHomeWidgets * { animation: none; transition: none; }
+}
+.myntReducedMotion #myntHomeWidgets * { animation: none; transition: none; }
+@media (forced-colors: active) {
+    #myntHomeWidgets .home-widget-card { border-color: CanvasText; background: Canvas; color: CanvasText; }
+    #myntHomeWidgets :focus-visible { outline-color: Highlight; }
+    #pomodoroPanel[data-home-widget-highlight] { outline-color: Highlight; }
+}
+
+/* 第 16 輪：今日與日期共用膠囊比例；抵銷既有 14px 列距中的 6px，留下 8px。 */
+#myntHomeWidgets h2 {
+    margin: 0 0 -6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: max(14px, calc(14px * var(--mynt-font-scale, 1)));
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* 按鈕維持原生隱藏與焦點行為；長字串可增高，正常字級共用 36px。 */
+#myntHomeWidgets button {
+    min-height: 36px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    line-height: 22px;
+}
+#myntHomeWidgets .home-widget-add input {
+    min-height: 36px;
+    padding-block: 6px;
+    line-height: 22px;
+}
+#myntHomeWidgets .home-widget-add button {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    align-self: center;
+    padding: 0;
+    font-size: 18px;
+}
+
+@media (forced-colors: none) {
+    /* 沿用搜尋主按鈕的混色方式，再加深一階，讓蜜桃主題的懸停文字也達 AA。 */
+    :root:not(.myntHighContrast) body #myntHomeWidgets {
+        --mynt-widget-primary: color-mix(in srgb, var(--darkerColor-blue) 60%, var(--textColorDark-blue));
+    }
+    :root:has(#darkTheme:checked):not(.myntHighContrast) body #myntHomeWidgets {
+        --mynt-widget-primary: #3569b2;
+    }
+
+    /* 沿用既有反相選擇器以覆蓋 r14 色票；淺深共用表面，不新增深色色票。 */
+    :root:not(.myntHighContrast) body,
+    html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast) body,
+    html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) body {
+        & #myntHomeWidgets h2 {
+            background: var(--accentLightTint-blue);
+            color: var(--textColorDark-blue);
+            border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 24%, var(--accentLightTint-blue));
+            box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+        }
+        & #myntHomeWidgets button {
+            border-color: var(--mynt-widget-primary);
+            background: #fff;
+            color: var(--mynt-widget-primary);
+        }
+        & #myntHomeWidgets button:hover {
+            background: color-mix(in srgb, var(--mynt-widget-primary) 8%, #fff);
+        }
+        /* 開始／暫停沿用計時文字後的既有按鈕，不依翻譯文字選取。 */
+        & #myntHomeWidgets .home-widget-time + button {
+            background: var(--mynt-widget-primary);
+            color: #fff;
+        }
+        & #myntHomeWidgets .home-widget-time + button:hover {
+            background: color-mix(in srgb, var(--mynt-widget-primary) 84%, #000);
+        }
+    }
+}

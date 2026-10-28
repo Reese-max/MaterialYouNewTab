@@ -1,0 +1,45 @@
+/* 第 10 輪：預設影片桌布在深色模式的負片問題、捷徑名稱在桌布上的可讀性 */
+
+/* 純色模式由 html 反相：影片先調暗，再抵銷外層的反相。 */
+html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)) #videoBg,
+html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)) #videoBg {
+	filter: brightness(0.55) invert(1) hue-rotate(180deg);
+}
+
+/* 桌布模式只反相 body 子元素：直接覆寫影片的濾鏡，保留原色。 */
+body[data-bg="wallpaper"]:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)) > #videoBg,
+body[data-bg="wallpaper"][sysTheme="systemDark"]:has(.menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)) > #videoBg {
+	filter: brightness(0.55);
+}
+
+/* 固定底板與不透明文字，避免透明度設定或深色衣物降低對比；不改幾何尺寸。 */
+body:is([data-bg="wallpaper"], [data-workspace-background="video"]) .shortcutsContainer .shortcuts .shortcut-name {
+	background-color: rgba(255, 255, 255, 0.92);
+	color: #202020;
+	border-radius: 5px;
+	opacity: 1;
+	text-shadow: none;
+}
+
+/* 影片名言已有高不透明度底板；一般圖片桌布補上同等保護。 */
+body[data-bg="wallpaper"]:not([data-workspace-background="video"]) :is(#studyQuote, .quotesContainer) {
+	background-color: rgba(255, 255, 255, 0.96);
+	color: #202020;
+	text-shadow: none;
+}
+
+body[data-bg="wallpaper"]:not([data-workspace-background="video"]) #studyQuoteText {
+	color: inherit;
+	opacity: 1;
+}
+
+/* 減少動態時不插補影片濾鏡，播放行為仍由既有程式管理。 */
+html.myntReducedMotion #videoBg {
+	transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#videoBg {
+		transition: none;
+	}
+}

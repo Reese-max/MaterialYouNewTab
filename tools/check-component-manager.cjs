@@ -7,17 +7,18 @@ class Element {
  setAttribute(k,v){this.attrs.set(k,v)} toggleAttribute(k,v){if(v)this.attrs.set(k,'');else this.attrs.delete(k)}
  hasAttribute(k){return this.attrs.has(k)} getBoundingClientRect(){return {width:300,height:300,top:-200,left:70,right:370,bottom:100}} get offsetWidth(){return 300} get offsetHeight(){return 300} addEventListener(k,fn){this.handlers[k]=fn} contains(e){return this===e||this.children.some(c=>c.contains?.(e))} querySelector(){return null} matches(){return false}
 }
-function setup(initial={},fail=false,layout=null){
+function setup(initial={},fail=false,layout=null,{video=false}={}){
  const values=new Map(Object.entries(initial)),nodes=new Map(),events={},host=new Element(),all=[];
  const node=id=>{if(!nodes.has(id)){const e=new Element();e.id=id;nodes.set(id,e)}return nodes.get(id)};
  core.definitions.forEach(d=>[...d.selectors,...d.panelSelectors].forEach(s=>node(s.slice(1))));
  const storage={getItem:k=>values.get(k)??null,setItem(k,v){if(fail){fail=false;throw Error('quota')}values.set(k,v)},removeItem:k=>values.delete(k)};
  const document={readyState:'complete',body:new Element(),createElement(tag){const e=new Element(tag);all.push(e);return e},getElementById:node,querySelector:s=>s==='#overviewPage > .toggleTextsCont'?host:null,querySelectorAll:s=>nodes.has(s.slice(1))?[node(s.slice(1))]:[],addEventListener(k,fn){events[k]=fn},dispatchEvent(){}};
+ document.body.matches=()=>video;
  const calls={clockInit:0,clockRefresh:0,clockReload:0,countdowns:0,study:0};
  const clockRuntime=()=>({refreshVisibility(){calls.clockRefresh++},reload(){calls.clockReload++}});
  const root={MYNTComponentVisibilityCore:core,addEventListener(k,fn){events[k]=fn},myntCountdowns:{render(){calls.countdowns++}},myntStudy:{render(){calls.study++}}};
  if(layout)root.myntLayout={get:()=>layout,isEditing:()=>Boolean(layout.editing)};
- const context={innerWidth:1180,innerHeight:758,myntClampOffset:require('../scripts/layout-editor.js').myntClampOffset,window:root,localStorage:storage,document,queueMicrotask:fn=>fn(),MutationObserver:class{observe(){}},CustomEvent:class{},initializeClock(){calls.clockInit++;root.myntClockPreferences=clockRuntime()}};
+ const context={innerWidth:1180,innerHeight:758,myntClampOffset:require('../scripts/layout-editor.js').myntClampOffset,window:root,localStorage:storage,document,getComputedStyle:()=>({display:video?'none':'block'}),queueMicrotask:fn=>fn(),MutationObserver:class{observe(){}},CustomEvent:class{},initializeClock(){calls.clockInit++;root.myntClockPreferences=clockRuntime()}};
  vm.runInNewContext(fs.readFileSync(require.resolve('../scripts/component-manager.js'),'utf8'),context);
  const control=id=>all.find(e=>e.id==='myntComponent-'+id);
  return {values,node,all,events,root,control,context,calls,clockRuntime,change(id,visible){const c=control(id);c.checked=visible;c.handlers.change()},host};
@@ -26,7 +27,9 @@ module.exports={setup};
 if(require.main===module){
 const original={myntPomoTimerV1:'timer-private',myntLayoutProfilesV1:'layout-private',scratchpad:'note-private',myntWallpaper:'image-private'};
 const app=setup(original);
+assert.equal(app.node('hideClock').checked,true,'Manager refresh uses the positive Show clock control.');
 for(const d of core.definitions)app.change(d.id,false);
+assert.equal(app.node('hideClock').checked,false);
 for(const [k,v]of Object.entries(original))assert.equal(app.values.get(k),v);
 for(const d of core.definitions)for(const s of d.selectors)assert(app.node(s.slice(1)).attrs.has('data-mynt-component-hidden'));
 assert(!app.node('menuButton').attrs.has('data-mynt-component-hidden'));
@@ -53,9 +56,16 @@ assert.equal(cleared.control('studyQuote').checked,true);
 assert.equal(cleared.node('studyQuote').hidden,false,'Cross-tab clear re-renders the owner-controlled hidden attribute, not only manager CSS.');
 assert.equal(cleared.calls.countdowns,1,'Storage clear also refreshes countdown state.');
 const crossTab=setup({hideClockVisible:'true'});
+assert.equal(crossTab.node('hideClock').checked,false);
 crossTab.events.storage({key:'hideClockVisible'});assert.equal(crossTab.calls.clockInit,0,'Do not initialize a hidden clock.');
 crossTab.values.set('hideClockVisible','false');crossTab.events.storage({key:'hideClockVisible'});
 assert.equal(crossTab.calls.clockInit,1,'A previously uninitialized clock starts when another tab reveals it.');
+assert.equal(crossTab.node('hideClock').checked,true);
+const video=setup({},false,null,{video:true});
+assert.equal(video.values.has('hideClockVisible'),false,'CSS-hidden startup never invents a hidden clock preference.');
+assert.equal(video.node('analogClock').hasAttribute('data-mynt-component-hidden'),false);
+assert.equal(video.node('date').hasAttribute('data-mynt-component-hidden'),false);
+assert.equal(video.values.get('hideWeatherVisible'),'true','Unrelated legacy weather migration is unchanged.');
 crossTab.values.set('clocktype','digital');crossTab.events.storage({key:'clocktype'});
 assert.equal(crossTab.calls.clockRefresh,1);assert.equal(crossTab.calls.clockReload,0,'Visibility synchronization must not invoke legacy layout-changing reload.');
 crossTab.change('clock',false);assert.equal(crossTab.calls.clockRefresh,2,'Local manager hide updates clock intervals too.');
