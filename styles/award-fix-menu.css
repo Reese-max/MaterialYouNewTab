@@ -35,7 +35,7 @@
    只讓列本身接收滑鼠以顯示游標，子元素維持不可操作。 */
 #menuCont .ttcont.inactive,
 #menuCont .ttcont:has(input:disabled) {
-	opacity: 0.45;
+	opacity: 1;
 	cursor: not-allowed;
 	pointer-events: auto;
 }
@@ -43,6 +43,15 @@
 #menuCont .ttcont.inactive > *,
 #menuCont .ttcont:has(input:disabled) > * {
 	pointer-events: none;
+}
+
+/* 停用文字保留對比，只淡化開關；原有停用與焦點邏輯不變。 */
+#menuCont .ttcont:is(.inactive, :has(input:disabled)) :is(.bigText, .infoText) {
+	color: var(--menu-row-muted);
+}
+
+#menuCont .ttcont:is(.inactive, :has(input:disabled)) .switch {
+	opacity: 0.5;
 }
 
 /* ===== 4. 捲動區內縮，避免捲軸貼住面板圓角 ===== */
@@ -197,9 +206,13 @@ html.black-theme #menuCont #greetingNameInput::placeholder {
 }
 
 #menuCont .sectionInner .ttcont {
-	min-height: 52px;
-	padding: 4px;
+	min-height: 64px;
+	padding: 8px 4px;
 	gap: 8px;
+}
+
+#menuCont .sectionInner .ttcont:not(:last-child) {
+	border-bottom: 1px solid var(--menu-row-divider);
 }
 
 #menuCont .ttcont .texts {
@@ -208,12 +221,15 @@ html.black-theme #menuCont #greetingNameInput::placeholder {
 }
 
 #menuCont .ttcont .bigText {
-	font-size: 1rem;
+	font-size: 0.9375rem;
+	font-weight: 600;
 	line-height: 1.4;
 }
 
 #menuCont .ttcont .infoText {
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
+	color: var(--menu-row-muted);
+	opacity: 1;
 	line-height: 1.4;
 	margin-top: 2px;
 }
@@ -329,4 +345,78 @@ html.black-theme #menuCont #myntComponentManager:hover {
 #menuCont .section.expanded .sectionChevron,
 #menuCont #myntComponentManager[open] > summary::after {
 	transform: rotate(-135deg) translateY(-3px);
+}
+
+/* 第 16 輪：中性文字不隨主題色變淡；黑色主題使用直接配色。 */
+#menuCont {
+	--menu-row-muted: #595959;
+	--menu-row-divider: #d5d9df;
+	/* 沿用首頁主動作的加深主色，讓黃／蜜桃主題的白字也達 AA。 */
+	--menu-selected: color-mix(in srgb, var(--darkerColor-blue) 65%, var(--textColorDark-blue));
+}
+
+html.black-theme #menuCont {
+	--menu-row-muted: #c4c4c4;
+	--menu-row-divider: #555;
+	--menu-selected: #3569b2;
+}
+
+/* 窄螢幕保留文字空間；其他尺寸用縮排與連續細線表示數位時鐘子選項。 */
+@media (min-width: 360px) {
+	#menuCont :is(#timeformatField, #greetingField) {
+		margin-inline-start: 16px;
+		border-inline-start: 2px solid var(--menu-row-divider);
+		padding-inline-start: 12px;
+	}
+}
+
+/* 保留原有滑塊定位與切換流程，選中文字與主色滑塊同步。 */
+#menuCont .themeSegment {
+	background: #e5e5e5;
+}
+
+#menuCont .themeIndicator {
+	background: var(--menu-selected);
+}
+
+#menuCont .themeSegBtn {
+	background: transparent;
+	color: var(--menu-row-muted);
+	min-width: 0;
+	height: auto;
+	min-height: 44px;
+	padding: 6px 4px;
+	font-size: 0.9375rem;
+	line-height: 1.4;
+	overflow-wrap: anywhere;
+}
+
+#menuCont .themeSegment[data-active="light"] [data-theme="light"],
+#menuCont .themeSegment[data-active="dark"] [data-theme="dark"],
+#menuCont .themeSegment[data-active="system"] [data-theme="system"] {
+	color: #fff;
+	font-weight: 600;
+}
+
+#menuCont .themeSegBtn[data-theme="dark"]::after {
+	content: none;
+}
+
+/* 深色軌道比主色滑塊暗；只對小型切換器抵銷祖先反相，保留白字與主色。 */
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)) #menuCont .themeSegment,
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)) #menuCont .themeSegment {
+	filter: invert(1) hue-rotate(180deg);
+	background: #181c22;
+	--menu-row-muted: #c4c4c4;
+}
+
+html.black-theme #menuCont .themeSegment {
+	background: #181c22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#menuCont .themeSegment,
+	#menuCont .themeIndicator {
+		transition: none;
+	}
 }
