@@ -810,6 +810,8 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             getState: timer.getState,
             subscribe: timer.subscribe,
+            // 首頁精簡卡沿用計時操作，不自動展開面板。
+            startInline: startPomodoro,
             pause: pausePomodoro,
             reset: resetPomodoro,
             extend: timer.extend,

@@ -372,3 +372,42 @@ document.addEventListener("DOMContentLoaded", function () {
     loadCheckboxState("todoListCheckboxState", todoListCheckbox);
     loadDisplayStatus("todoListDisplayStatus", todoListCont);
 });
+
+// 首頁唯讀快照與操作入口；沿用清單的驗證、儲存與完成事件。
+window.myntTodoApi = {
+    list() {
+        if (todoStorageInvalid || !todoList) throw new Error("Todo data unavailable");
+        return Object.entries(todoList).map(([id, todo]) => ({ ...todo, id }));
+    },
+    add(title) {
+        ShowToDoList();
+        return createTodo(title);
+    },
+    toggle(id) {
+        ShowToDoList();
+        if (todoStorageInvalid || !Object.hasOwn(todoList, id)) return false;
+        const detail = { action: { type: "todo.complete", todoId: id, completed: todoList[id].status !== "completed" } };
+        document.dispatchEvent(new CustomEvent("mynt:todo-action", { detail }));
+        return detail.applied === true;
+    },
+    subscribe(callback) {
+        // 分頁重新可見時，先讀回隱藏期間其他分頁更新的清單。
+        ShowToDoList();
+        const notify = () => callback();
+        const onStorage = event => {
+            if (event.key !== null && event.key !== "todoList") return;
+            ShowToDoList();
+            notify();
+        };
+        // 完整清單重載（含本機復原）也會更新首頁，不改動原有流程。
+        const observer = new MutationObserver(notify);
+        observer.observe(todoulList, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
+        document.addEventListener("mynt:todo-updated", notify);
+        window.addEventListener("storage", onStorage);
+        return () => {
+            observer.disconnect();
+            document.removeEventListener("mynt:todo-updated", notify);
+            window.removeEventListener("storage", onStorage);
+        };
+    }
+};

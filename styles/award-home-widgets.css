@@ -1,0 +1,66 @@
+/* 今日欄位於 720px 主欄右側；上下留給浮動入口，不更動既有主欄。 */
+#myntHomeWidgets { display: none; }
+@media (min-width: 1500px) {
+    body:not(.mynt-layout-editing):not([data-mynt-layout]):not(:has([data-mynt-layout])) #myntHomeWidgets:not([hidden]):not([data-mynt-component-hidden]) {
+        display: grid;
+        position: fixed;
+        left: calc(var(--workspace-left, calc(50vw - 360px)) + var(--workspace-width, 720px) + 24px);
+        top: 180px;
+        width: min(320px, calc(100vw - var(--workspace-left, calc(50vw - 360px)) - var(--workspace-width, 720px) - 48px));
+        max-height: calc(100dvh - 292px);
+        overflow: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        gap: 14px;
+        padding: 4px;
+        box-sizing: border-box;
+        z-index: 1;
+        color: #20334c;
+        font: .875rem/1.5 "Poppins", "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    }
+}
+#myntHomeWidgets, #myntHomeWidgets * { box-sizing: border-box; }
+#myntHomeWidgets h2 { width: fit-content; margin: 0 4px; padding: 4px 10px; border-radius: 10px; background: #f3f7fc; font-size: 1.125rem; font-weight: 600; }
+#myntHomeWidgets h3 { margin: 0 0 12px; font-size: .9375rem; font-weight: 600; }
+#myntHomeWidgets .home-widget-card {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #d5dfeb;
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--accentLightTint-blue, #e5efff) 35%, #fff);
+    box-shadow: 0 4px 14px #20334c12;
+}
+#myntHomeWidgets button, #myntHomeWidgets input { font: inherit; color: inherit; }
+#myntHomeWidgets button {
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #a1b2c6;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+#myntHomeWidgets button + button { margin-inline-start: 6px; }
+#myntHomeWidgets button:hover { background: #e5efff; }
+#myntHomeWidgets :disabled { opacity: .6; cursor: default; }
+#myntHomeWidgets :focus-visible { outline: 3px solid #265a91; outline-offset: 2px; }
+#myntHomeWidgets .home-widget-todos { list-style: none; padding: 0; margin: 0 0 12px; }
+#myntHomeWidgets .home-widget-todos label { display: flex; align-items: flex-start; gap: 10px; min-height: 40px; padding-block: 8px; cursor: pointer; }
+#myntHomeWidgets .home-widget-todos input { position: static; opacity: 1; flex: 0 0 18px; width: 18px; height: 18px; margin: 2px 0; accent-color: #265a91; }
+#myntHomeWidgets .home-widget-todos span { min-width: 0; overflow-wrap: anywhere; }
+#myntHomeWidgets .home-widget-add { display: flex; gap: 8px; margin-bottom: 12px; }
+#myntHomeWidgets .home-widget-add input { width: 0; min-width: 0; flex: 1; border: 1px solid #a1b2c6; border-radius: 12px; padding: 8px 10px; background: #fff; }
+#myntHomeWidgets input::placeholder { color: #4b6078; opacity: 1; }
+#myntHomeWidgets .home-widget-add button { flex: 0 0 40px; }
+#myntHomeWidgets .home-widget-note { margin: 8px 0 12px; color: #405976; overflow-wrap: anywhere; }
+#myntHomeWidgets .home-widget-note:empty { display: none; }
+#myntHomeWidgets .home-widget-time { margin: 8px 0 16px; font-size: 2.25rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+/* 使用既有反相深色機制；不加入動效，亦尊重系統與專案減少動畫設定。 */
+@media (prefers-reduced-motion: reduce) {
+    #myntHomeWidgets * { animation: none; transition: none; }
+}
+.myntReducedMotion #myntHomeWidgets * { animation: none; transition: none; }
+@media (forced-colors: active) {
+    #myntHomeWidgets .home-widget-card { border-color: CanvasText; background: Canvas; color: CanvasText; }
+    #myntHomeWidgets :focus-visible { outline-color: Highlight; }
+}
