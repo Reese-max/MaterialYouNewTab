@@ -265,11 +265,20 @@ html.black-theme #menuCont #greetingNameInput::placeholder {
 #menuCont > .optCont {
 	height: calc(100% - 72px);
 	padding-bottom: 32px;
-	scroll-padding-bottom: 32px;
+	scroll-padding-bottom: 64px;
+	/* 本機背景隨內容捲到底時蓋住底部陰影，不需捲動事件或動畫。
+	   陰影僅繪於抽屜捲動區，留白處可辨識下方仍有設定。 */
+	background-image:
+		linear-gradient(to top, var(--accentLightTint-blue) 40%, transparent),
+		radial-gradient(farthest-side at 50% 100%, rgb(0 0 0 / 22%), transparent);
+	background-position: center bottom;
+	background-size: 100% 48px, 100% 16px;
+	background-repeat: no-repeat;
+	background-attachment: local, scroll;
 }
 
 #menuCont > .optCont > .page {
-	padding-bottom: max(32px, var(--gap));
+	padding-bottom: max(64px, var(--gap));
 }
 
 /* ===== 10. 分頁以字色、表面與陰影共同標示選取，保留文字縮放 ===== */
