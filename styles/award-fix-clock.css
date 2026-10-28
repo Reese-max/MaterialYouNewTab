@@ -8,10 +8,12 @@
     width: max-content;
     max-width: min(320px, calc(100vw - 48px));
     box-sizing: border-box;
-    padding: 3px 10px;
+    padding: 4px 10px;
     border-radius: 8px;
-    background: var(--accentLightTint-blue);
-    font-size: calc(14px * var(--mynt-font-scale, 1));
+    background: #ecf4ff;
+    color: #20334c;
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
     line-height: 1.5;
     text-align: center;
     overflow-wrap: anywhere;
@@ -35,11 +37,18 @@ body.mynt-manual-workspace:not([data-workspace-background="video"]) #analogClock
 /* 只補償自訂／編輯版面，未自訂版面的日期與流向維持原樣。 */
 body #analogClock .mynt-clock-date[data-mynt-layout-date] {
     display: block;
-    font-size: max(calc(14px * var(--mynt-font-scale, 1)), calc(12px / var(--mynt-clock-scale, 1)));
+    /* 補償使用者儲存的時鐘縮放，讓日期實際顯示至少 13px。 */
+    font-size: max(calc(13px * var(--mynt-font-scale, 1)), calc(13px * var(--mynt-font-scale, 1) / var(--mynt-clock-scale, 1)));
     max-width: calc((100vw - 16px) / var(--mynt-clock-scale, 1));
     left: var(--mynt-date-x, 50%);
     top: var(--mynt-date-y, calc(100% + 8px));
     transform: none;
+}
+
+/* 沿用焦點卡的自適應表面與文字，只移除表面的透明度，不動版面座標。 */
+body:is([data-adaptive-contrast="on"], [data-adaptive-opacity="on"]) #analogClock .mynt-clock-date {
+    background: rgb(from var(--adaptive-surface, #f4f8ff) r g b / 1);
+    color: var(--adaptive-text, #213851);
 }
 
 html:has(> body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout]))) {

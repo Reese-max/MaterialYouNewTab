@@ -184,7 +184,7 @@ assert.match(html, /id="hideClock"[^>]*aria-labelledby="showClockBox"[^>]*aria-d
 const css = fs.readFileSync(require.resolve('../styles/award-fix-clock.css'), 'utf8');
 assert.match(css, /body:is\([^\n]+:not\(\.mynt-layout-editing\):not\(:has\(\[data-mynt-layout\]\)\) \{/);
 assert.match(css, /font-size: 128px; font-weight: 300/);
-assert.match(css, /font-size: calc\(14px \* var\(--mynt-font-scale, 1\)\)/);
+assert.match(css, /font-size: max\(13px, calc\(13px \* var\(--mynt-font-scale, 1\)\)\)/);
 assert.doesNotMatch(css, /backdrop-filter/);
 // 兩個有界的 !important 是必要覆寫：顯示影片自訂鐘與明確關閉所有鐘。
 const customClockRule = css.match(/body\[data-workspace-background="video"\]:has\(\[data-mynt-layout\]\):has\(#hideClock:checked\)[^{]+\{([^}]+)\}/);

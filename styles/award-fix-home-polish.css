@@ -104,3 +104,70 @@ html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:ho
 #userText {
     color: var(--textColorDark-blue);
 }
+
+/* 第 14 輪：問候與狀態維持卡片的高對比文字，動作列統一尺寸。 */
+body .ttteexxtt #date {
+    font-size: max(14px, calc(14px * var(--mynt-font-scale, 1)));
+    font-weight: 600;
+    color: inherit;
+    opacity: 1;
+}
+#dailyFocusStatus {
+    font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+    color: inherit;
+    opacity: 1;
+}
+#dailyFocusActions {
+    position: relative;
+    align-items: center;
+    gap: 4px;
+}
+#dailyFocusToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    min-height: 36px;
+}
+#dailyFocusTools {
+    gap: 4px;
+    flex: 0 0 auto;
+}
+#dailyFocusTools .dailyFocusIcon {
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    opacity: 1;
+    background: color-mix(in srgb, currentColor 5%, transparent);
+}
+#dailyFocusTools .dailyFocusIcon:is(:hover, :focus-visible, [aria-expanded="true"]) {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+}
+#dailyFocusTools .dailyFocusIcon:focus-visible {
+    outline: 2px solid var(--darkerColor-blue);
+    outline-offset: 2px;
+}
+
+/* 既有程式會補上翻譯後的 aria-label；以整列為定位範圍，提示在按鈕上方且不越過卡片左右邊緣。 */
+#dailyFocusTools .dailyFocusIcon[aria-label]:not([aria-label=""]):is(:hover, :focus-visible)::after {
+    content: attr(aria-label);
+    position: absolute;
+    inset-inline-end: 0;
+    bottom: calc(100% + 8px);
+    z-index: 1;
+    width: max-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--textColorDark-blue);
+    color: var(--accentLightTint-blue);
+    font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: start;
+    pointer-events: none;
+}
