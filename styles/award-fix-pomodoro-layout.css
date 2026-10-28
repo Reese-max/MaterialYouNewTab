@@ -750,3 +750,132 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
         color: var(--pomo-fg, #17243b);
     }
 }
+
+/* 第 16 輪：短視窗保留計時與主要動作，完整設定才使用內部捲動。
+   真實設定 top 約 90.12px，預留 100px 包含底部至少 8px；不改座標或縮放。 */
+@media (max-height: 800px) {
+    #pomodoroPanel.pomodoro-panel:not([style*="display: none"]) {
+        max-height: min(calc(100dvh - 100px), var(--pomo-viewport-height, 100dvh));
+        padding-block: 8px;
+        overflow: hidden;
+        grid-template-rows: repeat(5, max-content) auto minmax(0, 1fr) max-content;
+        /* 重要性只覆蓋本檔原有的兩欄強制網格。 */
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+    #pomodoroPanel .pomodoroPhaseLabel {
+        grid-area: 1 / 1 / 2 / 3;
+        justify-self: end;
+        align-self: center;
+        margin: 0 4px 0 0;
+        line-height: 21px;
+    }
+    #pomodoroPanel .pomodoroRoundDisplay {
+        grid-area: 1 / 3 / 2 / 5;
+        justify-self: start;
+        align-self: center;
+        margin: 0;
+        line-height: 21px;
+    }
+    /* 重要性只覆蓋本檔前段的固定圓環尺寸。 */
+    #pomodoroPanel .pomodoroCircleWrap,
+    #pomodoroPanel .pomodoroProgressRing {
+        width: 96px !important;
+        height: 96px !important;
+        max-width: 96px !important;
+        max-height: 96px !important;
+    }
+    #pomodoroPanel .pomodoroCircleWrap { grid-row: 2; }
+    #pomodoroPanel .pomodoroControls { grid-row: 3; }
+    #pomodoroPanel .pomoStudioTask { grid-row: 4; }
+    #pomodoroPanel #myntPomoTask { height: 32px; }
+
+    /* 三顆既有按鈕同列；懸浮入口使用半列，另外兩顆各四分之一列。
+       重要性覆蓋本檔舊的全寬入口及各半列設定，不改 DOM 或事件。 */
+    #pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float {
+        grid-column: 1 / 3 !important;
+        grid-row: 5;
+        height: 32px;
+        padding: 4px 2px;
+        font-size: 12px;
+        border-color: transparent !important;
+    }
+    #pomodoroPanel .pomoStudioRow > button {
+        grid-row: 5;
+        height: 32px;
+        padding: 4px 2px;
+        font-size: 12px;
+    }
+    #pomodoroPanel .pomoStudioRow > button:first-child { grid-column: 3 / 4 !important; }
+    #pomodoroPanel .pomoStudioRow > button:last-child { grid-column: 4 / 5 !important; }
+    #pomodoroPanel .pomoStudioStatus { grid-row: 6; margin-block: 0; }
+
+    #pomodoroPanel #myntPomoExtras {
+        grid-row: 7;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        margin: 0;
+        padding: 2px 4px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scroll-padding-block: 40px 4px;
+    }
+    #pomodoroPanel #myntPomoExtras > * { flex-shrink: 0; }
+    #pomodoroPanel #myntPomoExtras .pomoStudioCards {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        gap: 0;
+        margin: 0;
+        background: var(--pomo-surface, #ffffff);
+    }
+    #pomodoroPanel #myntPomoExtras .pomoStudioCard {
+        min-height: 36px;
+        height: 36px;
+        padding: 4px 2px;
+        border-radius: 0;
+    }
+    #pomodoroPanel #myntPomoExtras .pomoStudioCard:first-child { border-radius: 8px 0 0 8px; }
+    #pomodoroPanel #myntPomoExtras .pomoStudioCard:last-child { border-radius: 0 8px 8px 0; }
+    #pomodoroPanel #myntPomoExtras .pomoStudioCard > span { display: none; }
+    #pomodoroPanel #myntPomoExtras .pomoStudioSettings { gap: 0; }
+    #pomodoroPanel #myntPomoExtras :is(.pomoStudioScenarios, .mynt-pomo-appearance, .mynt-music-library, .pomoStudioAmbient, .pomoStudioAlarmNotes) {
+        margin: 0;
+        border: 0;
+    }
+    #pomodoroPanel #myntPomoExtras :is(.pomoStudioScenarios, .mynt-pomo-appearance, .mynt-music-library, .pomoStudioAmbient, .pomoStudioAlarmNotes) > summary {
+        box-sizing: border-box;
+        min-height: 32px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--pomo-border, #718096);
+        font-size: 13px;
+        line-height: 19px;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music { row-gap: 0; }
+    #pomodoroPanel #myntPomoMusicMount .mynt-music-now { min-height: 24px; }
+    #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup {
+        order: 1;
+        align-self: end;
+        justify-content: end;
+        width: auto;
+        min-height: 24px;
+        margin: 0;
+        padding: 4px 2px;
+        font-size: 12px;
+        line-height: 14px;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    #pomodoroPanel > .pomoStudioStats {
+        grid-row: 8;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0 8px;
+        padding: 0;
+    }
+    #pomodoroPanel .pomodoroSessionsToday { padding: 0; }
+    #pomodoroPanel .pomodoroFocusSummary { flex: 1; gap: 4px; padding: 0; }
+}
