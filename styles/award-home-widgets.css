@@ -78,3 +78,72 @@
     #myntHomeWidgets :focus-visible { outline-color: Highlight; }
     #pomodoroPanel[data-home-widget-highlight] { outline-color: Highlight; }
 }
+
+/* 第 16 輪：今日與日期共用膠囊比例；抵銷既有 14px 列距中的 6px，留下 8px。 */
+#myntHomeWidgets h2 {
+    margin: 0 0 -6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: max(14px, calc(14px * var(--mynt-font-scale, 1)));
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* 按鈕維持原生隱藏與焦點行為；長字串可增高，正常字級共用 36px。 */
+#myntHomeWidgets button {
+    min-height: 36px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    line-height: 22px;
+}
+#myntHomeWidgets .home-widget-add input {
+    min-height: 36px;
+    padding-block: 6px;
+    line-height: 22px;
+}
+#myntHomeWidgets .home-widget-add button {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    align-self: center;
+    padding: 0;
+    font-size: 18px;
+}
+
+@media (forced-colors: none) {
+    /* 沿用搜尋主按鈕的混色方式，再加深一階，讓蜜桃主題的懸停文字也達 AA。 */
+    :root:not(.myntHighContrast) body #myntHomeWidgets {
+        --mynt-widget-primary: color-mix(in srgb, var(--darkerColor-blue) 60%, var(--textColorDark-blue));
+    }
+    :root:has(#darkTheme:checked):not(.myntHighContrast) body #myntHomeWidgets {
+        --mynt-widget-primary: #3569b2;
+    }
+
+    /* 沿用既有反相選擇器以覆蓋 r14 色票；淺深共用表面，不新增深色色票。 */
+    :root:not(.myntHighContrast) body,
+    html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast) body,
+    html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) body {
+        & #myntHomeWidgets h2 {
+            background: var(--accentLightTint-blue);
+            color: var(--textColorDark-blue);
+            border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 24%, var(--accentLightTint-blue));
+            box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+        }
+        & #myntHomeWidgets button {
+            border-color: var(--mynt-widget-primary);
+            background: #fff;
+            color: var(--mynt-widget-primary);
+        }
+        & #myntHomeWidgets button:hover {
+            background: color-mix(in srgb, var(--mynt-widget-primary) 8%, #fff);
+        }
+        /* 開始／暫停沿用計時文字後的既有按鈕，不依翻譯文字選取。 */
+        & #myntHomeWidgets .home-widget-time + button {
+            background: var(--mynt-widget-primary);
+            color: #fff;
+        }
+        & #myntHomeWidgets .home-widget-time + button:hover {
+            background: color-mix(in srgb, var(--mynt-widget-primary) 84%, #000);
+        }
+    }
+}

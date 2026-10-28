@@ -144,3 +144,20 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-l
         & #amPm { transform: translate(35px, -115px); }
     }
 }
+
+/* 第 16 輪：日期沿用浮動工具的膠囊表面；保留日期座標與時鐘縮放補償。 */
+:root body #analogClock .mynt-clock-date {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: max(calc(14px * var(--mynt-font-scale, 1)), calc(14px * var(--mynt-font-scale, 1) / var(--mynt-clock-scale, 1)));
+    font-weight: 500;
+    line-height: 1.5;
+}
+@media (forced-colors: none) {
+    :root:not(.myntHighContrast) body #analogClock .mynt-clock-date {
+        background: var(--accentLightTint-blue);
+        color: var(--textColorDark-blue);
+        border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 24%, var(--accentLightTint-blue));
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    }
+}
