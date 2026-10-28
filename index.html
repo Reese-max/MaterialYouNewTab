@@ -77,6 +77,7 @@
     <script defer src="scripts/ambient-sound.js"></script>
     <script defer src="scripts/component-visibility-core.js"></script>
     <script defer src="scripts/component-manager.js"></script>
+    <script defer src="scripts/home-widgets.js"></script>
     <link rel="stylesheet" href="styles/component-manager.css">
     <script defer src="scripts/local-mcp-components.js"></script>
     <script defer src="scripts/local-mcp-data.js"></script>
@@ -94,11 +95,13 @@
     <link href="styles/manual-workspace.css" rel="stylesheet">
     <link href="styles/adaptive-background.css" rel="stylesheet">
     <link href="styles/manual-editor-controls.css" rel="stylesheet">
+    <link href="styles/award.css" rel="stylesheet">
     <script defer src="scripts/adaptive-core.js"></script>
     <script defer src="scripts/adaptive-background.js"></script>
 </head>
 
 <body data-bg="wallpaper" data-workspace-background="video">
+    <aside id="myntHomeWidgets" aria-labelledby="homeWidgetsTitle" hidden></aside>
     <!-- --------------------- Video Background --------------------- -->
     <video id="videoBg" muted loop playsinline preload="none" aria-hidden="true"
         style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;">
@@ -1488,12 +1491,12 @@
                                 <div class="sectionInner" id="clockSectionContent">
                                     <div class="ttcont" id="clockHidden">
                                         <div class="texts">
-                                            <div class="bigText" id="hideClockBox">Hide Clock</div>
-                                            <div class="infoText" id="hideClockBoxInfo">Show or hide the clock and date
+                                            <div class="bigText" id="showClockBox">Show clock</div>
+                                            <div class="infoText" id="showClockBoxInfo">Show the clock and date on the home page
                                             </div>
                                         </div>
                                         <label class="switch">
-                                            <input id="hideClock" type="checkbox">
+                                            <input id="hideClock" type="checkbox" aria-labelledby="showClockBox" aria-describedby="showClockBoxInfo">
                                             <span class="toggle"></span>
                                         </label>
                                     </div>

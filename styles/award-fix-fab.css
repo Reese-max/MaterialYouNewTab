@@ -1,0 +1,239 @@
+/* 第 7 輪：右下角設定提示與圓形按鈕群 */
+
+/* ===== 右下角浮動按鈕配對 =====
+   #menuButton 原為 50px、inset-inline-end/bottom 各 var(--gap)=30px；
+   .wallpaperQuickActions 內的桌布圖庫鈕為 40px、right:80px、bottom:22px。
+   兩者尺寸不一、垂直錯開，看起來不像同一組。
+   統一為 44×44px、底部同對齊距視窗 20px 的水平列，
+   按鈕間距固定 12px（20＋44＋12＝桌布鈕容器 right:76px）。
+   視覺語言也統一：原本一顆是 --darkColor-blue 實心藍底、
+   一顆是淡色描邊靶心，改為同款「主題色淡底＋主題深色圖示＋1px 細框」，
+   hover 放大與 focus-visible 外框兩顆一致。 */
+
+#menuButton {
+	inset-inline-end: 20px;
+	bottom: 20px;
+	width: 44px;
+	height: 44px;
+	/* 淡底＋細框與桌布圖庫鈕一致；原本的 6px 淡色外框取消。
+	   靶心圖樣保留三層內圈結構，改用主題深色 --darkerColor-blue 重繪
+	   （1px 邊框下 padding box 為 42px，圈寬依原比例換算） */
+	background-color: var(--accentLightTint-blue);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 45%, transparent);
+	box-shadow:
+		0 2px 8px rgba(0, 0, 0, 0.25),
+		inset 0 0 0 5px var(--darkerColor-blue),
+		inset 0 0 0 13px var(--accentLightTint-blue),
+		inset 0 0 0 40px var(--darkerColor-blue);
+	transition: transform 0.15s ease;
+}
+
+/* hover 與 focus-visible 兩顆一致 */
+#menuButton:hover,
+.wallpaperQuickBtn:hover {
+	transform: scale(1.07);
+}
+
+#menuButton:focus-visible,
+.wallpaperQuickBtn:focus-visible {
+	/* 淡底上用主題深色描邊才看得見，對比約 5:1 */
+	outline: 2px solid var(--darkerColor-blue);
+	outline-offset: 2px;
+}
+
+.wallpaperQuickActions {
+	right: 76px;
+	bottom: 20px;
+	gap: 12px;
+}
+
+.wallpaperQuickBtn {
+	width: 44px;
+	height: 44px;
+	/* 與設定鈕同一樣式：原本是 --darkColor-blue 實心藍底無框，
+	   改為主題色淡底、主題深色圖示（svg 用 currentColor）與 1px 細框 */
+	background: var(--accentLightTint-blue);
+	color: var(--darkerColor-blue);
+	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 45%, transparent);
+}
+
+/* ===== 「開啟設定」提示 =====
+   前三次造訪時 .showHomeActionHints 會把 .homeActionHint 強制常駐顯示
+   在兩顆圓鈕正上方，膠囊形狀與圓鈕語彙衝突、且看不出對應哪顆。
+   改為平常一律隱藏（ID 選擇器優先權高於 .showHomeActionHints 規則，
+   書籤鈕的 #bookmarksHover 新手提示不受影響），
+   只在 #menuButton 的 :hover 或 :focus-visible 時顯示。
+   位置在設定鈕左側、以 translateY(-50%) 對鈕心垂直置中；
+   因桌布鈕緊鄰其左，右緣需再讓出 12px 間距＋44px 桌布鈕寬＋10px
+   呼吸距離（共 66px），提示才不會蓋到任何按鈕。
+   注意 inset-inline-end 的 100% 以扣除 1px border 的 padding box
+   （42px）為基準，故 calc 內寫 68px 即可留出 69px 淨空。
+   配色沿用 award-fix-home-actions.css 的 #settingsHintText 高對比規則
+   （--darkerColor-blue 實心底＋白字 ≈5.5:1），本檔不更動顏色。 */
+
+#menuButton .homeActionHint {
+	top: 50%;
+	bottom: auto;
+	inset-inline-start: auto;
+	inset-inline-end: calc(100% + 68px);
+	transform: translateY(-50%);
+	max-width: 200px;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	/* visibility 以離散方式轉場，讓淡出過程仍看得見提示 */
+	transition: opacity 0.18s ease, visibility 0.18s;
+}
+
+#menuButton:hover .homeActionHint,
+#menuButton:focus-visible .homeActionHint {
+	opacity: 1;
+	visibility: visible;
+}
+
+/* 尊重 prefers-reduced-motion：停用縮放與淡入淡出轉場 */
+@media (prefers-reduced-motion: reduce) {
+	#menuButton,
+	#menuButton .homeActionHint {
+		transition: none;
+	}
+}
+
+/* 窄螢幕（≤500px）時 #menuButton 原本會 scale:0.8 並鎖定右下角，
+   桌布鈕跟隨同倍率縮放，維持兩顆同尺寸、同基準角。 */
+@media screen and (max-width: 500px) {
+	.wallpaperQuickBtn {
+		transform-origin: bottom right;
+		scale: 0.8;
+	}
+}
+
+/* 第 13 輪：首頁浮動工具共用表面；座標與縮放仍交給既有版面。
+   使用不透明主題淺底與主題文字色，避免桌布透色及深色反相後的低對比。
+   :root 提高具體性，覆蓋黑色主題原本的粗框，保留高對比模式的系統色。 */
+:root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+    #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+    --mynt-fab-ink: var(--textColorDark-blue);
+    --mynt-fab-focus: color-mix(in srgb, var(--darkerColor-blue) 65%, var(--textColorDark-blue));
+    box-sizing: border-box;
+    border-radius: 16px;
+    background: var(--accentLightTint-blue);
+    color: var(--mynt-fab-ink);
+    border: 1px solid color-mix(in srgb, var(--mynt-fab-ink) 24%, var(--accentLightTint-blue));
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: background-color 0.15s ease;
+
+    &:not(summary) {
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 兩個邊角膠囊改用右側箭頭；保留原生展開操作與長字串換行。 */
+    &:is(summary) {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        list-style: none;
+        min-height: 48px;
+        padding: 12px 14px;
+        font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+        font-weight: 600;
+        line-height: 1.5;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+
+        &::marker { content: ""; }
+        &::-webkit-details-marker { display: none; }
+        &::after {
+            content: "";
+            flex: 0 0 12px;
+            width: 12px;
+            height: 12px;
+            background: currentColor;
+            clip-path: polygon(0 30%, 12% 18%, 50% 56%, 88% 18%, 100% 30%, 50% 80%);
+            forced-color-adjust: none;
+            /* 直接切換方向，減少動畫設定下也不產生過渡。 */
+            transition: none;
+        }
+    }
+
+    & > svg {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--mynt-fab-ink);
+        fill: currentColor;
+        filter: none;
+    }
+
+    &:hover {
+        background-color: color-mix(in srgb, var(--accentLightTint-blue) 94%, var(--mynt-fab-ink));
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--mynt-fab-focus);
+        outline-offset: 2px;
+    }
+}
+
+:root body :is(#myntProfilesPanel, #myntAdaptivePanel)[open] > summary::after {
+    transform: rotate(180deg);
+}
+
+/* 鐘面、指針與刻度同色；不改指針的旋轉與計時行為。 */
+#pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
+    stroke: currentColor;
+    stroke-width: 1.75;
+}
+#pomodoroCont .pomodoro-clock-face { fill: none; }
+#pomodoroCont .pomodoro-clock-second { opacity: 1; }
+
+/* 設定鈕原本以 inset 陰影畫滿整顆粗環，改為與其他圖示等大的齒輪。
+   純 CSS 繪製，不增加圖片、字型或網路請求。 */
+#menuButton::before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    background: currentColor;
+    clip-path: polygon(40% 0, 60% 0, 63% 13%, 74% 18%, 87% 14%,
+        97% 31%, 87% 40%, 87% 60%, 97% 69%, 87% 86%, 74% 82%,
+        63% 87%, 60% 100%, 40% 100%, 37% 87%, 26% 82%, 13% 86%,
+        3% 69%, 13% 60%, 13% 40%, 3% 31%, 13% 14%, 26% 18%, 37% 13%);
+    mask: radial-gradient(circle, transparent 4px, #000 4.5px);
+}
+
+/* 深色反相時用白色陰影取得中性暗影。額外的 body 保證優先於
+   後載入的 award-fix-dark-shadows.css，避免設定粗環與不一致陰影回來。 */
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
+    & body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+        #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+        #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+        &, &:hover { box-shadow: 0 2px 6px rgb(255 255 255 / 0.1); }
+    }
+}
+
+html.myntReducedMotion body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+    #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+    transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    :root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+        #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+        #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+        transition: none;
+    }
+}

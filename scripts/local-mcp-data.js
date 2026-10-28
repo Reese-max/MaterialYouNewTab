@@ -19,7 +19,7 @@ const readSettings = Object.freeze({...settings,...Object.fromEntries(['aiToolsC
 const event = object({id,name:str(80),date:{type:'string',pattern:'^\\d{4}-\\d{2}-\\d{2}$'},category:enumeration(['exam','anniversary','custom']),emoji:str(16),color:enumeration(['lavender','blue','green','peach','rose']),annual:bool},['id','name','date','category','emoji','color','annual']);
 const step = object({text:str(80),done:bool},['text','done']);
 const block = object({x:{type:'number',minimum:-1,maximum:1},y:{type:'number',minimum:-1,maximum:1},s:{type:'number',minimum:.5,maximum:2}},['x','y','s']);
-const blocks = Object.fromEntries(['clock','focus','search','aiTools','shortcuts','quote','countdowns','exam','pomodoro','scratchpad','bookmarks','wallpaper','menu'].map(k=>[k,block]));
+const blocks = Object.fromEntries(['clock','focus','search','aiTools','shortcuts','quote','countdowns','exam','pomodoro','scratchpad','homeWidgets','bookmarks','wallpaper','menu'].map(k=>[k,block]));
 const layout = object({version:{const:2},snap:bool,locked:bool,blocks:object(blocks)},['version','snap','locked','blocks']);
 const workspaceWidgets=object(Object.fromEntries(['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox','motivationalQuotesCheckbox','bongoCatCheckbox','scratchpadCheckbox'].map(key=>[key,bool])));
 const workspacePatch=object({name:str(30),widgets:workspaceWidgets,background:enumeration(['video','wallpaper','color']),focusMinutes:{type:'number',minimum:1,maximum:120},urls:{type:'array',maxItems:10,items:str(2048)}});

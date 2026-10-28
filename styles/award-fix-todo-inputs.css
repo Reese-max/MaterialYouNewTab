@@ -1,0 +1,273 @@
+/* 第 1 輪：待辦項目與設定輸入框的配色與對比 */
+
+/* ==========================================================================
+   主題顏色與新表面變數定義
+   依規則：必要的新顏色在檔案開頭用 :root 與 html.black-theme 各定義一次
+   ========================================================================== */
+:root {
+	/* 待辦項目表面與文字顏色（淺色模式：安靜淺色表面，呼應主題色但不飽和） */
+	--todo-item-bg: color-mix(in srgb, var(--accentLightTint-blue) 60%, #ffffff);
+	--todo-item-border: color-mix(in srgb, var(--darkerColor-blue) 18%, transparent);
+	--todo-item-text: var(--textColorDark-blue);
+
+	/* 已完成待辦項目顏色（淺色模式：明顯降一階表面，文字對比度達 6.4:1，符合 4.5:1 標準） */
+	--todo-item-checked-bg: color-mix(in srgb, var(--accentLightTint-blue) 20%, #f8fafc);
+	--todo-item-checked-border: color-mix(in srgb, var(--textColorDark-blue) 12%, transparent);
+	--todo-item-checked-text: #475569;
+
+	/* 待辦操作按鈕顏色（淺色模式） */
+	--todo-icon-color: color-mix(in srgb, var(--textColorDark-blue) 70%, transparent);
+	--todo-icon-hover-color: var(--darkerColor-blue);
+	--todo-icon-delete-hover: #dc2626;
+
+	/* 設定選單輸入框顏色（淺色模式） */
+	--menu-input-bg: #ffffff;
+	--menu-input-border: color-mix(in srgb, var(--darkerColor-blue) 25%, #cbd5e1);
+	--menu-input-text: var(--textColorDark-blue);
+	--menu-input-placeholder: #64748b; /* 對白底對比約 4.6:1 */
+	--menu-input-focus-border: var(--darkColor-blue);
+	--menu-input-focus-ring: color-mix(in srgb, var(--darkColor-blue) 35%, transparent);
+}
+
+html.black-theme {
+	/* 待辦項目表面與文字顏色（深色模式：安靜深色表面，帶有些微主題冷色調但不刺眼） */
+	--todo-item-bg: color-mix(in srgb, var(--darkColor-blue) 12%, #222429);
+	--todo-item-border: color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
+	--todo-item-text: #f1f5f9;
+
+	/* 已完成待辦項目顏色（深色模式：明顯降階至低調底色，文字對比度達 6.8:1，符合 4.5:1 標準） */
+	--todo-item-checked-bg: #18191c;
+	--todo-item-checked-border: rgba(255, 255, 255, 0.06);
+	--todo-item-checked-text: #94a3b8;
+
+	/* 待辦操作按鈕顏色（深色模式） */
+	--todo-icon-color: #94a3b8;
+	--todo-icon-hover-color: #f1f5f9;
+	--todo-icon-delete-hover: #f87171;
+
+	/* 設定選單輸入框顏色（深色模式：深灰表面、可見邊框、高對比 placeholder 達 5.7:1） */
+	--menu-input-bg: #282a2e;
+	--menu-input-border: #4e535e;
+	--menu-input-text: #f3f4f6;
+	--menu-input-placeholder: #9ca3af;
+	--menu-input-focus-border: var(--darkColor-blue);
+	--menu-input-focus-ring: color-mix(in srgb, var(--darkColor-blue) 45%, transparent);
+}
+
+/* ==========================================================================
+   1. 待辦項目表面配色與完成狀態層次
+   ========================================================================== */
+
+/* 未完成待辦項目：改為安靜的淺色／深色表面，不再使用刺眼的高飽和純亮藍底 */
+.todolistitem {
+	background-color: var(--todo-item-bg);
+	color: var(--todo-item-text);
+	border: 1px solid var(--todo-item-border);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	align-items: center;
+	transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.todolistitem:hover {
+	background-color: color-mix(in srgb, var(--todo-item-bg) 85%, var(--accentLightTint-blue));
+}
+
+html.black-theme .todolistitem:hover {
+	background-color: color-mix(in srgb, var(--todo-item-bg) 85%, var(--darkColor-blue));
+}
+
+/* 已完成待辦項目：明顯降一階表面、淡化但對比度 >= 4.5:1 的文字 */
+.todolistitem.checked {
+	background-color: var(--todo-item-checked-bg);
+	color: var(--todo-item-checked-text);
+	border-color: var(--todo-item-checked-border);
+	box-shadow: none;
+}
+
+.todolistitem.checked:hover {
+	background-color: var(--todo-item-checked-bg);
+}
+
+/* 確保淺色模式下未完成的核取圖示在淡色底上有足夠辨識度 */
+:root:not(.black-theme) .todolistitem:not(.checked)::before {
+	filter: brightness(0.4) saturate(1.8);
+}
+
+:root:not(.black-theme) .todolistitem.checked::before {
+	filter: none;
+}
+
+.todolistitem.checked::before {
+	opacity: 0.75;
+}
+
+/* ==========================================================================
+   2. 操作圖示大小與對齊一致
+   ========================================================================== */
+
+/* 統整四個操作圖示按鈕的容器尺寸 (24px x 24px)、垂直置中對齊與基礎配色 */
+.todolistitem .todoremovebtn,
+.todolistitem .todopinbtn,
+.todolistitem .todoeditbtn,
+.todolistitem .todoDaidaiBtn {
+	width: 24px;
+	height: 24px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	color: var(--todo-icon-color);
+	opacity: 0.85;
+	transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+/* 覆蓋 style.css 第 2108 行 scale: 1.05 與不均勻 line-height，避免尺寸失真與垂直偏移 */
+.todolistitem .todoremovebtn {
+	scale: 1;
+	font-size: 18px;
+	line-height: 1;
+}
+
+/* 覆蓋 style.css 第 2139 行之 25px x 25px，使四者尺寸完全一致 */
+.todolistitem .todoDaidaiBtn {
+	width: 24px;
+	height: 24px;
+}
+
+/* 操作圖示懸浮狀態 */
+.todolistitem .todoremovebtn:hover,
+.todolistitem .todopinbtn:hover,
+.todolistitem .todoeditbtn:hover,
+.todolistitem .todoDaidaiBtn:hover {
+	opacity: 1;
+}
+
+.todolistitem .todopinbtn:hover,
+.todolistitem .todoeditbtn:hover,
+.todolistitem .todoDaidaiBtn:hover {
+	color: var(--todo-icon-hover-color);
+}
+
+.todolistitem .todoremovebtn:hover {
+	color: var(--todo-icon-delete-hover);
+}
+
+/* 覆蓋 style.css 第 6009-6019 行深色模式下的過暗顏色 (#616161) */
+.black-theme .todolistitem .todoremovebtn,
+.black-theme .todolistitem .todopinbtn,
+.black-theme .todolistitem .todoeditbtn,
+.black-theme .todolistitem .todoDaidaiBtn {
+	color: var(--todo-icon-color);
+}
+
+.black-theme .todolistitem .todoremovebtn:hover {
+	color: var(--todo-icon-delete-hover);
+}
+
+.black-theme .todolistitem .todopinbtn:hover,
+.black-theme .todolistitem .todoeditbtn:hover,
+.black-theme .todolistitem .todoDaidaiBtn:hover {
+	color: var(--todo-icon-hover-color);
+}
+
+/* 已完成項目的操作圖示稍降權重，懸浮時恢復清晰 */
+.todolistitem.checked .todoremovebtn,
+.todolistitem.checked .todopinbtn,
+.todolistitem.checked .todoeditbtn,
+.todolistitem.checked .todoDaidaiBtn {
+	opacity: 0.65;
+}
+
+.todolistitem.checked .todoremovebtn:hover,
+.todolistitem.checked .todopinbtn:hover,
+.todolistitem.checked .todoeditbtn:hover,
+.todolistitem.checked .todoDaidaiBtn:hover {
+	opacity: 1;
+}
+
+/* 行內編輯輸入框微調 */
+.todolist .edit-input {
+	border-color: color-mix(in srgb, currentColor 30%, transparent);
+	background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   3. 設定選單文字輸入框在深色模式下的表面、邊框與 Placeholder 對比修復
+   ========================================================================== */
+
+/*
+ * 原因說明：
+ * style.css 第 5872 行設定了「.black-theme .ttcont input { background-color: var(--darkColor-dark) !important; }」
+ * 由於該行帶有 !important 且變數不存在導致純黑底，此處必須以 !important 覆蓋，
+ * 提供舒適的深灰表面（--menu-input-bg: #282a2e）與清晰可見的邊框（--menu-input-border: #4e535e）。
+ */
+.black-theme .ttcont input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html.black-theme .ttcont input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.black-theme .ttcont textarea,
+html.black-theme .ttcont textarea {
+	background-color: var(--menu-input-bg) !important;
+	color: var(--menu-input-text);
+	border: 1px solid var(--menu-input-border);
+	border-radius: 6px;
+	padding: 6px 10px;
+	font-size: 0.95rem;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.black-theme .ttcont input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+html.black-theme .ttcont input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+.black-theme .ttcont textarea:focus,
+html.black-theme .ttcont textarea:focus {
+	border-color: var(--menu-input-focus-border);
+	box-shadow: 0 0 0 2px var(--menu-input-focus-ring);
+	outline: none;
+}
+
+/* 深色模式下的 placeholder 文字顏色：對比度達 5.7:1，滿足 WCAG AA >= 4.5:1 */
+.black-theme .ttcont input::placeholder,
+html.black-theme .ttcont input::placeholder,
+.black-theme .ttcont textarea::placeholder,
+html.black-theme .ttcont textarea::placeholder,
+.black-theme #todoInput::placeholder,
+html.black-theme #todoInput::placeholder {
+	color: var(--menu-input-placeholder);
+	opacity: 1; /* 覆蓋瀏覽器預設降低 opacity 的行為，確保實質對比度不打折 */
+}
+
+/* 淺色模式下設定選單輸入框的基礎體驗一致性 */
+:root:not(.black-theme) .ttcont input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+:root:not(.black-theme) .ttcont textarea {
+	background-color: var(--menu-input-bg);
+	color: var(--menu-input-text);
+	border: 1px solid var(--menu-input-border);
+	border-radius: 6px;
+}
+
+:root:not(.black-theme) .ttcont input::placeholder,
+:root:not(.black-theme) .ttcont textarea::placeholder {
+	color: var(--menu-input-placeholder);
+	opacity: 1;
+}
+
+/* ==========================================================================
+   4. 無障礙動態偏好支援（prefers-reduced-motion）
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+	/*
+	 * 原因說明：
+	 * style.css 第 2055、2103 行等設定了持續 0.3s 的過渡動畫，
+	 * 此處使用 !important 確保完全停用過渡動畫，尊重使用者無障礙偏好。
+	 */
+	.todolistitem,
+	.todolistitem::before,
+	.todolistitem .todoremovebtn,
+	.todolistitem .todopinbtn,
+	.todolistitem .todoeditbtn,
+	.todolistitem .todoDaidaiBtn,
+	.ttcont input,
+	.ttcont textarea {
+		transition: none !important;
+	}
+}

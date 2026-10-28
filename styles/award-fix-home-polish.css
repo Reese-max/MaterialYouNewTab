@@ -1,0 +1,227 @@
+/* 第 5 輪：首頁工具列圖示、浮動鈕分組、焦點卡排版細節 */
+
+/* ===== 左上三顆工具鈕：統一外形 =====
+   待辦 .todoListCont、便籤 .scratchpadCont、番茄鐘 .pomodoroCont
+   原本同為 52×52 但造型不一：便籤是圓形半透明浮鈕，
+   另兩顆是無底圖示（待辦圖示甚至沒設 fill，顯示成純黑）。
+   統一為 44×44px 圓角方塊浮鈕，沿用便籤的半透明底板配方
+   （--transparency 跟隨使用者的透明度設定），圖示縮為 24px
+   並統一填主題深色，三者外觀一致。
+   定位（top／inset-inline-start／margin）不動；
+   三鈕頂緣原本就對齊在 40px（--gap 30 + 10），
+   44px 高度下底緣仍同線（84px）。 */
+:is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: color-mix(in srgb, var(--accentLightTint-blue) var(--transparency), transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+:is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+    width: 24px;
+    height: 24px;
+    fill: var(--darkColor-blue);
+    filter: none; /* 蓋掉番茄鐘圖示的 drop-shadow，三顆圖示一樣平 */
+}
+
+/* hover／active：三鈕一致的按壓回饋；
+   順便壓掉番茄鐘原本的內層圖示放大，避免它獨自膨脹一圈。 */
+:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover {
+    transform: scale(1.06);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+    transform: none;
+}
+:is(.todoListCont, .scratchpadCont, .pomodoroCont):active {
+    transform: scale(0.96);
+}
+
+/* 鍵盤焦點框，與 #dailyFocusToggle 同一套 */
+:is(.todoListCont, .scratchpadCont, .pomodoroCont):focus-visible {
+    outline: 2px solid var(--darkColor-blue);
+    outline-offset: 2px;
+}
+
+/* 黑色主題（html.black-theme）：沿用便籤原本的深色浮鈕配色，
+   把待辦與番茄鐘一併補齊，鐘面刻度描邊同步成淺藍。 */
+html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+    background: rgba(30, 31, 35, 0.75);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+    fill: #a8c7fa;
+}
+html.black-theme .pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
+    stroke: #a8c7fa;
+}
+
+/* 尊重減少動態：保留顏色／陰影回饋，去掉縮放位移 */
+@media (prefers-reduced-motion: reduce) {
+    :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+        transition: none;
+    }
+    :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active),
+    :is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+        transform: none;
+    }
+}
+html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+    transition: none;
+}
+html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active) {
+    transform: none;
+}
+
+/* ===== 圖示列與浮動面板的間距 =====
+   圖示列視覺範圍是 top 40～84px；排版組合（#myntProfilesPanel）與
+   背景配色（#myntAdaptivePanel）原本 top:100px，只留約 8px。
+   統一下移到 112px，與圖示列固定隔 28px（≥16px 要求），
+   兩面板頂緣仍同高、summary 高度與 13px 字級原本就一致。
+   ≤480px 時 #myntProfilesPanel 另有 top:16px 的窄版規則
+   （manual-editor-controls.css），用 min-width:481px 包住不覆蓋它。 */
+@media (min-width: 481px) {
+    #myntProfilesPanel,
+    #myntAdaptivePanel {
+        top: 112px;
+    }
+}
+
+/* ===== 焦點卡標題改用主題深色 =====
+   「今天，最重要的一件事是……」（#userText）原本沒有自己的
+   color，吃卡片 .ttteexxtt 寫死的 #20334c，和卡片其他文字
+   （#date 的 #405976、面板的 #213851）不是同一套色。
+   改指到主題變數 --textColorDark-blue（#1b3041）：在淺色
+   卡片底（rgba(236,244,255,.9)）上對比約 9:1，且跟著主題換色。
+   adaptive-contrast 模式下的 #userText 規則特異度更高，
+   自適應取色開啟時仍由它接管，不受影響。 */
+#userText {
+    color: var(--textColorDark-blue);
+}
+
+/* 第 14 輪：問候與狀態維持卡片的高對比文字，動作列統一尺寸。 */
+body .ttteexxtt #date {
+    font-size: max(14px, calc(14px * var(--mynt-font-scale, 1)));
+    font-weight: 600;
+    color: inherit;
+    opacity: 1;
+}
+#dailyFocusStatus {
+    font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+    color: inherit;
+    opacity: 1;
+}
+#dailyFocusActions {
+    position: relative;
+    align-items: center;
+    gap: 4px;
+}
+#dailyFocusToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    min-height: 36px;
+}
+#dailyFocusTools {
+    gap: 4px;
+    flex: 0 0 auto;
+}
+#dailyFocusTools .dailyFocusIcon {
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    opacity: 1;
+    background: color-mix(in srgb, currentColor 5%, transparent);
+}
+#dailyFocusTools .dailyFocusIcon:is(:hover, :focus-visible, [aria-expanded="true"]) {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+}
+#dailyFocusTools .dailyFocusIcon:focus-visible {
+    outline: 2px solid var(--darkerColor-blue);
+    outline-offset: 2px;
+}
+
+/* 既有程式會補上翻譯後的 aria-label；以整列為定位範圍，提示在按鈕上方且不越過卡片左右邊緣。 */
+#dailyFocusTools .dailyFocusIcon[aria-label]:not([aria-label=""]):is(:hover, :focus-visible)::after {
+    content: attr(aria-label);
+    position: absolute;
+    inset-inline-end: 0;
+    bottom: calc(100% + 8px);
+    z-index: 1;
+    width: max-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--textColorDark-blue);
+    color: var(--accentLightTint-blue);
+    font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: start;
+    pointer-events: none;
+}
+
+/* 第 18 輪：頂列保留等高空間，收緊內距與列距，不改使用者儲存的座標與縮放。
+   標準字級下即使標題達既有 4.3rem 上限，卡片經 1.01 倍縮放仍低於 158px。 */
+body:is([data-workspace-background="video"], .mynt-manual-workspace) .ttteexxtt:has(> #dailyFocusActions:not([style*="display: none"])) {
+    --focus-header-top: 12px;
+    --focus-header-side: 24px;
+    position: relative;
+    padding-block-start: calc(var(--focus-header-top) + max(16.9px, calc(16.9px * var(--mynt-font-scale, 1))) + 4px);
+    padding-block-end: 12px;
+    gap: 4px;
+
+    & #dailyFocusStatus,
+    & #date {
+        position: absolute;
+        inset-block-start: var(--focus-header-top);
+        width: calc(50% - var(--focus-header-side) - 8px);
+        max-width: none;
+        font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    & #dailyFocusStatus {
+        inset-inline-start: var(--focus-header-side);
+        font-weight: 600;
+        letter-spacing: .06em;
+    }
+
+    & #date {
+        inset-inline-end: var(--focus-header-side);
+        font-weight: 400;
+        letter-spacing: normal;
+        text-align: end;
+    }
+
+    & #dailyFocusActions {
+        position: static;
+        justify-content: flex-end;
+        margin: 0;
+        gap: 4px;
+    }
+
+    /* 操作列不再作為定位容器，提示改錨定圖示組；寬度留在窄版卡片內。 */
+    & #dailyFocusTools { position: relative; }
+    & #dailyFocusTools .dailyFocusIcon::after {
+        max-width: min(260px, calc(100vw - 96px));
+    }
+
+    @media (max-width: 900px) {
+        --focus-header-side: 20px;
+    }
+}
