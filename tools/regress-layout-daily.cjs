@@ -166,7 +166,7 @@ test('Clock fallback uses the strict 20% threshold, preserves scale and never mu
     for (const obstacle of [focus,search]) assert.equal(overlap(rect(date.left,date.top,108,21),obstacle),0);
     assert.equal(JSON.stringify(block), bytes);
     const css = fs.readFileSync(path.join(root, 'styles/award-fix-clock.css'), 'utf8');
-    assert.match(css, /\[data-mynt-layout-date\][^{]*\{[^}]*font-size: max\(calc\(14px \* var\(--mynt-font-scale, 1\)\), calc\(12px \/ var\(--mynt-clock-scale, 1\)\)\)/);
+    assert.match(css, /\[data-mynt-layout-date\][^{]*\{[^}]*font-size: max\(calc\(13px \* var\(--mynt-font-scale, 1\)\), calc\(13px \* var\(--mynt-font-scale, 1\) \/ var\(--mynt-clock-scale, 1\)\)\)/);
     for (const scale of [.1,.5,.75,1,2]) assert(Math.max(14,12/scale)*scale >= 12);
 });
 
