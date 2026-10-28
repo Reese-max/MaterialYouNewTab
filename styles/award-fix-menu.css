@@ -224,3 +224,109 @@ html.black-theme #menuCont #greetingNameInput::placeholder {
 		transition: none;
 	}
 }
+
+/* ===== 9. 捲動收邊：頁面採絕對定位，末端留白也須放在內容頁 ===== */
+#menuCont > .optCont {
+	height: calc(100% - 72px);
+	padding-bottom: 32px;
+	scroll-padding-bottom: 32px;
+}
+
+#menuCont > .optCont > .page {
+	padding-bottom: max(32px, var(--gap));
+}
+
+/* ===== 10. 分頁以字色、表面與陰影共同標示選取，保留文字縮放 ===== */
+#menuCont .settingsGroupTabs button {
+	font-size: max(14px, 0.875rem);
+	line-height: 1.5;
+	color: var(--textColorDark-silver);
+	overflow-wrap: anywhere;
+}
+
+#menuCont .settingsGroupTabs button[aria-selected="true"] {
+	background: #fff;
+	color: color-mix(in srgb, var(--darkerColor-blue) 60%, var(--textColorDark-blue));
+	box-shadow: 0 1px 4px rgb(13 39 71 / 14%);
+}
+
+/* 黑色主題有自己的深色表面，與整頁反相的深色模式分開處理。 */
+html.black-theme #menuCont .settingsGroupTabs button {
+	color: var(--award-surface-dark-text);
+}
+
+html.black-theme #menuCont .settingsGroupTabs button[aria-selected="true"] {
+	color: var(--textColorDark-silver);
+}
+
+#menuCont .settingsGroupTabs button:focus-visible,
+#menuCont .sectionHeader:focus-visible,
+#menuCont #myntComponentManager > summary:focus-visible {
+	outline: 2px solid var(--textColorDark-blue);
+	outline-offset: 2px;
+}
+
+/* ===== 11. 元件管理沿用區塊卡片表面與標題尺寸，保留原生開合 ===== */
+#menuCont #myntComponentManager {
+	padding: 7px;
+	border: 0;
+	border-radius: 20px;
+	background-color: color-mix(in srgb, var(--accentLightTint-blue) 60%, var(--bg-color-blue));
+}
+
+#menuCont #myntComponentManager[open] {
+	border-radius: 25px;
+}
+
+#menuCont #myntComponentManager:hover {
+	background-color: color-mix(in srgb, var(--accentLightTint-blue) 40%, var(--bg-color-blue));
+}
+
+html.black-theme #menuCont #myntComponentManager {
+	background-color: #222;
+}
+
+html.black-theme #menuCont #myntComponentManager:hover {
+	background-color: #1e1e1e;
+}
+
+#menuCont .sectionHeader,
+#menuCont #myntComponentManager > summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 44px;
+	padding: 6px 12px;
+	font-size: 1.05rem;
+	font-weight: 600;
+	line-height: 1.4;
+	color: var(--textColorDark-blue);
+	background: transparent;
+	text-align: start;
+	overflow-wrap: anywhere;
+}
+
+#menuCont #myntComponentManager > summary {
+	list-style: none;
+}
+
+#menuCont #myntComponentManager > summary::-webkit-details-marker {
+	display: none;
+}
+
+#menuCont .sectionChevron,
+#menuCont #myntComponentManager > summary::after {
+	content: "";
+	flex: 0 0 10px;
+	width: 10px;
+	height: 10px;
+	border-right: 3px solid var(--textColorDark-blue);
+	border-bottom: 3px solid var(--textColorDark-blue);
+	transform: rotate(45deg) translate(-3px, -2px);
+}
+
+#menuCont .section.expanded .sectionChevron,
+#menuCont #myntComponentManager[open] > summary::after {
+	transform: rotate(-135deg) translateY(-3px);
+}
