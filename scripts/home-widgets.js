@@ -40,7 +40,7 @@
             const control = document.getElementById(`myntComponent-${kind}`);
             if (control && !control.checked && !control.disabled) control.click();
             if (kind === 'pomodoro') {
-                window.myntPomodoro?.open();
+                window.myntPomodoro?.open({ anchorRect: host.getBoundingClientRect() });
                 const running = window.myntPomodoro?.getState().isRunning;
                 document.getElementById(running ? 'pomodoroPauseBtn' : 'pomodoroStartBtn')?.focus({ preventScroll: true });
                 const panel = document.getElementById('pomodoroPanel');

@@ -133,8 +133,58 @@
         return { width: 320 + chrome(win.outerWidth, win.innerWidth), height: 420 + chrome(win.outerHeight, win.innerHeight) };
     }
     function isCompactWindow(win) { return win.innerWidth > 0 && win.innerWidth <= 336 && win.innerHeight > 0 && win.innerHeight <= 436; }
-    // Pure helpers are exported for dependency-free regression checks, not persisted.
-    if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow }; return; }
+    function anchoredPanelPosition(anchor, panel, viewport) {
+        if (!anchor || !['top', 'left', 'bottom'].every(key => Number.isFinite(anchor[key]))) return null;
+        const clamp = (value, size, limit) => Math.max(8, Math.min(value, limit - size - 8));
+        let left = anchor.left - panel.width - 16, top = anchor.top;
+        if (left < 8) {
+            left = anchor.left;
+            const above = anchor.top - panel.height - 16;
+            top = above >= 8 || anchor.top - 8 >= viewport.innerHeight - anchor.bottom - 8 ? above : anchor.bottom + 16;
+        }
+        return { top: clamp(top, panel.height, viewport.innerHeight), left: clamp(left, panel.width, viewport.innerWidth) };
+    }
+    function installPanelAnchor(api, panel, trigger, viewport) {
+        if (!api?.open || !panel || !trigger) return;
+        const originalOpen = api.open;
+        let temporary = null;
+        const restore = () => {
+            if (!temporary) return;
+            for (const [key, value] of Object.entries(temporary.style)) {
+                if (!temporary.dragged || !['top', 'left'].includes(key)) panel.style[key] = value;
+            }
+            if (!temporary.dragged) panel.classList.toggle('pomodoro-dragged', temporary.wasDragged);
+            temporary = null;
+        };
+        api.open = function (options) {
+            restore();
+            const result = originalOpen.call(this);
+            const anchor = options?.anchorRect;
+            if (!anchor || !['top', 'left', 'bottom'].every(key => Number.isFinite(anchor[key]))) return result;
+            // 錨點位置與尺寸限制只供本次顯示；拖曳存檔仍由原模組處理。
+            const keys = ['top', 'left', 'maxWidth', 'maxHeight', 'minWidth'];
+            temporary = { style: Object.fromEntries(keys.map(key => [key, panel.style[key]])), wasDragged: panel.classList.contains('pomodoro-dragged'), dragged: false };
+            panel.classList.add('pomodoro-dragged');
+            const rect = panel.getBoundingClientRect(), css = getComputedStyle(panel);
+            const scale = rect.width / panel.offsetWidth || 1;
+            const extra = keys => css.boxSizing === 'border-box' ? 0 : keys.reduce((sum, key) => sum + (parseFloat(css[key]) || 0), 0);
+            if (rect.width > viewport.innerWidth - 16) {
+                panel.style.minWidth = '0';
+                panel.style.maxWidth = Math.max(0, (viewport.innerWidth - 16) / scale - extra(['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'])) + 'px';
+            }
+            if (rect.height > viewport.innerHeight - 16) panel.style.maxHeight = Math.max(0, (viewport.innerHeight - 16) / scale - extra(['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'])) + 'px';
+            const pos = anchoredPanelPosition(anchor, panel.getBoundingClientRect(), viewport);
+            panel.style.top = pos.top + 'px'; panel.style.left = pos.left + 'px';
+            return result;
+        };
+        panel.querySelector('#pomodoroDragHandle')?.addEventListener('pointerdown', event => {
+            if (event.button === 0 && temporary) temporary.dragged = true;
+        });
+        new MutationObserver(() => { if (trigger.getAttribute('aria-expanded') !== 'true') restore(); })
+            .observe(trigger, { attributes: true, attributeFilter: ['aria-expanded'] });
+    }
+    // 匯出供無相依套件的回歸檢查使用，不新增儲存資料。
+    if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition }; return; }
     let settings = { ...defaults }, imageUrl = '', floating = null, opening = false, unsubscribe = null;
     let status, appearanceForm, floatVideo;
     const imageSamples = new Map(), modeChoices = new Map(), settingGroups = new Map(), thumbnailCache = new WeakMap();
@@ -504,6 +554,10 @@
         finally { opening = false; }
     }
     function init() {
+        const connectAnchor = () => installPanelAnchor(window.myntPomodoro, document.getElementById('pomodoroPanel'), document.getElementById('pomodoroCont'), window);
+        // defer 腳本可能早於計時器的 DOMContentLoaded 初始化執行。
+        if (window.myntPomodoro?.open) connectAnchor();
+        else document.addEventListener('mynt:pomodoro-ready', connectAnchor, { once: true });
         const mount = document.getElementById('myntPomoFloatMount'); if (!mount) return;
         mount.classList.add('mynt-pomo-settings');
         const floatingButton = button(document, 'float', () => openFloat(false)); floatingButton.className = 'mynt-pomo-open-float';

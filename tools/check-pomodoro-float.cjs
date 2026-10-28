@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow } = require('../scripts/pomodoro-float.js');
+const { validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition } = require('../scripts/pomodoro-float.js');
 const settings = validate({ mode: 'gradient', color: '#abcdef' });
 assert.equal(settings.version, 1); assert.equal(settings.color, '#abcdef');
 assert.deepEqual(Object.keys(settings).sort(), ['version','mode','color','color2','fit','position'].sort());
@@ -110,6 +110,84 @@ function doc() {
 }
 const resizeChecks = [];
 function win() { const window = new Node(); window.document = doc(); window.focus = () => {}; window.close = () => { window.closed = true; return window.emit('pagehide'); }; window.setTimeout = callback => { resizeChecks.push(callback); }; window.scrollTo = (x, y) => { window.lastScroll = [x, y]; }; return window; }
+// 執行原模組的開啟與拖曳流程；幾何由測試提供，實際瀏覽器驗收由呼叫端執行。
+async function checkPanelAnchor(delayedReady) {
+    const viewport = { innerWidth: 1536, innerHeight: 740 }, size = { width: 320, height: 500 };
+    const anchor = { top: 180, left: 1016, bottom: 724 };
+    assert.deepEqual(anchoredPanelPosition(anchor, size, viewport), { top: 180, left: 680 });
+    assert.deepEqual(anchoredPanelPosition({ ...anchor, left: 1400 }, size, { innerWidth: 1920, innerHeight: 1080 }), { top: 180, left: 1064 });
+    assert.deepEqual(anchoredPanelPosition({ top: 600, left: 100, bottom: 700 }, size, viewport), { top: 84, left: 100 }, 'Insufficient left space falls back above');
+    assert.deepEqual(anchoredPanelPosition({ top: 40, left: 100, bottom: 120 }, size, viewport), { top: 136, left: 100 }, 'Insufficient upper space falls back below');
+    for (const rect of [anchor, { top: -100, left: -100, bottom: 0 }, { top: 900, left: 1800, bottom: 1000 }, { top: 300, left: 100, bottom: 500 }]) {
+        const pos = anchoredPanelPosition(rect, size, viewport);
+        assert(pos.left >= 8 && pos.top >= 8 && pos.left + size.width <= viewport.innerWidth - 8 && pos.top + size.height <= viewport.innerHeight - 8, 'All four viewport margins are at least 8px');
+    }
+    for (const rect of [undefined, {}, { top: NaN, left: 20, bottom: 30 }, { top: 10, left: Infinity, bottom: 30 }]) assert.equal(anchoredPanelPosition(rect, size, viewport), null);
+    const document = doc(), panel = document.createElement('div'), trigger = document.createElement('button'), handle = document.createElement('div');
+    panel.id = 'pomodoroPanel'; trigger.id = 'pomodoroCont'; handle.id = 'pomodoroDragHandle'; panel.append(handle); document.body.append(panel, trigger);
+    panel.offsetWidth = 320; panel.offsetHeight = 500;
+    let scale = 1;
+    panel.getBoundingClientRect = () => {
+        const top = parseFloat(panel.style.top) || 85, left = parseFloat(panel.style.left) || 15;
+        const width = Math.min(panel.offsetWidth, parseFloat(panel.style.maxWidth) || Infinity) * scale;
+        const height = Math.min(panel.offsetHeight, parseFloat(panel.style.maxHeight) || Infinity) * scale;
+        return { top, left, width, height, right: left + width, bottom: top + height };
+    };
+    const window = Object.assign(new Node(), viewport), writes = [], saved = new Map([['pomodoroPanelPosition', '{"top":90,"left":151}']]);
+    const localStorage = { getItem: key => saved.get(key) ?? null, setItem(key, value) { writes.push(key); saved.set(key, value); }, removeItem: key => saved.delete(key) };
+    const observers = [];
+    const context = { document, window, localStorage, PANEL_POS_KEY: 'pomodoroPanelPosition', pomodoroPanel: panel, pomodoroCont: trigger, pomodoroDragHandle: handle,
+        pomodoroCheckbox: { checked: true }, pomodoroBgVideo: { play: () => Promise.resolve() }, setTimeout() {}, console,
+        getComputedStyle: () => ({ boxSizing: 'border-box' }), MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} } };
+    const source = fs.readFileSync(require.resolve('../scripts/pomodoro.js'), 'utf8');
+    const drag = source.slice(source.indexOf('// --- Panel drag functionality ---'), source.indexOf('// --- Icon drag functionality ---'));
+    const open = source.slice(source.indexOf('function openPanel()'), source.indexOf('function getCurrentPanelScale()'));
+    const apiOpen = source.match(/window\.myntPomodoro = \{([\s\S]*?)(?=\s+start\(\))/)[1];
+    vm.createContext(context);
+    vm.runInContext(`${drag}\nlet panelOpen = false;\n${open}\nwindow.myntPomodoro = {${apiOpen}isOpen: () => panelOpen};
+        window.openFromIconForTest = openPanel;
+        window.closeForTest = () => { panelOpen = false; pomodoroCont.setAttribute('aria-expanded', 'false'); };`, context);
+    const api = window.myntPomodoro;
+    if (delayedReady) delete window.myntPomodoro;
+    vm.runInContext(fs.readFileSync(require.resolve('../scripts/pomodoro-float.js'), 'utf8'), context);
+    if (delayedReady) { window.myntPomodoro = api; await document.emit('mynt:pomodoro-ready'); }
+    const close = () => { window.closeForTest(); for (const notify of observers) notify(); };
+    const assertPosition = (top, left) => { assert.equal(parseFloat(panel.style.top), top); assert.equal(parseFloat(panel.style.left), left); };
+    window.myntPomodoro.open(); assertPosition(90, 151); close();
+    window.myntPomodoro.open({ anchorRect: anchor }); assertPosition(180, 680);
+    assert.equal(saved.get('pomodoroPanelPosition'), '{"top":90,"left":151}'); assert.deepEqual(writes, [], 'Anchored opening never writes settings');
+    close(); window.openFromIconForTest(); assertPosition(90, 151); close();
+    window.myntPomodoro.open({ anchorRect: anchor });
+    window.myntPomodoro.open({ anchorRect: { ...anchor, left: 1100 } }); assertPosition(180, 764);
+    window.myntPomodoro.open(); assertPosition(90, 151); close();
+    scale = 1.04; panel.style.transform = 'scale(1.04)';
+    window.myntPomodoro.open({ anchorRect: anchor }); assertPosition(180, 667.2);
+    assert.equal(panel.style.transform, 'scale(1.04)', 'Anchoring preserves the saved scale'); close();
+    panel.offsetHeight = 900; panel.offsetWidth = 1600;
+    window.myntPomodoro.open({ anchorRect: anchor });
+    const bounded = panel.getBoundingClientRect();
+    assert(bounded.left >= 8 && bounded.top >= 8 && bounded.right <= 1528.001 && bounded.bottom <= 732.001, 'Oversized scaled panels fit within all four margins'); close();
+    panel.offsetHeight = 500; panel.offsetWidth = 320; scale = 1;
+    window.myntPomodoro.open({ anchorRect: anchor });
+    await handle.emit('pointerdown', { button: 2 }); close();
+    window.myntPomodoro.open(); assertPosition(90, 151); close();
+    window.myntPomodoro.open({ anchorRect: anchor });
+    await handle.emit('pointerdown', { button: 0, clientX: 690, clientY: 190 });
+    assert.deepEqual(writes, [], 'Starting a drag does not write settings');
+    await document.emit('pointermove', { clientX: 510, clientY: 110 });
+    assert.deepEqual(writes, [], 'Moving a drag does not write settings');
+    await document.emit('pointerup');
+    assert.deepEqual(writes, ['pomodoroPanelPosition'], 'Only the original drag completion writes a position');
+    assert.equal(saved.get('pomodoroPanelPosition'), '{"top":100,"left":500}');
+    close(); window.myntPomodoro.open(); assertPosition(100, 500); close();
+    saved.delete('pomodoroPanelPosition'); panel.style.top = ''; panel.style.left = ''; panel.classList.remove('pomodoro-dragged');
+    window.myntPomodoro.open({ anchorRect: anchor }); close();
+    assert.equal(panel.classList.contains('pomodoro-dragged'), false, 'Closing restores the default undragged layout when no position was saved');
+    window.myntPomodoro.open(); assert.equal(panel.style.top, ''); assert.equal(panel.style.left, '');
+    console.log('Pomodoro anchor placement, scaled viewport bounds, transient storage, saved fallback, and original drag persistence passed');
+}
+(async () => { for (const delayedReady of [false, true]) await checkPanelAnchor(delayedReady); })()
+    .catch(error => { console.error(error); process.exitCode = 1; });
 (async () => {
     const document = doc(), mount = document.createElement('div'), panel = document.createElement('div');
     mount.id = 'myntPomoFloatMount'; panel.id = 'pomodoroPanel'; document.body.append(mount, panel);

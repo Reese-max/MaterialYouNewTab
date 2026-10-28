@@ -69,6 +69,9 @@ function setup(options = {}) {
     const app = environment({ selectedLanguage: options.language || 'en', ...options.storage });
     const { document, window, context, node } = app;
     const host = node('myntHomeWidgets', 'aside'); host.hidden = true;
+    const anchorRect = { top: 180, left: 1016, right: 1336, bottom: 724, width: 320, height: 544 };
+    host.getBoundingClientRect = () => anchorRect;
+    const pomoOpenOptions = [];
     node('todoInput', 'input');
     const panel = node('pomodoroPanel');
     panel.append(node('pomodoroStartBtn', 'button'), node('pomodoroPauseBtn', 'button'));
@@ -107,7 +110,7 @@ function setup(options = {}) {
         getState: () => ({ ...state }), subscribe(fn) { pomoListeners.add(fn); fn(state); return () => pomoListeners.delete(fn); },
         async startInline() { started++; state.isRunning = true; for (const fn of [...pomoListeners]) fn(state); },
         async pause() { paused++; state.isRunning = false; for (const fn of [...pomoListeners]) fn(state); },
-        open() { pomoOpens++; setPanelOpen(true); },
+        open(options) { pomoOpenOptions.push(options); pomoOpens++; setPanelOpen(true); },
         isOpen: () => panelOpen
     };
     if (options.width) window.innerWidth = options.width;
@@ -122,7 +125,7 @@ function setup(options = {}) {
     const find = predicate => descendants(host).find(predicate);
     const button = title => find(node => node.tagName === 'BUTTON' && node.textContent === title);
     const list = () => find(node => node.className === 'home-widget-todos');
-    return Object.assign(app, { host, find, button, list, todoListeners, pomoListeners, added, toggled, setPanelOpen,
+    return Object.assign(app, { host, find, button, list, todoListeners, pomoListeners, added, toggled, setPanelOpen, anchorRect, pomoOpenOptions,
         counters: () => ({ todoOpens, pomoOpens, started, paused, layoutApplications }),
         setState(next) { state = { ...state, ...next }; for (const fn of [...pomoListeners]) fn(state); },
         setItems(next) { items = next; for (const fn of [...todoListeners]) fn(); }
@@ -161,6 +164,7 @@ async function main() {
     await app.button('Open full list').emit('click'); assert.equal(app.counters().todoOpens, 1, 'An open list stays open');
     assert.equal(app.document.activeElement, app.document.getElementById('todoInput'));
     await app.button('Open Pomodoro').emit('click'); assert.equal(app.counters().pomoOpens, 1);
+    assert.equal(app.pomoOpenOptions[0].anchorRect, app.anchorRect, 'Opening anchors to the whole widget');
     assert.equal(app.values.get('todoEnabled'), 'true'); assert.equal(app.values.get('pomodoroEnabled'), 'true');
     app.document.hidden = true; await app.document.emit('visibilitychange');
     assert.equal(app.pomoListeners.size, 0, 'Hidden tab detaches the widget countdown subscription'); assert.equal(app.todoListeners.size, 0);
@@ -204,6 +208,7 @@ async function main() {
     const returned = await panelApp.button(en.homeWidgetsFocusPanel).emit('click');
     assert(returned.stopped, 'Returning does not bubble to the outside-click close handler');
     assert.equal(panelApp.counters().pomoOpens, 1, 'Return uses the existing open API');
+    assert.equal(panelApp.pomoOpenOptions[0].anchorRect, panelApp.anchorRect, 'Returning anchors to the whole widget too');
     assert.equal(panelApp.document.activeElement, panelApp.document.getElementById('pomodoroPauseBtn'), 'Focus the visible running control');
     assert.equal(panelApp.document.activeElement.lastFocusOptions.preventScroll, true);
     assert(panel.hasAttribute('data-home-widget-highlight'), 'Return briefly emphasizes the panel outline');
