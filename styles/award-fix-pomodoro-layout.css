@@ -664,3 +664,89 @@
 
 /* 專案內的減少動畫設定也停用舊規則的懸停位移；重要性覆蓋既有按鈕狀態。 */
 html.myntReducedMotion #pomodoroPanel button:is(:hover, :active) { transform: none !important; }
+
+/* 第 15 輪：開啟的面板以細框與雙層陰影和首頁分層。
+   原本 12px 透明邊框的安全區改放內距，保留內容寬度、圓角與外部尺寸；
+   不改 top、left、transform，也不干預點擊面板外關閉的既有行為。 */
+#pomodoroPanel.pomodoro-panel:not([style*="display: none"]) {
+    border: 1px solid var(--pomo-border, #718096);
+    outline: none;
+    padding: 11px 13px 23px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 18px 48px rgba(0, 0, 0, 0.24);
+}
+
+/* 只降低首頁主欄的視覺權重；今日小工具、浮動入口與 pointer-events 均沿用原設定。
+   不加入淡入淡出，減少動畫模式也不會產生新的動態效果。 */
+body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv, #aiToolsCont) {
+    opacity: 0.35;
+}
+
+@media (max-height: 800px) {
+    /* 曲名與主要播放控制並排；使用原有音樂庫 details 展開其餘控制。
+       保留 DOM 順序、原生鍵盤展開與匯入入口，不另造互動元件。 */
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 4px 8px;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-music-heading {
+        display: none;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-music-now {
+        grid-column: 1;
+        grid-row: 1;
+        min-height: 32px;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-music-artwork {
+        display: none;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-music-controls {
+        grid-column: 2;
+        grid-row: 1;
+        margin: 0;
+        grid-template-columns: auto;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music > :is(.mynt-music-progress, .mynt-music-library, button) {
+        grid-column: 1 / -1;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:has(.mynt-music-library[open]) .mynt-music-controls {
+        grid-column: 1 / -1;
+        grid-row: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])) .mynt-music-progress,
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])) .mynt-music-volume {
+        display: none;
+    }
+    /* 播放中保留暫停作為摘要的主要動作，接住 JS 由播放鈕交接的焦點。
+       disabled 在焦點交接前更新，data-playing 則在交接後才更新，故依前者切換。
+       停止時只顯示播放；展開後恢復兩顆原有按鈕。 */
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])) .mynt-music-play:disabled,
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])):has(.mynt-music-play:not(:disabled)) .mynt-music-controls > button:not(.mynt-music-play) {
+        display: none;
+    }
+    /* 空曲目沿用既有本地化提示；音樂庫摘要仍可展開來匯入或選擇曲目。
+       不以 disabled 判斷空曲目，因為播放中的播放鈕也會 disabled。 */
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])):has(.mynt-music-current[title=""]) .mynt-music-controls {
+        display: none;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:has(.mynt-music-current[title=""]) .mynt-music-now {
+        grid-column: 1 / -1;
+    }
+    /* 一般狀態保留給輔助科技朗讀，錯誤、匯入與跨分頁鎖定提示仍直接可見。 */
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])) .mynt-music-status:is([data-state="empty"], [data-state="ready"], [data-state="playing"], [data-state="paused"]) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+    }
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music button:not(:disabled) {
+        color: var(--pomo-fg, #17243b);
+    }
+}
