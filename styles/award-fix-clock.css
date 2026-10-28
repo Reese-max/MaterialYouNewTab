@@ -86,3 +86,27 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-l
         overflow-wrap: anywhere;
     }
 }
+
+/* 矮桌面改為同列時間／日期，保留底部捷徑與名言的空間；自訂與編輯版面不套用。 */
+@media (width > 900px) and (height < 860px) {
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])) {
+        padding-block-start: clamp(112px, 14vh, 128px);
+
+        & .leftDiv { gap: 16px; }
+        & #analogClock { width: 64px; height: 64px; margin-bottom: 0; }
+        & .mynt-clock-date {
+            top: 50%;
+            left: calc(100% + 12px);
+            transform: translateY(-50%);
+            max-width: 240px;
+        }
+        /* SVG 維持原本 0.5 倍縮放；時間再縮為 40px，保留既有字距與日期、AM/PM。 */
+        & #digitalClock {
+            width: calc(360px * var(--mynt-font-scale, 1));
+            height: calc(56px * var(--mynt-font-scale, 1));
+        }
+        & #digiclock { transform: translate(-100px, -40px) scale(.625); transform-origin: 290px 260px; }
+        & #digidate { transform: translate(160px, 100px); }
+        & #amPm { transform: translate(35px, -115px); }
+    }
+}

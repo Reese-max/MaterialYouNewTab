@@ -44,7 +44,7 @@ const allEntries = map => [...map.entries()].sort(([a], [b]) => a.localeCompare(
     const f = setup(privateData);
     let current = await f.call('mynt_components_get');
     assert(current.ok);
-    assert.equal(current.data.components.length, 19);
+    assert.equal(current.data.components.length, 20);
     assert.equal(current.revision.length, 64);
     assert.equal(current.data.visibilityOnly, true);
     assert.equal(current.data.playbackUnchanged, true);
@@ -106,6 +106,7 @@ const allEntries = map => [...map.entries()].sort(([a], [b]) => a.localeCompare(
     }
 
     for (const malformed of [
+        { id: 'homeWidgets', values: { myntHomeWidgetsVisible: 'maybe' } },
         { id: 'weather', values: { hideWeatherVisible: '{broken' } },
         { id: 'shortcuts', values: { shortcutsDisplayStatus: 'url(https://invalid.test)' } },
         { id: 'studyQuote', values: { myntStudyQuoteEnabled: 'true' } },

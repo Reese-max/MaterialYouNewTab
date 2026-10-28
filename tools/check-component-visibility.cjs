@@ -18,7 +18,7 @@ function apply(store, plan) { plan.writes.forEach(({ key, value }) => store.data
 function item(store, id) { return core.read(store).find(value => value.id === id); }
 function throwsCode(fn, code) { assert.throws(fn, error => error.code === code); }
 
-const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'bongo', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
+const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'bongo', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
 assert.deepEqual(core.definitions.map(value => value.id), ids);
 assert.equal(new Set(core.definitions.map(value => value.key)).size, ids.length);
 assert.deepEqual(core.definitions.find(value => value.id === 'clock').selectors, ['#analogClock', '#digitalClock', '#date']);
@@ -26,11 +26,11 @@ assert.deepEqual(core.definitions.find(value => value.id === 'countdowns').panel
 assert.ok(Object.isFrozen(core.definitions));
 assert.ok(Object.isFrozen(core.storageKeys));
 assert.ok(core.definitions.every(value => Object.isFrozen(value) && Object.isFrozen(value.keys) && Object.isFrozen(value.selectors)));
-assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value => value.key), ['myntSearchVisible', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible']);
+assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value => value.key), ['myntSearchVisible', 'myntHomeWidgetsVisible', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible']);
 assert.ok(core.definitions.filter(value => value.newPreference).every(value => !value.key.startsWith('myntWallpaper')),
     'New entry preferences must survive settings-only backup media filtering.');
 const empty = storage();
-const defaultsOn = new Set(['clock', 'weather', 'focus', 'search', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
+const defaultsOn = new Set(['clock', 'weather', 'focus', 'search', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
 for (const value of core.read(empty)) {
     assert.equal(value.valid, true, value.id);
     assert.equal(value.visible, defaultsOn.has(value.id), value.id);
@@ -183,4 +183,4 @@ const unloaded = unloadedBrowser.MYNTComponentVisibilityCore.read(storage());
 assert.equal(unloaded.find(value => value.id === 'countdowns').error.code, 'UNAVAILABLE');
 assert.equal(unloaded.find(value => value.id === 'focus').valid, true);
 assert.ok(!/\b(?:document|fetch|XMLHttpRequest|location)\s*\./.test(source), 'Core must remain independent of DOM and network.');
-console.log('Component visibility core checks passed: 19 entries, legacy keys, cache plans, safe defaults, absent-only migration, malformed preservation, countdown revisions and browser UMD.');
+console.log('Component visibility core checks passed: 20 entries, legacy keys, cache plans, safe defaults, absent-only migration, malformed preservation, countdown revisions and browser UMD.');

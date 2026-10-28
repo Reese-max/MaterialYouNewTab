@@ -7,7 +7,8 @@
         left: calc(var(--workspace-left, calc(50vw - 360px)) + var(--workspace-width, 720px) + 24px);
         top: 180px;
         width: min(320px, calc(100vw - var(--workspace-left, calc(50vw - 360px)) - var(--workspace-width, 720px) - 48px));
-        max-height: calc(100dvh - 292px);
+        /* 上緣 180px；底部留捷徑偏移 84px、捷徑列高度與 16px 間距。 */
+        max-height: max(0px, calc(100dvh - 308px - var(--shortcut-size, 50px) - var(--gap, 30px) * 2));
         overflow: auto;
         overscroll-behavior: contain;
         scrollbar-width: thin;
