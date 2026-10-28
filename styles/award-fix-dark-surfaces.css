@@ -537,3 +537,68 @@ html.black-theme #scratchpadContainer button:hover {
 		animation: none;
 	}
 }
+
+/* 第 14 輪：只調整反相模式的首頁表面；純色與桌布共用反相前色票。
+   #dde5f0 → 約 #141c27；#d2dcea → 約 #1b2533。
+   不涵蓋黑色主題、頂層對話框或高對比模式，淺色外觀維持原樣。 */
+@media (forced-colors: none) {
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
+	html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
+		--award-filter-surface: rgba(221, 229, 240, 0.96);
+		--award-filter-elevated: #d2dcea;
+		--award-filter-text: #1b1f24;
+		--award-filter-muted: #35465e;
+		/* 反相後為約 rgba(176, 190, 208, .18) 的淺色細線。 */
+		--award-filter-border: rgba(54, 68, 86, 0.18);
+
+		/* 半透明底色保留桌布層次；不依賴模糊或新增動效。 */
+		& :is(.ttteexxtt, #searchbar, .aiToolsCont .toolsCont a,
+			#dailyFocusPanel, #myntHomeWidgets .home-widget-card) {
+			background: var(--award-filter-surface);
+			color: var(--award-filter-text);
+			border: 1px solid var(--award-filter-border);
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			--textColorDark-blue: var(--award-filter-text);
+			--accentLightTint-blue: var(--award-filter-elevated);
+			--darkerColor-blue: #234c78;
+			/* 真實設定啟用自動取色；讓其提示文字與搜尋按鈕也使用已驗證色票。 */
+			--adaptive-text: var(--award-filter-text);
+			--adaptive-accent: #234c78;
+			--adaptive-accent-text: #ffffff;
+		}
+
+		/* 搜尋列維持既有外尺寸；輸入文字與小工具標頭同步離開純黑底。 */
+		& #searchbar { box-sizing: border-box; }
+		& #userText { background: transparent; color: var(--award-filter-text); }
+		& #searchQ { color: var(--award-filter-text); }
+		& #myntHomeWidgets h2 {
+			background: var(--award-filter-surface);
+			color: var(--award-filter-text);
+		}
+		& :is(#dailyFocusStepInput, #dailyFocusPaste,
+			#myntHomeWidgets button, #myntHomeWidgets .home-widget-add input) {
+			background: var(--award-filter-elevated);
+			color: var(--award-filter-text);
+			border-color: var(--award-filter-border);
+		}
+		& #myntHomeWidgets button:hover { background: var(--award-filter-surface); }
+		& :is(#searchQ, #dailyFocusStepInput, #dailyFocusPaste)::placeholder {
+			color: var(--award-filter-muted);
+			opacity: 1;
+		}
+		& .ttteexxtt .dailyFocusStepRemove { opacity: 0.72; }
+		& #myntHomeWidgets :disabled { opacity: 1; }
+
+		/* 只覆寫既存強制變數，故需 !important；壓過本檔舊值及 paint()
+		   的行內色票。保留 12px 透明安全區及 1px outline，不改座標與縮放。
+		   ::after、統計底板與控制項會沿用 --pomo-surface，避免白底反相成黑塊。 */
+		& #pomodoroPanel {
+			--pomo-surface: var(--award-filter-elevated) !important;
+			--pomo-border: var(--award-filter-border) !important;
+			--pomo-overlay: linear-gradient(rgba(210, 220, 234, 0.96), rgba(210, 220, 234, 0.96)) !important;
+		}
+		/* 停用仍由游標與原本狀態表示，文字不因半透明而低於 AA。 */
+		& #pomodoroPanel button:disabled { opacity: 1; }
+	}
+}
