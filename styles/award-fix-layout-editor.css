@@ -458,3 +458,45 @@ body.mynt-layout-editing .myntLayoutResize:focus-visible,
         animation: none !important; /* 遵循無障礙偏好設定，停用動畫效果 */
     }
 }
+
+
+/* ==========================================================================
+   6. 工具箱非置頂停靠位置修正：由左下角改停右側垂直置中
+   - 編輯模式下首頁元件回到左側基準位置（約 x ≤ 680px），右半邊留白；
+     非置頂狀態改停右側中央，避免遮住搜尋列下半與搜尋服務
+   - 視窗寬度 < 1100px 時右側空間不足，改回底部置中停靠（寬度上限 560px）
+   - 置頂狀態（data-dock="top"）維持原樣，本區塊不覆寫
+   - 覆寫方式：選擇器與第 2 節完全相同、寫在檔案更後方，靠來源順序
+     取代既有的左下停靠宣告，不需提高權重也不使用 !important
+   ========================================================================== */
+
+/* 非置頂：停靠畫面右側垂直置中，避開左半邊的首頁元件區 */
+body.mynt-layout-editing #myntLayoutToolbar:not([data-dock="top"]) {
+    position: fixed;
+    left: auto;
+    right: max(24px, env(safe-area-inset-right));
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    /* 寬度上限 360px；為左側內容（約 680px）與右側間距（24px）保留
+       calc(100vw - 720px) 的可用空間，下限 300px 避免過窄 */
+    width: clamp(300px, calc(100vw - 720px), 360px);
+    max-width: clamp(300px, calc(100vw - 720px), 360px);
+    /* 上下各留約 80px 呼吸空間；內容超出時面板內部捲動（沿用基礎規則的隱藏捲軸外觀） */
+    max-height: calc(100dvh - 160px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* 窄螢幕（視窗寬度 < 1100px）：右側放不下，改回底部水平置中停靠，寬度不超過 560px */
+@media (max-width: 1099.98px) {
+    body.mynt-layout-editing #myntLayoutToolbar:not([data-dock="top"]) {
+        left: 50%;
+        right: auto;
+        top: auto;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        width: min(560px, calc(100vw - 32px));
+        max-width: min(560px, calc(100vw - 32px));
+    }
+}
