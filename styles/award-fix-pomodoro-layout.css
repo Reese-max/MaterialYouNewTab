@@ -58,10 +58,10 @@
 	order: 3;
 	position: relative !important;
 	box-sizing: border-box !important;
-	width: 160px !important;
-	height: 160px !important;
-	max-width: 160px !important;
-	max-height: 160px !important;
+	width: var(--pomo-diameter, 160px) !important;
+	height: var(--pomo-diameter, 160px) !important;
+	max-width: var(--pomo-diameter, 160px) !important;
+	max-height: var(--pomo-diameter, 160px) !important;
 	margin: 0 auto 6px !important;
 	display: flex !important;
 	align-items: center !important;
@@ -70,8 +70,8 @@
 
 #pomodoroPanel .pomodoroProgressRing {
 	display: block !important;
-	width: 160px !important;
-	height: 160px !important;
+	width: var(--pomo-diameter, 160px) !important;
+	height: var(--pomo-diameter, 160px) !important;
 	max-width: 100% !important;
 	max-height: 100% !important;
 	flex-shrink: 0 !important;
@@ -109,7 +109,9 @@
 	justify-content: center !important;
 	text-align: center !important;
 	transform: none !important;
-	font-size: clamp(26px, 2rem, 32px) !important;
+	/* 重要性覆蓋既有計時字級；數字與圓環共用直徑，縮放時同步。
+	   以五字元倒數的 2.8em 寬度上限預留環內緣兩側各 10px。 */
+	font-size: min(calc(var(--pomo-diameter, 160px) * 0.24), calc((var(--pomo-diameter, 160px) * 0.8 - 20px) / 2.8)) !important;
 	font-weight: 600 !important;
 	line-height: 1 !important;
 	font-variant-numeric: tabular-nums !important;
@@ -636,13 +638,6 @@
 @media (max-height: 800px) {
     /* 這些重要性只覆蓋本檔原有的固定環尺寸與網格間距，不改使用者的 transform。 */
     #pomodoroPanel:not([style*="display: none"]) { gap: 2px !important; }
-    #pomodoroPanel .pomodoroCircleWrap,
-    #pomodoroPanel .pomodoroProgressRing {
-        width: 120px !important;
-        height: 120px !important;
-        max-width: 120px !important;
-        max-height: 120px !important;
-    }
     #pomodoroPanel .pomodoroCircleWrap { margin-bottom: 0 !important; }
     #pomodoroPanel :is(.pomodoroPhaseLabel, .pomodoroRoundDisplay, .pomodoroControls, .pomoStudioTask) { margin-block: 0; }
     #pomodoroPanel .pomodoroRoundDisplay { padding-block: 0; }
@@ -777,13 +772,6 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
         line-height: 21px;
     }
     /* 重要性只覆蓋本檔前段的固定圓環尺寸。 */
-    #pomodoroPanel .pomodoroCircleWrap,
-    #pomodoroPanel .pomodoroProgressRing {
-        width: 96px !important;
-        height: 96px !important;
-        max-width: 96px !important;
-        max-height: 96px !important;
-    }
     #pomodoroPanel .pomodoroCircleWrap { grid-row: 2; }
     #pomodoroPanel .pomodoroControls { grid-row: 3; }
     #pomodoroPanel .pomoStudioTask { grid-row: 4; }
@@ -878,4 +866,92 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
     }
     #pomodoroPanel .pomodoroSessionsToday { padding: 0; }
     #pomodoroPanel .pomodoroFocusSummary { flex: 1; gap: 4px; padding: 0; }
+}
+
+/* 第 18 輪：單一捲動區保留底部入口，原生換列避免次要動作斷字。
+   未提供可讀取的面板 top 變數，採視窗減 16px 的全域上限；
+   既有變數已換算縮放，另保留 100px 給本次 top 約 90px 與底部安全距。
+   不改 top、left、transform，也不寫入座標。 */
+#pomodoroPanel.pomodoro-panel:not([style*="display: none"]) {
+    --pomo-diameter: 160px;
+    /* 重要性僅覆蓋本檔舊的強制網格，讓兩顆次要動作一起換列。 */
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: start;
+    max-height: min(calc(100dvh - 16px), calc(var(--pomo-viewport-height, 100dvh) - 100px));
+    padding-bottom: 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+#pomodoroPanel > :where(:not(.pomoStudioBackdrop):not(.pomodoro-drag-handle)) {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+}
+/* 掛載節點沿用 contents，只有成對動作恢復實體容器；寬度不足時整組換列。
+   重要性覆蓋舊的 contents、全寬與按鈕狀態，不改 DOM 或鍵盤順序。 */
+#pomodoroPanel #myntPomoStudioMount > .pomoStudioRow {
+    display: flex !important;
+    flex: 2 0 max-content;
+    gap: 2px;
+    width: auto;
+    margin: 0;
+    order: 26;
+}
+#pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float,
+#pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask) {
+    flex: 1 0 max-content;
+    width: auto !important;
+    min-height: 32px;
+    height: 32px;
+    padding: 4px 6px;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--pomo-accent, #3569b2) !important;
+    font-size: 13px;
+    line-height: 20px;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
+#pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float:hover,
+#pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask):hover {
+    background: color-mix(in srgb, var(--pomo-accent, #3569b2) 8%, var(--pomo-surface, #ffffff)) !important;
+    color: var(--pomo-accent, #3569b2) !important;
+}
+#pomodoroPanel #myntPomoExtras {
+    overflow: visible;
+    padding-bottom: 12px;
+}
+#pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup {
+    min-height: 32px;
+    height: auto;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    scroll-margin-block: 12px;
+}
+/* 預設卡不再蓋住設定內容；音樂標題保留原有本地化文字。 */
+#pomodoroPanel #myntPomoExtras .pomoStudioCards { position: static; }
+#pomodoroPanel #myntPomoMusicMount .mynt-music-heading {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    margin-block: 0 4px;
+    padding-top: 4px;
+    line-height: 20px;
+}
+@media (max-height: 800px) {
+    #pomodoroPanel.pomodoro-panel:not([style*="display: none"]) { --pomo-diameter: 96px; }
+    #pomodoroPanel :is(.pomodoroPhaseLabel, .pomodoroRoundDisplay) {
+        flex: 1 0 calc(50% - 2px);
+        width: auto;
+        order: 2;
+    }
+    #pomodoroPanel .pomodoroPhaseLabel { text-align: right; margin: 0; }
+    #pomodoroPanel .pomodoroRoundDisplay { text-align: left; }
+    #pomodoroPanel #myntPomoMusicMount :is(.mynt-music-now, .mynt-music-controls) { grid-row: 2; }
+    #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:has(.mynt-music-library[open]) .mynt-music-controls { grid-row: auto; }
 }
