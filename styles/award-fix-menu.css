@@ -31,55 +31,196 @@
 	outline-offset: 3px;
 }
 
-/* ===== 3. 停用狀態設定列對比 =====
-   原本 .ttcont.inactive 整列 opacity:0.5，文字對比降到約 2.8:1。
-   改為文字僅略淡（維持 ≥4.5:1），停用感改由開關與輸入框表達。 */
-#menuCont .ttcont.inactive {
-	opacity: 1;
-}
-
-#menuCont .ttcont.inactive .bigText {
-	opacity: 0.9; /* 有效對比約 5.6:1，仍保有略淡的停用感 */
-}
-
-#menuCont .ttcont.inactive .infoText {
-	opacity: 0.88; /* 有效對比約 5.1:1 */
-}
-
-/* 停用列的開關整體降不透明度，作為主要停用視覺線索 */
-#menuCont .ttcont.inactive .switch {
+/* ===== 3. 停用列與一般關閉狀態分開辨識 =====
+   只讓列本身接收滑鼠以顯示游標，子元素維持不可操作。 */
+#menuCont .ttcont.inactive,
+#menuCont .ttcont:has(input:disabled) {
 	opacity: 0.45;
+	cursor: not-allowed;
+	pointer-events: auto;
 }
 
-/* 停用的文字輸入框（如問候語姓名）：底色微沉、文字維持 ≥4.5:1 */
-#menuCont .ttcont input:disabled {
-	opacity: 1;
-	color: color-mix(in srgb, var(--textColorDark-blue) 88%, var(--whitishColor-blue));
-	background-color: color-mix(in srgb, var(--whitishColor-blue) 70%, var(--accentLightTint-blue));
+#menuCont .ttcont.inactive > *,
+#menuCont .ttcont:has(input:disabled) > * {
+	pointer-events: none;
 }
 
-/* ===== 4. 選單捲軸可見性 =====
-   原本 6px 透明軌道捲軸不易察覺；加寬並給淡主題色軌道與把手。 */
-#menuCont .optCont {
+/* ===== 4. 捲動區內縮，避免捲軸貼住面板圓角 ===== */
+#menuCont > .optCont {
+	position: relative;
+	width: calc(100% - 8px);
+	height: calc(100% - 80px);
+	margin-inline-end: 8px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
 	scrollbar-width: thin;
-	scrollbar-color:
-		color-mix(in srgb, var(--darkColor-blue) 55%, transparent)
-		color-mix(in srgb, var(--darkColor-blue) 10%, transparent);
+	scrollbar-color: var(--darkerColor-silver) transparent;
 }
 
 #menuCont .optCont::-webkit-scrollbar {
-	width: 10px;
+	width: 6px;
 }
 
 #menuCont .optCont::-webkit-scrollbar-track {
-	background: color-mix(in srgb, var(--darkColor-blue) 10%, transparent);
+	background: transparent;
+	margin-block: 8px;
 }
 
 #menuCont .optCont::-webkit-scrollbar-thumb {
-	background: color-mix(in srgb, var(--darkColor-blue) 55%, transparent);
-	border-radius: 5px;
+	background: var(--darkerColor-silver);
+	border-radius: 3px;
 }
 
 #menuCont .optCont::-webkit-scrollbar-thumb:hover {
-	background: var(--darkColor-blue);
+	background: var(--textColorDark-silver);
+}
+
+/* ===== 5. 移除全畫面霧化，保留桌布與選單的明暗分界 ===== */
+#menuBar {
+	background-color: rgb(0 0 0 / 28%);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+
+/* ===== 6. 所有開關共用灰底關閉、主色開啟；保留寬度並補足觸控高度 ===== */
+#menuCont .switch {
+	flex-shrink: 0;
+	height: 44px;
+}
+
+/* 透明原生輸入框保留鍵盤與輔助技術操作，視覺軌道仍為 60 × 34px。 */
+#menuCont .switch input[type="checkbox"] {
+	display: block;
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+/* 舊停用列靠不可點擊停用；不把它們加入新的鍵盤焦點順序。 */
+#menuCont .ttcont.inactive .switch input[type="checkbox"] {
+	display: none;
+}
+
+#menuCont .switch .toggle {
+	inset: 5px 0;
+	background-color: var(--accentLightTint-silver);
+	border: 1px solid var(--darkerColor-silver);
+}
+
+#menuCont .switch .toggle::before {
+	background-color: var(--textColorDark-silver);
+	inset-inline-start: 8px;
+	bottom: 8px;
+}
+
+#menuCont .switch input:checked + .toggle {
+	background-color: var(--darkColor-blue);
+	border-color: var(--darkerColor-blue);
+}
+
+#menuCont .switch input:checked + .toggle::before {
+	background-color: #fff;
+	inset-inline-start: 4px;
+	bottom: 4px;
+}
+
+#menuCont .switch input:focus-visible + .toggle {
+	outline: 2px solid var(--darkerColor-blue);
+	outline-offset: 3px;
+}
+
+/* ===== 7. 姓名欄沿用現有表面變數；一般深色模式由整頁反相處理 ===== */
+#menuCont #greetingNameInput {
+	min-height: 44px;
+	padding: 8px 12px;
+	border: 1px solid var(--menu-input-border);
+	border-radius: 12px;
+	background-color: var(--menu-input-bg);
+	color: var(--menu-input-text);
+}
+
+#menuCont #greetingNameInput::placeholder {
+	color: var(--award-surface-light-muted);
+	opacity: 1;
+}
+
+html.black-theme #menuCont #greetingNameInput::placeholder {
+	color: var(--award-surface-dark-muted);
+}
+
+#menuCont #greetingNameInput:focus {
+	outline: 2px solid var(--darkerColor-blue);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+/* ===== 8. 筆電高度減少留白，長字串仍可換行並隨文字縮放增高 ===== */
+#menuCont > .topDiv {
+	height: 72px;
+}
+
+#menuCont .settingsGroupTabs {
+	margin-bottom: 8px;
+}
+
+#menuCont .settingsGroupTabs button,
+#menuCont .sectionHeader {
+	min-height: 44px;
+}
+
+#menuCont .section + .section {
+	margin-top: 12px;
+}
+
+#menuCont .sectionHeader {
+	padding: 6px 12px;
+}
+
+#menuCont .sectionTitle {
+	font-size: 1.05rem;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+#menuCont .sectionInner {
+	padding-inline: 10px;
+}
+
+#menuCont .section.expanded .sectionInner {
+	margin-top: 4px;
+}
+
+#menuCont .sectionInner .ttcont {
+	min-height: 52px;
+	padding: 4px;
+	gap: 8px;
+}
+
+#menuCont .ttcont .texts {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+#menuCont .ttcont .bigText {
+	font-size: 1rem;
+	line-height: 1.4;
+}
+
+#menuCont .ttcont .infoText {
+	font-size: 0.875rem;
+	line-height: 1.4;
+	margin-top: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#menuCont .switch .toggle,
+	#menuCont .switch .toggle::before {
+		transition: none;
+	}
 }
