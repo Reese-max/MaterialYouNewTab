@@ -193,7 +193,7 @@ async function main() {
     assert.match(css, /#myntHomeWidgets\s*\{ display: none;/);
     assert.match(css, /@media \(min-width: 1500px\)/); assert.match(css, /body:not\(\.mynt-layout-editing\):not\(\[data-mynt-layout\]\):not\(:has\(\[data-mynt-layout\]\)\)/);
     assert.match(css, /:not\(\[hidden\]\):not\(\[data-mynt-component-hidden\]\)/);
-    assert.match(css, /top: 180px/); assert.match(css, /max-height: calc\(100dvh - 292px\)/);
+    assert.match(css, /top: 180px/); assert.match(css, /max-height: max\(0px, calc\(100dvh - 308px - var\(--shortcut-size, 50px\) - var\(--gap, 30px\) \* 2\)\)/);
     assert.match(css, /:focus-visible/); assert.match(css, /prefers-reduced-motion/); assert.match(css, /forced-colors/);
     assert.doesNotMatch(css, /prefers-color-scheme|black-theme|backdrop-filter/);
     assert.match(html, /<script defer src="scripts\/home-widgets.js"><\/script>/); assert.match(html, /<link href="styles\/award-home-widgets.css" rel="stylesheet">/);
