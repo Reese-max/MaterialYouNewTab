@@ -292,7 +292,9 @@ async function main() {
     }
     assert.match(css, /:focus-visible/); assert.match(css, /prefers-reduced-motion/); assert.match(css, /forced-colors/);
     assert.doesNotMatch(css, /prefers-color-scheme|black-theme|backdrop-filter/);
-    assert.match(html, /<script defer src="scripts\/home-widgets.js"><\/script>/); assert.match(html, /<link href="styles\/award-home-widgets.css" rel="stylesheet">/);
+    assert.match(html, /<script defer src="scripts\/home-widgets.js"><\/script>/); assert.match(html, /<link href="styles\/award\.css" rel="stylesheet">/);
+    assert.match(read('tools/build-award-css.mjs'), /'award-home-widgets\.css'/);
+    assert(read('styles/award.css').includes(`/* ==== award-home-widgets.css ==== */\n${css}`), 'Bundle retains the complete home widgets stylesheet');
     assert.match(html, /<aside id="myntHomeWidgets"[^>]+hidden>/);
     assert.match(read('scripts/pomodoro.js'), /startInline: startPomodoro/);
     assert.doesNotMatch(read('scripts/home-widgets.js'), /setInterval|localStorage\.setItem|innerHTML|eval\(/, 'No additional clock, storage copy, HTML parsing or evaluation');

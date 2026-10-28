@@ -179,7 +179,16 @@ for (const language of ['en', 'zh_TW', 'de']) {
     assert.equal(translated.node('showClockBoxInfo').textContent, language === 'zh_TW' ? zh.showClockBoxInfo : en.showClockBoxInfo);
 }
 const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
-assert.match(html, /award-fix-home-hierarchy\.css" rel="stylesheet">\s*<link href="styles\/award-fix-clock\.css"/);
+assert.match(html, /<link href="styles\/award\.css" rel="stylesheet">/);
+assert.match(fs.readFileSync(require.resolve('./build-award-css.mjs'), 'utf8'), /'award-fix-home-hierarchy\.css',\s*'award-fix-clock\.css'/);
+const bundle = fs.readFileSync(require.resolve('../styles/award.css'), 'utf8');
+const hierarchyCss = fs.readFileSync(require.resolve('../styles/award-fix-home-hierarchy.css'), 'utf8');
+const clockCss = fs.readFileSync(require.resolve('../styles/award-fix-clock.css'), 'utf8');
+const hierarchySection = `/* ==== award-fix-home-hierarchy.css ==== */\n${hierarchyCss}`;
+const clockSection = `/* ==== award-fix-clock.css ==== */\n${clockCss}`;
+assert(bundle.includes(hierarchySection), 'Bundle retains the complete home hierarchy stylesheet');
+assert(bundle.includes(clockSection), 'Bundle retains the complete clock stylesheet');
+assert(bundle.indexOf(clockSection) === bundle.indexOf(hierarchySection) + hierarchySection.length, 'Clock styles immediately follow home hierarchy styles');
 assert.match(html, /id="hideClock"[^>]*aria-labelledby="showClockBox"[^>]*aria-describedby="showClockBoxInfo"/);
 const css = fs.readFileSync(require.resolve('../styles/award-fix-clock.css'), 'utf8');
 assert.match(css, /body:is\([^\n]+:not\(\.mynt-layout-editing\):not\(:has\(\[data-mynt-layout\]\)\) \{/);
