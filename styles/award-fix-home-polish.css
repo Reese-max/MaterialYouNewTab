@@ -172,13 +172,15 @@ body .ttteexxtt #date {
     pointer-events: none;
 }
 
-/* 第 17 輪：狀態在操作列內，不能直接與問候共用網格；只將非互動文字定位到卡片頂列。
-   預留等高空間，問候隱藏時也不壓住標題；標題與按鈕的 Tab 順序維持不變。 */
+/* 第 18 輪：頂列保留等高空間，收緊內距與列距，不改使用者儲存的座標與縮放。
+   標準字級下即使標題達既有 4.3rem 上限，卡片經 1.01 倍縮放仍低於 158px。 */
 body:is([data-workspace-background="video"], .mynt-manual-workspace) .ttteexxtt:has(> #dailyFocusActions:not([style*="display: none"])) {
-    --focus-header-top: 20px;
+    --focus-header-top: 12px;
     --focus-header-side: 24px;
     position: relative;
-    padding-block-start: calc(var(--focus-header-top) + max(19.5px, calc(19.5px * var(--mynt-font-scale, 1))) + 10px);
+    padding-block-start: calc(var(--focus-header-top) + max(16.9px, calc(16.9px * var(--mynt-font-scale, 1))) + 4px);
+    padding-block-end: 12px;
+    gap: 4px;
 
     & #dailyFocusStatus,
     & #date {
@@ -187,7 +189,7 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace) .ttteexxtt:
         width: calc(50% - var(--focus-header-side) - 8px);
         max-width: none;
         font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
-        line-height: 1.5;
+        line-height: 1.3;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -209,6 +211,8 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace) .ttteexxtt:
     & #dailyFocusActions {
         position: static;
         justify-content: flex-end;
+        margin: 0;
+        gap: 4px;
     }
 
     /* 操作列不再作為定位容器，提示改錨定圖示組；寬度留在窄版卡片內。 */
@@ -218,7 +222,6 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace) .ttteexxtt:
     }
 
     @media (max-width: 900px) {
-        --focus-header-top: 18px;
         --focus-header-side: 20px;
     }
 }

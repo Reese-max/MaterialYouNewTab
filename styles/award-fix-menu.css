@@ -45,13 +45,13 @@
 	pointer-events: none;
 }
 
-/* 停用文字保留對比，只淡化開關；原有停用與焦點邏輯不變。 */
+/* 停用文字保留中性灰對比；原有停用與焦點邏輯不變。 */
 #menuCont .ttcont:is(.inactive, :has(input:disabled)) :is(.bigText, .infoText) {
 	color: var(--menu-row-muted);
 }
 
 #menuCont .ttcont:is(.inactive, :has(input:disabled)) .switch {
-	opacity: 0.5;
+	opacity: 1;
 }
 
 /* ===== 4. 捲動區內縮，避免捲軸貼住面板圓角 ===== */
@@ -137,6 +137,26 @@
 	background-color: #fff;
 	inset-inline-start: 4px;
 	bottom: 4px;
+}
+
+/* 第 18 輪：停用優先於勾選配色；圓點置中，與可操作的左右狀態區分。
+   同時涵蓋舊版 inactive 列與原生 disabled，不改儲存的勾選值。 */
+#menuCont .ttcont.inactive .switch .toggle,
+#menuCont .switch input:disabled + .toggle {
+	background-color: #e5e5e5;
+	border-color: #b5b5b5;
+	transition: none;
+}
+
+#menuCont .ttcont.inactive .switch .toggle::before,
+#menuCont .switch input:disabled + .toggle::before {
+	background-color: #808080;
+	width: 16px;
+	height: 16px;
+	inset-inline-start: calc(50% - 8px);
+	bottom: 8px;
+	transform: none;
+	transition: none;
 }
 
 #menuCont .switch input:focus-visible + .toggle {
