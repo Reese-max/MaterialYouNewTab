@@ -107,3 +107,111 @@
 		scale: 0.8;
 	}
 }
+
+/* 第 13 輪：首頁浮動工具共用表面；座標與縮放仍交給既有版面。
+   使用不透明主題淺底與主題文字色，避免桌布透色及深色反相後的低對比。
+   :root 提高具體性，覆蓋黑色主題原本的粗框，保留高對比模式的系統色。 */
+:root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+    #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+    --mynt-fab-ink: var(--textColorDark-blue);
+    --mynt-fab-focus: color-mix(in srgb, var(--darkerColor-blue) 65%, var(--textColorDark-blue));
+    box-sizing: border-box;
+    border-radius: 16px;
+    background: var(--accentLightTint-blue);
+    color: var(--mynt-fab-ink);
+    border: 1px solid color-mix(in srgb, var(--mynt-fab-ink) 24%, var(--accentLightTint-blue));
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: background-color 0.15s ease;
+
+    &:not(summary) {
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 保留 summary 的原生標記與文字內容，長字串可在既有容器內換行。 */
+    &:is(summary) {
+        min-height: 48px;
+        padding: 12px 14px;
+        font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
+        font-weight: 600;
+        line-height: 1.5;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    & > svg {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--mynt-fab-ink);
+        fill: currentColor;
+        filter: none;
+    }
+
+    &:hover {
+        background-color: color-mix(in srgb, var(--accentLightTint-blue) 94%, var(--mynt-fab-ink));
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--mynt-fab-focus);
+        outline-offset: 2px;
+    }
+}
+
+/* 鐘面、指針與刻度同色；不改指針的旋轉與計時行為。 */
+#pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
+    stroke: currentColor;
+    stroke-width: 1.75;
+}
+#pomodoroCont .pomodoro-clock-face { fill: none; }
+#pomodoroCont .pomodoro-clock-second { opacity: 1; }
+
+/* 設定鈕原本以 inset 陰影畫滿整顆粗環，改為與其他圖示等大的齒輪。
+   純 CSS 繪製，不增加圖片、字型或網路請求。 */
+#menuButton::before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    background: currentColor;
+    clip-path: polygon(40% 0, 60% 0, 63% 13%, 74% 18%, 87% 14%,
+        97% 31%, 87% 40%, 87% 60%, 97% 69%, 87% 86%, 74% 82%,
+        63% 87%, 60% 100%, 40% 100%, 37% 87%, 26% 82%, 13% 86%,
+        3% 69%, 13% 60%, 13% 40%, 3% 31%, 13% 14%, 26% 18%, 37% 13%);
+    mask: radial-gradient(circle, transparent 4px, #000 4.5px);
+}
+
+/* 深色反相時用白色陰影取得中性暗影。額外的 body 保證優先於
+   後載入的 award-fix-dark-shadows.css，避免設定粗環與不一致陰影回來。 */
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
+html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
+    & body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+        #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+        #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+        &, &:hover { box-shadow: 0 2px 6px rgb(255 255 255 / 0.1); }
+    }
+}
+
+html.myntReducedMotion body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+    #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+    transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    :root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+        #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
+        #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
+        transition: none;
+    }
+}
