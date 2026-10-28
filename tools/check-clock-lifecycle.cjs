@@ -185,7 +185,18 @@ const css = fs.readFileSync(require.resolve('../styles/award-fix-clock.css'), 'u
 assert.match(css, /body:is\([^\n]+:not\(\.mynt-layout-editing\):not\(:has\(\[data-mynt-layout\]\)\) \{/);
 assert.match(css, /font-size: 128px; font-weight: 300/);
 assert.match(css, /font-size: calc\(14px \* var\(--mynt-font-scale, 1\)\)/);
-assert.doesNotMatch(css, /!important|backdrop-filter/);
+assert.doesNotMatch(css, /backdrop-filter/);
+// 兩個有界的 !important 是必要覆寫：顯示影片自訂鐘與明確關閉所有鐘。
+const customClockRule = css.match(/body\[data-workspace-background="video"\]:has\(\[data-mynt-layout\]\):has\(#hideClock:checked\)[^{]+\{([^}]+)\}/);
+assert(customClockRule, 'Video custom layouts have an explicit shown-clock override');
+assert.match(customClockRule[0], /:is\(#analogClock, #digitalClock\)\[data-mynt-component-display="block"\]:not\(\[data-mynt-component-hidden\]\)/);
+assert.match(customClockRule[1], /display: block !important/);
+assert.doesNotMatch(customClockRule[1], /translate|scale|position|width|height/, 'Saved geometry belongs to the layout engine');
+assert.match(css, /body:has\(#hideClock:not\(:checked\)\) \.leftDiv :is\(#analogClock, #digitalClock\)\s*\{\s*display: none !important;/);
+assert.equal((css.match(/!important;/g) || []).length, 2, 'Only the two visibility rules need priority');
+assert.match(css, /body\.mynt-manual-workspace:not\(\[data-workspace-background="video"\]\) #analogClock \.mynt-clock-date\s*\{\s*display: none;/, 'The focus-card analog date is the sole date outside video workspaces');
+const manual = fixture({ clocktype: 'analog' });
+assert.equal(manual.node('date').innerText, manual.node('analogClock').children[0].textContent, 'The duplicate date content is covered by the CSS rule above');
 for (const [, animation] of css.matchAll(/\banimation:\s*([^;]+);/g)) assert.equal(animation.trim(), 'none');
 console.log('Clock lifecycle checks passed: late/early controls, one runtime across resize, ticking re-add, mode synchronization, no hidden-tab timers, malformed preservation and untouched saved positions.');
 console.log('Clock defaults checks passed: new-install visibility, positive toggle/readback, video dates, 12/24 hours, greeting, locale fallback and scoped layout styling.');

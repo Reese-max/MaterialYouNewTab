@@ -14,6 +14,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["exam", "#examDaily", "layoutBlockExam", "Daily exam"],
     ["pomodoro", "#pomodoroCont", "layoutBlockPomodoro", "Pomodoro"],
     ["scratchpad", "#scratchpadCont", "layoutBlockScratchpad", "Scratchpad"],
+    ["homeWidgets", "#myntHomeWidgets", "layoutBlockHomeWidgets", "Today widgets"],
     ["bookmarks", "#bookmarkButton", "layoutBlockBookmarks", "Bookmarks"],
     ["wallpaper", "#wallpaperQuickActions", "layoutBlockWallpaper", "Wallpaper"],
     ["menu", "#menuButton", "layoutBlockMenu", "Settings"]

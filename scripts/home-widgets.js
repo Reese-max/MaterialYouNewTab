@@ -128,8 +128,11 @@
         function refresh() {
             let enabled = false;
             try { const saved = localStorage.getItem('myntHomeWidgetsVisible'); enabled = saved === null || saved === 'true'; } catch (_) { /* 儲存不可用時維持隱藏。 */ }
-            const visible = enabled && window.innerWidth >= 1500 && !document.body.classList.contains('mynt-layout-editing') && !document.querySelector('[data-mynt-layout]');
+            const visible = enabled && window.innerWidth >= 1500;
+            const wasHidden = host.hidden;
             host.hidden = !visible;
+            // 延後初始化／重新顯示後才有尺寸，讓既有版面引擎重新套用儲存縮放與邊界限制。
+            if (visible && wasHidden) window.myntLayout?.applyAll();
             active = visible && !document.hidden;
             if (!active) {
                 unsubscribeTodo?.(); unsubscribeTodo = null;
@@ -144,10 +147,6 @@
         window.addEventListener('storage', event => { if (event.key === null || event.key === 'myntHomeWidgetsVisible') refresh(); });
         document.addEventListener('visibilitychange', refresh);
         for (const name of ['mynt:components-changed', 'mynt:layout-applied', 'mynt:pomodoro-ready', 'mynt:mcp-settings-refresh']) document.addEventListener(name, refresh);
-        // 編輯模式與自訂座標也可能直接套用；只檢查影響顯示條件的屬性。
-        const layoutObserver = new MutationObserver(refresh);
-        layoutObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-        layoutObserver.observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ['data-mynt-layout'] });
         refresh();
     }
     const defer = () => {

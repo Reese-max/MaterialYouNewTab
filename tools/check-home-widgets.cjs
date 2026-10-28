@@ -79,6 +79,11 @@ function setup(options = {}) {
     let items = Array.from({ length: 8 }, (_, index) => ({ id: `t${index}`, title: index === 1 ? '<img src=x onerror=alert(1)>' : `Task ${index}`, status: index === 0 ? 'completed' : 'pending', pinned: index === 6 || index === 7 }));
     const todoListeners = new Set(), pomoListeners = new Set();
     let state = { phase: 'work', timeRemaining: 1500, isRunning: false };
+    let layoutApplications = 0;
+    window.myntLayout = { applyAll() {
+        assert.equal(host.hidden, false, 'Measure the widget only after revealing it');
+        layoutApplications++; document.dispatchEvent({ type: 'mynt:layout-applied' });
+    } };
     window.myntTodoApi = {
         list: () => items.map(item => ({ ...item })),
         add(title) { added.push(title); if (app.failAdd) return null; items.push({ id: 'new', title, status: 'pending' }); for (const fn of [...todoListeners]) fn(); return 'new'; },
@@ -104,7 +109,7 @@ function setup(options = {}) {
     const button = title => find(node => node.tagName === 'BUTTON' && node.textContent === title);
     const list = () => find(node => node.className === 'home-widget-todos');
     return Object.assign(app, { host, find, button, list, todoListeners, pomoListeners, added, toggled,
-        counters: () => ({ todoOpens, pomoOpens, started, paused }),
+        counters: () => ({ todoOpens, pomoOpens, started, paused, layoutApplications }),
         setState(next) { state = { ...state, ...next }; for (const fn of [...pomoListeners]) fn(state); },
         setItems(next) { items = next; for (const fn of [...todoListeners]) fn(); }
     });
@@ -114,8 +119,14 @@ async function main() {
         const app = setup({ width }); assert.equal(app.host.hidden, width < 1500, `Width ${width}`);
         assert.equal(app.pomoListeners.size, width < 1500 ? 0 : 1);
     }
-    for (const options of [{ layout: true }, { editing: true }, { storage: { myntHomeWidgetsVisible: 'false' } }, { storage: { myntHomeWidgetsVisible: 'broken' } }]) assert.equal(setup(options).host.hidden, true);
+    for (const options of [{ layout: true }, { editing: true }, { layout: true, editing: true }]) {
+        assert.equal(setup(options).host.hidden, false, 'Custom and editing layouts show enabled widgets');
+        assert.equal(setup({ ...options, width: 1499 }).host.hidden, true, 'Layout editing respects the width gate');
+        assert.equal(setup({ ...options, storage: { myntHomeWidgetsVisible: 'false' } }).host.hidden, true, 'Layout editing respects the component switch');
+    }
+    for (const value of ['false', 'broken']) assert.equal(setup({ storage: { myntHomeWidgetsVisible: value } }).host.hidden, true);
     const app = setup();
+    assert.equal(app.counters().layoutApplications, 1, 'Initial deferred reveal reapplies the saved layout once without event recursion');
     const ids = () => app.list().children.map(row => row.firstChild.firstChild.dataset.todoId);
     assert.deepEqual(ids(), ['t6', 't7', 't1', 't2', 't3'], 'Five unfinished tasks, stable pin-first order');
     assert.equal(app.list().children[2].firstChild.children[1].textContent, '<img src=x onerror=alert(1)>', 'Task titles stay inert text');
@@ -145,14 +156,15 @@ async function main() {
     await app.document.emit('visibilitychange'); assert.equal(app.pomoListeners.size, 1, 'No duplicate subscriptions');
     app.window.innerWidth = 1499; await app.window.emit('resize'); assert(app.host.hidden); assert.equal(app.pomoListeners.size, 0);
     app.window.innerWidth = 1500; await app.window.emit('resize'); assert(!app.host.hidden);
+    assert.equal(app.counters().layoutApplications, 2, 'Returning to a wide viewport reapplies saved geometry');
     app.values.set('myntHomeWidgetsVisible', 'false'); await app.document.emit('mynt:components-changed'); assert(app.host.hidden); assert.equal(app.pomoListeners.size, 0);
     app.values.delete('myntHomeWidgetsVisible'); await app.window.emit('storage', { key: null }); assert(!app.host.hidden);
-    app.document.customLayout = true; await app.document.emit('mynt:layout-applied'); assert(app.host.hidden);
+    app.document.customLayout = true; await app.document.emit('mynt:layout-applied'); assert(!app.host.hidden);
     app.document.customLayout = false; await app.document.emit('mynt:layout-applied'); assert(!app.host.hidden);
     app.document.body.classList.add('mynt-layout-editing');
-    app.observers.at(-1).callback([{ attributeName: 'class', target: app.document.body }]); assert(app.host.hidden);
+    await app.document.emit('mynt:layout-applied'); assert(!app.host.hidden, 'Editing keeps the block available to drag');
     app.document.body.classList.remove('mynt-layout-editing');
-    app.observers.at(-1).callback([{ attributeName: 'class', target: app.document.body }]); assert(!app.host.hidden);
+    await app.document.emit('mynt:layout-applied'); assert(!app.host.hidden);
     const zhApp = setup({ language: 'zh_TW' }); assert(zhApp.button('開啟完整清單')); assert(zhApp.button('開始'));
     const fallback = setup({ language: 'ja', noIdle: true }); assert(fallback.button('Open full list')); assert.equal(fallback.host.hidden, false);
     assert.equal(setup({ hidden: true }).pomoListeners.size, 0, 'Initially hidden tabs never subscribe');
@@ -191,9 +203,34 @@ async function main() {
     manager.change('homeWidgets', true); assert(!manager.node('myntHomeWidgets').hasAttribute('data-mynt-component-hidden'));
     const css = read('styles/award-home-widgets.css'), html = read('index.html');
     assert.match(css, /#myntHomeWidgets\s*\{ display: none;/);
-    assert.match(css, /@media \(min-width: 1500px\)/); assert.match(css, /body:not\(\.mynt-layout-editing\):not\(\[data-mynt-layout\]\):not\(:has\(\[data-mynt-layout\]\)\)/);
+    assert.match(css, /@media \(min-width: 1500px\)/); assert.match(css, /body #myntHomeWidgets:not/);
+    assert.doesNotMatch(css, /:not\(\.mynt-layout-editing\)|:not\(:has\(\[data-mynt-layout\]\)\)/);
     assert.match(css, /:not\(\[hidden\]\):not\(\[data-mynt-component-hidden\]\)/);
-    assert.match(css, /top: 180px/); assert.match(css, /max-height: max\(0px, calc\(100dvh - 308px - var\(--shortcut-size, 50px\) - var\(--gap, 30px\) \* 2\)\)/);
+    assert.match(css, /top: 180px/); assert.match(css, /max-height: max\(0px, calc\(100dvh - 340px\)\)/);
+    assert.match(css, /max-height: max\(0px, calc\(100dvh - 308px - var\(--shortcut-size, 50px\) - var\(--gap, 30px\) \* 2\)\)/, 'The default layout keeps its existing shortcut clearance');
+    assert.match(css, /overflow: auto/);
+    const { MYNT_LAYOUT_BLOCKS, myntNormalizeLayout } = require('../scripts/layout-editor.js');
+    assert.deepEqual(MYNT_LAYOUT_BLOCKS.find(([id]) => id === 'homeWidgets'), ['homeWidgets', '#myntHomeWidgets', 'layoutBlockHomeWidgets', 'Today widgets']);
+    assert.equal(en.layoutBlockHomeWidgets, 'Today widgets'); assert.equal(zh.layoutBlockHomeWidgets, '今日小工具');
+    assert.deepEqual(myntNormalizeLayout({ version: 2, blocks: { homeWidgets: { x: -.1, y: .2, s: .8 } } }).blocks.homeWidgets, { x: -.1, y: .2, s: .8 });
+    assert.doesNotMatch(read('scripts/home-widgets.js'), /!document\.querySelector\('\[data-mynt-layout\]'\)|!document\.body\.classList\.contains\('mynt-layout-editing'\)/);
+    // CSS 推算值與使用者提供的 real-seed 矩形至少保持 16px 間距（不等同瀏覽器截圖驗收）。
+    const customCss = css.match(/body:is\(:has\(\[data-mynt-layout\]\), \.mynt-layout-editing\) #myntHomeWidgets[^{}]*\{([^}]+)\}/)[1];
+    const rightSpace = Number(customCss.match(/left: calc\(100vw - (\d+)px\)/)[1]);
+    const top = Number(customCss.match(/top: (\d+)px/)[1]);
+    const width = Number(customCss.match(/width: (\d+)px;/)[1]);
+    const [, cap, reserve] = customCss.match(/height: min\((\d+)px, calc\(100dvh - (\d+)px\)\)/).map(Number);
+    const cases = [
+        [1536, 740, [[80,200,643,355],[95,360,650,425],[95,445,530,485],[70,5,290,70],[25,100,118,150],[1240,20,1330,110],[1460,40,1500,75],[1416,100,1512,150],[1420,545,1470,595],[1415,675,1460,720],[555,672,980,712],[25,672,145,712]]],
+        [1920, 1080, [[80,388,643,540],[95,540,655,605],[95,625,535,665],[1575,12,1665,103],[1800,100,1895,150],[1795,830,1845,880],[1800,1015,1840,1060],[748,1012,1172,1052]]]
+    ];
+    for (const [vw, vh, obstacles] of cases) {
+        const left = vw - rightSpace, height = Math.min(cap, vh - reserve), right = left + width, bottom = top + height;
+        assert(left >= 0 && top >= 0 && right <= vw && bottom <= vh);
+        assert(bottom <= vh - 68 - 16, 'Keep the quote row clear vertically');
+        for (const [x1,y1,x2,y2] of obstacles) assert(right + 16 <= x1 || left >= x2 + 16 || bottom + 16 <= y1 || top >= y2 + 16, `Widget overlaps the 16px clearance at ${vw}x${vh}: ${[x1,y1,x2,y2]}`);
+        console.log(`HOME_WIDGETS_GEOMETRY ${vw}x${vh}: x=${left} y=${top} width=${width} height=${height}`);
+    }
     assert.match(css, /:focus-visible/); assert.match(css, /prefers-reduced-motion/); assert.match(css, /forced-colors/);
     assert.doesNotMatch(css, /prefers-color-scheme|black-theme|backdrop-filter/);
     assert.match(html, /<script defer src="scripts\/home-widgets.js"><\/script>/); assert.match(html, /<link href="styles\/award-home-widgets.css" rel="stylesheet">/);

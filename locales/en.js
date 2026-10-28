@@ -890,6 +890,7 @@ const en = {
     "layoutBlockExam": "Daily exam",
     "layoutBlockPomodoro": "Pomodoro",
     "layoutBlockScratchpad": "Scratchpad",
+    "layoutBlockHomeWidgets": "Today widgets",
     "layoutBlockBookmarks": "Bookmarks",
     "layoutBlockWallpaper": "Wallpaper",
     "layoutBlockMenu": "Settings",

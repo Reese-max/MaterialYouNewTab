@@ -1,5 +1,36 @@
-/* 第 12 輪：沿用時鐘區塊；只調整未自訂、非編輯中的影片工作區。 */
-.mynt-clock-date { display: none; }
+/* 第 12 輪：沿用時鐘區塊；預設排版仍只套用未自訂、非編輯中的工作區。 */
+.mynt-clock-date {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(320px, calc(100vw - 48px));
+    box-sizing: border-box;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: var(--accentLightTint-blue);
+    font-size: calc(14px * var(--mynt-font-scale, 1));
+    line-height: 1.5;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* 影片工作區舊規則以 !important 藏鐘；自訂版面須尊重顯示設定與鐘型，座標／縮放留給版面引擎。 */
+body[data-workspace-background="video"]:has([data-mynt-layout]):has(#hideClock:checked) .leftDiv :is(#analogClock, #digitalClock)[data-mynt-component-display="block"]:not([data-mynt-component-hidden]) {
+    display: block !important;
+}
+/* 日期跟著既有類比鐘區塊縮放；不另設座標或新增第二個日期元件。 */
+body[data-workspace-background="video"]:has([data-mynt-layout]) #analogClock .mynt-clock-date { display: block; }
+/* 關閉顯示時鐘時，所有版面皆隱藏；優先於歷史樣式與元件顯示規則。 */
+body:has(#hideClock:not(:checked)) .leftDiv :is(#analogClock, #digitalClock) {
+    display: none !important;
+}
+/* 非影片工作區的類比日期已顯示在焦點卡，避免未自訂版面出現兩份日期。 */
+body.mynt-manual-workspace:not([data-workspace-background="video"]) #analogClock .mynt-clock-date {
+    display: none;
+}
 
 html:has(> body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout]))) {
     overflow: auto;
@@ -68,23 +99,7 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-l
     & #analogClock #hour { height: 400%; top: -350%; }
     & #analogClock :is(#hour, #minute)::after { width: 100%; height: 150%; bottom: -50%; }
     & #analogClock #second::after { width: 100%; height: 100%; top: -23%; }
-    & .mynt-clock-date {
-        display: block;
-        position: absolute;
-        top: calc(100% + 8px);
-        left: 50%;
-        transform: translateX(-50%);
-        width: max-content;
-        max-width: min(320px, calc(100vw - 48px));
-        box-sizing: border-box;
-        padding: 3px 10px;
-        border-radius: 8px;
-        background: var(--accentLightTint-blue);
-        font-size: calc(14px * var(--mynt-font-scale, 1));
-        line-height: 1.5;
-        text-align: center;
-        overflow-wrap: anywhere;
-    }
+    & .mynt-clock-date { display: block; }
 }
 
 /* 矮桌面改為同列時間／日期，保留底部捷徑與名言的空間；自訂與編輯版面不套用。 */

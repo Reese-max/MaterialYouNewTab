@@ -890,6 +890,7 @@ const zh_TW = {
     "layoutBlockExam": "今日考古題",
     "layoutBlockPomodoro": "番茄鐘",
     "layoutBlockScratchpad": "便籤",
+    "layoutBlockHomeWidgets": "今日小工具",
     "layoutBlockBookmarks": "書籤",
     "layoutBlockWallpaper": "桌布",
     "layoutBlockMenu": "設定",

@@ -94,6 +94,10 @@ function fixture(options = {}) {
     document.dispatchEvent = event => document.emit(event.type, event);
     const search = document.createElement('section'); search.id = 'rightDiv';
     search.rect = { left: 100, top: 180, width: 300, height: 60 }; document.body.append(search);
+    if (options.widgets) {
+        const widgets = document.createElement('aside'); widgets.id = 'myntHomeWidgets';
+        widgets.rect = { left: 680, top: 180, width: 320, height: 400 }; document.body.append(widgets);
+    }
     const setting = document.createElement('input'); setting.id = 'layoutEditCheckbox'; document.body.append(setting);
     const events = new Map(); let writes = 0, blocked = false, readBlocked = false, profileReadsLeft = Infinity;
     const context = {
@@ -123,6 +127,29 @@ const tests = [];
 const test = (name, run) => tests.push({ name, run });
 const saved = app => app.storage.get('myntLayoutProfiles');
 const rectangle = app => clone(app.search.getBoundingClientRect());
+
+test('Today widgets keep defaults until moved, save in the existing profile and restore without extra storage keys', () => {
+    const app = fixture({ widgets: true }), bytes = saved(app), keys = [...app.storage.keys()];
+    const widgets = app.id('myntHomeWidgets');
+    assert.equal(widgets.style.translate, undefined); assert.equal(widgets.dataset.myntLayout, undefined);
+    app.api.setEditing(true);
+    const handle = app.document.all().find(node => node.dataset.block === 'homeWidgets')?.querySelector('.myntLayoutMove');
+    assert(handle, 'The enabled widget has a drag handle in editing mode');
+    handle.emit('keydown', { key: 'ArrowLeft', shiftKey: true });
+    assert.equal(widgets.style.translate, '-10px 0px'); assert.equal(saved(app), bytes);
+    app.id('myntLayoutSave').click();
+    const stored = JSON.parse(saved(app));
+    assert.equal(stored.profiles[0].layouts.wide.blocks.homeWidgets.x, -10 / 1200);
+    assert.equal(stored.profiles[0].layouts.wide.locked, true);
+    assert.deepEqual([...app.storage.keys()], keys);
+    const restored = fixture({ widgets: true, data: stored });
+    assert.equal(restored.id('myntHomeWidgets').style.translate, '-10px 0px');
+    restored.api.setEditing(true);
+    restored.document.all().find(node => node.dataset.block === 'homeWidgets').querySelector('.myntLayoutMove').emit('keydown', { key: 'ArrowDown', shiftKey: true });
+    restored.api.cancel();
+    assert.equal(restored.id('myntHomeWidgets').style.translate, '-10px 0px');
+    assert.equal(restored.writes(), 0);
+});
 
 test('A recoverable draft blocks previous-version preview without changing any layout', () => {
     const app = fixture({ draft: true }), before = clone(app.api.get()), rect = rectangle(app);
