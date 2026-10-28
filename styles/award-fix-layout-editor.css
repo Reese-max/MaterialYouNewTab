@@ -755,3 +755,41 @@ body.mynt-layout-editing #myntLayoutToolbar:not([data-dock="top"]) {
         border-color: Highlight;
     }
 }
+
+/* 第 14 輪：今日小工具在編輯模式的左緣是 100vw - 520px；
+   工具盒停在其左側並留 24px，不移動使用者區塊。1500px 以下小工具不顯示，沿用原停靠。
+   高度最多 560px、上下至少各留 88px，展開內容也不遮住底部名言與浮動入口。 */
+@media (min-width: 1500px) {
+    body.mynt-layout-editing:has(#myntHomeWidgets:not([hidden]):not([data-mynt-component-hidden])) #myntLayoutToolbar:not([data-dock="top"]) {
+        left: auto;
+        right: 544px;
+        top: 50%;
+        bottom: auto;
+        transform: translateY(-50%);
+        width: 320px;
+        max-width: 320px;
+        max-height: min(560px, calc(100dvh - 176px));
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #93a8c4 #f6f9ff;
+        scrollbar-gutter: stable;
+
+        /* 覆寫前段隱藏捲軸的規則；軌道兩端內縮，避開 14px 圓角。 */
+        &::-webkit-scrollbar {
+            display: block;
+            width: 6px;
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            margin-block: 14px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #93a8c4;
+            border-radius: 999px;
+        }
+    }
+}
