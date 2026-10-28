@@ -1013,3 +1013,54 @@ body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision button {
     white-space: normal;
     overflow-wrap: anywhere;
 }
+
+/* 第 16 輪：小區塊與靠頂區塊的把手留在框內，選取或聚焦也不向外展開。
+   沿用 JS 的靠頂訊號（top <48px），保守涵蓋 top <28px，不改使用者座標。 */
+@container myntlayoutblock (width < 110px) or (height < 110px) or style(--mynt-handle-top: 0px) {
+    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutLabel.myntLayoutMove {
+        top: 4px;
+        bottom: auto;
+        left: 4px;
+        right: auto;
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        min-height: 20px;
+        padding: 0;
+        gap: 0;
+        font-size: 0;
+        justify-content: center;
+    }
+
+    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutLabel.myntLayoutMove::before {
+        content: "⠿";
+        font: 600 12px/1 system-ui, sans-serif;
+    }
+
+    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize {
+        top: auto;
+        bottom: 0;
+        right: 0;
+        /* 以較長邊預留 4px 內距、20px 拖曳鈕及 4px 間隔，縮小時仍不相撞。 */
+        width: min(16px, calc(max(100cqw, 100cqh) - 28px));
+        height: min(16px, calc(max(100cqw, 100cqh) - 28px));
+        min-width: 0;
+        min-height: 0;
+        border-radius: 4px;
+        font-size: 12px;
+        box-shadow: none;
+    }
+}
+
+/* selectedLabel 是 span：提示與選取狀態都維持純文字，不套用按鈕外觀。 */
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp > span:first-child {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    font: 400 12px/1.5 var(--main-font-family, system-ui, sans-serif);
+    color: #536174;
+    cursor: default;
+}

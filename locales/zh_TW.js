@@ -884,7 +884,7 @@ const zh_TW = {
     "layoutResizeAria": "縮放{name}",
     "layoutSaveError": "儲存失敗：儲存空間不可用。變更仍保留，請重試或取消。 / Could not save. Changes are still available; retry or cancel.",
     "layoutBlockClock": "時鐘",
-    "layoutBlockFocus": "今天最重要的事",
+    "layoutBlockFocus": "今日焦點",
     "layoutBlockSearch": "搜尋列",
     "layoutBlockAiTools": "AI 工具",
     "layoutBlockShortcuts": "捷徑",
