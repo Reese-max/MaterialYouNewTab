@@ -29,10 +29,23 @@
     root.MyntCenteredLayout = { migrate, KEY, FLAG };
     if (typeof module !== 'undefined' && module.exports) module.exports = root.MyntCenteredLayout;
     try { migrate(root.localStorage); } catch (_) { /* Private browsing may deny storage. */ }
-    const wireAdd = () => document.getElementById('addQuickLinkButton')?.addEventListener('click', () => {
+    const wireAdd = () => document.getElementById('addQuickLinkButton')?.addEventListener('click', event => {
+        event.stopPropagation();
         const toggle = document.getElementById('shortcutsCheckbox');
         if (toggle && !toggle.checked) { toggle.checked = true; toggle.dispatchEvent(new Event('change', { bubbles: true })); }
-        document.getElementById('newShortcutButton')?.click();
+        const menu = document.getElementById('menuButton');
+        if (menu?.getAttribute('aria-expanded') !== 'true') setTimeout(() => menu?.click(), 0);
+        // The menu animation is cancelled by any page switch, so wait until it has finished opening.
+        const started = Date.now();
+        const whenOpen = () => {
+            const cont = document.getElementById('menuCont'), opt = document.getElementById('optCont');
+            const open = cont?.style.transform === 'translateX(0px)' && opt?.style.opacity === '1';
+            if (!open && Date.now() - started < 2000) return setTimeout(whenOpen, 50);
+            document.querySelector('[data-settings-group-button="work"]')?.click();
+            document.getElementById('shortcutEditButton')?.click();
+            setTimeout(() => document.getElementById('newShortcutButton')?.click(), 400);
+        };
+        setTimeout(whenOpen, 50);
     });
     if (root.document?.readyState === 'loading') root.document.addEventListener('DOMContentLoaded', wireAdd, { once: true });
     else if (root.document) wireAdd();

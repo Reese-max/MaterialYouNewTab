@@ -27,6 +27,15 @@ const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
 assert.match(html, /<div[^>]*id="homeToolbar"[^>]*>[\s\S]*?id="googleAppsCont"[\s\S]*?id="bookmarkButton"/);
 assert.match(html, /id="myntHomeWidgets"[^>]*hidden/);
 const centeredCss = fs.readFileSync(require.resolve('../styles/centered-home.css'), 'utf8');
+assert.match(centeredCss, /#quickLinksRow #shortcutsContainer > \* > a[\s\S]*?height:\s*42px[\s\S]*?padding:\s*0 14px/);
+assert.match(centeredCss, /#quickLinksRow #shortcutsContainer \.shortcut-name[\s\S]*?position:\s*static[\s\S]*?visibility:\s*visible/);
+const centeredSource = fs.readFileSync(require.resolve('../scripts/centered-layout.js'), 'utf8');
+const addFlow = centeredSource.slice(centeredSource.indexOf("const wireAdd"));
+for (const step of ['shortcutsCheckbox', 'menuButton', 'data-settings-group-button="work"', 'shortcutEditButton', 'newShortcutButton']) {
+    assert.ok(addFlow.includes(step), `Quick-link add flow must use ${step}.`);
+}
+assert.ok(addFlow.indexOf('menuButton') < addFlow.indexOf('shortcutEditButton'));
+assert.ok(addFlow.indexOf('shortcutEditButton') < addFlow.indexOf('newShortcutButton'));
 for (const [, selectors, declarations] of centeredCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const targetsShortcuts = selectors.split(',').some(selector => /#shortcuts-section(?:\s*:[\w-]+(?:\([^)]*\))?)*\s*$/.test(selector.trim()));
     if (targetsShortcuts) assert.doesNotMatch(declarations, /display\s*:\s*(?!none\b)[^;}]+!important/i, 'Disabled shortcuts must retain the component manager hidden state.');

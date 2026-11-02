@@ -175,3 +175,12 @@ CENTERED_LAYOUT_CHECK_OK
 - 瀏覽器探測只嘗試一次：`python -X utf8 C:\Users\Administrator\route-work\mynt-layout-20261102\probe_layout.py . .\out-v4 C:\Users\Administrator\route-work\mynt-layout-20261102\user-localstorage-fixture.json`，結束碼 `1`。環境缺少 `playwright`（`ModuleNotFoundError`），沒有輸出 `LAYOUT_PROBE_OK`；依要求不重試。
 - `git diff --check`：結束碼 `0`，通過；僅有既有 LF/CRLF 轉換提示。
 - 未提交；未更動探測器、fixture 或 `scripts/removed-features.js`。
+
+## v5 修正與驗收（2026-11-02）
+
+- `styles/centered-home.css`：只在 `#quickLinksRow` 範圍把使用者捷徑重設為 42px 橫向膠囊，圖示 20px、標籤回到列內；不改置中列的座標。
+- `scripts/centered-layout.js`：加號啟用捷徑後，透過既有選單按鈕開啟設定、切換到 Work tools、進入既有捷徑編輯頁，再延遲觸發既有新增按鈕，讓原 handler 捲動並聚焦新項目的 URL 欄位。
+- `tools/check-centered-layout.cjs`：補上首頁 pill 尺寸／標籤樣式與新增流程順序斷言。
+- 以下 15 項 Node 檢查全部結束碼 `0`：`check-component-visibility`、`check-component-manager`、`regress-component-manager`、`check-layout-profiles`、`check-adaptive-settings`、`check-home-widgets`、`check-removed-features`、`check-layout-save`、`check-layout-stability`、`check-manual-editor`、`regress-bookmark-completion`、`regress-layout-daily`、`regress-panel-interactions`、`check-clock-lifecycle`、`check-centered-layout`；最後輸出 `CENTERED_LAYOUT_CHECK_OK`。
+- 瀏覽器探測只嘗試一次：`python -X utf8 C:\Users\Administrator\route-work\mynt-layout-20261102\probe_layout.py . .\out-v5 C:\Users\Administrator\route-work\mynt-layout-20261102\user-localstorage-fixture.json`，結束碼 `1`，因環境缺少 Playwright（`ModuleNotFoundError: No module named 'playwright'`），未輸出 `LAYOUT_PROBE_OK`。依要求不再重試；實際 pill 高度、換行、加號聚焦與無重疊仍未經瀏覽器驗證。
+- `git diff --check`：結束碼 `0`，通過；僅有既有 LF/CRLF 轉換提示。未提交；未更動 probe、fixture 或 `scripts/removed-features.js`。
