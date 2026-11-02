@@ -1,0 +1,32 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const api = require('../scripts/centered-layout.js');
+
+function storage(seed = {}) {
+    const values = new Map(Object.entries(seed)), writes = [];
+    return { values, writes, getItem: key => values.has(key) ? values.get(key) : null, setItem(key, value) { writes.push(key); values.set(key, value); } };
+}
+const old = { version: 2, snap: true, locked: false, blocks: { clock: { x: .23, y: .36, s: .5 }, bookmarks: { x: .1, y: .2, s: 1.75 } } };
+const fresh = () => ({ version: 1, revision: 8, active: 'pactive', profiles: [{ id: 'pactive', name: 'Work', layouts: { wide: structuredClone(old), narrow: structuredClone(old) }, previous: {} }] });
+const unrelated = { theme: 'dark', selectedLanguage: 'en' };
+const store = storage({ ...unrelated, [api.KEY]: JSON.stringify(fresh()) });
+assert.equal(api.migrate(store), true);
+const migrated = JSON.parse(store.getItem(api.KEY)), active = migrated.profiles.find(p => p.id === 'pactive'), backup = migrated.profiles.find(p => p.name === '舊版面（自動備份）');
+assert.ok(backup); assert.notEqual(backup.id, active.id);
+assert.deepEqual(backup.layouts.wide.blocks, old.blocks); assert.deepEqual(backup.layouts.narrow.blocks, old.blocks);
+for (const size of ['wide', 'narrow']) { assert.deepEqual(active.layouts[size].blocks, {}); assert.deepEqual({ version: active.layouts[size].version, snap: active.layouts[size].snap, locked: active.layouts[size].locked }, { version: old.version, snap: old.snap, locked: old.locked }); }
+assert.deepEqual(Object.fromEntries([...store.values].filter(([key]) => ![api.KEY, api.FLAG].includes(key))), unrelated);
+assert.equal(api.migrate(store), false); assert.equal(store.writes.filter(key => key === api.KEY).length, 1);
+store.values.delete(api.FLAG); assert.equal(api.migrate(store), true);
+assert.equal(JSON.parse(store.getItem(api.KEY)).profiles.filter(p => p.name === '舊版面（自動備份）').length, 1, 'A saved profile write with a failed flag write cannot duplicate its backup on retry.');
+for (const initial of [{ ...unrelated }, { ...unrelated, [api.KEY]: '{malformed' }]) {
+    const safe = storage(initial); assert.equal(api.migrate(safe), true);
+    assert.equal(safe.getItem(api.KEY), initial[api.KEY] ?? null); assert.deepEqual(Object.fromEntries([...safe.values].filter(([key]) => key !== api.FLAG && key !== api.KEY)), unrelated);
+}
+const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
+assert.match(html, /<div[^>]*id="homeToolbar"[^>]*>[\s\S]*?id="googleAppsCont"[\s\S]*?id="bookmarkButton"/);
+assert.match(html, /id="myntHomeWidgets"[^>]*hidden/);
+const widgets = fs.readFileSync(require.resolve('../scripts/home-widgets.js'), 'utf8');
+assert.match(widgets, /mynt-removed-features[\s\S]*?return;/);
+assert.match(fs.readFileSync(require.resolve('../styles/centered-home.css'), 'utf8'), /#myntComponentManager label:has\(#myntComponent-homeWidgets\)/);
+console.log('CENTERED_LAYOUT_CHECK_OK');

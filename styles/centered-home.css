@@ -1,0 +1,87 @@
+/* Minimal centered home layout. Existing feature scripts and storage remain in place. */
+html.mynt-removed-features body #myntHomeWidgets { display: none !important; }
+body #myntComponentManager label:has(#myntComponent-homeWidgets) { display: none !important; }
+html.mynt-removed-features body .ttteexxtt { display: none !important; }
+body #analogClock .mynt-clock-date { display: none !important; }
+
+body #analogClock,
+body #digitalClock {
+    position: fixed !important; inset: 16vh auto auto 50% !important; z-index: 1;
+    width: 132px !important; height: 132px !important; margin: 0 !important;
+    transform: translateX(-50%) !important; translate: none !important; scale: 1 !important;
+}
+body #digitalClock { width: 200px !important; height: 152px !important; }
+body #date {
+    position: fixed !important; inset: calc(16vh + 142px) auto auto 50% !important;
+    display: block !important; visibility: visible !important; transform: translateX(-50%) !important;
+    width: max-content; max-width: calc(100vw - 32px); text-align: center; z-index: 1;
+    color: #fff; font-size: 16px; line-height: 24px; text-shadow: 0 1px 4px #0008;
+}
+body:has(#digitalClock[style*="display: block"]) #date { inset-block-start: calc(16vh + 162px) !important; }
+body #rightDiv { position: static !important; }
+body #searchbar {
+    position: fixed !important; inset: 47vh auto auto 50% !important; z-index: 2;
+    width: min(640px, calc(100vw - 32px)) !important; max-width: none !important;
+    transform: translateX(-50%) !important; translate: none !important; margin: 0 !important;
+}
+body #quickLinksRow {
+    position: fixed !important; inset: 59vh auto auto 50% !important; z-index: 2;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: max-content; max-width: calc(100vw - 24px); overflow-x: auto; overflow-y: hidden;
+    transform: translateX(-50%) !important; scrollbar-width: none;
+}
+body #quickLinksRow::-webkit-scrollbar { display: none; }
+body #quickLinksRow #shortcuts-section,
+body #quickLinksRow #aiToolsCont { position: static !important; inset: auto !important; transform: none !important; width: auto !important; max-width: none !important; height: auto !important; margin: 0 !important; overflow: visible !important; }
+body #quickLinksRow #shortcuts-section { display: flex !important; align-items: center; min-height: 42px; }
+body #quickLinksRow #shortcuts-section[data-mynt-component-hidden] #shortcutsContainer { visibility: hidden; pointer-events: none; }
+body #quickLinksRow #shortcuts-section .wrapper,
+body #quickLinksRow #shortcuts-section .shortcutsContainer,
+body #quickLinksRow #toolsCont { display: flex !important; align-items: center; justify-content: center; gap: 8px !important; width: max-content !important; }
+body #quickLinksRow #aiToolsIcon,
+body #quickLinksRow .hangno,
+body #quickLinksRow #flexMonitor,
+body #quickLinksRow #defaultMonitor { display: none !important; }
+body #quickLinksRow #toolsCont a,
+body #quickLinksRow #shortcutsContainer > *,
+body #addQuickLinkButton {
+    display: inline-flex !important; align-items: center; justify-content: center;
+    box-sizing: border-box; min-width: 48px; height: 42px !important; padding: 0 14px !important;
+    border: 1px solid #ffffff50; border-radius: 999px; background: #f3f6fcf2; color: #20334c;
+    box-shadow: 0 3px 14px #0002; text-decoration: none;
+}
+body #quickLinksRow #shortcutsContainer > * { width: auto !important; }
+body #addQuickLinkButton { flex: 0 0 42px; width: 42px; padding: 0 !important; cursor: pointer; font-size: 24px; }
+body #motivationalQuotesCont { position: fixed !important; inset: auto auto 20px 50% !important; width: min(640px, calc(100vw - 32px)); transform: translateX(-50%) !important; text-align: center; z-index: 1; }
+body #studyQuote { position: fixed !important; inset: auto auto 20px 50% !important; width: min(640px, calc(100vw - 32px)); transform: translateX(-50%) !important; text-align: center; z-index: 1; }
+
+body #homeToolbar {
+    position: fixed; top: 16px; right: 20px; z-index: 30; display: flex; align-items: center; gap: 8px;
+}
+body #homeToolbar :is(#googleAppsCont, #bookmarkButton) {
+    position: static !important; inset: auto !important; translate: none !important; transform: none !important;
+    width: 48px !important; height: 48px !important; margin: 0 !important; border-radius: 50%;
+}
+body #homeToolbar #googleAppsCont svg { width: 28px; height: 28px; }
+body #homeToolbar #bookmarkButton svg { width: 24px; height: 24px; }
+body #bookmarksContainer { z-index: 40; }
+body #bookmarkState:not([hidden]) { min-height: 38vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 20px 28px; text-align: center; box-sizing: border-box; }
+body #bookmarkStateDescription { max-width: 34ch; line-height: 1.55; }
+body #bookmarkList li:not(.folder) > a { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 10px 12px; border-radius: 14px; }
+body #bookmarkList li:not(.folder) > a .favicon { flex: 0 0 24px; width: 24px; height: 24px; margin: 0; }
+body #bookmarkList .bookmark-item-copy { display: grid; min-width: 0; gap: 3px; }
+body #bookmarkList .bookmark-item-copy strong,
+body #bookmarkList .bookmark-item-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body #bookmarkList .bookmark-item-copy small { opacity: .72; font-size: .78rem; }
+
+@media (max-width: 600px) {
+    body #analogClock { inset-block-start: 12vh !important; width: 96px !important; height: 96px !important; }
+    body #digitalClock { inset-block-start: 11vh !important; width: 170px !important; height: 128px !important; }
+    body #date { inset-block-start: calc(12vh + 104px) !important; font-size: 14px; }
+    body:has(#digitalClock[style*="display: block"]) #date { inset-block-start: calc(11vh + 140px) !important; }
+    body #searchbar { inset-block-start: 43vh !important; }
+    body #quickLinksRow { inset-block-start: 56vh !important; gap: 6px; }
+    body #quickLinksRow #toolsCont a, body #quickLinksRow #shortcutsContainer > * { padding-inline: 10px !important; }
+    body #homeToolbar { top: 10px; right: 10px; gap: 4px; }
+    body #homeToolbar :is(#googleAppsCont, #bookmarkButton) { width: 42px !important; height: 42px !important; }
+}

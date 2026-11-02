@@ -49,6 +49,7 @@
     <script defer src="scripts/focus-card.js"></script>
     <script defer src="scripts/exam-daily.js"></script>
     <script defer src="scripts/layout-profiles.js"></script>
+    <script defer src="scripts/centered-layout.js"></script>
     <script defer src="scripts/layout-draft.js"></script>
     <script defer src="scripts/layout-editor.js"></script>
     <script defer src="scripts/search.js"></script>
@@ -94,6 +95,7 @@
     <link href="styles/adaptive-background.css" rel="stylesheet">
     <link href="styles/manual-editor-controls.css" rel="stylesheet">
     <link href="styles/award.css" rel="stylesheet">
+    <link href="styles/centered-home.css" rel="stylesheet">
     <script defer src="scripts/adaptive-core.js"></script>
     <script defer src="scripts/adaptive-background.js"></script>
 </head>
@@ -236,15 +238,6 @@
         </svg>
     </div>
 
-    <button class="bookmark-button" id="bookmarkButton" type="button" aria-controls="bookmarkSidebar" aria-expanded="false">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill-rule="evenodd"
-                d="M7 2a3 3 0 0 0-3 3v15.138a1.5 1.5 0 0 0 2.244 1.303l5.26-3.006a1 1 0 0 1 .992 0l5.26 3.006A1.5 1.5 0 0 0 20 20.138V5a3 3 0 0 0-3-3z"
-                clip-rule="evenodd" />
-        </svg>
-        <!-- Text to appear on hover -->
-        <span class="tooltip-text homeActionHint" id="bookmarksHover">書籤</span>
-    </button>
     <div id="bookmarksContainer">
         <div id="bookmarkSidebar" class="bookmark-sidebar" role="dialog" aria-modal="true"
             aria-labelledby="bookmarksHeading" aria-hidden="true" inert>
@@ -353,6 +346,7 @@
 
     <!----------------------- Google App Menu Setup Starting ----------------------->
     <!-- 9 Dot Icon -->
+    <div class="homeToolbar" id="homeToolbar">
     <button class="googleAppsCont" id="googleAppsCont" type="button" aria-controls="iconContainer" aria-expanded="false">
         <svg class="dot-icon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24">
             <path
@@ -361,6 +355,11 @@
         <!-- Text to appear on hover -->
         <span class="tooltip-text" id="googleAppsHover">Google Apps</span>
     </button>
+    <button class="bookmark-button" id="bookmarkButton" type="button" aria-controls="bookmarkSidebar" aria-expanded="false" aria-label="書籤">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M7 2a3 3 0 0 0-3 3v15.138a1.5 1.5 0 0 0 2.244 1.303l5.26-3.006a1 1 0 0 1 .992 0l5.26 3.006A1.5 1.5 0 0 0 20 20.138V5a3 3 0 0 0-3-3z" clip-rule="evenodd" /></svg>
+        <span class="tooltip-text homeActionHint" id="bookmarksHover">書籤</span>
+    </button>
+    </div>
 
     <!-- Centered Icon Container -->
     <div id="iconContainer" class="icon-container" style="display: none;">
@@ -802,8 +801,8 @@
                     </div>
                     <p id="dailyFocusNote" role="status" aria-live="polite" hidden></p>
                 </div>
-                <div id="date"></div>
             </div>
+            <div id="date"></div>
         </div>
         <!-- ---------end of leftDiv--------------- -->
 
@@ -959,6 +958,7 @@
     <!---End of centerDiv--->
 
     <!-- ------shortcuts------------------ -->
+    <div id="quickLinksRow" aria-label="快速連結">
     <div id="shortcuts-section">
         <div class="wrapper">
             <div id="flexMonitor"></div>
@@ -1018,6 +1018,8 @@
                 <div class="tLabel" id="youtube">YouTube</div>
             </a>
         </div>
+    </div>
+    <button id="addQuickLinkButton" type="button" aria-label="新增捷徑" title="新增捷徑">+</button>
     </div>
 
     <!-- Settings Modal (hidden by default) -->
