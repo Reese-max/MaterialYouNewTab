@@ -61,4 +61,5 @@ assert.match(centeredCss, /html\.mynt-removed-features body (?:#analogClock){3},
 assert.match(centeredCss, /html\.mynt-removed-features body #searchbar \{ inset-block-start: calc\(50vh - 96px\) !important; \}/, 'Search group must sit on the optical center once clock and date are removed.');
 assert.match(centeredCss, /#pomodoroCont#pomodoroCont \{[\s\S]*?inset: 16px auto auto 20px !important;[\s\S]*?border-radius: 50% !important;/, 'Pomodoro button must mirror the top-right toolbar as a circle.');
 assert.match(centeredCss, /#quickLinksRow #shortcuts-section \{ column-gap: 8px; row-gap: 8px;/, 'Shortcut pills need the row gap because component-manager forces #shortcuts-section to flex.');
+assert.doesNotMatch(centeredCss.match(/#pomodoroCont#pomodoroCont \{[^}]*\}/)[0], /display\s*:[^;]*!important/, 'Pomodoro corner rule must not force display, or disabling the widget cannot hide it.');
 console.log('CENTERED_LAYOUT_CHECK_OK');

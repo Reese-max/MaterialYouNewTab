@@ -129,7 +129,7 @@ html.mynt-removed-features body #quickLinksRow { inset-block-start: calc(50vh + 
 html.mynt-removed-features body #pomodoroCont#pomodoroCont {
     position: fixed !important; inset: 16px auto auto 20px !important; translate: none !important; transform: none !important; scale: 1 !important;
     width: 48px !important; height: 48px !important; margin: 0 !important; border-radius: 50% !important;
-    display: flex !important; align-items: center; justify-content: center;
+    align-items: center; justify-content: center; /* display stays with component-manager so the owner can hide it */
 }
 html.mynt-removed-features body :is(#wallpaperGalleryBtn, #menuButton) { width: 48px !important; height: 48px !important; border-radius: 50% !important; }
 /* component-manager.css forces #shortcuts-section to display:flex (not contents), so give it the row's own gap;
