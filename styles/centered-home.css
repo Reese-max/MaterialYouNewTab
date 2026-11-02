@@ -172,6 +172,14 @@ html.black-theme.mynt-removed-features body {
   --mynt-glass: rgba(32, 34, 40, .92); --mynt-glass-strong: rgba(32, 34, 40, .95); --mynt-glass-edge: rgba(255, 255, 255, .10);
   --mynt-ink: #e4e9f1; --mynt-ink-soft: #b4bfce;
 }
+/* Adaptive background keeps its computed surface; high contrast gets solid surfaces and a visible edge. */
+html.mynt-removed-features body:is([data-adaptive-contrast="on"], [data-adaptive-opacity="on"]) {
+  --mynt-glass: var(--adaptive-surface, rgba(244, 248, 255, .96)); --mynt-glass-strong: var(--adaptive-surface, rgba(244, 248, 255, .96));
+  --mynt-ink: var(--adaptive-text, #213851); --mynt-ink-soft: var(--adaptive-text, #213851);
+}
+html.myntHighContrast.mynt-removed-features body {
+  --mynt-glass: #fff; --mynt-glass-strong: #fff; --mynt-glass-edge: #1d2b3e; --mynt-ink: #000; --mynt-ink-soft: #1d2b3e;
+}
 /* search bar */
 html.mynt-removed-features body #searchbar {
   width: min(720px, calc(100vw - 32px)) !important; height: 60px !important;
@@ -181,7 +189,7 @@ html.mynt-removed-features body #searchbar {
 }
 html.mynt-removed-features body #searchbar .searchbar-content { height: 100% !important; }
 html.mynt-removed-features body #searchQ { font-size: 17px !important; color: var(--mynt-ink) !important; }
-html.mynt-removed-features body #searchQ::placeholder { color: var(--mynt-ink-soft) !important; opacity: .8; }
+html.mynt-removed-features body #searchQ::placeholder { color: var(--mynt-ink-soft) !important; opacity: 1; }
 /* pills */
 html.mynt-removed-features body #quickLinksRow #toolsCont a,
 html.mynt-removed-features body #quickLinksRow #shortcutsContainer > * > a,
@@ -199,7 +207,11 @@ html.mynt-removed-features body #addQuickLinkButton:hover { transform: translate
 html.mynt-removed-features body #quickLinksRow { inset-block-start: calc(50vh + 16px) !important; column-gap: 10px; }
 html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 10px; }
 /* corner buttons */
-html.mynt-removed-features body :is(#pomodoroCont#pomodoroCont, #googleAppsCont, #bookmarkButton, #wallpaperGalleryBtn, #menuButton) {
+html.mynt-removed-features body #pomodoroCont,
+html.mynt-removed-features body #googleAppsCont,
+html.mynt-removed-features body #bookmarkButton,
+html.mynt-removed-features body #wallpaperGalleryBtn,
+html.mynt-removed-features body #menuButton {
   background: var(--mynt-glass) !important; border: 1px solid var(--mynt-glass-edge) !important;
   box-shadow: 0 4px 14px rgba(18, 38, 66, .12) !important;
   backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
@@ -211,7 +223,6 @@ html.mynt-removed-features body #studyQuote {
   background: var(--mynt-glass) !important; border: 1px solid var(--mynt-glass-edge) !important; box-shadow: 0 4px 16px rgba(18, 38, 66, .10) !important;
 }
 html.mynt-removed-features body #studyQuote :is(#studyQuoteText, #studyQuoteSource) { color: var(--mynt-ink-soft) !important; font-size: 13.5px !important; letter-spacing: .02em; }
-html.mynt-removed-features body #studyQuote #studyQuoteSource { opacity: .75; }
 @media (max-width: 600px) {
   html.mynt-removed-features body #quickLinksRow,
   html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 6px; row-gap: 6px; }
