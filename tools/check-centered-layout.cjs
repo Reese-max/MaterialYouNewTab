@@ -67,5 +67,5 @@ assert.match(pomodoroSource, /e\.key !== "Escape" \|\| !panelOpen[\s\S]*?closePa
 assert.match(pomodoroSource, /pomodoroCont\.classList\.toggle\("pomodoro-active", active\)[\s\S]*?--pomo-elapsed/, 'The corner button must mirror an active countdown.');
 assert.match(centeredCss, /#pomodoroCont#pomodoroCont\.pomodoro-active::before \{[\s\S]*?conic-gradient\(#234c78 calc\(var\(--pomo-elapsed/, 'Active pomodoro needs the elapsed-time ring.');
 const studioSource = fs.readFileSync(require.resolve('../scripts/pomodoro-studio.js'), 'utf8');
-assert.match(studioSource, /const height=Math\.floor\(/, 'The panel backdrop must floor its height, or a subpixel overflow shows a scrollbar.');
+assert.match(studioSource, /fitBackdrop=css=>\{if\(!panel\.clientHeight\)return;[\s\S]*?const height=Math\.floor\([\s\S]*?if\(!\(height>0\)\)return;/, 'The panel backdrop must floor its height, or a subpixel overflow shows a scrollbar.');
 console.log('CENTERED_LAYOUT_CHECK_OK');

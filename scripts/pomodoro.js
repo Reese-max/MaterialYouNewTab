@@ -219,7 +219,8 @@ document.addEventListener("DOMContentLoaded", function () {
         pomodoroCont.classList.toggle("pomodoro-break", pomodoroState.phase !== "work");
         pomodoroCont.style.setProperty("--pomo-elapsed", (1 - progress).toFixed(4));
         pomodoroCont.setAttribute("aria-label", label);
-        if (pomodoroHover) pomodoroHover.textContent = label;
+        // languages.js owns the tooltip text (applied on window load); the countdown rides in data-time.
+        if (pomodoroHover) pomodoroHover.dataset.time = active ? " " + pomodoroTimeDisplay.textContent : "";
     }
 
     // --- Timer controls: one shared wall-clock source for every view. ---
@@ -532,6 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Escape closes the panel and returns focus to its corner button.
     document.addEventListener("keydown", function (e) {
         if (e.key !== "Escape" || !panelOpen || e.defaultPrevented) return;
+        e.preventDefault();
         const focusInside = pomodoroPanel.contains(document.activeElement);
         closePanel();
         if (focusInside || document.activeElement === document.body) pomodoroCont.focus();
