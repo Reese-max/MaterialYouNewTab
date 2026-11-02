@@ -56,5 +56,5 @@ assert.ok(removedCommandMap, 'Command palette must map removed features to their
 for (const id of ['todo', 'quick-create-task', 'scratchpad', 'scratchpadCopy', 'focus-history', 'focus-gpt', 'exam-today']) assert.ok(removedCommandMap[1].includes(`"${id}"`), `Removed feature command ${id} must be hidden from the palette.`);
 assert.match(dashboardTools, /\]\.filter\(command => !hiddenCommandIds\.has\(command\.id\)\)/, 'Palette results must drop commands of removed features.');
 const lazyBookmarks = fs.readFileSync(require.resolve('../scripts/bookmarks.js'), 'utf8');
-assert.doesNotMatch(lazyBookmarks, /^document\.addEventListener\("DOMContentLoaded"/m, 'bookmarks.js is lazy-loaded after DOMContentLoaded, so its init must run immediately when the DOM is ready.');
+assert.doesNotMatch(lazyBookmarks, /^\s*document\.addEventListener\(\s*["']DOMContentLoaded["']/m, 'bookmarks.js is lazy-loaded after DOMContentLoaded, so its init must run immediately when the DOM is ready.');
 console.log('CENTERED_LAYOUT_CHECK_OK');
