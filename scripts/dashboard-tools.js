@@ -1028,6 +1028,10 @@ if (typeof document !== "undefined") {
             if (event.target === controlDialog) controlDialog.close();
         });
 
+        // Commands that would reopen or write into features removed from the homepage (scripts/removed-features.js).
+        const REMOVED_COMMANDS = { todo: ["todo", "quick-create-task"], scratchpad: ["scratchpad", "scratchpadCopy"], focus: ["focus-history", "focus-gpt"], exam: ["exam-today"] };
+        const hiddenCommandIds = new Set((window.MYNT_REMOVED_COMPONENT_IDS || []).flatMap(id => REMOVED_COMMANDS[id] || []));
+
         function ensureWidget(checkboxId, triggerId, visibleSelector) {
             const checkbox = document.getElementById(checkboxId);
             if (checkbox && !checkbox.checked) checkbox.click();
@@ -1183,7 +1187,7 @@ if (typeof document !== "undefined") {
                 ...workspaceLaunchCommands,
                 ...collectLinkCommands("#toolsCont a", "commandGroupAi", normalized),
                 ...collectLinkCommands("#iconContainer a", "commandGroupGoogle", normalized)
-            ];
+            ].filter(command => !hiddenCommandIds.has(command.id));
             const bookmarks = await bookmarkCommands(normalized);
             if (token !== commandRenderToken) return;
             filteredCommands = [...base, ...bookmarks].slice(0, 40);

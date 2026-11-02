@@ -50,4 +50,9 @@ assert.equal(api.migrate(full), false); assert.equal(full.getItem(api.FLAG), nul
 full.setItem = originalSet; assert.equal(api.migrate(full), true); assert.equal(full.getItem(api.FLAG), 'true');
 assert.match(html, /id="quickLinksRow" role="group" aria-label=/);
 assert.match(centeredCss, /@media \(max-width: 600px\) \{ body #quickLinksRow \{ row-gap: 6px; column-gap: 6px; \} \}\s*$/);
+const dashboardTools = fs.readFileSync(require.resolve('../scripts/dashboard-tools.js'), 'utf8');
+const removedCommandMap = dashboardTools.match(/REMOVED_COMMANDS = \{([\s\S]*?)\}/);
+assert.ok(removedCommandMap, 'Command palette must map removed features to their commands.');
+for (const id of ['quick-create-task', 'scratchpadCopy', 'focus-history', 'focus-gpt', 'exam-today']) assert.ok(removedCommandMap[1].includes(`"${id}"`), `Removed feature command ${id} must be hidden from the palette.`);
+assert.match(dashboardTools, /\]\.filter\(command => !hiddenCommandIds\.has\(command\.id\)\)/, 'Palette results must drop commands of removed features.');
 console.log('CENTERED_LAYOUT_CHECK_OK');
