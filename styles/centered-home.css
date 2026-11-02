@@ -143,4 +143,16 @@ html.mynt-removed-features body #quickLinksRow #toolsCont a .tIcon { flex: 0 0 2
     html.mynt-removed-features body #homeToolbar :is(#googleAppsCont, #bookmarkButton),
     html.mynt-removed-features body :is(#wallpaperGalleryBtn, #menuButton) { width: 42px !important; height: 42px !important; min-width: 42px !important; min-height: 42px !important; scale: 1 !important; }
 }
+/* Pomodoro: the panel drops straight below its corner button (a dragged panel keeps its inline position),
+   the footer stats sit centered, and the corner button shows an elapsed-time ring while a session is active. */
+html.mynt-removed-features body #pomodoroPanel { top: 72px; left: 20px; max-height: min(calc(100dvh - 88px), var(--pomo-viewport-height, 100dvh)); }
+html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { justify-content: center; gap: 6px; }
+html.mynt-removed-features body #pomodoroCont#pomodoroCont.pomodoro-active::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    background: conic-gradient(#234c78 calc(var(--pomo-elapsed, 0) * 1turn), #234c7826 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+}
+html.mynt-removed-features body #pomodoroCont#pomodoroCont.pomodoro-active.pomodoro-break::before { background: conic-gradient(#2f7d5b calc(var(--pomo-elapsed, 0) * 1turn), #2f7d5b26 0); }
+@media (max-width: 600px) { html.mynt-removed-features body #pomodoroPanel { top: 60px; left: 10px; } }
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }

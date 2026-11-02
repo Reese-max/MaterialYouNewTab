@@ -62,4 +62,10 @@ assert.match(centeredCss, /html\.mynt-removed-features body #searchbar \{ inset-
 assert.match(centeredCss, /#pomodoroCont#pomodoroCont \{[\s\S]*?inset: 16px auto auto 20px !important;[\s\S]*?border-radius: 50% !important;/, 'Pomodoro button must mirror the top-right toolbar as a circle.');
 assert.match(centeredCss, /#quickLinksRow #shortcuts-section \{ column-gap: 8px; row-gap: 8px;/, 'Shortcut pills need the row gap because component-manager forces #shortcuts-section to flex.');
 assert.doesNotMatch(centeredCss.match(/#pomodoroCont#pomodoroCont \{[^}]*\}/)[0], /display\s*:[^;]*!important/, 'Pomodoro corner rule must not force display, or disabling the widget cannot hide it.');
+const pomodoroSource = fs.readFileSync(require.resolve('../scripts/pomodoro.js'), 'utf8');
+assert.match(pomodoroSource, /e\.key !== "Escape" \|\| !panelOpen[\s\S]*?closePanel\(\);[\s\S]*?pomodoroCont\.focus\(\)/, 'Escape must close the pomodoro panel and return focus to its button.');
+assert.match(pomodoroSource, /pomodoroCont\.classList\.toggle\("pomodoro-active", active\)[\s\S]*?--pomo-elapsed/, 'The corner button must mirror an active countdown.');
+assert.match(centeredCss, /#pomodoroCont#pomodoroCont\.pomodoro-active::before \{[\s\S]*?conic-gradient\(#234c78 calc\(var\(--pomo-elapsed/, 'Active pomodoro needs the elapsed-time ring.');
+const studioSource = fs.readFileSync(require.resolve('../scripts/pomodoro-studio.js'), 'utf8');
+assert.match(studioSource, /const height=Math\.floor\(/, 'The panel backdrop must floor its height, or a subpixel overflow shows a scrollbar.');
 console.log('CENTERED_LAYOUT_CHECK_OK');

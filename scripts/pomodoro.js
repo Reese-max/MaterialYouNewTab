@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const pomodoroCheckbox = document.getElementById("pomodoroCheckbox");
     const pomodoroCont = document.getElementById("pomodoroCont");
     const pomodoroIcon = document.getElementById("pomodoroIcon");
+    const pomodoroHover = document.getElementById("pomodoroHover");
     const pomodoroPanel = document.getElementById("pomodoroPanel");
     const pomodoroBgVideo = document.querySelector(".pomodoro-bg-video");
     const pomodoroPhaseLabel = document.getElementById("pomodoroPhaseLabel");
@@ -210,6 +211,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Sessions today
         pomodoroSessionsCount.textContent = getSessionsToday();
+
+        // The corner button mirrors an active countdown, so the panel can stay closed.
+        const active = pomodoroState.isRunning || pomodoroState.timeRemaining !== pomodoroState.totalTime;
+        const label = getPomodoroText("pomodoroHover", "Pomodoro") + (active ? " " + pomodoroTimeDisplay.textContent : "");
+        pomodoroCont.classList.toggle("pomodoro-active", active);
+        pomodoroCont.classList.toggle("pomodoro-break", pomodoroState.phase !== "work");
+        pomodoroCont.style.setProperty("--pomo-elapsed", (1 - progress).toFixed(4));
+        pomodoroCont.setAttribute("aria-label", label);
+        if (pomodoroHover) pomodoroHover.textContent = label;
     }
 
     // --- Timer controls: one shared wall-clock source for every view. ---
@@ -517,6 +527,14 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             openPanel();
         }
+    });
+
+    // Escape closes the panel and returns focus to its corner button.
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape" || !panelOpen || e.defaultPrevented) return;
+        const focusInside = pomodoroPanel.contains(document.activeElement);
+        closePanel();
+        if (focusInside || document.activeElement === document.body) pomodoroCont.focus();
     });
 
     document.addEventListener("click", function (e) {
