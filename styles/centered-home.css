@@ -232,4 +232,41 @@ html.mynt-removed-features body #studyQuote :is(#studyQuoteText, #studyQuoteSour
   html.mynt-removed-features body #searchbar { height: 56px !important; }
   html.mynt-removed-features body #studyQuote { inset: auto 16px 80px 16px !important; width: auto !important; margin-inline: auto; }
 }
+/* Pomodoro panel layout: clear hierarchy (phase -> timer -> primary action -> task -> quiet extras -> one-line stats). */
+html.mynt-removed-features body #pomodoroCont[aria-expanded="true"] #pomodoroHover { display: none !important; }
+html.mynt-removed-features body #pomodoroPanel {
+  border: 1px solid var(--mynt-glass-edge, rgba(255, 255, 255, .7)) !important; border-radius: 24px !important;
+  box-shadow: var(--mynt-glass-shadow, 0 10px 30px rgba(18, 38, 66, .16)) !important; padding: 18px 20px 14px !important;
+}
+html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop { border-radius: 23px !important; }
+html.mynt-removed-features body #pomodoroPanel .pomodoroPhaseLabel { font-size: 13px !important; font-weight: 600 !important; letter-spacing: .06em; }
+html.mynt-removed-features body #pomodoroPanel .pomodoroPhaseLabel::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 7px 1px 0; border-radius: 50%; background: currentColor; vertical-align: middle;
+}
+html.mynt-removed-features body #pomodoroPanel .pomodoroRoundDisplay { font-size: 12px !important; font-weight: 500 !important; opacity: .7; letter-spacing: .08em; margin-top: -2px; }
+/* primary row: start fills the width, reset is a round secondary */
+html.mynt-removed-features body #pomodoroPanel .pomodoroControls { width: 100% !important; gap: 8px !important; justify-content: stretch !important; }
+html.mynt-removed-features body #pomodoroPanel .pomodoroControls :is(#pomodoroStartBtn, #pomodoroPauseBtn) { flex: 1 1 auto !important; min-width: 0 !important; height: 44px !important; border-radius: 22px !important; }
+html.mynt-removed-features body #pomodoroPanel .pomodoroControls #pomodoroResetBtn { flex: 0 0 44px !important; width: 44px !important; min-width: 44px !important; height: 44px !important; padding: 0 !important; border-radius: 50% !important; }
+/* task field */
+html.mynt-removed-features body #pomodoroPanel #myntPomoTask {
+  height: 40px !important; border-radius: 14px !important; padding-inline: 14px !important; font-size: 13px !important;
+  border: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 14%, transparent) !important; box-shadow: none !important;
+}
+/* quiet extras: outline pills, smaller than the primary action */
+html.mynt-removed-features body #pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float,
+html.mynt-removed-features body #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask) {
+  height: 34px !important; min-height: 34px !important; border-radius: 999px !important; font-size: 12.5px !important; font-weight: 500 !important;
+  background: transparent !important; box-shadow: none !important;
+  border: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 16%, transparent) !important; color: var(--pomo-muted, #35465e) !important;
+}
+html.mynt-removed-features body #pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float:hover,
+html.mynt-removed-features body #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask):hover { background: color-mix(in srgb, var(--pomo-accent, #234c78) 8%, transparent) !important; color: var(--pomo-fg, #1b1f24) !important; }
+html.mynt-removed-features body #pomodoroPanel .pomoStudioRow { gap: 8px !important; }
+/* stats: one centered line */
+html.mynt-removed-features body #pomodoroPanel .pomoStudioStats {
+  display: flex !important; flex-wrap: wrap; align-items: center; justify-content: center; column-gap: 10px; row-gap: 2px;
+  margin-top: 4px; padding: 10px 0 0 !important; border-top: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 10%, transparent) !important; background: transparent !important;
+}
+html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { margin: 0 !important; padding: 0 !important; border: 0 !important; width: auto !important; font-size: 12px !important; gap: 4px !important; }
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }

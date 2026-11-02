@@ -68,4 +68,6 @@ assert.match(pomodoroSource, /pomodoroCont\.classList\.toggle\("pomodoro-active"
 assert.match(centeredCss, /#pomodoroCont#pomodoroCont\.pomodoro-active::before \{[\s\S]*?conic-gradient\(#234c78 calc\(var\(--pomo-elapsed/, 'Active pomodoro needs the elapsed-time ring.');
 const studioSource = fs.readFileSync(require.resolve('../scripts/pomodoro-studio.js'), 'utf8');
 assert.match(studioSource, /fitBackdrop=css=>\{if\(!panel\.clientHeight\)return;[\s\S]*?const height=Math\.floor\([\s\S]*?if\(!\(height>0\)\)return;/, 'The panel backdrop must floor its height, or a subpixel overflow shows a scrollbar.');
+assert.match(centeredCss, /#pomodoroCont\[aria-expanded="true"\] #pomodoroHover \{ display: none !important; \}/, 'The corner tooltip must not peek out from behind the open pomodoro panel.');
+assert.match(centeredCss, /\.pomodoroControls #pomodoroResetBtn \{[^}]*border-radius: 50% !important;/, 'Reset is a round secondary next to a full-width start button.');
 console.log('CENTERED_LAYOUT_CHECK_OK');
