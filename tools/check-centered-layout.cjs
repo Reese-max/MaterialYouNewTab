@@ -53,6 +53,6 @@ assert.match(centeredCss, /@media \(max-width: 600px\) \{ body #quickLinksRow \{
 const dashboardTools = fs.readFileSync(require.resolve('../scripts/dashboard-tools.js'), 'utf8');
 const removedCommandMap = dashboardTools.match(/REMOVED_COMMANDS = \{([\s\S]*?)\}/);
 assert.ok(removedCommandMap, 'Command palette must map removed features to their commands.');
-for (const id of ['quick-create-task', 'scratchpadCopy', 'focus-history', 'focus-gpt', 'exam-today']) assert.ok(removedCommandMap[1].includes(`"${id}"`), `Removed feature command ${id} must be hidden from the palette.`);
+for (const id of ['todo', 'quick-create-task', 'scratchpad', 'scratchpadCopy', 'focus-history', 'focus-gpt', 'exam-today']) assert.ok(removedCommandMap[1].includes(`"${id}"`), `Removed feature command ${id} must be hidden from the palette.`);
 assert.match(dashboardTools, /\]\.filter\(command => !hiddenCommandIds\.has\(command\.id\)\)/, 'Palette results must drop commands of removed features.');
 console.log('CENTERED_LAYOUT_CHECK_OK');
