@@ -111,8 +111,8 @@ body #bookmarkList .bookmark-item-copy small { opacity: .72; font-size: .78rem; 
 
 /* Flatten AI tools and enabled user shortcuts into one wrapping pill row. */
 body #quickLinksRow { row-gap: 8px; column-gap: 8px; }
+body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]) { display: contents; }
 body #quickLinksRow #aiToolsCont,
 body #quickLinksRow #toolsCont,
-body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]),
 body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]) .wrapper,
 body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]) #shortcutsContainer { display: contents !important; }
