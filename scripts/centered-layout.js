@@ -21,7 +21,7 @@
             data.profiles.push(backup);
             for (const size of ['wide', 'narrow']) active.layouts[size].blocks = {};
             data.revision++;
-            storage.setItem(KEY, JSON.stringify(data));
+            try { storage.setItem(KEY, JSON.stringify(data)); } catch (_) { return false; /* Retry next load; nothing was written. */ }
         } catch (_) { /* Missing or malformed profiles are left untouched. */ }
         storage.setItem(FLAG, 'true');
         return true;

@@ -116,3 +116,4 @@ body #quickLinksRow #aiToolsCont:not([data-mynt-component-hidden]):not([style*="
 body #quickLinksRow #toolsCont,
 body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]) .wrapper,
 body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]) #shortcutsContainer { display: contents !important; }
+@media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
