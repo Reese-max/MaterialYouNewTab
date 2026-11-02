@@ -125,3 +125,53 @@ git diff --check
 - `git diff --check` 通過；僅有既有 CRLF 轉換提示。
 - 瀏覽器探測已依要求嘗試一次：`python -X utf8 C:\Users\Administrator\route-work\mynt-layout-20261102\probe_layout.py . .\out-v2 C:\Users\Administrator\route-work\mynt-layout-20261102\user-localstorage-fixture.json`，結束碼 `1`，因環境沒有 `playwright` 模組（`ModuleNotFoundError`），未產生 `LAYOUT_PROBE_OK`；依要求不重試。
 - 未提交。瀏覽器實際幾何、手機換行與無重疊尚未驗證。
+
+## v4 進度（2026-11-02）
+
+- 狀態：CSS 修正完成；保留已驗收的寬版配置。
+- 計畫：檢查目前 CSS 及相關媒體規則，僅在 styles/centered-home.css 增補窄版覆寫；執行要求的 Node 檢查、瀏覽器探測（最多一次）及 git diff --check，將結果記錄於此。
+
+
+- styles/centered-home.css：窄版解除祖先縮放對固定定位座標的影響；維持原時鐘、日期位置，搜尋列及連結列回到正確順序；確保搜尋提交按鈕顯示、搜尋內容使用容器寬度，並將引言移到右下按鈕上方且限制在側邊留白內。寬版規則未動。
+- 驗收進行中。
+
+### v4 驗收結果
+
+- Node 檢查：下列 15 項全部結束碼 `0`。
+
+```text
+node tools/check-component-visibility.cjs
+Component visibility core checks passed: 20 entries, legacy keys, cache plans, safe defaults, absent-only migration, malformed preservation, countdown revisions and browser UMD.
+node tools/check-component-manager.cjs
+Component manager checks passed: all-hidden/re-add/reload, untouched timer/layout/media/note data, keyed/clear storage events, owner hidden-state refresh, clock synchronization without layout reload, delayed layout clamp, malformed/quota fallback and settings/config recovery.
+node tools/regress-component-manager.cjs
+Component settings regression passed: shortcut/AI false-to-true-to-false controls, cross-tab/MCP refresh, canonical defaults, malformed-state preservation, unchanged content/layout/timer data and zero refresh writes.
+node tools/check-layout-profiles.cjs
+LAYOUT_PROFILES_OK; PROFILE_RECOVERY_OK
+node tools/check-adaptive-settings.cjs
+ADAPTIVE_SETTINGS_OK; ADAPTIVE_APPEARANCE_OK; ADAPTIVE_INTERACTIONS_OK
+node tools/check-home-widgets.cjs
+HOME_WIDGETS_GEOMETRY 1536x740; HOME_WIDGETS_GEOMETRY 1920x1080; HOME_WIDGETS_OK
+node tools/check-removed-features.cjs
+Removed feature visibility, settings, manager, and layout checks passed.
+node tools/check-layout-save.cjs
+LAYOUT_SAVE_CHECK_OK
+node tools/check-layout-stability.cjs
+LAYOUT_STABILITY_OK
+node tools/check-manual-editor.cjs
+MANUAL_EDITOR_CHECK_OK; PRECISE_CENTER_OK
+node tools/regress-bookmark-completion.cjs
+BOOKMARK_MOCK_CHROME_OK; BOOKMARK_MOCK_FIREFOX_OK; BOOKMARK_REAL_API_UNVERIFIED (mock suite only)
+node tools/regress-layout-daily.cjs
+LAYOUT_DAILY_OK: 17 integration regressions passed; storage was in-memory only
+node tools/regress-panel-interactions.cjs
+PASS GALLERY_MODE_CONTROLS; PASS BOOKMARK_FOCUS_AND_ESCAPE; PASS FOCUS_PANEL_ESCAPE; PASS TASK_RENAME; PASS SEARCH_DISMISSAL_AND_ORDER; PASS GALLERY_RENDER_RACE
+node tools/check-clock-lifecycle.cjs
+Clock lifecycle checks passed; Clock defaults checks passed.
+node tools/check-centered-layout.cjs
+CENTERED_LAYOUT_CHECK_OK
+```
+
+- 瀏覽器探測只嘗試一次：`python -X utf8 C:\Users\Administrator\route-work\mynt-layout-20261102\probe_layout.py . .\out-v4 C:\Users\Administrator\route-work\mynt-layout-20261102\user-localstorage-fixture.json`，結束碼 `1`。環境缺少 `playwright`（`ModuleNotFoundError`），沒有輸出 `LAYOUT_PROBE_OK`；依要求不重試。
+- `git diff --check`：結束碼 `0`，通過；僅有既有 LF/CRLF 轉換提示。
+- 未提交；未更動探測器、fixture 或 `scripts/removed-features.js`。

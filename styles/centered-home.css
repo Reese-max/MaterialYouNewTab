@@ -81,13 +81,18 @@ body #bookmarkList .bookmark-item-copy small { overflow: hidden; text-overflow: 
 body #bookmarkList .bookmark-item-copy small { opacity: .72; font-size: .78rem; }
 
 @media (max-width: 600px) {
+    body .leftDiv, body .rightDiv, body .rightDiv .topDiv { transform: none !important; translate: none !important; scale: none !important; }
     body #analogClock { inset-block-start: 12vh !important; width: 96px !important; height: 96px !important; }
     body #digitalClock { inset-block-start: 11vh !important; width: 170px !important; height: 128px !important; }
     body #date { inset-block-start: calc(12vh + 104px) !important; font-size: 14px; }
     body:has(#digitalClock[style*="display: block"]) #date { inset-block-start: calc(11vh + 140px) !important; }
-    body #searchbar { inset-block-start: 43vh !important; }
+    body #searchbar { inset-block-start: 43vh !important; box-sizing: border-box; scale: 1 !important; }
+    body #searchbar .searchbar-content { width: 100%; min-width: 0; box-sizing: border-box; }
+    body #searchbar #enterBtn { display: block !important; min-width: 54px; padding-inline: 10px; }
     body #quickLinksRow { inset-block-start: 56vh !important; gap: 6px; }
     body #quickLinksRow #toolsCont a, body #quickLinksRow #shortcutsContainer > * > a { padding-inline: 10px !important; }
+    body #motivationalQuotesCont { bottom: 80px !important; width: calc(100vw - 32px); max-width: calc(100vw - 32px); box-sizing: border-box; overflow-wrap: anywhere; }
+    body #studyQuote { inset: auto 16px 76px 16px !important; width: auto !important; max-width: none !important; transform: none !important; translate: none !important; box-sizing: border-box; }
     body #homeToolbar { top: 10px; right: 10px; gap: 4px; }
     body #homeToolbar :is(#googleAppsCont, #bookmarkButton) { width: 42px !important; height: 42px !important; }
 }
