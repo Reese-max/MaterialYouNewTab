@@ -3,6 +3,7 @@ html.mynt-removed-features body #myntHomeWidgets { display: none !important; }
 body #myntComponentManager label:has(#myntComponent-homeWidgets) { display: none !important; }
 html.mynt-removed-features body .ttteexxtt { display: none !important; }
 body #analogClock .mynt-clock-date { display: none !important; }
+body #digitalClock #digidate { display: none !important; }
 
 body #analogClock,
 body #digitalClock {
@@ -26,31 +27,36 @@ body #searchbar {
 }
 body #quickLinksRow {
     position: fixed !important; inset: 59vh auto auto 50% !important; z-index: 2;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: max-content; max-width: calc(100vw - 24px); overflow-x: auto; overflow-y: hidden;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px;
+    width: min(900px, calc(100vw - 24px)); max-width: calc(100vw - 24px); overflow: visible;
     transform: translateX(-50%) !important; scrollbar-width: none;
 }
 body #quickLinksRow::-webkit-scrollbar { display: none; }
 body #quickLinksRow #shortcuts-section,
-body #quickLinksRow #aiToolsCont { position: static !important; inset: auto !important; transform: none !important; width: auto !important; max-width: none !important; height: auto !important; margin: 0 !important; overflow: visible !important; }
-body #quickLinksRow #shortcuts-section { display: flex !important; align-items: center; min-height: 42px; }
-body #quickLinksRow #shortcuts-section[data-mynt-component-hidden] #shortcutsContainer { visibility: hidden; pointer-events: none; }
+body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]),
+body #quickLinksRow #aiToolsCont { position: static !important; inset: auto !important; transform: none !important; width: auto !important; max-width: 100% !important; height: auto !important; margin: 0 !important; overflow: visible !important; }
+body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]) { display: flex; align-items: center; max-width: 100%; }
 body #quickLinksRow #shortcuts-section .wrapper,
 body #quickLinksRow #shortcuts-section .shortcutsContainer,
-body #quickLinksRow #toolsCont { display: flex !important; align-items: center; justify-content: center; gap: 8px !important; width: max-content !important; }
+body #quickLinksRow #toolsCont { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px !important; width: auto !important; max-width: 100%; }
+body #quickLinksRow #shortcuts-section .wrapper { display: flex !important; align-items: center; justify-content: center; width: auto !important; max-width: 100%; }
 body #quickLinksRow #aiToolsIcon,
 body #quickLinksRow .hangno,
 body #quickLinksRow #flexMonitor,
 body #quickLinksRow #defaultMonitor { display: none !important; }
 body #quickLinksRow #toolsCont a,
-body #quickLinksRow #shortcutsContainer > *,
+body #quickLinksRow #shortcutsContainer > * > a,
 body #addQuickLinkButton {
     display: inline-flex !important; align-items: center; justify-content: center;
     box-sizing: border-box; min-width: 48px; height: 42px !important; padding: 0 14px !important;
     border: 1px solid #ffffff50; border-radius: 999px; background: #f3f6fcf2; color: #20334c;
     box-shadow: 0 3px 14px #0002; text-decoration: none;
 }
-body #quickLinksRow #shortcutsContainer > * { width: auto !important; }
+body #quickLinksRow #shortcutsContainer > * { width: auto !important; padding: 0 !important; background: none; box-shadow: none; }
+body #quickLinksRow #shortcutsContainer > * > a { gap: 8px; }
+body #quickLinksRow #shortcutsContainer .shortcutLogoContainer { width: 20px; height: 20px; }
+body #quickLinksRow #shortcutsContainer .shortcutLogoContainer img,
+body #quickLinksRow #shortcutsContainer .shortcutLogoContainer svg { width: 20px; height: 20px; }
 body #addQuickLinkButton { flex: 0 0 42px; width: 42px; padding: 0 !important; cursor: pointer; font-size: 24px; }
 body #motivationalQuotesCont { position: fixed !important; inset: auto auto 20px 50% !important; width: min(640px, calc(100vw - 32px)); transform: translateX(-50%) !important; text-align: center; z-index: 1; }
 body #studyQuote { position: fixed !important; inset: auto auto 20px 50% !important; width: min(640px, calc(100vw - 32px)); transform: translateX(-50%) !important; text-align: center; z-index: 1; }
@@ -81,7 +87,7 @@ body #bookmarkList .bookmark-item-copy small { opacity: .72; font-size: .78rem; 
     body:has(#digitalClock[style*="display: block"]) #date { inset-block-start: calc(11vh + 140px) !important; }
     body #searchbar { inset-block-start: 43vh !important; }
     body #quickLinksRow { inset-block-start: 56vh !important; gap: 6px; }
-    body #quickLinksRow #toolsCont a, body #quickLinksRow #shortcutsContainer > * { padding-inline: 10px !important; }
+    body #quickLinksRow #toolsCont a, body #quickLinksRow #shortcutsContainer > * > a { padding-inline: 10px !important; }
     body #homeToolbar { top: 10px; right: 10px; gap: 4px; }
     body #homeToolbar :is(#googleAppsCont, #bookmarkButton) { width: 42px !important; height: 42px !important; }
 }

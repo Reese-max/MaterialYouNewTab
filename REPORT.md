@@ -109,3 +109,19 @@ git diff --check
 ## 未完成項目
 
 - 瀏覽器視覺探測待在允許 Playwright 子程序與輸出目錄的環境執行。
+
+## v2 進度（2026-11-02）
+
+- 狀態：開始修正 v1 瀏覽器探測回報的捷徑可見性、單列置中與日期缺失；尚未完成驗收。
+- 接下來：檢查目前 HTML/CSS/JS 與 centered-layout 檢查，做最小修正；執行指定 Node 檢查與一次 Playwright 探測嘗試，記錄完整結果。
+
+### v2 修正與驗收（2026-11-02）
+
+- `styles/centered-home.css`：移除對捷徑容器的強制顯示，停用時交由元件管理器維持隱藏；可見捷徑與 AI pills 改用置中、可換行的視窗內列，網站捷徑呈現圖示與標籤；數位鐘內建日期隱藏，避免重複日期。
+- `index.html`、`scripts/clock.js`：將唯一的 `#date` 移出隱藏 focus 容器；類比與數位鐘都在此列顯示日期。問候語可省略，避免只顯示問候而漏日期；保留 `.mynt-clock-date` 元素及版面編輯器引用。
+- `tools/check-centered-layout.cjs`：新增斷言，禁止樣式強制顯示停用捷徑。
+- `tools/check-clock-lifecycle.cjs`：更新受日期列行為變更影響的預期值，並驗證數位鐘日期不受問候語設定影響。
+- 15 項指定 Node 檢查（原 14 項加 centered-layout）全部通過，結束碼均為 `0`：`check-component-visibility`、`check-component-manager`、`regress-component-manager`、`check-layout-profiles`、`check-adaptive-settings`、`check-home-widgets`、`check-removed-features`、`check-layout-save`、`check-layout-stability`、`check-manual-editor`、`regress-bookmark-completion`、`regress-layout-daily`、`regress-panel-interactions`、`check-clock-lifecycle`、`check-centered-layout`。
+- `git diff --check` 通過；僅有既有 CRLF 轉換提示。
+- 瀏覽器探測已依要求嘗試一次：`python -X utf8 C:\Users\Administrator\route-work\mynt-layout-20261102\probe_layout.py . .\out-v2 C:\Users\Administrator\route-work\mynt-layout-20261102\user-localstorage-fixture.json`，結束碼 `1`，因環境沒有 `playwright` 模組（`ModuleNotFoundError`），未產生 `LAYOUT_PROBE_OK`；依要求不重試。
+- 未提交。瀏覽器實際幾何、手機換行與無重疊尚未驗證。

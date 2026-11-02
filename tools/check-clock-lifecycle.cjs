@@ -135,7 +135,7 @@ assert.equal(fresh.node('analogClock').style.display, 'block');
 const analogDate = fresh.node('analogClock').children[0];
 assert.equal(analogDate.className, 'mynt-clock-date');
 assert.equal(analogDate.textContent, 'Sat, Oct 24', 'Video workspaces show a date below the analog clock.');
-assert.equal(fresh.node('date').innerText, 'Evening', 'The existing greeting is retained separately.');
+assert.equal(fresh.node('date').innerText, 'Sat, Oct 24', 'The centered date line stays visible; the optional greeting may be omitted.');
 fresh.change('hideClock', false);
 assert.equal(fresh.values.get('hideClockVisible'), 'true', 'Unchecked stores the canonical hidden=true.');
 assert.equal(fresh.intervals.size, 0);
@@ -151,13 +151,13 @@ assert.equal(analogDate.textContent, 'Sun, Oct 25', 'The analog date advances at
 const videoDigital = fixture({ clocktype: 'digital', greetingEnabled: 'false', hourformat: 'false' }, { video: true });
 assert.equal(videoDigital.node('digihours').textContent, '18');
 assert.equal(videoDigital.node('digidate').textContent, '24 Sat');
-assert.equal(videoDigital.node('date').style.display, 'none');
+assert.equal(videoDigital.node('date').style.display, 'block');
 videoDigital.values.set('hourformat', 'true'); videoDigital.context.myntClockPreferences.refreshVisibility();
 assert.equal(videoDigital.node('digihours').textContent, '6');
 assert.equal(videoDigital.node('amPm').textContent, 'PM');
 videoDigital.values.set('greetingEnabled', 'true'); videoDigital.context.myntClockPreferences.refreshVisibility();
 assert.equal(videoDigital.node('date').style.display, 'block');
-assert.equal(videoDigital.node('date').innerText, 'Evening');
+assert.equal(videoDigital.node('date').textContent, '24 Sat', 'The date remains visible regardless of the optional greeting preference.');
 
 function locale(name) {
     return vm.runInNewContext(fs.readFileSync(require.resolve(`../locales/${name}.js`), 'utf8') + `;${name}`);

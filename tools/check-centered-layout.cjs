@@ -26,7 +26,12 @@ for (const initial of [{ ...unrelated }, { ...unrelated, [api.KEY]: '{malformed'
 const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
 assert.match(html, /<div[^>]*id="homeToolbar"[^>]*>[\s\S]*?id="googleAppsCont"[\s\S]*?id="bookmarkButton"/);
 assert.match(html, /id="myntHomeWidgets"[^>]*hidden/);
+const centeredCss = fs.readFileSync(require.resolve('../styles/centered-home.css'), 'utf8');
+for (const [, selectors, declarations] of centeredCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const targetsShortcuts = selectors.split(',').some(selector => /#shortcuts-section(?:\s*:[\w-]+(?:\([^)]*\))?)*\s*$/.test(selector.trim()));
+    if (targetsShortcuts) assert.doesNotMatch(declarations, /display\s*:\s*(?!none\b)[^;}]+!important/i, 'Disabled shortcuts must retain the component manager hidden state.');
+}
 const widgets = fs.readFileSync(require.resolve('../scripts/home-widgets.js'), 'utf8');
 assert.match(widgets, /mynt-removed-features[\s\S]*?return;/);
-assert.match(fs.readFileSync(require.resolve('../styles/centered-home.css'), 'utf8'), /#myntComponentManager label:has\(#myntComponent-homeWidgets\)/);
+assert.match(centeredCss, /#myntComponentManager label:has\(#myntComponent-homeWidgets\)/);
 console.log('CENTERED_LAYOUT_CHECK_OK');
