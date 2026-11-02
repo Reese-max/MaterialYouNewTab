@@ -158,4 +158,67 @@ html.mynt-removed-features body #pomodoroHover[data-time]::after { content: attr
 html.black-theme.mynt-removed-features body #pomodoroCont#pomodoroCont.pomodoro-active::before { background: conic-gradient(#a8c7fa calc(var(--pomo-elapsed, 0) * 1turn), #a8c7fa33 0); }
 html.black-theme.mynt-removed-features body #pomodoroCont#pomodoroCont.pomodoro-active.pomodoro-break::before { background: conic-gradient(#8fd8b0 calc(var(--pomo-elapsed, 0) * 1turn), #8fd8b033 0); }
 @media (max-width: 600px) { html.mynt-removed-features body #pomodoroPanel { top: 60px; left: 10px; } }
+/* Visual polish: one bright, near-opaque surface for search, pills, corner buttons and quote
+   (translucent glass turned muddy over dark wallpaper areas), larger search group, quote as a slim caption. */
+html.mynt-removed-features body {
+  --mynt-glass: rgba(248, 250, 254, .95);
+  --mynt-glass-strong: rgba(252, 253, 255, .97);
+  --mynt-glass-edge: rgba(255, 255, 255, .7);
+  --mynt-glass-shadow: 0 10px 30px rgba(18, 38, 66, .16), 0 1px 2px rgba(18, 38, 66, .08);
+  --mynt-ink: #1d2b3e;
+  --mynt-ink-soft: #4a5a70;
+}
+html.black-theme.mynt-removed-features body {
+  --mynt-glass: rgba(32, 34, 40, .92); --mynt-glass-strong: rgba(32, 34, 40, .95); --mynt-glass-edge: rgba(255, 255, 255, .10);
+  --mynt-ink: #e4e9f1; --mynt-ink-soft: #b4bfce;
+}
+/* search bar */
+html.mynt-removed-features body #searchbar {
+  width: min(720px, calc(100vw - 32px)) !important; height: 60px !important;
+  background: var(--mynt-glass-strong) !important; border: 1px solid var(--mynt-glass-edge) !important;
+  box-shadow: var(--mynt-glass-shadow) !important; border-radius: 30px !important;
+  backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+html.mynt-removed-features body #searchbar .searchbar-content { height: 100% !important; }
+html.mynt-removed-features body #searchQ { font-size: 17px !important; color: var(--mynt-ink) !important; }
+html.mynt-removed-features body #searchQ::placeholder { color: var(--mynt-ink-soft) !important; opacity: .8; }
+/* pills */
+html.mynt-removed-features body #quickLinksRow #toolsCont a,
+html.mynt-removed-features body #quickLinksRow #shortcutsContainer > * > a,
+html.mynt-removed-features body #addQuickLinkButton {
+  height: 44px !important; background: var(--mynt-glass) !important; border: 1px solid var(--mynt-glass-edge) !important;
+  box-shadow: 0 4px 14px rgba(18, 38, 66, .12) !important; color: var(--mynt-ink) !important;
+  font-size: 15px !important; font-weight: 500; letter-spacing: .01em;
+  backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+html.mynt-removed-features body #addQuickLinkButton { font-size: 22px !important; font-weight: 400; width: 44px !important; min-width: 44px !important; flex-basis: 44px !important; }
+html.mynt-removed-features body #quickLinksRow #toolsCont a:hover,
+html.mynt-removed-features body #quickLinksRow #shortcutsContainer > * > a:hover,
+html.mynt-removed-features body #addQuickLinkButton:hover { transform: translateY(-1px); background: var(--mynt-glass-strong) !important; box-shadow: 0 8px 22px rgba(18, 38, 66, .18) !important; }
+html.mynt-removed-features body #quickLinksRow { inset-block-start: calc(50vh + 16px) !important; column-gap: 10px; }
+html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 10px; }
+/* corner buttons */
+html.mynt-removed-features body :is(#pomodoroCont#pomodoroCont, #googleAppsCont, #bookmarkButton, #wallpaperGalleryBtn, #menuButton) {
+  background: var(--mynt-glass) !important; border: 1px solid var(--mynt-glass-edge) !important;
+  box-shadow: 0 4px 14px rgba(18, 38, 66, .12) !important;
+  backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
+}
+/* quote: a quiet caption that hugs its text, not a full-width button */
+html.mynt-removed-features body #studyQuote {
+  width: fit-content !important; max-width: min(720px, calc(100vw - 32px)) !important; inset-block-end: 24px !important;
+  padding: 8px 20px !important; border-radius: 999px !important;
+  background: var(--mynt-glass) !important; border: 1px solid var(--mynt-glass-edge) !important; box-shadow: 0 4px 16px rgba(18, 38, 66, .10) !important;
+}
+html.mynt-removed-features body #studyQuote :is(#studyQuoteText, #studyQuoteSource) { color: var(--mynt-ink-soft) !important; font-size: 13.5px !important; letter-spacing: .02em; }
+html.mynt-removed-features body #studyQuote #studyQuoteSource { opacity: .75; }
+@media (max-width: 600px) {
+  html.mynt-removed-features body #quickLinksRow,
+  html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 6px; row-gap: 6px; }
+  html.mynt-removed-features body #quickLinksRow #toolsCont a { font-size: 13px !important; padding-inline: 10px !important; gap: 6px; }
+  html.mynt-removed-features body #addQuickLinkButton { width: 40px !important; min-width: 40px !important; flex-basis: 40px !important; height: 40px !important; }
+  html.mynt-removed-features body #quickLinksRow #toolsCont a, html.mynt-removed-features body #quickLinksRow #shortcutsContainer > * > a { height: 40px !important; }
+  html.mynt-removed-features body #searchbar { height: 56px !important; }
+  html.mynt-removed-features body #studyQuote { inset: auto 16px 80px 16px !important; width: auto !important; margin-inline: auto; }
+}
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
