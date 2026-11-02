@@ -117,10 +117,9 @@ body #quickLinksRow #toolsCont,
 body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]) .wrapper,
 body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([style*="display: none"]) #shortcutsContainer { display: contents !important; }
 
-/* Clock faces removed by the owner; the date stays as a small heading above the search bar.
+/* Clock faces and date removed by the owner.
    Three ID anchors outrank component-manager.css (2 IDs) and the award.css video-workspace rule (2 IDs + 6 classes). */
 html.mynt-removed-features body #analogClock#analogClock#analogClock,
-html.mynt-removed-features body #digitalClock#digitalClock#digitalClock { display: none !important; }
-html.mynt-removed-features body #date#date { inset-block-start: calc(47vh - 54px) !important; font-size: 18px !important; padding: 3px 16px; border-radius: 999px; background: #f3f6fcd9; box-shadow: 0 3px 14px #0002; text-shadow: none !important; }
-@media (max-width: 600px) { html.mynt-removed-features body #date#date { inset-block-start: calc(43vh - 46px) !important; font-size: 15px !important; } }
+html.mynt-removed-features body #digitalClock#digitalClock#digitalClock,
+html.mynt-removed-features body #date#date#date { display: none !important; }
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }

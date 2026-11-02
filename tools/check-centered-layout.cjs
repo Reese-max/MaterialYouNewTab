@@ -57,5 +57,5 @@ for (const id of ['todo', 'quick-create-task', 'scratchpad', 'scratchpadCopy', '
 assert.match(dashboardTools, /\]\.filter\(command => !hiddenCommandIds\.has\(command\.id\)\)/, 'Palette results must drop commands of removed features.');
 const lazyBookmarks = fs.readFileSync(require.resolve('../scripts/bookmarks.js'), 'utf8');
 assert.doesNotMatch(lazyBookmarks, /^\s*document\.addEventListener\(\s*["']DOMContentLoaded["']/m, 'bookmarks.js is lazy-loaded after DOMContentLoaded, so its init must run immediately when the DOM is ready.');
-assert.match(centeredCss, /html\.mynt-removed-features body (?:#analogClock){3},\s*html\.mynt-removed-features body (?:#digitalClock){3} \{ display: none !important; \}/, 'The owner removed the clock faces from the homepage.');
+assert.match(centeredCss, /html\.mynt-removed-features body (?:#analogClock){3},\s*html\.mynt-removed-features body (?:#digitalClock){3},\s*html\.mynt-removed-features body (?:#date){3} \{ display: none !important; \}/, 'The owner removed the clock and the date from the homepage.');
 console.log('CENTERED_LAYOUT_CHECK_OK');
