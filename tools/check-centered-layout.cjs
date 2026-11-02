@@ -58,4 +58,7 @@ assert.match(dashboardTools, /\]\.filter\(command => !hiddenCommandIds\.has\(com
 const lazyBookmarks = fs.readFileSync(require.resolve('../scripts/bookmarks.js'), 'utf8');
 assert.doesNotMatch(lazyBookmarks, /^\s*document\.addEventListener\(\s*["']DOMContentLoaded["']/m, 'bookmarks.js is lazy-loaded after DOMContentLoaded, so its init must run immediately when the DOM is ready.');
 assert.match(centeredCss, /html\.mynt-removed-features body (?:#analogClock){3},\s*html\.mynt-removed-features body (?:#digitalClock){3},\s*html\.mynt-removed-features body (?:#date){3} \{ display: none !important; \}/, 'The owner removed the clock and the date from the homepage.');
+assert.match(centeredCss, /html\.mynt-removed-features body #searchbar \{ inset-block-start: calc\(50vh - 96px\) !important; \}/, 'Search group must sit on the optical center once clock and date are removed.');
+assert.match(centeredCss, /#pomodoroCont#pomodoroCont \{[\s\S]*?inset: 16px auto auto 20px !important;[\s\S]*?border-radius: 50% !important;/, 'Pomodoro button must mirror the top-right toolbar as a circle.');
+assert.match(centeredCss, /#quickLinksRow #shortcuts-section \{ column-gap: 8px; row-gap: 8px;/, 'Shortcut pills need the row gap because component-manager forces #shortcuts-section to flex.');
 console.log('CENTERED_LAYOUT_CHECK_OK');

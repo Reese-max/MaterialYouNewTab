@@ -122,4 +122,25 @@ body #quickLinksRow #shortcuts-section:not([data-mynt-component-hidden]):not([st
 html.mynt-removed-features body #analogClock#analogClock#analogClock,
 html.mynt-removed-features body #digitalClock#digitalClock#digitalClock,
 html.mynt-removed-features body #date#date#date { display: none !important; }
+/* With clock and date removed, center the search group on the optical center (21px above the middle),
+   and give every corner control the same circular 48px (42px on phones) shape; pomodoro mirrors the top-right toolbar. */
+html.mynt-removed-features body #searchbar { inset-block-start: calc(50vh - 96px) !important; }
+html.mynt-removed-features body #quickLinksRow { inset-block-start: calc(50vh + 12px) !important; }
+html.mynt-removed-features body #pomodoroCont#pomodoroCont {
+    position: fixed !important; inset: 16px auto auto 20px !important; translate: none !important; transform: none !important; scale: 1 !important;
+    width: 48px !important; height: 48px !important; margin: 0 !important; border-radius: 50% !important;
+    display: flex !important; align-items: center; justify-content: center;
+}
+html.mynt-removed-features body :is(#wallpaperGalleryBtn, #menuButton) { width: 48px !important; height: 48px !important; border-radius: 50% !important; }
+/* component-manager.css forces #shortcuts-section to display:flex (not contents), so give it the row's own gap;
+   AI tool badges (glyph drawn at 70%) are 24px so the glyph matches the 20px shortcut favicons. */
+html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 8px; row-gap: 8px; flex-wrap: wrap; justify-content: center; }
+html.mynt-removed-features body #quickLinksRow #toolsCont a { gap: 8px; }
+html.mynt-removed-features body #quickLinksRow #toolsCont a .tIcon { flex: 0 0 24px; width: 24px !important; height: 24px !important; margin: 0 !important; }
+@media (max-width: 600px) {
+    html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 6px; row-gap: 6px; }
+    html.mynt-removed-features body #pomodoroCont#pomodoroCont { inset: 10px auto auto 10px !important; width: 42px !important; height: 42px !important; }
+    html.mynt-removed-features body #homeToolbar :is(#googleAppsCont, #bookmarkButton),
+    html.mynt-removed-features body :is(#wallpaperGalleryBtn, #menuButton) { width: 42px !important; height: 42px !important; min-width: 42px !important; min-height: 42px !important; scale: 1 !important; }
+}
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
