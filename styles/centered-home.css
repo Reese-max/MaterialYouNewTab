@@ -16,7 +16,7 @@ body #date {
     position: fixed !important; inset: calc(16vh + 142px) auto auto 50% !important;
     display: block !important; visibility: visible !important; transform: translateX(-50%) !important;
     width: max-content; max-width: calc(100vw - 32px); text-align: center; z-index: 1;
-    color: #fff; font-size: 16px; line-height: 24px; text-shadow: 0 1px 4px #0008;
+    color: #20334c !important; font-size: 16px !important; font-weight: 500 !important; line-height: 24px; text-shadow: 0 0 6px #fffc, 0 0 2px #fff !important;
 }
 body:has(#digitalClock[style*="display: block"]) #date { inset-block-start: calc(16vh + 162px) !important; }
 body #rightDiv { position: static !important; }
@@ -58,7 +58,7 @@ body #quickLinksRow #shortcutsContainer > * {
 }
 body #quickLinksRow #shortcutsContainer > * > a {
     display: inline-flex; flex-direction: row; align-items: center; gap: 8px;
-    width: auto !important; height: 42px !important; position: static; padding: 0 14px !important;
+    width: auto !important; height: 42px !important; position: static; padding: 0 14px !important; font-size: 16px;
     background: #f3f6fcf2 !important; border: 1px solid #ffffff50; border-radius: 999px;
 }
 body #quickLinksRow #shortcutsContainer .shortcut-name {
