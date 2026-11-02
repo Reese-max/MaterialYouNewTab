@@ -43,4 +43,6 @@ for (const [, selectors, declarations] of centeredCss.matchAll(/([^{}]+)\{([^{}]
 const widgets = fs.readFileSync(require.resolve('../scripts/home-widgets.js'), 'utf8');
 assert.match(widgets, /mynt-removed-features[\s\S]*?return;/);
 assert.match(centeredCss, /#myntComponentManager label:has\(#myntComponent-homeWidgets\)/);
+assert.match(centeredCss, /#quickLinksRow #aiToolsCont:not\(\[data-mynt-component-hidden\]\):not\(\[style\*="display: none"\]\)/, 'Disabled AI tools must stay hidden.');
+assert.doesNotMatch(centeredCss, /#quickLinksRow #aiToolsCont,/, 'Unguarded #aiToolsCont display override would show disabled AI tools.');
 console.log('CENTERED_LAYOUT_CHECK_OK');
