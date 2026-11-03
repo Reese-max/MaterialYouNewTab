@@ -269,16 +269,17 @@ html.mynt-removed-features body #pomodoroPanel .pomoStudioStats {
   margin-top: 4px; padding: 10px 0 0 !important; border-top: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 10%, transparent) !important; background: transparent !important;
 }
 html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { margin: 0 !important; padding: 0 !important; border: 0 !important; width: auto !important; font-size: 12px !important; gap: 4px !important; }
-/* Pomodoro background settings: one surface while scrolling, compact 3-up choices, quiet controls. */
+/* Pomodoro background settings: one surface while scrolling, list of background choices, quiet controls. */
 /* The panel's ::after surface only spans the first screen of scroll content; give the sticky backdrop the same surface so no seam appears once scrolled. */
 html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-overlay { background: var(--pomo-surface, #ffffff) !important; }
 html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static { background-image: none !important; }
-html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choices { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; padding: 2px 0 10px !important; }
-html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choice { gap: 4px !important; padding: 4px 4px 6px !important; border-radius: 12px !important; }
-html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-preview { height: 38px !important; border-radius: 8px !important; }
-html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choice.is-selected .mynt-pomo-background-preview::after { inset-block-start: 7px !important; inset-inline-end: 7px !important; width: 16px !important; height: 16px !important; font-size: 10px !important; }
+/* A ~200px column cannot fit English labels 3-up without breaking words, so the five choices are a list: swatch, label, check. */
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choices { grid-template-columns: minmax(0, 1fr) !important; gap: 6px !important; padding: 2px 0 10px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choice { flex-direction: row !important; align-items: center !important; gap: 10px !important; padding: 5px 36px 5px 5px !important; border-radius: 12px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-preview { flex: 0 0 52px; width: 52px !important; height: 32px !important; border-radius: 8px !important; overflow: hidden; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choice.is-selected .mynt-pomo-background-preview::after { inset-block-start: 50% !important; inset-inline-end: 10px !important; transform: translateY(-50%); width: 18px !important; height: 18px !important; font-size: 11px !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-symbol { width: 18px !important; height: 18px !important; font-size: 14px !important; border-radius: 5px !important; }
-html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-label { font-size: 11.5px !important; line-height: 1.3 !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-label { width: auto !important; flex: 1 1 auto; min-width: 0; text-align: start !important; font-size: 12.5px !important; line-height: 1.3 !important; overflow-wrap: normal !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-appearance label:has(> input[type="color"]) { flex-direction: row !important; align-items: center !important; justify-content: space-between !important; margin: 6px 0 !important; font-size: 12.5px !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-appearance input[type="color"] { width: 56px !important; height: 34px !important; padding: 3px !important; border-radius: 10px !important; flex: 0 0 auto; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > .mynt-pomo-note { margin: 0 0 4px !important; }
