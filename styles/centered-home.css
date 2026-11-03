@@ -243,7 +243,7 @@ html.mynt-removed-features body #pomodoroPanel .pomodoroPhaseLabel { font-size: 
 html.mynt-removed-features body #pomodoroPanel .pomodoroPhaseLabel::before {
   content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 7px 1px 0; border-radius: 50%; background: currentColor; vertical-align: middle;
 }
-html.mynt-removed-features body #pomodoroPanel .pomodoroRoundDisplay { font-size: 12px !important; font-weight: 500 !important; opacity: .7; letter-spacing: .08em; margin-top: -2px; }
+html.mynt-removed-features body #pomodoroPanel .pomodoroRoundDisplay { font-size: 12px !important; font-weight: 500 !important; opacity: 1; letter-spacing: .08em; margin-top: -2px; }
 /* primary row: start fills the width, reset is a round secondary */
 html.mynt-removed-features body #pomodoroPanel .pomodoroControls { width: 100% !important; gap: 8px !important; justify-content: stretch !important; }
 html.mynt-removed-features body #pomodoroPanel .pomodoroControls :is(#pomodoroStartBtn, #pomodoroPauseBtn) { flex: 1 1 auto !important; min-width: 0 !important; height: 44px !important; border-radius: 22px !important; }
@@ -270,9 +270,34 @@ html.mynt-removed-features body #pomodoroPanel .pomoStudioStats {
 }
 html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { margin: 0 !important; padding: 0 !important; border: 0 !important; width: auto !important; font-size: 12px !important; gap: 4px !important; }
 /* Pomodoro background settings: one surface while scrolling, list of background choices, quiet controls. */
-/* The panel's ::after surface only spans the first screen of scroll content; give the sticky backdrop the same surface so no seam appears once scrolled. */
-html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-overlay { background: var(--pomo-surface, #ffffff) !important; }
+/* Pomodoro main panel shows the chosen background: one sticky backdrop (video or static image) under a readable scrim. */
+html.mynt-removed-features body #pomodoroPanel::after { content: none !important; }
 html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static { background-image: none !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop { display: block !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop > .pomodoro-bg-video { display: none !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::before {
+  content: ""; position: absolute; inset: 0; z-index: -3; pointer-events: none;
+  background-color: var(--pomo-color, transparent); background-image: var(--pomo-background, none);
+  background-size: var(--pomo-fit, cover); background-position: var(--pomo-position, 50% 50%); background-repeat: no-repeat;
+}
+/* The scrollbar column cannot show scrolled content; square the backdrop's inline-end corners so it meets that track cleanly. */
+html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop { border-start-end-radius: 0 !important; border-end-end-radius: 0 !important; }
+html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-overlay { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 74%, transparent) !important; border-radius: 0 !important; }
+/* Frosted look: the picture is softened and kept colourful, settings sit on a translucent card instead of a white slab. */
+html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-video,
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::before { filter: blur(14px) saturate(1.5); transform: scale(1.12); }
+/* MYNT dark mode inverts the page; undo it on the picture layers only, so photos never show as negatives while the scrim still turns dark. */
+html.mynt-removed-features:is(:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]), :has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"])):not(:has(#darkTheme:checked)) body #pomodoroPanel > .pomoStudioBackdrop > :is(.pomodoro-bg-video),
+html.mynt-removed-features:is(:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]), :has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"])):not(:has(#darkTheme:checked)) body #pomodoroPanel > .pomoStudioBackdrop::before,
+html.mynt-removed-features body:is([data-bg="wallpaper"]:has(.menuBar .themeSegment[data-active="dark"]), [data-bg="wallpaper"][sysTheme="systemDark"]:has(.menuBar .themeSegment[data-active="system"])):not(:has(#darkTheme:checked)) #pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-video,
+html.mynt-removed-features body:is([data-bg="wallpaper"]:has(.menuBar .themeSegment[data-active="dark"]), [data-bg="wallpaper"][sysTheme="systemDark"]:has(.menuBar .themeSegment[data-active="system"])):not(:has(#darkTheme:checked)) #pomodoroPanel > .pomoStudioBackdrop::before { filter: invert(1) hue-rotate(180deg) blur(14px) saturate(1.5); }
+@media (forced-colors: none) {
+html.mynt-removed-features body #pomodoroPanel #myntPomoExtras {
+  background: color-mix(in srgb, var(--pomo-surface, #ffffff) 60%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--pomo-surface, #ffffff) 85%, transparent) !important;
+  box-shadow: 0 6px 20px rgba(18, 38, 66, .08) !important;
+}
+}
 /* A ~200px column cannot fit English labels 3-up without breaking words, so the five choices are a list: swatch, label, check. */
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choices { grid-template-columns: minmax(0, 1fr) !important; gap: 6px !important; padding: 2px 0 10px !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choice { flex-direction: row !important; align-items: center !important; gap: 10px !important; padding: 5px 36px 5px 5px !important; border-radius: 12px !important; }
