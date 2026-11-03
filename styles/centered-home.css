@@ -337,6 +337,33 @@ html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open
   html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup { align-self: stretch !important; justify-content: center !important; width: 100% !important; text-decoration: none !important; }
   html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup + .mynt-pomo-note { order: 1 !important; margin: -4px 0 4px !important; }
   html.mynt-removed-features body #pomodoroPanel .pomodoroFocusSummary { flex: 0 1 auto !important; }
-  html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:has(.mynt-music-current[title=""]) .mynt-music-current { font-weight: 500 !important; font-size: 12.5px !important; color: var(--pomo-muted, #35465e) !important; }
+}
+/* Reserve the scrollbar column so opening full settings never narrows or shifts the timer; the column replaces part of the end padding. */
+html.mynt-removed-features body #pomodoroPanel { scrollbar-gutter: stable; padding-inline-end: 8px !important; }
+/* Statistics reads as one line and the stats action looks actionable. */
+html.mynt-removed-features body #pomodoroPanel .pomodoroFocusSummary::before { content: "\00b7"; margin-inline-end: 2px; }
+html.mynt-removed-features body #pomodoroPanel #pomodoroStatsBtn { margin-inline-start: 6px !important; color: var(--pomo-accent, #234c78) !important; font-weight: 600 !important; }
+/* An empty music library is one short row (artwork, title, hint); the player appears once a track exists. */
+html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])):has(.mynt-music-current[title=""]) :is(.mynt-music-progress, .mynt-music-controls) { display: none !important; }
+/* A loaded local image needs no placeholder glyph on its thumbnail. */
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-preview[style*="url("] > .mynt-pomo-image-symbol { display: none !important; }
+/* Image actions share one rhythm. */
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls { display: flex !important; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > * { margin: 0 !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > label { align-self: stretch; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"] { min-height: 0 !important; }
+/* The ordinary-window action uses the same quiet pill as the other secondary actions. */
+html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup {
+  display: flex !important; align-items: center !important; justify-content: center !important; align-self: stretch !important; width: 100% !important;
+  height: 34px !important; min-height: 34px !important; margin: 10px 0 6px !important; padding: 0 14px !important; border-radius: 999px !important;
+  border: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 18%, transparent) !important; background: color-mix(in srgb, var(--pomo-surface, #ffffff) 55%, transparent) !important;
+  color: var(--pomo-muted, #35465e) !important; font-size: 12.5px !important; font-weight: 500 !important; text-decoration: none !important;
+}
+@media (max-height: 800px) {
+  html.mynt-removed-features body #pomodoroPanel.pomodoro-panel:not([style*="display: none"]) { --pomo-diameter: 112px; row-gap: 8px !important; }
+  html.mynt-removed-features body #pomodoroPanel #myntPomoExtras { padding: 10px 10px 12px !important; }
+  html.mynt-removed-features body #pomodoroPanel #myntPomoExtras .pomoStudioCard { min-height: 40px !important; height: 40px !important; }
+  html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])):has(.mynt-music-current[title=""]) .mynt-music-artwork { display: grid !important; grid-column: auto; }
+  html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])) .mynt-music-status[data-state="empty"] { position: static !important; width: auto !important; height: auto !important; margin: 0 !important; overflow: visible !important; clip-path: none !important; white-space: normal !important; }
 }
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
