@@ -269,4 +269,32 @@ html.mynt-removed-features body #pomodoroPanel .pomoStudioStats {
   margin-top: 4px; padding: 10px 0 0 !important; border-top: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 10%, transparent) !important; background: transparent !important;
 }
 html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { margin: 0 !important; padding: 0 !important; border: 0 !important; width: auto !important; font-size: 12px !important; gap: 4px !important; }
+/* Pomodoro background settings: one surface while scrolling, compact 3-up choices, quiet controls. */
+/* The panel's ::after surface only spans the first screen of scroll content; give the sticky backdrop the same surface so no seam appears once scrolled. */
+html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop > .pomodoro-bg-overlay { background: var(--pomo-surface, #ffffff) !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static { background-image: none !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choices { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; padding: 2px 0 10px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choice { gap: 4px !important; padding: 4px 4px 6px !important; border-radius: 12px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-preview { height: 38px !important; border-radius: 8px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-choice.is-selected .mynt-pomo-background-preview::after { inset-block-start: 7px !important; inset-inline-end: 7px !important; width: 16px !important; height: 16px !important; font-size: 10px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-symbol { width: 18px !important; height: 18px !important; font-size: 14px !important; border-radius: 5px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-label { font-size: 11.5px !important; line-height: 1.3 !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-appearance label:has(> input[type="color"]) { flex-direction: row !important; align-items: center !important; justify-content: space-between !important; margin: 6px 0 !important; font-size: 12.5px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-appearance input[type="color"] { width: 56px !important; height: 34px !important; padding: 3px !important; border-radius: 10px !important; flex: 0 0 auto; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > .mynt-pomo-note { margin: 0 0 4px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > label { margin: 6px 0 8px !important; gap: 6px !important; font-size: 12px !important; color: var(--pomo-muted, #35465e) !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"] { height: auto !important; padding: 0 !important; border: 0 !important; background: transparent !important; font-size: 12px !important; color: var(--pomo-muted, #35465e) !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"]::file-selector-button {
+  height: 34px; margin-inline-end: 10px; padding: 0 14px; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 16%, transparent); background: transparent; color: var(--pomo-fg, #1b1f24);
+}
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-appearance form > button,
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > button {
+  height: 34px !important; min-height: 34px !important; padding: 0 14px !important; border-radius: 999px !important; font-size: 12.5px !important; font-weight: 500 !important;
+  background: transparent !important; box-shadow: none !important; border: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 16%, transparent) !important; color: var(--pomo-muted, #35465e) !important;
+}
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-framing { margin-top: 8px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-framing > summary { display: list-item !important; list-style: revert !important; justify-content: initial !important; padding: 10px 0 !important; text-align: start !important; font-size: 12.5px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-framing label { margin: 4px 0 8px !important; gap: 4px !important; font-size: 12px !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-framing select { height: 38px !important; padding: 0 10px !important; }
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }

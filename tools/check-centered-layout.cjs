@@ -70,4 +70,7 @@ const studioSource = fs.readFileSync(require.resolve('../scripts/pomodoro-studio
 assert.match(studioSource, /fitBackdrop=css=>\{if\(!panel\.clientHeight\)return;[\s\S]*?const height=Math\.floor\([\s\S]*?if\(!\(height>0\)\)return;/, 'The panel backdrop must floor its height, or a subpixel overflow shows a scrollbar.');
 assert.match(centeredCss, /#pomodoroCont\[aria-expanded="true"\] #pomodoroHover \{ display: none !important; \}/, 'The corner tooltip must not peek out from behind the open pomodoro panel.');
 assert.match(centeredCss, /\.pomodoroControls #pomodoroResetBtn \{[^}]*border-radius: 50% !important;/, 'Reset is a round secondary next to a full-width start button.');
+assert.match(centeredCss, /#pomodoroPanel > \.pomoStudioBackdrop > \.pomodoro-bg-overlay \{ background: var\(--pomo-surface, #ffffff\) !important; \}/, 'Once scrolled past the ::after surface, the backdrop must show the same panel surface (no seam).');
+assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static \{ background-image: none !important; \}/, 'Static background modes must not paint a second scrim below the ::after surface.');
+assert.match(centeredCss, /\.mynt-pomo-background-choices \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\) !important;/, 'Five background choices fit a 3-up grid instead of leaving one orphan in a 2-up grid.');
 console.log('CENTERED_LAYOUT_CHECK_OK');
