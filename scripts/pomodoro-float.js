@@ -364,7 +364,12 @@
         }
         // The selected mode's own settings sit directly under its tile.
         const anchor = modeChoices.get(settings.mode)?.tile;
-        if (modePanel && anchor && modePanelAnchor !== anchor) { modePanel.remove(); anchor.after(modePanel); modePanelAnchor = anchor; }
+        if (modePanel && anchor && modePanelAnchor !== anchor) {
+            // A move detaches the block; focus inside it (a change from another tab) is put back where it was.
+            const active = document.activeElement, hadFocus = !!active && active !== modePanel && modePanel.contains?.(active);
+            modePanel.remove(); anchor.after(modePanel); modePanelAnchor = anchor;
+            if (hadFocus && document.activeElement !== active) active.focus({ preventScroll: true });
+        }
     }
     function buildSettings(mount) {
         const details = el(document, 'details', '', 'mynt-pomo-appearance'); details.append(el(document, 'summary', t('appearance')));
