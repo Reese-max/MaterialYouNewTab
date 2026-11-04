@@ -257,8 +257,8 @@ html.mynt-removed-features body #pomodoroPanel #myntPomoTask {
 html.mynt-removed-features body #pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float,
 html.mynt-removed-features body #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask) {
   height: 34px !important; min-height: 34px !important; border-radius: 999px !important; font-size: 12.5px !important; font-weight: 500 !important;
-  background: transparent !important; box-shadow: none !important;
-  border: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 16%, transparent) !important; color: var(--pomo-muted, #35465e) !important;
+  background: color-mix(in srgb, var(--pomo-surface, #ffffff) 74%, transparent) !important; box-shadow: none !important;
+  border: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 30%, transparent) !important; color: var(--pomo-muted, #35465e) !important;
 }
 html.mynt-removed-features body #pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float:hover,
 html.mynt-removed-features body #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask):hover { background: color-mix(in srgb, var(--pomo-accent, #234c78) 8%, transparent) !important; color: var(--pomo-fg, #1b1f24) !important; }
@@ -324,7 +324,7 @@ html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-framing > summar
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-framing label { margin: 4px 0 8px !important; gap: 4px !important; font-size: 12px !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-framing select { height: 38px !important; padding: 0 10px !important; }
 /* Layout polish: secondary controls keep a frosted fill so their edges survive any background. */
-html.mynt-removed-features body #pomodoroPanel :is(.mynt-pomo-open-float, .pomoStudioRow > button) { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 55%, transparent) !important; border-color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 18%, transparent) !important; }
+html.mynt-removed-features body #pomodoroPanel :is(.mynt-pomo-open-float, .pomoStudioRow > button) { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 74%, transparent) !important; border-color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 30%, transparent) !important; }
 /* The saved-image state is shown by the selected tile; hide the native "no file chosen" text that contradicts it. */
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"] { font-size: 0 !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"]::file-selector-button { font-size: 12.5px; margin-inline-end: 0; }
@@ -348,7 +348,7 @@ html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-mu
 /* A loaded local image needs no placeholder glyph on its thumbnail. */
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-background-preview[style*="url("] > .mynt-pomo-image-symbol { display: none !important; }
 /* Image actions share one rhythm. */
-html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls { display: flex !important; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls:not([hidden]) { display: flex !important; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > * { margin: 0 !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > label { align-self: stretch; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"] { min-height: 0 !important; }
@@ -366,4 +366,29 @@ html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open
   html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])):has(.mynt-music-current[title=""]) .mynt-music-artwork { display: grid !important; grid-column: auto; }
   html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])) .mynt-music-status[data-state="empty"] { position: static !important; width: auto !important; height: auto !important; margin: 0 !important; overflow: visible !important; clip-path: none !important; white-space: normal !important; }
 }
+/* Settings order is fixed at every size: collapsible sections stay together, the ordinary-window action closes the card. */
+html.mynt-removed-features body #pomodoroPanel #myntPomoExtras:not([hidden]) { display: flex !important; flex-direction: column; }
+/* Flex items do not collapse margins; the collapsible sections butt together like they did in block flow. */
+html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > details { margin-block: 0 !important; }
+html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > :is(.mynt-pomo-open-popup, .mynt-pomo-open-popup + .mynt-pomo-note) { order: 1 !important; }
+html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup { margin-top: 14px !important; }
+/* Balanced wrapping so helper text never leaves a one-word last line. */
+html.mynt-removed-features body #pomodoroPanel :is(.mynt-pomo-image-controls > label, .mynt-pomo-note, .mynt-music-status) { text-wrap: balance; }
+/* Secondary outlines stay visible over bright or busy pictures. */
+html.mynt-removed-features body #pomodoroPanel :is(.mynt-pomo-open-float, .pomoStudioRow > button, #myntPomoExtras > .mynt-pomo-open-popup, .mynt-pomo-image-controls > button) { border-color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 30%, transparent) !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"]::file-selector-button { border-color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 24%, transparent); }
+/* Deleting the saved image is destructive: quiet danger tone, same size as its neighbours. */
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > button { color: #9b2c2c !important; border-color: color-mix(in srgb, #9b2c2c 35%, transparent) !important; }
+html.mynt-removed-features.black-theme body #pomodoroPanel .mynt-pomo-image-controls > button { color: #f2a7a7 !important; border-color: color-mix(in srgb, #f2a7a7 40%, transparent) !important; }
+@media (max-height: 800px) {
+  /* Short windows only shrink the ring once full settings need the room. */
+  html.mynt-removed-features body #pomodoroPanel.pomodoro-panel:not(.pomoStudioExpanded):not([style*="display: none"]) { --pomo-diameter: 148px; }
+}
+/* Nothing saved yet: no delete action to offer. */
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls:not(.mynt-pomo-has-image) > button { display: none !important; }
+/* The selected background's own settings read as a sub-block of its tile. */
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-mode-settings { margin: 2px 0 6px 14px !important; padding: 2px 0 2px 12px !important; border-inline-start: 2px solid color-mix(in srgb, var(--pomo-accent, #24466f) 35%, transparent); }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-mode-settings > .mynt-pomo-image-framing { margin-top: 4px !important; border-top: 0 !important; }
+html.mynt-removed-features body #pomodoroPanel .mynt-pomo-mode-settings > .mynt-pomo-image-framing > summary { padding: 8px 0 4px !important; }
+html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .pomoStudioCardsLabel { margin: 0 0 8px !important; font-size: 12px !important; font-weight: 600 !important; color: var(--pomo-muted, #35465e) !important; }
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }

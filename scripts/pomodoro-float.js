@@ -220,7 +220,9 @@
     // 匯出供無相依套件的回歸檢查使用，不新增儲存資料。
     if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition, avoidingPanelPosition }; return; }
     let settings = { ...defaults }, imageUrl = '', floating = null, opening = false, unsubscribe = null;
-    let status, appearanceForm, floatVideo;
+    let status, appearanceForm, floatVideo, modePanel, modePanelAnchor;
+    // Routine saves are announced to assistive tech only; errors stay visible.
+    function setStatus(text, quiet = false) { status.textContent = text; status.classList.toggle('mynt-pomo-sr-only', quiet); }
     const imageSamples = new Map(), modeChoices = new Map(), settingGroups = new Map(), thumbnailCache = new WeakMap();
     try { settings = validate(JSON.parse(localStorage.getItem(KEY)) || defaults); } catch (_) { /* safe defaults */ }
     function el(doc, tag, text, className) { const node = doc.createElement(tag); if (text) node.textContent = text; if (className) node.className = className; return node; }
@@ -337,6 +339,7 @@
     function syncForm() {
         if (!appearanceForm) return;
         for (const key of ['color', 'color2', 'fit', 'position']) appearanceForm.elements.namedItem(key).value = settings[key];
+        settingGroups.get('image')?.classList.toggle('mynt-pomo-has-image', !!imageUrl);
         const home = getComputedStyle(document.body).getPropertyValue('--bg-image').trim();
         const originalPreview = videoThumbnail(document.getElementById('pomodoroPanel')?.querySelector('.pomodoro-bg-video'));
         const previews = {
@@ -359,6 +362,9 @@
             group.hidden = name === 'image' ? settings.mode !== 'image' : name === 'color' ? !['color', 'gradient'].includes(settings.mode)
                 : name === 'color2' ? settings.mode !== 'gradient' : !['image', 'home'].includes(settings.mode);
         }
+        // The selected mode's own settings sit directly under its tile.
+        const anchor = modeChoices.get(settings.mode)?.tile;
+        if (modePanel && anchor && modePanelAnchor !== anchor) { modePanel.remove(); anchor.after(modePanel); modePanelAnchor = anchor; }
     }
     function buildSettings(mount) {
         const details = el(document, 'details', '', 'mynt-pomo-appearance'); details.append(el(document, 'summary', t('appearance')));
@@ -376,9 +382,10 @@
             tile.append(input, preview, el(document, 'span', t(mode), 'mynt-pomo-background-label'));
             choices.append(tile); modeChoices.set(mode, { input, tile, preview, fallback });
         }
+        modePanel = el(document, 'div', '', 'mynt-pomo-mode-settings'); modePanelAnchor = null; choices.append(modePanel);
         form.append(choices);
-        for (const key of ['color', 'color2']) { const input = el(document, 'input'); input.type = 'color'; input.name = key; settingGroups.set(key, row(key, input)); }
-        const imageControls = el(document, 'div', '', 'mynt-pomo-image-controls'); form.append(imageControls); settingGroups.set('image', imageControls);
+        for (const key of ['color', 'color2']) { const input = el(document, 'input'); input.type = 'color'; input.name = key; settingGroups.set(key, row(key, input, modePanel)); }
+        const imageControls = el(document, 'div', '', 'mynt-pomo-image-controls'); modePanel.append(imageControls); settingGroups.set('image', imageControls);
         imageControls.append(el(document, 'p', t('localOnly'), 'mynt-pomo-note'));
         const framing = el(document, 'details', '', 'mynt-pomo-image-framing'); framing.append(el(document, 'summary', t('adjustImage')));
         row('fit', select('fit', [['cover', 'cover'], ['contain', 'contain']]), framing);
@@ -386,8 +393,8 @@
         settingGroups.set('framing', framing);
         form.addEventListener('change', event => {
             if (!['mode', 'color', 'color2', 'fit', 'position'].includes(event.target.name)) return;
-            try { applySettings({ ...settings, [event.target.name]: event.target.value }); status.textContent = settings.mode === 'image' && !imageUrl ? t('missing') : t('ready'); }
-            catch (_) { status.textContent = t('error'); syncForm(); }
+            try { applySettings({ ...settings, [event.target.name]: event.target.value }); if (settings.mode === 'image' && !imageUrl) setStatus(t('missing')); else setStatus(t('ready'), true); }
+            catch (_) { setStatus(t('error')); syncForm(); }
         });
         details.addEventListener('keydown', event => { if (isDismissKey(event) && details.open) { event.preventDefault(); event.stopPropagation(); details.open = false; details.querySelector('summary').focus(); } });
         let deletedImage = null;
@@ -398,8 +405,8 @@
                 url = await decodeImage(deletedImage.blob);
                 await imageStore('put', deletedImage.blob);
                 setImage(url); url = ''; applySettings(deletedImage.settings);
-                deletedImage = null; undo.hidden = true; status.textContent = t('ready');
-            } catch (_) { if (url) URL.revokeObjectURL(url); status.textContent = t('error'); }
+                deletedImage = null; undo.hidden = true; setStatus(t('ready'), true);
+            } catch (_) { if (url) URL.revokeObjectURL(url); setStatus(t('error')); }
             finally { undo.disabled = false; input.disabled = false; remove.disabled = false; }
         });
         undo.hidden = true;
@@ -410,8 +417,8 @@
             try {
                 url = await decodeImage(file);
                 await imageStore('put', file);
-                setImage(url); url = ''; applySettings({ ...settings, mode: 'image' }); deletedImage = null; undo.hidden = true; status.textContent = t('ready');
-            } catch (_) { if (url) URL.revokeObjectURL(url); status.textContent = t('error'); }
+                setImage(url); url = ''; applySettings({ ...settings, mode: 'image' }); deletedImage = null; undo.hidden = true; setStatus(t('ready'), true);
+            } catch (_) { if (url) URL.revokeObjectURL(url); setStatus(t('error')); }
             finally { input.value = ''; input.disabled = false; remove.disabled = false; undo.disabled = false; }
         });
         const remove = button(document, 'remove', async () => {
@@ -419,14 +426,14 @@
             remove.disabled = true; input.disabled = true; undo.disabled = true;
             try {
                 const blob = await imageStore('get');
-                if (!blob) { status.textContent = t('missing'); return; }
+                if (!blob) { setStatus(t('missing')); return; }
                 const previous = { blob, settings: { ...settings } };
                 await imageStore('delete'); deletedImage = previous; undo.hidden = false;
-                setImage(''); if (settings.mode === 'image') applySettings({ ...settings, mode: 'home' }); status.textContent = t('deleted');
-            } catch (_) { status.textContent = t('error'); }
+                setImage(''); if (settings.mode === 'image') applySettings({ ...settings, mode: 'home' }); setStatus(t('deleted')); undo.focus();
+            } catch (_) { setStatus(t('error')); }
             finally { remove.disabled = false; input.disabled = false; undo.disabled = false; }
         });
-        imageControls.append(remove); form.append(framing, undo);
+        imageControls.append(remove); modePanel.append(framing, undo);
         details.append(form); mount.append(details); syncForm();
     }
     function clearFloat(win) {
@@ -574,17 +581,17 @@
     async function openFloat(ordinary) {
         if (opening) return;
         if (floating && !floating.closed) { floating.focus(); return; }
-        if (!window.myntPomodoro) { status.textContent = t('unsupported'); return; }
-        if (!ordinary && !window.documentPictureInPicture?.requestWindow) { status.textContent = t('unsupported'); return; }
+        if (!window.myntPomodoro) { setStatus(t('unsupported')); return; }
+        if (!ordinary && !window.documentPictureInPicture?.requestWindow) { setStatus(t('unsupported')); return; }
         if (unsubscribe) { unsubscribe(); unsubscribe = null; }
         opening = true;
         try {
             // Initial placement is a supported hint, not a guarantee: browsers may clamp size.
             // https://developer.chrome.com/docs/web-platform/document-picture-in-picture
             const win = ordinary ? window.open('', 'myntPomodoroFloat', 'popup,width=320,height=420') : await window.documentPictureInPicture.requestWindow(pipOptions());
-            if (!win) { status.textContent = t('blocked'); return; }
-            floating = win; constructFloat(win, ordinary); status.textContent = ordinary ? t('note') : '';
-        } catch (_) { if (floating) { floating.close(); clearFloat(floating); } status.textContent = t('unsupported'); }
+            if (!win) { setStatus(t('blocked')); return; }
+            floating = win; constructFloat(win, ordinary); setStatus(ordinary ? t('note') : '');
+        } catch (_) { if (floating) { floating.close(); clearFloat(floating); } setStatus(t('unsupported')); }
         finally { opening = false; }
     }
     function init() {
@@ -604,7 +611,7 @@
         const observer = new MutationObserver(renderAppearance);
         for (const target of [document.body, document.documentElement]) observer.observe(target, { attributes: true, attributeFilter: ['style', 'class'] });
         for (const query of ['(prefers-reduced-motion: reduce)', '(forced-colors: active)']) window.matchMedia?.(query).addEventListener('change', renderAppearance);
-        imageStore('get').then(async blob => { if (blob) setImage(await decodeImage(blob)); }).catch(() => { if (settings.mode === 'image') status.textContent = t('missing'); });
+        imageStore('get').then(async blob => { if (blob) setImage(await decodeImage(blob)); }).catch(() => { if (settings.mode === 'image') setStatus(t('missing')); });
         window.addEventListener('storage', event => { if (event.key === KEY) { try { settings = validate(JSON.parse(event.newValue) || defaults); renderAppearance(); syncForm(); } catch (_) { /* ignore corrupt input */ } } });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true }); else init();
