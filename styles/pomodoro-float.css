@@ -78,6 +78,8 @@
 .mynt-pomo-background-label { width: 100%; font-size: var(--pomo-type-small); line-height: 1.4; text-align: center; overflow-wrap: anywhere; }
 .mynt-pomo-image-symbol { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: #f6f8ffdd; color: #17243b; font-size: 18px; }
 .mynt-pomo-image-framing { margin-top: 6px; border-top: 1px solid var(--pomo-border); }
+.mynt-pomo-mode-settings { grid-column: 1 / -1; min-width: 0; }
+.mynt-pomo-mode-settings:not(:has(> :not([hidden]))) { display: none; }
 .mynt-pomo-float {
     margin: 0;
     padding: 8px;

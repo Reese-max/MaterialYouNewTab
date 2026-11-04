@@ -111,6 +111,8 @@
 .pomoStudioRow { display: flex; gap: 8px; margin: 8px 0; }
 .pomoStudioRow > button { flex: 1; }
 #myntPomoStudioMount button:hover, #myntPomoFloatMount > button:hover, #pomodoroPanel .pomoStudioCard:hover { background: color-mix(in srgb, var(--pomo-fg, #fff) 10%, var(--pomo-surface, #162330b3)); }
+/* Visible caption for the preset row (the group keeps its own accessible name). */
+.pomoStudioCardsLabel { margin: 0 0 6px; font-size: 12px; font-weight: 600; }
 .pomoStudioCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 8px; }
 #pomodoroPanel .pomoStudioCard { display: grid; align-content: center; justify-items: center; text-align: center; gap: 2px; min-height: 54px; padding: 7px 4px; border-radius: 16px; line-height: 1.35; }
 .pomoStudioCard strong { width: 100%; font-size: var(--pomo-type-body); font-weight: 600; font-variant-numeric: tabular-nums; }

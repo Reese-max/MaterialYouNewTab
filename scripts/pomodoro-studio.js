@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  custom.onclick=()=>{full=true;setMode();scenarios.open=true;try{localStorage.setItem(MODE,'full');}catch{}requestAnimationFrame(()=>{keepVisible();durationInputs.workMinutes.focus({preventScroll:true});durationInputs.workMinutes.scrollIntoView({block:'nearest'});});};
  const updateRemove=()=>{remove.disabled=Number(select.value)<builtin.length;};select.onchange=updateRemove;render();updateRemove();
  const alarmNotes=el('details');alarmNotes.className='pomoStudioAlarmNotes';alarmNotes.append(el('summary',t('pomoStudioAlarmNotes','提示音與使用說明')),alarmLabel,limits);
- settings.append(scenarios);extras.prepend(cards,settings);extras.append(alarmNotes);
+ settings.append(scenarios);const cardsLabel=el('p',t('pomoStudioFocusBreak','專注／休息（分）'));cardsLabel.className='pomoStudioCardsLabel';cardsLabel.setAttribute('aria-hidden','true');extras.prepend(cardsLabel,cards,settings);extras.append(alarmNotes);
  const stats=el('div');stats.className='pomoStudioStats';for(const selector of ['.pomodoroSessionsToday','.pomodoroFocusSummary']){const child=panel.querySelector(selector);if(child)stats.append(child);}if(stats.children.length)panel.append(stats);
  // Both primary states keep an identical footprint; labels and keyboard focus survive swaps.
  const controls=panel.querySelector('.pomodoroControls'),start=panel.querySelector('#pomodoroStartBtn'),pause=panel.querySelector('#pomodoroPauseBtn'),reset=panel.querySelector('#pomodoroResetBtn');
