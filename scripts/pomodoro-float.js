@@ -219,7 +219,7 @@
     }
     // 匯出供無相依套件的回歸檢查使用，不新增儲存資料。
     if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition, avoidingPanelPosition }; return; }
-    let settings = { ...defaults }, imageUrl = '', floating = null, opening = false, unsubscribe = null;
+    let settings = { ...defaults }, imageUrl = '', imageStored = false, floating = null, opening = false, unsubscribe = null;
     let status, appearanceForm, floatVideo, modePanel, modePanelAnchor;
     // Routine saves are announced to assistive tech only; errors stay visible.
     function setStatus(text, quiet = false) { status.textContent = text; status.classList.toggle('mynt-pomo-sr-only', quiet); }
@@ -339,7 +339,8 @@
     function syncForm() {
         if (!appearanceForm) return;
         for (const key of ['color', 'color2', 'fit', 'position']) appearanceForm.elements.namedItem(key).value = settings[key];
-        settingGroups.get('image')?.classList.toggle('mynt-pomo-has-image', !!imageUrl);
+        // A stored image that failed to decode can still be removed.
+        settingGroups.get('image')?.classList.toggle('mynt-pomo-has-image', !!imageUrl || imageStored);
         const home = getComputedStyle(document.body).getPropertyValue('--bg-image').trim();
         const originalPreview = videoThumbnail(document.getElementById('pomodoroPanel')?.querySelector('.pomodoro-bg-video'));
         const previews = {
@@ -405,14 +406,18 @@
         let deletedImage = null;
         const undo = button(document, 'undo', async () => {
             if (!deletedImage) return;
-            undo.disabled = true; input.disabled = true; remove.disabled = true; let url = '';
+            undo.disabled = true; input.disabled = true; remove.disabled = true; let url = '', restored = false;
             try {
                 url = await decodeImage(deletedImage.blob);
-                await imageStore('put', deletedImage.blob);
+                await imageStore('put', deletedImage.blob); imageStored = true;
                 setImage(url); url = ''; applySettings(deletedImage.settings);
-                deletedImage = null; undo.hidden = true; setStatus(t('ready'), true);
+                deletedImage = null; undo.hidden = true; setStatus(t('ready'), true); restored = true;
             } catch (_) { if (url) URL.revokeObjectURL(url); setStatus(t('error')); }
-            finally { undo.disabled = false; input.disabled = false; remove.disabled = false; }
+            finally {
+                undo.disabled = false; input.disabled = false; remove.disabled = false;
+                // Undo hides itself: keyboard focus returns to the delete button the restored image brings back.
+                if (restored) remove.focus();
+            }
         });
         undo.hidden = true;
         const input = el(document, 'input'); input.type = 'file'; input.accept = 'image/png,image/jpeg,image/webp';
@@ -421,22 +426,26 @@
             const file = input.files[0]; if (!file) return; input.disabled = true; remove.disabled = true; undo.disabled = true; let url = '';
             try {
                 url = await decodeImage(file);
-                await imageStore('put', file);
+                await imageStore('put', file); imageStored = true;
                 setImage(url); url = ''; applySettings({ ...settings, mode: 'image' }); deletedImage = null; undo.hidden = true; setStatus(t('ready'), true);
             } catch (_) { if (url) URL.revokeObjectURL(url); setStatus(t('error')); }
             finally { input.value = ''; input.disabled = false; remove.disabled = false; undo.disabled = false; }
         });
         const remove = button(document, 'remove', async () => {
             if (!window.confirm(t('deleteConfirm'))) return;
-            remove.disabled = true; input.disabled = true; undo.disabled = true;
+            remove.disabled = true; input.disabled = true; undo.disabled = true; let deleted = false;
             try {
                 const blob = await imageStore('get');
-                if (!blob) { setStatus(t('missing')); return; }
+                if (!blob) { imageStored = false; syncForm(); setStatus(t('missing')); return; }
                 const previous = { blob, settings: { ...settings } };
-                await imageStore('delete'); deletedImage = previous; undo.hidden = false;
-                setImage(''); if (settings.mode === 'image') applySettings({ ...settings, mode: 'home' }); setStatus(t('deleted')); undo.focus();
+                await imageStore('delete'); imageStored = false; deletedImage = previous; undo.hidden = false;
+                setImage(''); if (settings.mode === 'image') applySettings({ ...settings, mode: 'home' }); setStatus(t('deleted')); deleted = true;
             } catch (_) { setStatus(t('error')); }
-            finally { remove.disabled = false; input.disabled = false; undo.disabled = false; }
+            finally {
+                remove.disabled = false; input.disabled = false; undo.disabled = false;
+                // The delete button hides with the image: keyboard focus moves to the now-enabled undo.
+                if (deleted) undo.focus();
+            }
         });
         imageControls.append(remove); modePanel.append(framing, undo);
         details.append(form); mount.append(details); syncForm();
@@ -616,7 +625,7 @@
         const observer = new MutationObserver(renderAppearance);
         for (const target of [document.body, document.documentElement]) observer.observe(target, { attributes: true, attributeFilter: ['style', 'class'] });
         for (const query of ['(prefers-reduced-motion: reduce)', '(forced-colors: active)']) window.matchMedia?.(query).addEventListener('change', renderAppearance);
-        imageStore('get').then(async blob => { if (blob) setImage(await decodeImage(blob)); }).catch(() => { if (settings.mode === 'image') setStatus(t('missing')); });
+        imageStore('get').then(async blob => { imageStored = !!blob; syncForm(); if (blob) setImage(await decodeImage(blob)); }).catch(() => { if (settings.mode === 'image') setStatus(t('missing')); });
         window.addEventListener('storage', event => { if (event.key === KEY) { try { settings = validate(JSON.parse(event.newValue) || defaults); renderAppearance(); syncForm(); } catch (_) { /* ignore corrupt input */ } } });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true }); else init();

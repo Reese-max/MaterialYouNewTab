@@ -375,7 +375,7 @@ html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open
 /* Balanced wrapping so helper text never leaves a one-word last line. */
 html.mynt-removed-features body #pomodoroPanel :is(.mynt-pomo-image-controls > label, .mynt-pomo-note, .mynt-music-status) { text-wrap: balance; }
 /* Secondary outlines stay visible over bright or busy pictures. */
-html.mynt-removed-features body #pomodoroPanel :is(.mynt-pomo-open-float, .pomoStudioRow > button, #myntPomoExtras > .mynt-pomo-open-popup, .mynt-pomo-image-controls > button) { border-color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 30%, transparent) !important; }
+html.mynt-removed-features body #pomodoroPanel :is(.mynt-pomo-open-float, .pomoStudioRow > button, #myntPomoExtras > .mynt-pomo-open-popup) { border-color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 30%, transparent) !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls input[type="file"]::file-selector-button { border-color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 24%, transparent); }
 /* Deleting the saved image is destructive: quiet danger tone, same size as its neighbours. */
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-image-controls > button { color: #9b2c2c !important; border-color: color-mix(in srgb, #9b2c2c 35%, transparent) !important; }
