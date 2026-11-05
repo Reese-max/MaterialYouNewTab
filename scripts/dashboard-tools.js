@@ -416,8 +416,11 @@ if (typeof document !== "undefined") {
 
         function saveHabits() {
             if (habitsStorageInvalid) return false;
+            let current;
             try {
-                const current = myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
+                current = myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
+            } catch (_) { habitsStorageInvalid = true; return false; }
+            try {
                 if (window.MyntStorageSync) {
                     const byId = items => Object.fromEntries(items.map(item => [item.id, item]));
                     const base = byId(habitsBaseline), draft = byId(habits), remote = byId(current);
@@ -431,7 +434,12 @@ if (typeof document !== "undefined") {
                     habits = Object.values(window.MyntStorageSync.mergeRecords(base, draft, remote));
                 }
                 myntValidateHabits(habits);
-            } catch (_) { habitsStorageInvalid = true; return false; }
+            } catch (_) {
+                habits = current;
+                habitsBaseline = JSON.parse(JSON.stringify(current));
+                renderHabits();
+                return false;
+            }
             localStorage.setItem(KEYS.habits, JSON.stringify(habits));
             habitsBaseline = JSON.parse(JSON.stringify(habits));
             document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
@@ -474,6 +482,7 @@ if (typeof document !== "undefined") {
                 return false;
             }
             habits = next;
+            habitsBaseline = JSON.parse(JSON.stringify(habits));
             document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
             renderHabits();
             document.getElementById("habitInput").focus();

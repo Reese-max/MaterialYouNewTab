@@ -138,6 +138,11 @@ function deleteTodo(id) {
         localStorage.setItem("todoList", JSON.stringify(next));
         localStorage.setItem("myntTodoRecoveryV1", JSON.stringify(record));
     } catch (error) {
+        if (error.message === "Task data changed") {
+            ShowToDoList();
+            notifyTodoUpdated();
+            return false;
+        }
         try {
             if (previousStorage === null) localStorage.removeItem("todoList");
             else localStorage.setItem("todoList", previousStorage);
@@ -244,6 +249,11 @@ todoulList.addEventListener("click", (event) => {
                     li.insertBefore(textNode, input);
                     li.removeChild(input);
                     li.classList.remove("edit");
+
+                    if (localStorage.getItem("todoList") !== JSON.stringify(todoBaseline)) {
+                        ShowToDoList();
+                        if (!todoStorageInvalid) notifyTodoUpdated();
+                    }
 
                     clearTimeout(suppressTimeout);
                     suppressTimeout = setTimeout(() => {

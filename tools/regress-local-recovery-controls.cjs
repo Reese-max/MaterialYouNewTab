@@ -265,7 +265,8 @@ function settingsBackup(recovery = todo) {
     const states = [], loadContext = vm.createContext({ localStorage: { getItem: key => key === "shortcutAmount" ? "49" : "" },
         presets: [], PLACEHOLDER: { name: "Fixture", url: "https://example.org" }, MAX_SHORTCUTS: 50,
         dom: { shortcutSettingsContainer: { appendChild() {} }, newShortcutButton: { classList: { toggle: (name, active) => states.push(active) } } },
-        createShortcutEntry() {}, renderShortcut() {}, setupDragAndDrop() {}, updateShortcutIndices() {} });
+        createShortcutEntry() {}, renderShortcut() {}, setupDragAndDrop() {}, updateShortcutIndices() {},
+        myntShortcutDefault: require(path.join(root, "scripts/shortcuts.js")).myntShortcutDefault });
     loadContext.window = {};
     vm.runInContext(`let shortcutsCache=[]; ${rememberSource}; ${loadSource}; loadShortcuts();`, loadContext);
     assert.equal(states.at(-1), false, "A deletion from a full list re-enables the Add shortcut control");
