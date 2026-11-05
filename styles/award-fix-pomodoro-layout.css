@@ -566,10 +566,15 @@
     padding: 0 2px 12px;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: var(--pomo-muted, #35465e) transparent;
+    scrollbar-width: auto;
+    scrollbar-color: auto;
     scroll-padding-block: 8px 12px;
     isolation: isolate;
+}
+/* Chrome ignores the ::-webkit-scrollbar styling below unless both standard properties are auto
+   (otherwise it draws arrowed scrollbars across the rounded corner), so they stay Firefox-only. */
+@supports not selector(::-webkit-scrollbar) {
+    #pomodoroPanel { scrollbar-width: thin; scrollbar-color: var(--pomo-muted, #35465e) transparent; }
 }
 
 /* 單一可讀底層蓋在影片上、內容下；沿用已校驗對比的即時番茄鐘色票。

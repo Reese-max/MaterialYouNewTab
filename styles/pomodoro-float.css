@@ -226,7 +226,7 @@ html.myntHighContrast .mynt-pomo-float :focus-visible { outline-color: Highlight
 .mynt-pomo-float .mynt-pomo-controls { width: min(100%, 320px); flex: 0 0 auto; }
 .mynt-pomo-float .mynt-pomo-options,
 .mynt-pomo-float .mynt-pomo-confirm,
-.mynt-pomo-float .mynt-pomo-card > .mynt-pomo-note { width: min(100%, 380px); flex: 0 0 auto; }
+.mynt-pomo-float .mynt-pomo-card > .mynt-pomo-note { width: min(100%, 23.75rem); flex: 0 0 auto; }
 /* Extra options and very short windows scroll normally instead of clipping controls. */
 .mynt-pomo-float:has(.mynt-pomo-options[open]) .mynt-pomo-card { justify-content: flex-start; }
 @media (max-height: 360px) {
@@ -235,23 +235,26 @@ html.myntHighContrast .mynt-pomo-float :focus-visible { outline-color: Highlight
     .mynt-pomo-float .pomodoroPhaseLabel { margin-bottom: 4px; }
 }
 /* A compact, optically balanced control group at every floating-window size. */
-.mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: clamp(120px, min(68vw, 43vh), 280px); }
+/* Text and controls grow with large floating windows (1rem stays 16px at the default 320x420). */
+/* !important: the window copies the homepage's inline calc(16px * --mynt-font-scale); keep that scale. */
+html.mynt-pomo-float-root { font-size: calc(clamp(16px, min(5vw, 3.5vh), 26px) * var(--mynt-font-scale, 1)) !important; }
+.mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: clamp(120px, min(68vw, 43vh), 420px); }
 .mynt-pomo-float .mynt-pomo-controls {
-    display: grid; width: min(100%, 232px); grid-template-columns: 44px minmax(0, 128px) 44px;
+    display: grid; width: min(100%, 14.5rem); grid-template-columns: 2.75rem minmax(0, 8rem) 2.75rem;
     gap: 8px; margin-bottom: 4px;
 }
 .mynt-pomo-float .mynt-pomo-primary {
-    min-width: 0; width: 100%; height: 44px; min-height: 44px; padding: 8px 12px;
-    gap: 6px; border-radius: 22px; font-size: .875rem; line-height: 1.25;
+    min-width: 0; width: 100%; height: 2.75rem; min-height: 2.75rem; padding: .5rem .75rem;
+    gap: .375rem; border-radius: 1.375rem; font-size: .875rem; line-height: 1.25;
 }
 .mynt-pomo-float .mynt-pomo-reset {
-    width: 44px; height: 44px; min-height: 44px; padding: 12px;
-    justify-self: center; border-radius: 22px;
+    width: 2.75rem; height: 2.75rem; min-height: 2.75rem; padding: .75rem;
+    justify-self: center; border-radius: 1.375rem;
 }
-.mynt-pomo-float button svg { width: 20px; height: 20px; }
+.mynt-pomo-float button svg { width: 1.25rem; height: 1.25rem; }
 .mynt-pomo-float .pomodoroTimeDisplay { font-size: calc(var(--pomo-ring-size) * .22 * var(--mynt-font-scale, 1)); }
 .mynt-pomo-float .mynt-pomo-context { margin: 10px 0 14px; }
-.mynt-pomo-float .mynt-pomo-options summary { min-height: 44px; padding: 8px 12px; font-size: .8125rem; }
+.mynt-pomo-float .mynt-pomo-options summary { min-height: 2.75rem; padding: .5rem .75rem; font-size: .8125rem; }
 @media (max-height: 360px) {
     .mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: 120px; }
     .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }

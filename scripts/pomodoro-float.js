@@ -456,7 +456,7 @@
         if (floatVideo) floatVideo.pause(); floatVideo = null; floating = null;
     }
     function constructFloat(win, ordinary) {
-        const doc = win.document; doc.title = t('float'); doc.documentElement.lang = document.documentElement.lang;
+        const doc = win.document; doc.title = t('float'); doc.documentElement.lang = document.documentElement.lang; doc.documentElement.classList.add('mynt-pomo-float-root');
         // Copy only this packaged stylesheet, never arbitrary page styles or remote scripts.
         const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = new URL('styles/pomodoro-float.css', document.baseURI).href; doc.head.append(css);
         doc.body.replaceChildren(); doc.body.className = 'mynt-pomo-float';

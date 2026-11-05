@@ -497,8 +497,10 @@ async function checkPanelAnchor(delayedReady) {
     assert.equal(panel.style.getPropertyValue('--pomo-scheme'), 'light', 'local image sampling derives a light palette from the decoded bright image');
     const css = fs.readFileSync(require.resolve('../styles/pomodoro-float.css'), 'utf8');
     assert.match(css, /font-variant-numeric: tabular-nums/);
-    assert.match(css, /width: min\(100%, 232px\); grid-template-columns: 44px minmax\(0, 128px\) 44px/, 'balanced control group keeps reset close without moving the primary off-center');
-    assert.match(css, /button svg \{ width: 20px; height: 20px; \}/, 'consistent floating action icon scale');
+    assert.match(css, /width: min\(100%, 14\.5rem\); grid-template-columns: 2\.75rem minmax\(0, 8rem\) 2\.75rem/, 'balanced control group keeps reset close without moving the primary off-center');
+    assert.match(css, /button svg \{ width: 1\.25rem; height: 1\.25rem; \}/, 'consistent floating action icon scale');
+    assert.match(css, /html\.mynt-pomo-float-root \{ font-size: calc\(clamp\(16px, min\(5vw, 3\.5vh\), 26px\) \* var\(--mynt-font-scale, 1\)\) !important; \}/, 'large floating windows scale text and controls while keeping the user font scale');
+    assert.ok(pip.document.documentElement.classList.contains('mynt-pomo-float-root'), 'floating root opts into window-relative sizing');
     assert.match(css, /width: 100%; min-height: 100vh; min-height: 100dvh; max-width: none/, 'standalone card fills the viewport');
     assert.match(css, /--pomo-ring-size: clamp\(120px, min\(72vw, 46vh\), 360px\)/, 'ring responds to both viewport dimensions');
     assert.match(css, /mynt-pomo-card\.mynt-pomo-static \{ background-size: cover !important/, 'PiP image fills viewport');
