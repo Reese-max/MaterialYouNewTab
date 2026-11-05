@@ -259,3 +259,16 @@ html.mynt-pomo-float-root { font-size: calc(clamp(16px, min(5vw, 3.5vh), 26px) *
     .mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: 120px; }
     .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
 }
+
+/* Shared audio transports keep the compact window to one extra row. */
+.mynt-pomo-audio { display: flex; gap: 6px; width: min(100%, 23.75rem); min-width: 0; }
+.mynt-pomo-audio[hidden], .mynt-pomo-audio button[hidden] { display: none; }
+.mynt-pomo-audio button { flex: 1 1 0; min-width: 0; min-height: 44px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .75rem; }
+.mynt-pomo-durations { display: grid; gap: 8px; }
+.mynt-pomo-durations label { min-width: 0; }
+.mynt-pomo-durations input { width: 100%; min-width: 0; min-height: 44px; }
+.mynt-pomo-float .pomodoroRoundDisplay { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-height: 480px) {
+    .mynt-pomo-float:has(.mynt-pomo-audio:not([hidden])) .mynt-pomo-card { --pomo-ring-size: min(38vh, 160px); }
+    .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
+}

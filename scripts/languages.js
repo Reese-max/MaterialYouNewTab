@@ -9,7 +9,7 @@
 // Translation data
 const DEFAULT_LANGUAGE = "zh_TW";
 
-const localeSources = {
+function readLocaleSources() { return {
     en: typeof en !== "undefined" ? en : undefined,
     pt: typeof pt !== "undefined" ? pt : undefined,
     ne: typeof ne !== "undefined" ? ne : undefined,
@@ -42,7 +42,8 @@ const localeSources = {
     pl: typeof pl !== "undefined" ? pl : undefined,
     uk: typeof uk !== "undefined" ? uk : undefined,
     sv: typeof sv !== "undefined" ? sv : undefined,
-};
+}; }
+const localeSources = readLocaleSources();
 
 const translations = Object.fromEntries(
     Object.entries(localeSources).filter(([, strings]) => strings).map(([code, strings]) => [
@@ -483,12 +484,30 @@ function applyLanguage(lang) {
     document.documentElement.lang = lang === "zh_TW" ? "zh-TW" : lang.replace("_", "-");
     saveLanguageStatus("selectedLanguage", lang);
     if (typeof refreshBackupScope === "function") refreshBackupScope();
+    document.dispatchEvent(new CustomEvent("mynt:language-changed"));
 }
 
 // Detect language from navigator.language
-document.getElementById("languageSelector").addEventListener("change", (event) => {
-    saveLanguageStatus("selectedLanguage", event.target.value);
-    location.reload();
+let languageRequest = 0;
+const localeLoads = new Map();
+document.getElementById("languageSelector").addEventListener("change", async (event) => {
+    const lang = event.target.value, request = ++languageRequest;
+    if (!Object.hasOwn(localeSources, lang)) return;
+    try {
+        if (!translations[lang]) {
+            if (!localeLoads.has(lang)) localeLoads.set(lang, new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.src = "locales/" + lang + ".js";
+                script.onload = resolve; script.onerror = reject; document.head.append(script);
+            }).finally(() => localeLoads.delete(lang)));
+            await localeLoads.get(lang);
+            translations[lang] = { ...en, ...readLocaleSources()[lang] };
+        }
+        if (request !== languageRequest) return;
+        currentLanguage = lang;
+        isRTL = rtlLanguages.includes(lang);
+        applyLanguage(lang);
+    } catch (_) { if (request === languageRequest) event.target.value = currentLanguage; }
 });
 
 // Function to apply the language when the page loads

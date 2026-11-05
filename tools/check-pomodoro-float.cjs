@@ -162,7 +162,7 @@ async function checkPanelAnchor(delayedReady) {
     const observers = [];
     const context = { document, window, localStorage, PANEL_POS_KEY: 'pomodoroPanelPosition', pomodoroPanel: panel, pomodoroCont: trigger, pomodoroDragHandle: handle,
         pomodoroCheckbox: { checked: true }, pomodoroBgVideo: { play: () => Promise.resolve() }, setTimeout() {}, console,
-        getComputedStyle: node => ({ boxSizing: 'border-box', ...node.style }), MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} } };
+        getComputedStyle: node => ({ boxSizing: 'border-box', ...node.style }), MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} disconnect() {} } };
     const source = fs.readFileSync(require.resolve('../scripts/pomodoro.js'), 'utf8');
     const drag = source.slice(source.indexOf('// --- Panel drag functionality ---'), source.indexOf('// --- Icon drag functionality ---'));
     const open = source.slice(source.indexOf('function openPanel()'), source.indexOf('function getCurrentPanelScale()'));
@@ -283,7 +283,7 @@ async function checkPanelAnchor(delayedReady) {
         queueMicrotask(() => req.onsuccess?.()); return req;
     } };
     const observers = [];
-    const context = { document, window, localStorage: { getItem: () => null, setItem() {} }, MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} }, getComputedStyle: node => node.style, URL, indexedDB, Image: class { constructor() { this.naturalWidth = 20; this.naturalHeight = 20; } decode() { return Promise.resolve(); } }, console };
+    const context = { document, window, localStorage: { getItem: () => null, setItem() {} }, MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} disconnect() {} }, getComputedStyle: node => node.style, URL, indexedDB, Image: class { constructor() { this.naturalWidth = 20; this.naturalHeight = 20; } decode() { return Promise.resolve(); } }, console };
     vm.runInNewContext(fs.readFileSync(require.resolve('../scripts/pomodoro-float.js'), 'utf8'), context);
     assert.equal(panel.classList.contains('mynt-pomo-static'), false, 'default leaves original video and overlay alone');
     assert.equal(originalVideo.pauseCalls, 0, 'appearance module never controls original video lifecycle');
@@ -334,7 +334,7 @@ async function checkPanelAnchor(delayedReady) {
     assert.equal(last.document.querySelector('.pomodoroCircleWrap').children.length, 2, 'circle has decorative SVG and readable timer');
     assert.equal(last.document.querySelector('.pomodoroProgressRing').getAttribute('aria-hidden'), 'true');
     assert.equal(last.document.querySelector('.pomodoroTimeDisplay').textContent, '25:00');
-    assert.equal(last.document.querySelector('.pomodoroRoundDisplay').textContent, 'Round 1 / 4');
+    assert.equal(last.document.querySelector('.pomodoroRoundDisplay').textContent, 'Rounds 1 / 4 · Today 0');
     const cardChildren = last.document.querySelector('.mynt-pomo-context').children;
     assert.ok(cardChildren.indexOf(last.document.querySelector('.mynt-pomo-task-preview')) < cardChildren.indexOf(last.document.querySelector('.pomodoroRoundDisplay')), 'task is secondary to timer and comes before tertiary round statistics');
     assert.ok(!last.document.querySelector('.mynt-pomo-options').open, 'advanced controls start collapsed');
@@ -427,7 +427,7 @@ async function checkPanelAnchor(delayedReady) {
     await find(pip.document, 'Reset').emit('click'); assert.equal(reset, 2, 'pristine reset requires no confirmation');
     state = { ...state, phase: 'shortBreak' }; renderState(state);
     assert.ok(pip.document.querySelector('.pomodoroRingFg').classList.contains('break-ring'));
-    assert.equal(pip.document.querySelector('.pomodoroPhaseLabel').textContent, 'Short break');
+    assert.equal(pip.document.querySelector('.pomodoroPhaseLabel').textContent, 'Short Break');
     const appearance = window.myntPomoAppearance;
     appearance.applySettings({ mode: 'color', color: '#123456' });
     assert.equal(panel.style.getPropertyValue('--pomo-color'), '#123456');
