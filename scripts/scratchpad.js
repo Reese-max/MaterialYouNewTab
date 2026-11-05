@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Load saved content
     scratchpadInput.value = localStorage.getItem(STORAGE_KEY) || "";
+    let savedContent = scratchpadInput.value;
     updateCounts();
 
     function updateCounts() {
@@ -35,12 +36,27 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    window.myntScratchpad = { reload() { scratchpadInput.value = localStorage.getItem(STORAGE_KEY) || ''; updateCounts(); } };
+    function reloadContent() {
+        const current = localStorage.getItem(STORAGE_KEY) || "";
+        if (scratchpadInput.value !== savedContent && scratchpadInput.value !== current) return;
+        scratchpadInput.value = savedContent = current;
+        updateCounts();
+    }
+    function saveContent() {
+        const current = localStorage.getItem(STORAGE_KEY) || "";
+        if (current !== savedContent && scratchpadInput.value !== savedContent && scratchpadInput.value !== current) {
+            scratchpadInput.value = window.MyntStorageSync.conflictText(current, scratchpadInput.value);
+        } else if (scratchpadInput.value === savedContent) scratchpadInput.value = current;
+        localStorage.setItem(STORAGE_KEY, scratchpadInput.value);
+        savedContent = scratchpadInput.value;
+        updateCounts();
+    }
+    window.myntScratchpad = { reload: reloadContent };
+    window.MyntStorageSync?.watch([STORAGE_KEY], reloadContent);
 
     // Auto-save on input
     scratchpadInput.addEventListener("input", function () {
-        localStorage.setItem(STORAGE_KEY, scratchpadInput.value);
-        updateCounts();
+        saveContent();
     });
 
     document.addEventListener("mynt:scratchpad-action", event => {
@@ -145,10 +161,11 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!scratchpadInput.value.trim()) return;
             const lang = localStorage.getItem("selectedLanguage") || "zh_TW";
             const message = (typeof translations !== "undefined" && (translations[lang]?.scratchpadClearConfirm || translations.en?.scratchpadClearConfirm)) || "Clear scratchpad?";
+            const beforeConfirm = savedContent;
             if (window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message)) {
                 scratchpadInput.value = "";
-                localStorage.removeItem(STORAGE_KEY);
-                updateCounts();
+                savedContent = beforeConfirm;
+                saveContent();
             }
         });
     }
@@ -197,8 +214,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 this.value = text.substring(0, lineStart) + newLine + (lineEnd === -1 ? "" : text.substring(lineEnd));
                 this.selectionStart = this.selectionEnd = Math.max(lineStart, start - 1);
             }
-            localStorage.setItem(STORAGE_KEY, this.value);
-            updateCounts();
+            saveContent();
             return;
         } else if (e.key === "Tab") {
             e.preventDefault();
@@ -206,8 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const end = this.selectionEnd;
             this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
             this.selectionStart = this.selectionEnd = start + 2;
-            localStorage.setItem(STORAGE_KEY, this.value);
-            updateCounts();
+            saveContent();
         } else if (e.key === "Enter") {
             const start = this.selectionStart;
             const text = this.value;
@@ -225,8 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.preventDefault();
                     this.value = text.substring(0, lineStart) + text.substring(start);
                     this.selectionStart = this.selectionEnd = lineStart;
-                    localStorage.setItem(STORAGE_KEY, this.value);
-                    updateCounts();
+                    saveContent();
                     return;
                 }
 
@@ -242,8 +256,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const insertText = "\n" + nextPrefix;
                 this.value = text.substring(0, start) + insertText + text.substring(start);
                 this.selectionStart = this.selectionEnd = start + insertText.length;
-                localStorage.setItem(STORAGE_KEY, this.value);
-                updateCounts();
+                saveContent();
             }
         }
     });

@@ -126,6 +126,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Cache for shortcuts data
     let shortcutsCache = [];
+    let shortcutBaseline;
     let recoveryControl;
     let shortcutDragInitialized = false;
 
@@ -145,6 +146,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             loadShortcuts();
             recoveryControl?.refresh();
         }
+    });
+    window.MyntStorageSync?.watch(key => /^shortcut(?:Amount$|Name\d+$|URL\d+$|Icon\d+$)/.test(key), () => {
+        // A focused field keeps its draft until blur performs the stale check.
+        if (dom.shortcutSettingsContainer.contains(document.activeElement)) return;
+        checkShortcutFreshness();
     });
 
     // Loads all settings from localStorage and applies them
@@ -182,6 +188,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     function handleBookmarkShortcut(event) {
+        if (!checkShortcutFreshness()) return;
         const plan = myntPlanShortcutPin(shortcutsCache, event.detail, MAX_SHORTCUTS);
         const name = String(event.detail?.name || "").trim();
         const url = myntNormalizeShortcutUrl(event.detail?.url) || String(event.detail?.url || "");
@@ -239,6 +246,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Loads shortcuts from localStorage or uses presets if none exist
     function loadShortcuts() {
+        rememberShortcutStorage();
         const amount = localStorage.getItem("shortcutAmount") || presets.length;
         const deleteInactive = amount <= 1;
 
@@ -371,7 +379,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             function applyIcon(iconValue) {
                 iconInput.value = iconValue;
                 try {
-                    saveShortcut(entry);
+                    if (saveShortcut(entry) === false) return;
                     renderShortcut(
                         entry.querySelector(".shortcutName").value,
                         entry.querySelector(".URL").value,
@@ -716,7 +724,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
                 if (input.classList.contains("URL") && !commitUrlInput(input, entry)) return;
 
-                saveShortcut(entry);
+                if (saveShortcut(entry) === false) return;
 
                 if (input.classList.contains("URL")) updateUrlDuplicateMessage(input, entry);
                 renderShortcut(
@@ -1032,6 +1040,21 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         return snapshot;
     }
 
+    function rememberShortcutStorage() {
+        if (window.MyntStorageSync) shortcutBaseline = [...snapshotShortcutStorage()];
+    }
+
+    function checkShortcutFreshness() {
+        if (!window.MyntStorageSync || window.MyntStorageSync.equal(shortcutBaseline, [...snapshotShortcutStorage()])) return true;
+        const draft = readShortcutOrder();
+        if (!window.MyntStorageSync.equal(draft, shortcutsCache)) {
+            window.MyntStorageSync.preserve(JSON.stringify(draft, null, 2));
+            alertPrompt(translations[currentLanguage]?.storageConflictSaved || translations.en.storageConflictSaved);
+        }
+        window.myntShortcuts.reload();
+        return false;
+    }
+
     function clearShortcutStorage() {
         localStorage.removeItem("shortcutAmount");
         for (let index = 0; index < MAX_SHORTCUTS; index++) {
@@ -1051,11 +1074,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             localStorage.setItem(`shortcutURL${index}`, item.url);
             localStorage.setItem(`shortcutIcon${index}`, item.icon || "");
         });
+        rememberShortcutStorage();
     }
 
     function restoreShortcutStorage(snapshot) {
         clearShortcutStorage();
         snapshot.forEach((value, key) => localStorage.setItem(key, value));
+        rememberShortcutStorage();
     }
 
     function rebuildShortcutEditor(order) {
@@ -1076,6 +1101,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Saves the new shortcut order without temporarily duplicating icon data.
     function saveShortcutOrder(originalOrder) {
+        if (!checkShortcutFreshness()) return;
         const newOrder = readShortcutOrder();
         if (!hasOrderChanged(newOrder)) return;
 
@@ -1157,11 +1183,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Adds a new shortcut
     function addNewShortcut() {
+        if (!checkShortcutFreshness()) return;
         const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
         if (currentAmount >= MAX_SHORTCUTS) return;
 
         const newAmount = currentAmount + 1;
         localStorage.setItem("shortcutAmount", newAmount.toString());
+        rememberShortcutStorage();
 
         if (currentAmount >= 1) {
             document.querySelectorAll(".shortcutDelete button.inactive").forEach(b => {
@@ -1183,6 +1211,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Deletes a shortcut atomically and records it for recovery
     function deleteShortcut(entry) {
+        if (!checkShortcutFreshness()) return;
         const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
         if (currentAmount <= 1) return;
 
@@ -1231,6 +1260,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     async function resetShortcuts() {
         if (!(await confirmPrompt(translations[currentLanguage]?.resetShortcutsPrompt || translations["en"].resetShortcutsPrompt)))
             return;
+        if (!checkShortcutFreshness()) return;
 
         // Animation for shortcut elements
         const shortcutEntries = [...dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")];
@@ -1263,6 +1293,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Saves a single shortcut to localStorage
     function saveShortcut(entry) {
+        if (!checkShortcutFreshness()) return false;
+        if (window.MyntStorageSync && !dom.shortcutSettingsContainer.contains(entry)) return false;
         const index = entry._index;
         const name = entry.querySelector(".shortcutName").value;
         const url = entry.querySelector(".URL").value;
@@ -1290,6 +1322,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
 
         shortcutsCache[index] = { name, url, icon: iconInput.value || "" };
+        rememberShortcutStorage();
+        return true;
     }
 
     // Keyboard shortcuts: Alt + 1-9 to open corresponding shortcut

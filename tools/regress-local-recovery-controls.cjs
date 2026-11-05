@@ -261,11 +261,13 @@ function settingsBackup(recovery = todo) {
     assert.equal(dragList.events.dragstart.length, 1, "Reload must not duplicate delegated drag handlers");
     assert.equal(dragDocument.events.dragend.length, 1); assert.equal(dragWindow.events.blur.length, 1);
     const loadSource = shortcutsSource.slice(shortcutsSource.indexOf("    function loadShortcuts()"), shortcutsSource.indexOf("    // Creates a shortcut entry element"));
+    const rememberSource = shortcutsSource.slice(shortcutsSource.indexOf("    function rememberShortcutStorage()"), shortcutsSource.indexOf("    function checkShortcutFreshness()"));
     const states = [], loadContext = vm.createContext({ localStorage: { getItem: key => key === "shortcutAmount" ? "49" : "" },
         presets: [], PLACEHOLDER: { name: "Fixture", url: "https://example.org" }, MAX_SHORTCUTS: 50,
         dom: { shortcutSettingsContainer: { appendChild() {} }, newShortcutButton: { classList: { toggle: (name, active) => states.push(active) } } },
         createShortcutEntry() {}, renderShortcut() {}, setupDragAndDrop() {}, updateShortcutIndices() {} });
-    vm.runInContext(`let shortcutsCache=[]; ${loadSource}; loadShortcuts();`, loadContext);
+    loadContext.window = {};
+    vm.runInContext(`let shortcutsCache=[]; ${rememberSource}; ${loadSource}; loadShortcuts();`, loadContext);
     assert.equal(states.at(-1), false, "A deletion from a full list re-enables the Add shortcut control");
     const dashboardSource = read("scripts/dashboard-tools.js");
     const habitReadSource = dashboardSource.slice(dashboardSource.indexOf("        let habitsStorageInvalid"), dashboardSource.indexOf("        function markSystemHabit"));

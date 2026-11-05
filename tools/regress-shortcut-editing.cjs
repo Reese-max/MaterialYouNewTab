@@ -244,6 +244,7 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
     };
     vm.createContext(context);
     context.window = context;
+    vm.runInContext(read("scripts/storage-sync.js"), context);
     vm.runInContext(read("scripts/local-recovery-controls.js"), context);
     vm.runInContext(read("scripts/shortcuts.js"), context, { filename: "scripts/shortcuts.js" });
     document.emit("DOMContentLoaded");

@@ -1,5 +1,7 @@
 // English (Default)
 const en = {
+    "storageConflictCopy": "Conflicting draft kept from this tab",
+    "storageConflictSaved": "Another tab changed this data. Your draft was kept in Scratchpad; the latest data has been loaded.",
     "homeWidgetsSetting": "Homepage Today widgets",
     "homeWidgetsTitle": "Today",
     "homeWidgetsTodo": "To-do",

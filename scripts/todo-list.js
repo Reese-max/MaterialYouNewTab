@@ -16,6 +16,7 @@ const todoInput = document.getElementById("todoInput");
 let todoStorageInvalid = false;
 let todoRecoveryControl;
 let todoList = {}; // Initialize todoList JSON
+let todoBaseline = {};
 let suppressNextClick = false;
 let suppressTimeout = null;
 
@@ -39,7 +40,7 @@ function createTodo(title) {
     if (todoStorageInvalid || !todoList) return null;
     const rawText = String(title || "").trim().slice(0, 120);
     if (!rawText) return null;
-    let id = "t" + Date.now();
+    let id = "t" + (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
     while (todoList[id]) id += "x";
     todoList[id] = { title: rawText, status: "pending", pinned: false };
     todoulList.appendChild(createTodoItemDOM(id, rawText, "pending", false));
@@ -268,8 +269,15 @@ todoulList.addEventListener("click", (event) => {
 // Save JSON to local Storage
 function SaveToDoData() {
     if (todoStorageInvalid || !todoList) return false;
-    try { const current=JSON.parse(localStorage.getItem("todoList") || "{}"); if(!current || Array.isArray(current) || typeof current!=="object") throw Error("Invalid todo data"); } catch { todoStorageInvalid=true; return false; }
+    const draft = JSON.stringify(todoList);
+    try {
+        const current = JSON.parse(localStorage.getItem("todoList") || "{}");
+        if (!current || Array.isArray(current) || typeof current !== "object") throw Error("Invalid todo data");
+        if (window.MyntStorageSync) todoList = window.MyntStorageSync.mergeRecords(todoBaseline, todoList, current);
+    } catch { todoStorageInvalid=true; return false; }
     localStorage.setItem("todoList", JSON.stringify(todoList));
+    todoBaseline = JSON.parse(JSON.stringify(todoList));
+    if (JSON.stringify(todoList) !== draft) ShowToDoList();
     notifyTodoUpdated();
     return true;
 }
@@ -336,6 +344,7 @@ function ShowToDoList() {
     try {
         todoList = JSON.parse(localStorage.getItem("todoList")) || {}; // Parse stored data or initialize empty
         if(!todoList || Array.isArray(todoList) || typeof todoList!=="object") throw Error("Invalid todo data");
+        todoBaseline = JSON.parse(JSON.stringify(todoList));
         todoStorageInvalid=false;
         todoulList.replaceChildren();
         const fragment = document.createDocumentFragment(); // Create a DocumentFragment
@@ -365,6 +374,7 @@ if (todoLastUpdateDate === todoCurrentDate) {
     // Modify the list when last update date and the current date does not match
     localStorage.setItem("todoLastUpdateDate", todoCurrentDate);
     try { todoList = JSON.parse(localStorage.getItem("todoList")) || {}; } catch { todoList = null; todoStorageInvalid=true; }
+    todoBaseline = JSON.parse(JSON.stringify(todoList || {}));
 
     for (let id in (todoList || {})) {
         if (todoList[id].pinned === false) {
@@ -381,6 +391,13 @@ if (todoLastUpdateDate === todoCurrentDate) {
 }
 
 // Toggle menu and tooltip visibility
+window.MyntStorageSync?.watch(["todoList"], () => {
+    // Keep an active title draft until blur; its save merges against its baseline.
+    if (todoulList.querySelector(".edit-input")) return;
+    ShowToDoList();
+    notifyTodoUpdated();
+});
+
 todoListCont.addEventListener("click", function (event) {
     const isMenuVisible = todoContainer.style.display === "grid";
 
@@ -458,20 +475,13 @@ window.myntTodoApi = {
         // 分頁重新可見時，先讀回隱藏期間其他分頁更新的清單。
         ShowToDoList();
         const notify = () => callback();
-        const onStorage = event => {
-            if (event.key !== null && event.key !== "todoList") return;
-            ShowToDoList();
-            notify();
-        };
         // 完整清單重載（含本機復原）也會更新首頁，不改動原有流程。
         const observer = new MutationObserver(notify);
         observer.observe(todoulList, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
         document.addEventListener("mynt:todo-updated", notify);
-        window.addEventListener("storage", onStorage);
         return () => {
             observer.disconnect();
             document.removeEventListener("mynt:todo-updated", notify);
-            window.removeEventListener("storage", onStorage);
         };
     }
 };

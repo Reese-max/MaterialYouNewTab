@@ -235,6 +235,7 @@ async function main() {
     // 執行真實待辦模組，驗證 API 沿用儲存、事件與清單 DOM。
     const real = environment({ todoLastUpdateDate: new Date().toLocaleDateString(), todoList: JSON.stringify({ p: { title: 'Pinned', status: 'pending', pinned: true } }) });
     for (const id of ['todoContainer', 'todoListCont', 'todoullist', 'todoAdd', 'todoInput']) real.node(id);
+    vm.runInNewContext(read('scripts/storage-sync.js'), real.context);
     vm.runInNewContext(read('scripts/todo-list.js'), real.context);
     const api = real.window.myntTodoApi;
     const copy = api.list(); copy[0].title = 'changed'; assert.equal(api.list()[0].title, 'Pinned', 'Read API returns detached values');
@@ -248,7 +249,9 @@ async function main() {
     await real.window.emit('storage', { key: 'todoList' }); assert.equal(api.list()[0].title, 'Other tab'); assert.equal(updates, 3);
     real.observers[0].callback([]); assert.equal(updates, 4, 'Full-panel/recovery DOM reload notifies subscribers');
     stop(); assert.equal(real.observers[0].connected, false);
-    await real.window.emit('storage', { key: 'todoList' }); assert.equal(updates, 4, 'Unsubscribe removes storage listener');
+    real.values.set('todoList', JSON.stringify({ after: { title: 'Changed after unsubscribe', status: 'pending', pinned: false } }));
+    await real.window.emit('storage', { key: 'todoList' }); assert.equal(updates, 4, 'Unsubscribe stops subscriber callbacks');
+    assert.equal(api.list()[0].title, 'Changed after unsubscribe', 'Task synchronization remains active without a widget subscriber');
     real.values.set('todoList', JSON.stringify({ resumed: { title: 'Changed while hidden', status: 'pending', pinned: true } }));
     const stopResumed = api.subscribe(() => {});
     assert.equal(api.list()[0].title, 'Changed while hidden', 'Resubscribe reloads changes missed while hidden'); stopResumed();

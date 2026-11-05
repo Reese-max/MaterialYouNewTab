@@ -62,6 +62,9 @@ for (const finding of ['2', '5']) test('search-nav#' + finding, () => {
 
 for (const finding of ['6', '9']) test('notes-ai#' + finding, () => {
     const c = context({ updateCounts() {}, STORAGE_KEY: 'note' }); c.scratchpadInput = node();
+    c.savedContent = '';
+    run(c, read('scripts/storage-sync.js'));
+    run(c, between('scripts/scratchpad.js', '    function saveContent()', '    window.myntScratchpad'));
     run(c, between('scripts/scratchpad.js', '    // Smart list continuation', '    // Global shortcut'));
     const n = c.scratchpadInput;
     if (finding === '6') for (const flag of [{ isComposing: true }, { keyCode: 229 }]) {

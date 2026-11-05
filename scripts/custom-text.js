@@ -74,13 +74,28 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     let focus = readState();
+    let focusBaseline = localStorage.getItem(STORAGE_KEY);
     let overwriteConfirmed = false;
 
     function save() {
+        const current = localStorage.getItem(STORAGE_KEY);
+        if (current !== focusBaseline) {
+            // Focus text is limited to 160 characters. Keep the complete rejected
+            // draft (including subject/steps) in Scratchpad's conflict block.
+            window.MyntStorageSync.preserve(JSON.stringify(focus, null, 2));
+            focus = readState();
+            focusBaseline = current;
+            render();
+            window.myntDialog?.alert(t("storageConflictSaved", "Another tab changed this data. Your draft was kept in Scratchpad; the latest data has been loaded."));
+            document.dispatchEvent(new CustomEvent("mynt:focus-changed", { detail: { focus: { ...focus } } }));
+            return false;
+        }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(focus));
+        focusBaseline = localStorage.getItem(STORAGE_KEY);
         if (focus.text) localStorage.setItem("userText", focus.text);
         else localStorage.removeItem("userText");
         document.dispatchEvent(new CustomEvent("mynt:focus-changed", { detail: { focus: { ...focus } } }));
+        return true;
     }
 
     function updateCounter(length) {
@@ -161,9 +176,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if (!focus.text) return;
         focus.completed = !focus.completed;
         if (focus.completed) delete focus.linked;
-        save();
+        const saved = save();
         render();
-        if (focus.completed) document.dispatchEvent(new CustomEvent("mynt:focus-completed"));
+        if (saved && focus.completed) document.dispatchEvent(new CustomEvent("mynt:focus-completed"));
     });
 
     document.addEventListener("visibilitychange", () => {
@@ -175,9 +190,22 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     });
 
     document.addEventListener('mynt:mcp-settings-refresh', () => { const visible=localStorage.getItem('userTextVisible')!=='false'; userTextCheckbox.checked=visible; setVisible(visible); });
+    function reloadFocus() {
+        focus = readState();
+        focusBaseline = localStorage.getItem(STORAGE_KEY);
+        overwriteConfirmed = false;
+        render();
+        document.dispatchEvent(new CustomEvent("mynt:focus-changed", { detail: { focus: { ...focus } } }));
+    }
+    window.MyntStorageSync?.watch([STORAGE_KEY, "userText"], () => {
+        if (document.activeElement !== userTextDiv) reloadFocus();
+    });
     window.myntFocus = {
-        reload() { focus = readState(); overwriteConfirmed = false; render(); },
-        get: () => ({ ...focus, steps: (focus.steps || []).map(step => ({ ...step })) }),
+        reload: reloadFocus,
+        get() {
+            if (localStorage.getItem(STORAGE_KEY) !== focusBaseline && document.activeElement !== userTextDiv) reloadFocus();
+            return { ...focus, steps: (focus.steps || []).map(step => ({ ...step })) };
+        },
         update(patch) {
             focus = { ...focus, ...patch };
             for (const key of ["subject", "steps", "rounds", "linked"]) {
@@ -185,8 +213,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 if (value === undefined || value === null || value === "" || value === false || value === 0 || (Array.isArray(value) && !value.length)) delete focus[key];
             }
             if (focus.steps) focus.steps = myntNormalizeFocusSteps(focus.steps);
-            save();
+            const saved = save();
             render();
+            return saved;
         },
         render
     };

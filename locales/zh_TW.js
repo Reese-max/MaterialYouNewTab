@@ -1,5 +1,7 @@
 // Chinese (Traditional)
 const zh_TW = {
+    "storageConflictCopy": "本分頁保留的衝突副本",
+    "storageConflictSaved": "另一分頁已變更資料。草稿已保留在筆記，並已載入最新資料。",
     "homeWidgetsSetting": "首頁今日小工具",
     "homeWidgetsTitle": "今日",
     "homeWidgetsTodo": "待辦",

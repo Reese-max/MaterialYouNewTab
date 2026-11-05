@@ -321,6 +321,7 @@ if (typeof document !== "undefined") {
         let focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
 
         function migratePomodoroToday() {
+            focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
             const sessions = Math.max(0, Number(localStorage.getItem("pomodoroSessionsToday")) || 0);
             if (!sessions || localStorage.getItem("pomodoroSessionsDate") !== new Date().toDateString()) return;
             const today = myntDateKey();
@@ -411,14 +412,28 @@ if (typeof document !== "undefined") {
             }
         }
         let habits = readHabits();
+        let habitsBaseline = JSON.parse(JSON.stringify(habits));
 
         function saveHabits() {
             if (habitsStorageInvalid) return false;
             try {
-                myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
+                const current = myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
+                if (window.MyntStorageSync) {
+                    const byId = items => Object.fromEntries(items.map(item => [item.id, item]));
+                    const base = byId(habitsBaseline), draft = byId(habits), remote = byId(current);
+                    for (const habit of habits) {
+                        if (!base[habit.id] || !remote[habit.id]) continue;
+                        const before = base[habit.id].doneDates;
+                        const dates = remote[habit.id].doneDates.filter(date => !before.includes(date) || habit.doneDates.includes(date));
+                        habit.doneDates = [...new Set([...dates, ...habit.doneDates.filter(date => !before.includes(date))])].sort().slice(-400);
+                        base[habit.id] = { ...base[habit.id], doneDates: remote[habit.id].doneDates };
+                    }
+                    habits = Object.values(window.MyntStorageSync.mergeRecords(base, draft, remote));
+                }
                 myntValidateHabits(habits);
             } catch (_) { habitsStorageInvalid = true; return false; }
             localStorage.setItem(KEYS.habits, JSON.stringify(habits));
+            habitsBaseline = JSON.parse(JSON.stringify(habits));
             document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
             return true;
         }
@@ -539,7 +554,7 @@ if (typeof document !== "undefined") {
             }
             const id = globalThis.crypto?.randomUUID?.() || `custom-${Date.now()}`;
             habits.push({ id, source: null, name: name.slice(0, 60), doneDates: [] });
-            saveHabits();
+            if (!saveHabits()) return;
             input.value = "";
             renderHabits();
         });
@@ -548,6 +563,8 @@ if (typeof document !== "undefined") {
         document.addEventListener("mynt:pomodoro-complete", event => {
             const minutes = Math.max(1, Math.min(120, Math.floor(Number(event.detail?.minutes) || 25)));
             const today = myntDateKey();
+            // The timer dispatches completion while holding its existing Web Lock.
+            focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
             const saved = focusHistory[today] || { sessions: 0, minutes: 0 };
             focusHistory[today] = { sessions: saved.sessions + 1, minutes: saved.minutes + minutes };
             saveFocusHistory();
@@ -734,6 +751,8 @@ if (typeof document !== "undefined") {
             }
         ];
         let workspaces = myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null), workspaceDefaults);
+        let workspaceBaseline = localStorage.getItem(KEYS.workspaces);
+        let workspaceEditorBaseline = workspaceBaseline;
         let applyingWorkspace = false;
         const restoredWorkspace = workspaces.find(item => item.id === localStorage.getItem(KEYS.workspace));
         if (restoredWorkspace) {
@@ -742,7 +761,14 @@ if (typeof document !== "undefined") {
         }
 
         function saveWorkspaces() {
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceBaseline) {
+                window.MyntStorageSync.preserve(JSON.stringify(workspaces, null, 2));
+                window.myntDashboard.reloadWorkspaces();
+                return false;
+            }
             localStorage.setItem(KEYS.workspaces, JSON.stringify(workspaces));
+            workspaceBaseline = localStorage.getItem(KEYS.workspaces);
+            return true;
         }
 
         function workspaceBackgroundName(background) {
@@ -821,6 +847,7 @@ if (typeof document !== "undefined") {
         }
 
         function openWorkspaceEditor(preset = null) {
+            workspaceEditorBaseline = localStorage.getItem(KEYS.workspaces);
             const editor = document.getElementById("workspaceEditorForm");
             const current = preset || {
                 id: "",
@@ -876,10 +903,16 @@ if (typeof document !== "undefined") {
             };
             const preset = myntNormalizeWorkspaces([draft])[0];
             if (!preset) return nameInput.reportValidity();
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceEditorBaseline) {
+                window.MyntStorageSync.preserve(JSON.stringify(draft, null, 2));
+                window.myntDashboard.reloadWorkspaces();
+                nameInput.setCustomValidity(t("storageConflictSaved", "Another tab changed this data. Your draft was kept in Scratchpad; the latest data has been loaded."));
+                return nameInput.reportValidity();
+            }
             const index = workspaces.findIndex(item => item.id === oldId);
             if (index === -1) workspaces.push(preset);
             else workspaces[index] = preset;
-            saveWorkspaces();
+            if (!saveWorkspaces()) return;
             closeWorkspaceEditor();
             applyWorkspace(preset.id);
         });
@@ -889,8 +922,12 @@ if (typeof document !== "undefined") {
             if (!preset) return;
             const message = format("workspaceDeleteConfirm", "Delete mode ‘{name}’?", { name: preset.name });
             if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceEditorBaseline) {
+                window.myntDashboard.reloadWorkspaces();
+                return;
+            }
             workspaces = workspaces.filter(item => item.id !== id);
-            saveWorkspaces();
+            if (!saveWorkspaces()) return;
             if (localStorage.getItem(KEYS.workspace) === id) localStorage.removeItem(KEYS.workspace);
             closeWorkspaceEditor();
             renderWorkspace();
@@ -1388,13 +1425,16 @@ if (typeof document !== "undefined") {
 
         window.myntDashboard = {
             getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
-            reloadHabits: () => { habits=readHabits(); renderHabits(); },
+            reloadHabits: () => { habits=readHabits(); habitsBaseline=JSON.parse(JSON.stringify(habits)); renderHabits(); },
             getWorkspacePresets: () => JSON.parse(JSON.stringify(workspaces)),
-            reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); renderWorkspace(); },
+            reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); workspaceBaseline=localStorage.getItem(KEYS.workspaces); renderWorkspace(); },
             reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); }
         };
-        window.addEventListener("storage", event => {
-            if (event.key === KEYS.habits || event.key === null) window.myntDashboard.reloadHabits();
+        window.MyntStorageSync?.watch([KEYS.habits, KEYS.workspaces, KEYS.workspace, KEYS.focusHistory], () => {
+            window.myntDashboard.reloadHabits();
+            window.myntDashboard.reloadWorkspaces();
+            focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
+            renderFocusStats();
         });
         localizeStaticUI();
         migratePomodoroToday();
