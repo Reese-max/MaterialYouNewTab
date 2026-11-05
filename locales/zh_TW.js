@@ -419,6 +419,8 @@ const zh_TW = {
     "invalidFileTypeMessage": "請選擇支援的圖片檔案。",
     "iconFileTooLargeMessage": "圖示檔案為 {size} KB，大小上限為 {max} KB。",
     "iconStorageQuotaMessage": "瀏覽器儲存空間不足，無法儲存此圖示。",
+    "shortcutInvalidUrlMessage": "網址無效，已還原為上次儲存的網址。",
+    "shortcutDuplicateUrlMessage": "這個網址已經在其他捷徑中。",
     "recentlyAddedBookmarks": "最近新增",
 
     // To-do List

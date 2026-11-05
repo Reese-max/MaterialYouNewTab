@@ -45,6 +45,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     // Constants
     const MAX_SHORTCUTS = 50;
     const MAX_ICON_BYTES = 100 * 1024;
+    const SHORTCUT_RECOVERY_KEY = "myntShortcutRecoveryV1";
     const SUPPORTED_ICON_MIME_TYPES = new Set([
         "image/png",
         "image/jpeg",
@@ -283,8 +284,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 <input class="shortcutName" placeholder="${PLACEHOLDER.inputName}" value="${escapeHtml(name)}">
                 <div class="shortcutInputRow">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39"/></svg>
-                    <input class="URL" placeholder="${PLACEHOLDER.inputUrl}" value="${escapeHtml(url)}">
+                    <input class="URL" placeholder="${PLACEHOLDER.inputUrl}" value="${escapeHtml(url)}" aria-describedby="shortcutUrlMessage${index}">
                 </div>
+                <div class="shortcutFieldMessage shortcutUrlMessage" id="shortcutUrlMessage${index}" role="status" aria-live="polite" hidden></div>
                 <div class="shortcutInputRow">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2M8.5 13.5l2.5 3.01L14.5 12l4.5 6H5z"/></svg>
                     <input class="iconURL" placeholder="${PLACEHOLDER.inputIcon}" value="${escapeHtml(iconUrl || "")}">
@@ -533,6 +535,41 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         return myntNormalizeShortcutUrl(url) || PLACEHOLDER.url;
     }
 
+    function shortcutTranslation(key) {
+        return translations[currentLanguage]?.[key] || translations["en"]?.[key] || "";
+    }
+
+    function setShortcutUrlMessage(entry, message) {
+        const element = entry.querySelector(".shortcutUrlMessage");
+        if (!element) return;
+        element.textContent = message || "";
+        element.hidden = !message;
+    }
+
+    // Validates the URL input on blur. Invalid input is not saved: the field is
+    // restored to the last saved URL and marked invalid until a valid save.
+    function commitUrlInput(urlInput, entry) {
+        if (myntNormalizeShortcutUrl(urlInput.value)) {
+            urlInput.removeAttribute("aria-invalid");
+            return true;
+        }
+
+        const savedUrl = shortcutsCache[entry._index]?.url ?? localStorage.getItem(`shortcutURL${entry._index}`);
+        if (typeof savedUrl === "string") urlInput.value = savedUrl;
+        urlInput.setAttribute("aria-invalid", "true");
+        setShortcutUrlMessage(entry, shortcutTranslation("shortcutInvalidUrlMessage"));
+        return false;
+    }
+
+    // Duplicate URLs are still saved; the inline note is informational only.
+    function updateUrlDuplicateMessage(urlInput, entry) {
+        const normalized = myntNormalizeShortcutUrl(urlInput.value);
+        const duplicate = normalized !== null && shortcutsCache.some(
+            (item, index) => index !== entry._index && myntNormalizeShortcutUrl(item.url) === normalized
+        );
+        setShortcutUrlMessage(entry, duplicate ? shortcutTranslation("shortcutDuplicateUrlMessage") : "");
+    }
+
     function appendShortcutLogo(container, name, url, customIcon) {
         const hostname = new URL(normalizeUrl(url)).hostname.replace(/^www\./iu, "");
 
@@ -651,7 +688,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                     validateIconInput(input);
                 }
 
+                if (input.classList.contains("URL") && !commitUrlInput(input, entry)) return;
+
                 saveShortcut(entry);
+
+                if (input.classList.contains("URL")) updateUrlDuplicateMessage(input, entry);
                 renderShortcut(
                     entry.querySelector(".shortcutName").value,
                     entry.querySelector(".URL").value,
@@ -1105,34 +1146,50 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         renderShortcut(PLACEHOLDER.name, PLACEHOLDER.url, "", currentAmount);
     }
 
-    // Deletes a shortcut
+    // Deletes a shortcut atomically and records it for recovery
     function deleteShortcut(entry) {
         const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
         if (currentAmount <= 1) return;
 
         const index = entry._index;
-        entry.remove();
-        dom.shortcutsContainer.removeChild(dom.shortcutsContainer.children[index]);
+        const order = readShortcutOrder();
+        if (index < 0 || index >= order.length) return;
 
-        // Update localStorage
-        localStorage.setItem("shortcutAmount", (currentAmount - 1).toString());
-        for (let i = index; i < currentAmount - 1; i++) {
-            const nextEntry = dom.shortcutSettingsContainer.children[i];
-            nextEntry._index = i;
-            saveShortcut(nextEntry);
+        const nextOrder = [...order.slice(0, index), ...order.slice(index + 1)];
+        const recoveryRecord = {
+            version: 1,
+            index,
+            item: { name: order[index].name, url: order[index].url, icon: order[index].icon || "" }
+        };
+        const previousStorage = snapshotShortcutStorage();
+        const previousRecovery = localStorage.getItem(SHORTCUT_RECOVERY_KEY);
+
+        try {
+            writeShortcutStorage(nextOrder);
+            localStorage.setItem(SHORTCUT_RECOVERY_KEY, JSON.stringify(recoveryRecord));
+        } catch (storageError) {
+            try {
+                restoreShortcutStorage(previousStorage);
+                if (previousRecovery === null) {
+                    localStorage.removeItem(SHORTCUT_RECOVERY_KEY);
+                } else {
+                    localStorage.setItem(SHORTCUT_RECOVERY_KEY, previousRecovery);
+                }
+            } catch (rollbackError) {
+                console.error("Shortcut delete rollback failed:", rollbackError);
+            }
+
+            if (isQuotaExceededError(storageError)) {
+                const iconStorageQuotaMessage = translations[currentLanguage]?.iconStorageQuotaMessage || translations["en"].iconStorageQuotaMessage;
+                alertPrompt(iconStorageQuotaMessage);
+                return;
+            }
+            throw storageError;
         }
-        localStorage.removeItem(`shortcutName${currentAmount - 1}`);
-        localStorage.removeItem(`shortcutURL${currentAmount - 1}`);
-        localStorage.removeItem(`shortcutIcon${currentAmount - 1}`);
-        shortcutsCache.length = currentAmount - 1;
 
-        if (currentAmount - 1 === 1) {
-            document.querySelectorAll(".shortcutDelete button").forEach(b => {
-                b.classList.add("inactive");
-            });
-        }
-
-        dom.newShortcutButton.classList.remove("inactive");
+        shortcutsCache = nextOrder;
+        rebuildShortcutEditor(nextOrder);
+        recoveryControl?.refresh();
     }
 
     // Resets all shortcuts to default

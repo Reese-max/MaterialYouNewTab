@@ -4592,6 +4592,25 @@ input:checked + .toggle:before {
 	min-width: 0;
 }
 
+.shortcutFieldMessage {
+	margin-top: 2px;
+	font-size: 0.72rem;
+	line-height: 1.3;
+	color: var(--textColorDark-blue);
+	opacity: 0.85;
+	overflow-wrap: anywhere;
+}
+
+.shortcutFieldMessage[hidden] {
+	display: none;
+}
+
+.shortcutSettingsEntry input[aria-invalid="true"] {
+	outline: 1px solid #d32f2f;
+	outline-offset: 1px;
+	border-radius: 2px;
+}
+
 /* Drag and drop styles */
 .shortcutSettingsEntry.dragging {
 	opacity: 0.5;
