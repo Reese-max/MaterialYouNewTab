@@ -227,13 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function stopAmbient() {
         if (globalThis.myntAmbientAudio?.isPlaying()) globalThis.myntAmbientAudio.stop();
     }
-    function startPomodoro() {
-        // Start audio during the user gesture, before the timer's asynchronous lock.
-        if (getPomodoroBool(KEYS.ambientAuto, true) && timer.getState().phase === "work" && !timer.getState().isRunning) {
-            void globalThis.myntAmbientAudio?.play(pomodoroAmbientSelect?.value || localStorage.getItem("myntAmbientType") || "rain");
-        }
-        return timer.start();
-    }
+    function startPomodoro() { return timer.start(); }
     function pausePomodoro() { stopAmbient(); return timer.pause(); }
     function resetPomodoro() { stopAmbient(); return timer.reset(); }
 
@@ -546,7 +540,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.addEventListener("click", function (e) {
-        if (pomoDragJustEnded) return;
+        // Scripted clicks (e.g. upstream loadCheckboxState restoring a checkbox) are not the user clicking outside.
+        if (pomoDragJustEnded || e.isTrusted === false) return;
         if (panelOpen && !pomodoroPanel.contains(e.target) && !pomodoroCont.contains(e.target)) {
             closePanel();
         }
@@ -854,6 +849,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         initPomodoro();
         timer.subscribe(state => {
+            if (state.isRunning && !pomodoroState.isRunning && state.phase === "work" && getPomodoroBool(KEYS.ambientAuto, true)) {
+                void globalThis.myntAmbientAudio?.play(pomodoroAmbientSelect?.value || localStorage.getItem("myntAmbientType") || "rain");
+            }
             pomodoroState = state;
             updatePomodoroUI();
             pomodoroWorkInput.value = state.durations.workMinutes;

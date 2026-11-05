@@ -182,9 +182,21 @@ test('focus-study#8', async () => {
 });
 
 test('focus-study#3', async () => {
-    let plays = 0, starts = 0; const state = { phase: 'work' };
-    const c = context({ timer: { start: () => ++starts, getState: () => state }, getPomodoroBool: () => true, KEYS: { ambientAuto: 'auto' }, pomodoroAmbientSelect: { value: 'rain' }, myntAmbientAudio: { play: () => plays++ } });
+    let plays = 0, starts = 0; const state = { phase: 'work', isRunning: false, durations: {} };
+    let subscriber;
+    const c = context({
+        pomodoroState: { ...state },
+        timer: {
+            start() { starts++; c.pomodoroState = { ...state }; subscriber({ ...state, isRunning: true }); },
+            subscribe(fn) { subscriber = fn; fn({ ...state }); }
+        },
+        initPomodoro() {}, updatePomodoroUI() {},
+        pomodoroWorkInput: {}, pomodoroShortBreakInput: {}, pomodoroLongBreakInput: {}, pomodoroRoundsInput: {},
+        getPomodoroBool: () => true, KEYS: { ambientAuto: 'auto' },
+        pomodoroAmbientSelect: { value: 'rain' }, myntAmbientAudio: { play: () => plays++ }
+    });
     run(c, between('scripts/pomodoro.js', '    function startPomodoro()', '    function pausePomodoro()'));
+    run(c, between('scripts/pomodoro.js', '        initPomodoro();', '        setInterval(() => { timer.tick()'));
     await c.startPomodoro(); assert.equal(plays, 1); assert.equal(starts, 1);
     c.getPomodoroBool = () => false; await c.startPomodoro(); assert.equal(plays, 1);
     c.getPomodoroBool = () => true; state.phase = 'shortBreak'; await c.startPomodoro(); assert.equal(plays, 1);

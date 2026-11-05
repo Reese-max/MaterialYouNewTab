@@ -184,10 +184,20 @@ assert.match(read("scripts/ai-tools.js"), /aiToolsMoreButton/);
 assert.match(dashboardCode, /source\[data-src\]/);
 assert.match(dashboardCode, /loadDecorativeVideo/);
 assert.match(backupCode, /SENSITIVE_LOCAL_STORAGE_KEYS\s*=\s*new Set\(\[["']weatherApiKey["']\]\)/);
+// Restore now rolls back through its persisted journal, including interrupted restores.
+assert.match(backupCode, /catch \(restoreError\) \{[\s\S]*await recoverInterruptedRestore\(\)/, "Restore failures must invoke recovery");
+assert.match(backupCode, /localBefore = previousLocalStorage\.filter[\s\S]*const journal = \{[^\n]*localBefore/, "Journal must retain the localStorage preimage");
+assert.match(backupCode, /key: 'wallpaper', before: await encodedRestoreValue\(previousIndexedDB\)/, "Journal must retain the IndexedDB preimage");
+const rollbackCode = backupCode.slice(backupCode.indexOf("async function recoverInterruptedRestore()"), backupCode.indexOf("async function applyRestore("));
 assert.match(
-    backupCode,
-    /catch \(restoreError\) \{[\s\S]*replaceLocalStorage\(previousLocalStorage\);[\s\S]*await replaceIndexedDB\(previousIndexedDB\);/,
-    "Restore must retain both rollback paths"
+    rollbackCode,
+    /new Map\(journal\.localBefore\)[\s\S]*old = before\.get\(key\)[\s\S]*localStorage\.setItem\(key, old\)/,
+    "Restore must retain the localStorage rollback path"
+);
+assert.match(
+    rollbackCode,
+    /const entries = decodeBackupValue\(item\.before\);[\s\S]*await replaceIndexedDB\(entries\);/,
+    "Restore must retain the IndexedDB rollback path"
 );
 assert.match(weatherCode, /initializeWeather\(\{ allowNetwork: !isHidden && isWeatherWidgetRendered\(\) \}\)/);
 assert.match(weatherCode, /if \(!allowNetwork\) return;/);
