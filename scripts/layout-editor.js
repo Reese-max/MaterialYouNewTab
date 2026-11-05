@@ -19,6 +19,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["wallpaper", "#wallpaperQuickActions", "layoutBlockWallpaper", "Wallpaper"],
     ["menu", "#menuButton", "layoutBlockMenu", "Settings"]
 ];
+const MYNT_REMOVED_LAYOUT_IDS = new Set(globalThis.MYNT_REMOVED_COMPONENT_IDS || []);
 const MYNT_LAYOUT_LIMITS = { minScale: 0.5, maxScale: 2, grid: 16, snapDistance: 8 };
 
 function myntNormalizeLayout(raw) {
@@ -240,7 +241,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const style = getComputedStyle(el), rect = el.getBoundingClientRect();
         return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
     };
-    const elementFor = id => elementsFor(MYNT_LAYOUT_BLOCKS.find(item => item[0] === id)[1]).find(visible);
+    const elementFor = id => MYNT_REMOVED_LAYOUT_IDS.has(id) ? null : elementsFor(MYNT_LAYOUT_BLOCKS.find(item => item[0] === id)[1]).find(visible);
     function currentBlock(id, el) {
         const saved = layout.blocks[id] || { x: 0, y: 0, s: 1 };
         const pixels = (el.style.translate || "0 0").split(/\s+/).map(parseFloat);
@@ -394,6 +395,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function buildOverlays() {
         for (const entry of MYNT_LAYOUT_BLOCKS) {
             const [id] = entry, name = blockName(entry), overlay = document.createElement("div");
+            if (MYNT_REMOVED_LAYOUT_IDS.has(id)) continue;
             overlay.className = "myntLayoutOverlay"; overlay.dataset.block = id;
             overlay.setAttribute("role", "group"); overlay.setAttribute("aria-label", name);
             const handle = button("", `⠿ ${name}`);

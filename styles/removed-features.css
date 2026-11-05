@@ -1,0 +1,19 @@
+/* The root class is set synchronously in the document head, before first paint. */
+html.mynt-removed-features body :is(
+    #todoListCont, #todoContainer,
+    #scratchpadCont, #scratchpadContainer,
+    #examDaily, #examDailyPanel,
+    #myntProfilesPanel, #myntAdaptivePanel,
+    .ttcont:has(#userTextCheckbox), .ttcont:has(#todoListCheckbox),
+    .ttcont:has(#scratchpadCheckbox), .ttcont:has(#examDailyCheckbox),
+    [data-workspace-widget="todoListCheckbox"],
+    [data-workspace-widget="scratchpadCheckbox"]
+) {
+    display: none !important;
+}
+
+/* Keep the bottom-anchored left column's saved height while removing focus. */
+html.mynt-removed-features body :is(#dailyFocusPanel, .ttteexxtt, #userText, #dailyFocusActions) {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}

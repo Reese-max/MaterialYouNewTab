@@ -142,7 +142,7 @@
 	display: flex !important;
 	justify-content: center;
 	align-items: center;
-	gap: 4px;
+	gap: 8px;
 	margin: 0 auto 10px;
 	width: 100%;
 }
@@ -195,22 +195,22 @@
 	outline-offset: 2px;
 }
 
-/* 重設按鈕：降階為次要動作（透明底＋細框），比「開始」按鈕明顯低一階 */
-#pomodoroPanel .pomodoroResetBtn {
+/* 重設沿用開始的高度與膠囊圓角，以淡底和細框區分次要動作。 */
+#pomodoroPanel .pomodoroBtn.pomodoroResetBtn {
 	grid-column: auto !important;
 	grid-row: auto !important;
-	flex: 0 0 44px;
-	width: 44px;
+	flex: 0 0 72px;
+	width: 72px;
 	height: 44px;
 	min-height: 44px;
-	padding: 0;
-	border-radius: 50%;
+	padding: 0 16px;
+	border-radius: 22px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	/* 次要按鈕樣式：透明底與細邊框 */
-	background: transparent !important;
+	/* 重要性覆蓋既有按鈕強制底色；前景與表面沿用即時配色。 */
+	background: color-mix(in srgb, var(--pomo-fg, #17243b) 8%, var(--pomo-surface, #ffffff)) !important;
 	border: 1px solid var(--pomo-accent, #3569b2) !important;
 	color: var(--pomo-fg, #17243b) !important;
 	box-shadow: none !important;
@@ -869,10 +869,10 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
     #pomodoroPanel .pomodoroFocusSummary { flex: 1; gap: 4px; padding: 0; }
 }
 
-/* 第 18 輪：單一捲動區保留底部入口，原生換列避免次要動作斷字。
-   未提供可讀取的面板 top 變數，採視窗減 16px 的全域上限；
-   既有變數已換算縮放，另保留 100px 給本次 top 約 90px 與底部安全距。
-   不改 top、left、transform，也不寫入座標。 */
+/* 單一捲動區保留底部入口，原生換列避免次要動作斷字。
+   高度上限 680px，扣除 180px 供既存 top 約 90px、底欄與至少 16px 間隔；
+   縮放仍沿用既有視窗變數，不改 top、left、transform 或儲存座標。
+   自訂位置若更靠近底緣，仍由原有避讓機制處理。 */
 #pomodoroPanel.pomodoro-panel:not([style*="display: none"]) {
     --pomo-diameter: 160px;
     /* 重要性僅覆蓋本檔舊的強制網格，讓兩顆次要動作一起換列。 */
@@ -880,10 +880,11 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
     flex-wrap: wrap;
     align-items: center;
     align-content: start;
-    max-height: min(calc(100dvh - 16px), calc(var(--pomo-viewport-height, 100dvh) - 100px));
+    max-height: max(0px, min(680px, calc(100dvh - 180px), calc(var(--pomo-viewport-height, 100dvh) - 180px)));
     padding-bottom: 12px;
     overflow-y: auto;
     overflow-x: hidden;
+    overscroll-behavior-y: contain;
 }
 #pomodoroPanel > :where(:not(.pomoStudioBackdrop):not(.pomodoro-drag-handle)) {
     flex: 0 0 auto;
@@ -891,11 +892,11 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
     min-width: 0;
 }
 /* 掛載節點沿用 contents，只有成對動作恢復實體容器；寬度不足時整組換列。
-   重要性覆蓋舊的 contents、全寬與按鈕狀態，不改 DOM 或鍵盤順序。 */
+   重要性覆蓋舊的 contents、全寬與透明文字按鈕，不改 DOM 或鍵盤順序。 */
 #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow {
     display: flex !important;
     flex: 2 0 max-content;
-    gap: 2px;
+    gap: 6px;
     width: auto;
     margin: 0;
     order: 26;
@@ -904,12 +905,13 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
 #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask) {
     flex: 1 0 max-content;
     width: auto !important;
-    min-height: 32px;
-    height: 32px;
-    padding: 4px 6px;
-    border: 0 !important;
-    background: transparent !important;
-    color: var(--pomo-accent, #3569b2) !important;
+    min-height: 36px;
+    height: auto;
+    padding: 7px 8px;
+    border: 1px solid var(--pomo-border, #718096) !important;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--pomo-fg, #17243b) 6%, var(--pomo-surface, #ffffff)) !important;
+    color: var(--pomo-fg, #17243b) !important;
     font-size: 13px;
     line-height: 20px;
     white-space: nowrap;
@@ -920,7 +922,7 @@ body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv
 #pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float:hover,
 #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask):hover {
     background: color-mix(in srgb, var(--pomo-accent, #3569b2) 8%, var(--pomo-surface, #ffffff)) !important;
-    color: var(--pomo-accent, #3569b2) !important;
+    color: var(--pomo-fg, #17243b) !important;
 }
 #pomodoroPanel #myntPomoExtras {
     overflow: visible;
