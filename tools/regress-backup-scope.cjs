@@ -39,7 +39,7 @@ function environment() {
     }
     let accepted = true, reloads = 0;
     const context = vm.createContext({
-        Blob, SizedBlob, URL, Uint8Array, atob, FileReader: Reader, localStorage: storage, console,
+        Blob, SizedBlob, URL, Uint8Array, atob, MyntMcpData: require('../scripts/local-mcp-data.js'), FileReader: Reader, localStorage: storage, console,
         faults, reads, writes, currentLanguage: 'en', translations: { en: { failedbackup: 'Backup failed: ', restorefailed: 'Restore failed: ', restorecompleted: 'Restored.' } },
         setTimeout: fn => fn(), document: { getElementById: id => nodes[id], body: { appendChild() {} }, createElement: () => ({ click() { downloads.push(this.download); }, remove() {} }) },
         alertPrompt: async text => { alerts.push(text); }, confirmPrompt: async text => { confirmations.push(text); return accepted; }, location: { reload() { reloads++; } }
@@ -68,11 +68,11 @@ function environment() {
         localStorage.setItem('myntPomoMusicSettingsV1','{"selectedId":"old-song","order":["old-song"],"volume":0.4}');
         localStorage.setItem('myntPomoScenarios','{"version":1,"presets":[{"name":"My music","music":{"selectedId":"old-song"}}]}');
         localStorage.setItem('selectedLanguage','en');
-        localStorage.setItem('todoList','existing tasks');
-        localStorage.setItem('myntLayout','existing layout');
+        localStorage.setItem('todoList','{"texisting":{"title":"existing tasks","status":"pending","pinned":false}}');
+        localStorage.setItem('myntLayout','{"version":2,"locked":true,"snap":false,"blocks":{}}');
         globalThis.settingsFixture = {
             format:'material-you-newtab', version:3, scope:'settings', createdAt:'2026-10-23T14:00:00Z',
-            localStorage:{selectedLanguage:'zh_TW',todoList:'restored tasks',myntLayout:'restored layout',myntScratchpadContent:'備份便籤',
+            localStorage:{selectedLanguage:'zh_TW',todoList:'{"trestored":{"title":"restored tasks","status":"pending","pinned":false}}',myntLayout:'{"version":2,"locked":false,"snap":true,"blocks":{}}',myntScratchpadContent:'備份便籤',
                 pomodoroState:JSON.stringify({version:2,phase:'work',totalTime:120,timeRemaining:120,currentRound:1,isRunning:true,endAt:Date.parse('2026-10-23T14:00:45Z')})}, indexedDB:{}
         };
     `);
@@ -134,7 +134,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     const small = await oversized.run('createBackup("settings")');
     assert.equal(small.backup.scope, 'settings'); assert(!Object.hasOwn(small.backup, 'media')); assert.deepEqual(clone(small.backup.indexedDB), {});
     assert.equal(small.estimatedBytes, new Blob([small.serialized]).size);
-    assert.equal(small.backup.localStorage.todoList, 'existing tasks');
+    assert.equal(small.backup.localStorage.todoList, '{"texisting":{"title":"existing tasks","status":"pending","pinned":false}}');
     for (const key of Object.keys(beforeLarge).filter(key => key.startsWith('myntWallpaper') || ['myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','weatherApiKey','myntPomoMusicOwnerV1'].includes(key))) {
         assert(!Object.hasOwn(small.backup.localStorage, key), `${key} must not import a dangling media reference`);
         assert(small.backup.excludedLocalStorageKeys.includes(key));
@@ -158,8 +158,8 @@ function fileEvent(env, expression = 'settingsFixture') {
     const restored = environment(), previousLocal = localSnapshot(restored), previousMedia = await storeSnapshot(restored);
     restored.faults.database = true;
     await restored.run('restoreData(settingsFixture)');
-    assert.equal(restored.storage.todoList, 'restored tasks'); assert.equal(restored.storage.myntScratchpadContent, '備份便籤');
-    assert.equal(restored.storage.myntLayout, 'restored layout');
+    assert.equal(restored.storage.todoList, '{"trestored":{"title":"restored tasks","status":"pending","pinned":false}}'); assert.equal(restored.storage.myntScratchpadContent, '備份便籤');
+    assert.equal(restored.storage.myntLayout, '{"version":2,"locked":false,"snap":true,"blocks":{}}');
     for (const key of Object.keys(previousLocal).filter(key => key.startsWith('myntWallpaper') || ['myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','weatherApiKey','myntPomoMusicOwnerV1'].includes(key))) assert.equal(restored.storage[key], previousLocal[key]);
     assert.deepEqual(await storeSnapshot(restored), previousMedia); assert.equal(restored.reads.length, 0); assert.equal(restored.writes.length, 0);
     const timer = JSON.parse(restored.storage.pomodoroState);
@@ -181,7 +181,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.equal(viaUi.reloads(), 1); assert(viaUi.confirmations[0].includes('settings-only backup'));
     assert.deepEqual(await storeSnapshot(viaUi), uiStores); assert.equal(viaUi.writes.length, 0); assert.equal(viaUi.reads.length, 0);
     const fullUi = environment(); fullUi.nodes.backupScopeSelect.value = 'settings';
-    fullUi.context.fullString = JSON.stringify({ format:'material-you-newtab',version:3,scope:'full',localStorage:{todoList:'full replacement'},indexedDB:{},media:{version:1,gallery:[],timerImage:[],music:[]} });
+    fullUi.context.fullString = JSON.stringify({ format:'material-you-newtab',version:3,scope:'full',localStorage:{todoList:'{"tfull":{"title":"full replacement","status":"pending","pinned":false}}'},indexedDB:{},media:{version:1,gallery:[],timerImage:[],music:[]} });
     fullUi.run('globalThis.fullFixture=JSON.parse(fullString)'); fileEvent(fullUi, 'fullFixture');
     await fullUi.run('validateAndRestoreData(fileEvent)');
     assert(fullUi.confirmations[0].includes('Files not present in the backup will be removed'));
@@ -214,9 +214,9 @@ function fileEvent(env, expression = 'settingsFixture') {
 
     for (const version of [undefined, 1, 2]) {
         const legacy = environment(), before = localSnapshot(legacy), media = await storeSnapshot(legacy);
-        legacy.context.legacyString = JSON.stringify({ version, localStorage:{todoList:'legacy task',myntWallpaperCurrent:'dangling-old-id',myntPomoMusicSettingsV1:'{"selectedId":"not-present"}'}, indexedDB:{} });
+        legacy.context.legacyString = JSON.stringify({ version, localStorage:{todoList:'{"tlegacy":{"title":"legacy task","status":"pending","pinned":false}}',myntWallpaperCurrent:'dangling-old-id',myntPomoMusicSettingsV1:'{"selectedId":"not-present"}'}, indexedDB:{} });
         await legacy.run('restoreData(JSON.parse(legacyString))');
-        assert.equal(legacy.storage.todoList, 'legacy task');
+        assert.equal(legacy.storage.todoList, '{"tlegacy":{"title":"legacy task","status":"pending","pinned":false}}');
         assert.equal(legacy.storage.myntWallpaperCurrent, before.myntWallpaperCurrent);
         assert.equal(legacy.storage.myntPomoMusicSettingsV1, before.myntPomoMusicSettingsV1);
         const after = await storeSnapshot(legacy);

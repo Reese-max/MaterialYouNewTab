@@ -4,12 +4,12 @@
   "version": "3.4.0",
   "description": "繁體中文優先的 Material You 新分頁，整合搜尋、待辦、專注、便籤與工作區。",
   "permissions": [
-    "storage",
-    "nativeMessaging"
+    "storage"
   ],
   "optional_permissions": [
     "bookmarks",
-    "favicon"
+    "favicon",
+    "nativeMessaging"
   ],
   "optional_host_permissions": [
     "https://www.google.com/*",

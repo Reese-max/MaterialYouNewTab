@@ -65,15 +65,19 @@ const {createEngine,createRecovery,HOST}=require('../scripts/local-mcp-bridge.js
  assert.equal((await createRecovery({storage,adapter,commit:engine.commit,lock:null})('todos')).error.code,'UNAVAILABLE');
  const busyRecovery=createRecovery({storage,lock,beforeCommit:()=>false,commit:()=>{throw Error('must not commit');},adapter:{async execute(name,args,context){return name.endsWith('_get')?{ok:true,revision:'r'}:context.commit({});}}});assert.equal((await busyRecovery('shortcuts')).error.code,'EDITOR_BUSY');
  const html=require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');assert.match(html,/id="localMcpSection"/);
- for(const name of ['manifest.json','manifest(firefox).json']){const manifest=require('../'+name);assert(![...(manifest.permissions||[]),...(manifest.optional_permissions||[])].includes('nativeMessaging'));}
+ for(const name of ['manifest.json','manifest(firefox).json']){const manifest=require('../'+name);assert(!(manifest.permissions||[]).includes('nativeMessaging'));assert((manifest.optional_permissions||[]).includes('nativeMessaging'));}
  // Exercise the real UI/native-port wiring without connecting any browser,
- // requesting permissions, registering a host, or listening on an IPC socket.
+ // showing real permission prompts, registering a host, or listening on an IPC socket.
  const vm=require('node:vm'),fs=require('node:fs'),handlers={},elements={},ports=[];let reads=0;
  for(const selector of ['[data-mcp-connect]','[data-mcp-disconnect]','[role=status]','[data-mcp-write]','[data-mcp-private]'])elements[selector]={checked:false,disabled:false,textContent:'',addEventListener:(event,handler)=>handlers[selector+':'+event]=handler};
  const native=()=>{const p={sent:[],disconnects:0,onMessage:{addListener(handler){p.message=handler;}},onDisconnect:{addListener(handler){p.closed=handler;}},disconnect(){p.disconnects++;p.closed?.();},postMessage(value){p.sent.push(value);}};ports.push(p);return p;};
- const context={localStorage:storage,navigator:{locks:{request:(_name,fn)=>fn()}},document:{readyState:'complete',getElementById:()=>({querySelector:selector=>elements[selector]}),querySelector:()=>null,querySelectorAll:()=>[],activeElement:null},chrome:{permissions:{contains:async()=>true},runtime:{connectNative:native}},addEventListener(){},MyntMcpData:{tools:[{name:'fixture_read',readOnly:true}],async execute(){reads++;return{ok:true,data:'synthetic'};}}};
+ let granted=false,requests=0;
+ const context={localStorage:storage,navigator:{locks:{request:(_name,fn)=>fn()}},document:{readyState:'complete',getElementById:()=>({querySelector:selector=>elements[selector]}),querySelector:()=>null,querySelectorAll:()=>[],activeElement:null},chrome:{permissions:{request:async options=>{assert.deepEqual(Array.from(options.permissions),['nativeMessaging']);requests++;return granted;}},runtime:{connectNative:native}},addEventListener(){},MyntMcpData:{tools:[{name:'fixture_read',readOnly:true}],async execute(){reads++;return{ok:true,data:'synthetic'};}}};
  vm.runInNewContext(fs.readFileSync(require.resolve('../scripts/local-mcp-bridge.js'),'utf8'),context);
  const click=()=>handlers['[data-mcp-connect]:click']({isTrusted:true});
+ assert.equal(requests,0);await handlers['[data-mcp-connect]:click']({isTrusted:false});assert.equal(requests,0);
+ await click();assert.equal(requests,1);assert.equal(ports.length,0);assert.equal(elements['[data-mcp-connect]'].disabled,false);assert.equal(context.myntLocalMcp.status().enabled,false);
+ granted=true;
  await click();const first=ports[0];await first.message({kind:'ready'});
  for(const selector of ['[data-mcp-write]','[data-mcp-private]']){elements[selector].checked=true;handlers[selector+':change']();}
  assert.equal(context.myntLocalMcp.status().privateReads,true);
@@ -90,5 +94,5 @@ const {createEngine,createRecovery,HOST}=require('../scripts/local-mcp-bridge.js
  await first.message({id:'old-after-reconnect',tool:'fixture_read',args:{}});await first.message({kind:'bridge_error'});first.closed();
  assert.equal(context.myntLocalMcp.status().enabled,true);assert.equal(elements['[role=status]'].textContent,connectedText);assert.equal(reads,0);assert.equal(second.sent.length,0);
  await second.message({id:'new-request',tool:'fixture_read',args:{}});assert.equal(reads,1);assert.equal(second.sent[0].id,'new-request');assert.equal(second.sent[0].ok,true);
- console.log('Local MCP bridge tests passed: default-off, revocation, private-read gate, replay/conflict, rollback, editor/context guards, native-error shutdown, reconnect isolation, unchanged permissions.');
+ console.log('Local MCP bridge tests passed: default-off, revocation, private-read gate, replay/conflict, rollback, editor/context guards, native-error shutdown, reconnect isolation, optional native permission and explicit grant/denial.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

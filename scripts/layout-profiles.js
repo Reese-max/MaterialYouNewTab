@@ -111,5 +111,5 @@
         }
         return {mount,manage,context:()=>({profile:data.active,size:variant,revision:data.revision,base:expected}),load:()=>clone(current().layouts[variant]),save(layout){const next=clone(data),p=next.profiles.find(p=>p.id===next.active);const candidate=normalize(layout);if(JSON.stringify(candidate)!==JSON.stringify(p.layouts[variant]))p.previous[variant]=clone(p.layouts[variant]);p.layouts[variant]=candidate;write(next);refresh();},finish(){const size=innerWidth<=900?'narrow':'wide';if(size!==variant){variant=size;apply();}},reload};
     }
-    const api={validate,migrate,parseImport,create,KEY};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.MyntLayoutProfiles=api;
+    const api={validate,validateLayout,migrate,parseImport,create,KEY};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.MyntLayoutProfiles=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -6,6 +6,7 @@
 	"permissions": ["storage"],
 	"optional_permissions": [
 		"bookmarks",
+		"nativeMessaging",
 		"https://www.google.com/*",
 		"http://127.0.0.1/*"
 	],

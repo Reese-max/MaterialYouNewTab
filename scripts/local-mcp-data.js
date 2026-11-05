@@ -386,5 +386,31 @@ async function execute(name,args={},context={}) {
   return {...result,...committed};
  } catch(error) {const known=['CONFLICT','STORAGE_FAILURE','ROLLBACK_FAILED','INVALID_TRANSACTION','ACCESS_REVOKED','EDITOR_BUSY','UNAVAILABLE'];const code=error.code||(known.includes(error.message)?error.message:'invalid_storage');const message=error.code||known.includes(error.message)?error.message:'Data validation failed; existing data preserved';return {ok:false,code,error:{code:code.toUpperCase(),message},message};}
 }
-const api=Object.freeze({tools,execute,familyMatrix,validateTodoRecovery:todoRecovery,validateShortcutRecovery:shortcutRecovery,validateHabitRecovery:habitRecovery});root.MyntMcpData=api;if(node)module.exports=api;
+function validateBackupStorage(saved) {
+ // Other structured settings have tolerant on-device normalizers. At the
+ // import boundary malformed JSON must never become a silent default/reset.
+ for(const key of ['pomodoroState','myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','myntAdaptiveBackground','aiToolsSettings','myntFocusHistory','weatherLocation','weatherParsedData','myntWallpaperHiddenBuiltins']) {
+  if(!Object.hasOwn(saved,key))continue;
+  const value=parse(saved[key]);
+  if(value===null||typeof value!=='object')fail('invalid_storage','Invalid structured setting');
+ }
+ for(const domain of Object.keys(keys)) {
+  if(!keys[domain].some(key=>Object.hasOwn(saved,key)))continue;
+  state(domain,keys[domain].map(key=>saved[key]??null),{});
+ }
+ // Migration is intentionally tolerant for existing on-device layouts. Imports
+ // must validate the legacy record as well, even when profiles are also present.
+ if(Object.hasOwn(saved,'myntLayout')) {
+  const value=parse(saved.myntLayout);
+  if(!plain(value)||![undefined,1,2].includes(value.version)||!plain(value.blocks))fail('invalid_storage','Invalid legacy layout');
+  profiles().validateLayout({...value,version:2,snap:value.snap??false,locked:value.locked??true},normalizeLayout);
+ }
+ if(Object.hasOwn(saved,'myntFocusLog'))focusLog(saved.myntFocusLog);
+ if(Object.hasOwn(saved,'shortcutAmount')) {
+  if(!/^\d{1,2}$/.test(saved.shortcutAmount)||Number(saved.shortcutAmount)<1||Number(saved.shortcutAmount)>50)fail('invalid_storage','Invalid shortcut count');
+  for(let i=0;i<Number(saved.shortcutAmount);i++)shortcutItem({name:saved['shortcutName'+i],url:saved['shortcutURL'+i],icon:saved['shortcutIcon'+i]||''});
+ }
+ return true;
+}
+const api=Object.freeze({tools,execute,familyMatrix,validateBackupStorage,validateTodoRecovery:todoRecovery,validateShortcutRecovery:shortcutRecovery,validateHabitRecovery:habitRecovery});root.MyntMcpData=api;if(node)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

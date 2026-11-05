@@ -21,9 +21,10 @@ const chromeManifest = JSON.parse(read("manifest.json"));
 const firefoxManifest = JSON.parse(read("manifest(firefox).json"));
 assert.ok(!chromeManifest.permissions?.includes("search"), "Chrome manifest still requests the unused search permission");
 assert.deepEqual(chromeManifest.permissions, ["storage"]);
+assert.deepEqual(chromeManifest.optional_permissions.sort(), ["bookmarks", "favicon", "nativeMessaging"].sort());
 assert.deepEqual(chromeManifest.optional_host_permissions, ["https://www.google.com/*", "http://127.0.0.1/*"]);
 assert.deepEqual(firefoxManifest.permissions, ["storage"]);
-assert.deepEqual(firefoxManifest.optional_permissions.sort(), ["bookmarks", "https://www.google.com/*", "http://127.0.0.1/*"].sort());
+assert.deepEqual(firefoxManifest.optional_permissions.sort(), ["bookmarks", "nativeMessaging", "https://www.google.com/*", "http://127.0.0.1/*"].sort());
 
 const html = read("index.html");
 const searchCode = read("scripts/search.js") + read("scripts/search-suggestions.js");

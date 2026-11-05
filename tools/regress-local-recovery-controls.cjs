@@ -199,7 +199,7 @@ function settingsBackup(recovery = todo) {
     assert.equal(unfocused.document.activeElement, outside, "An unfocused invocation never claims keyboard focus");
 
     const backup = backupFixture({ myntTodoRecoveryV1: JSON.stringify(todo), myntShortcutRecoveryV1: JSON.stringify(shortcut), myntHabitRecoveryV1: JSON.stringify(habit),
-        weatherApiKey: "FIXTURE_SECRET", myntWallpaperCurrent: "private photo", myntPomoMusicSettingsV1: "private music" });
+        weatherApiKey: "FIXTURE_SECRET", myntWallpaperCurrent: "private photo", myntPomoMusicSettingsV1: JSON.stringify({ selectedId: "private music" }) });
     const exported = await backup.run('createBackup("settings")');
     assert.equal(exported.backup.localStorage.myntTodoRecoveryV1, JSON.stringify(todo));
     assert.equal(exported.backup.localStorage.myntShortcutRecoveryV1, JSON.stringify(shortcut));
