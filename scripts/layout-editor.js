@@ -236,7 +236,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         setting?.setAttribute("aria-describedby", "layoutEditInfo myntLayoutSaveStatus");
         announce(t("layoutDragGuard", "Drag handles are available only in edit mode"));
     }
-    const elementsFor = selector => [...document.querySelectorAll(selector)];
+    // Centered home fixes the search bar itself; its static wrapper has no usable rectangle.
+    const elementsFor = selector => [...document.querySelectorAll(selector === "#rightDiv" && document.getElementById("searchbar") ? "#searchbar" : selector)];
     const visible = el => {
         const style = getComputedStyle(el), rect = el.getBoundingClientRect();
         return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;

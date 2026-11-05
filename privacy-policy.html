@@ -203,6 +203,7 @@
                     <li><code>https://ipinfo.io/json</code> — 天氣功能開啟且未設定手動位置或 GPS 時，根據 IP 位址取得約略經緯度。</li>
                 </ul>
                 <p>只有在天氣元件實際顯示且未被停用時，才會連線至 IPinfo，接著向 WeatherAPI 查詢天氣。若版面未呈現天氣元件或您在設定中隱藏天氣，MYNT 不會為不可見的天氣內容發出位置或天氣請求。</p>
+                <p>天氣會先顯示本機快取與更新時間。可見且啟用的分頁每分鐘檢查一次，或在回到分頁時檢查；快取過期才向既有 WeatherAPI 服務更新，失敗保留快取並標示過期。沒有新增服務或儲存欄位。 / Weather displays the existing local cache and update time first. Visible, enabled tabs check each minute and when returning to the tab, refreshing expired data through the existing WeatherAPI service. Failed updates retain the cache and mark it stale. No new service or storage field is added.</p>
             </li>
 
             <li><strong>天氣更新（<a href="https://www.weatherapi.com/" target="_blank" rel="noopener noreferrer">WeatherAPI</a>）：</strong>

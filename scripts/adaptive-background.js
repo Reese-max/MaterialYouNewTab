@@ -25,9 +25,12 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     const inputs = {};
     for (const [key,[labelKey, fallback]] of Object.entries(labels)) {
         const label = document.createElement('label'), input = document.createElement('input'); input.type='checkbox'; input.id=`myntAdaptive-${key}`; input.checked=config[key]; inputs[key]=input;
-        label.append(input, document.createTextNode(t(labelKey,fallback))); content.append(label);
+        label.append(input, document.createTextNode(t(labelKey,fallback))); (key === 'opacity' ? document.getElementById('opacityTextContainer') || content : content).append(label);
         input.addEventListener('change', () => {config[key]=input.checked; persist(); applyModes(); schedule();});
     }
+    document.addEventListener('mynt:manual-opacity', () => {
+        config.opacity=false; inputs.opacity.checked=false; persist(); applyModes(); schedule();
+    });
     const analyzeButton=document.createElement('button'); analyzeButton.type='button'; analyzeButton.id='myntAdaptiveAnalyze'; analyzeButton.textContent=t('adaptiveReanalyze','重新分析背景'); analyzeButton.addEventListener('click',()=>schedule());
     const state=document.createElement('p');state.id='myntAdaptiveStatus';state.setAttribute('role','status');state.setAttribute('aria-live','polite');
     const notes=document.createElement('p');notes.className='adaptiveNotes';notes.textContent=t('adaptiveNotes','影片每 6 秒平滑更新配色，不會移動元件。位置由手動排版、儲存與鎖定控制，設定只存於此瀏覽器。');

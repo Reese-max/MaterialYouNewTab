@@ -339,6 +339,52 @@ async function main() {
         return {escapeKeptDraft,centered,legacyPreserved:localStorage.getItem('myntLayout')==='{malformed-review-fixture',saved:!!first,previousPreserved:JSON.stringify(first.profiles[0].previous)===JSON.stringify(second.profiles[0].previous)};
     })()`);
     for(const [key,value] of Object.entries(review))assert.equal(value,true,'Review regression: '+key);
+    const manualCss = await evaluate(`(async () => {
+        const ids=['pomodoroCont','bookmarkButton'];
+        const components=['pomodoro','bookmarks'];
+        const blocks={pomodoro:{x:.1,y:.15,s:1.5},bookmarks:{x:-.1,y:.15,s:1.5}};
+        const previous=MYNTComponentVisibilityCore.definitions.filter(item=>components.includes(item.id))
+            .flatMap(item=>item.keys).map(key=>[key,localStorage.getItem(key)]);
+        const settled=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        const rect=id=>{
+            const el=document.getElementById(id),r=el.getBoundingClientRect(),style=getComputedStyle(el);
+            return {x:r.x,y:r.y,w:r.width,h:r.height,display:style.display,visibility:style.visibility,translate:style.translate,scale:style.scale};
+        };
+        try {
+            // Use the settings UI's validated visibility writes, not inline display overrides.
+            for(const id of components){
+                const toggle=document.getElementById('myntComponent-'+id);
+                if(!toggle.checked)toggle.click();
+            }
+            window.myntLayout.replaceSaved({version:2,blocks:{}});
+            await settled();
+            const defaults=ids.map(rect);
+            window.myntLayout.replaceSaved({version:2,blocks});
+            await settled();
+            const moved=ids.map(rect);
+            window.myntLayout.replaceSaved({version:2,blocks:{}});
+            await settled();
+            return {defaults,moved,reset:ids.map(rect),blocks:components.map(id=>blocks[id]),viewport:[innerWidth,innerHeight]};
+        } finally {
+            for(const [key,value] of previous){if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}
+            window.myntComponents.refresh();
+        }
+    })()`);
+    const {defaults,moved,reset,blocks,viewport:[vw,vh]}=manualCss;
+    const cssDiagnostics=JSON.stringify(manualCss);
+    assert.ok([...defaults,...moved,...reset].every(r=>r.w>0&&r.h>0&&r.display!=='none'&&r.visibility==='visible'),
+        'B5 layout measurements require visible pomodoro/bookmarks: '+cssDiagnostics);
+    assert.ok(moved.every((r,i)=>{
+        const xy=r.translate.split(/\s+/u).map(parseFloat);
+        return xy.length===2&&Math.abs(xy[0]-blocks[i].x*vw)<.001&&Math.abs(xy[1]-blocks[i].y*vh)<.001&&Number(r.scale)===blocks[i].s;
+    }),
+        'B5 visible computed translate/scale must equal saved values: '+cssDiagnostics);
+    assert.ok(moved.every((r,i)=>Math.abs(r.w-defaults[i].w*blocks[i].s)<1&&Math.abs(r.h-defaults[i].h*blocks[i].s)<1
+        &&Math.abs(r.y-defaults[i].y-blocks[i].y*vh)<1&&Math.abs(r.x-defaults[i].x-blocks[i].x*vw)<1)
+        &&reset.every((r,i)=>['x','y','w','h'].every(key=>Math.abs(r[key]-defaults[i][key])<1)
+            &&r.translate===defaults[i].translate&&r.scale===defaults[i].scale),
+        'B5 manual positions and scale must win over centered CSS; reset restores defaults: '+cssDiagnostics);
+    console.log('B5_CSS_LAYOUT_OK');
     // Reset only this disposable test's layout fixture; no user's browser data is used.
     await evaluate(`localStorage.removeItem('myntLayout');localStorage.removeItem('myntLayoutProfiles')`);
     await reloadAndWait();

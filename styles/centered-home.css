@@ -9,7 +9,7 @@ body #analogClock,
 body #digitalClock {
     position: fixed !important; inset: 16vh auto auto 50% !important; z-index: 1;
     width: 132px !important; height: 132px !important; margin: 0 !important;
-    transform: translateX(-50%) !important; translate: none !important; scale: 1 !important;
+    transform: translateX(-50%) !important;
 }
 body #digitalClock { width: 200px !important; height: 152px !important; }
 body #date {
@@ -23,7 +23,7 @@ body #rightDiv { position: static !important; }
 body #searchbar {
     position: fixed !important; inset: 47vh auto auto 50% !important; z-index: 2;
     width: min(640px, calc(100vw - 32px)) !important; max-width: none !important;
-    transform: translateX(-50%) !important; translate: none !important; margin: 0 !important;
+    transform: translateX(-50%) !important; margin: 0 !important;
 }
 body #quickLinksRow {
     position: fixed !important; inset: 59vh auto auto 50% !important; z-index: 2;
@@ -77,7 +77,7 @@ body #homeToolbar {
     position: fixed; top: 16px; right: 20px; z-index: 30; display: flex; align-items: center; gap: 8px;
 }
 body #homeToolbar :is(#googleAppsCont, #bookmarkButton) {
-    position: relative !important; inset: auto !important; translate: none !important; transform: none !important;
+    position: relative !important; inset: auto !important; transform: none !important;
     width: 48px !important; height: 48px !important; margin: 0 !important; border-radius: 50%;
 }
 body #homeToolbar #googleAppsCont svg { width: 28px; height: 28px; }
@@ -98,7 +98,7 @@ body #bookmarkList .bookmark-item-copy small { opacity: .72; font-size: .78rem; 
     body #digitalClock { inset-block-start: 11vh !important; width: 170px !important; height: 128px !important; }
     body #date { inset-block-start: calc(12vh + 104px) !important; font-size: 14px; }
     body:has(#digitalClock[style*="display: block"]) #date { inset-block-start: calc(11vh + 140px) !important; }
-    body #searchbar { inset-block-start: 43vh !important; box-sizing: border-box; scale: 1 !important; }
+    body #searchbar { inset-block-start: 43vh !important; box-sizing: border-box; }
     body #searchbar .searchbar-content { width: 100%; min-width: 0; box-sizing: border-box; }
     body #searchbar #enterBtn { display: block !important; min-width: 54px; padding-inline: 10px; }
     body #quickLinksRow { inset-block-start: 56vh !important; gap: 6px; }
@@ -127,7 +127,7 @@ html.mynt-removed-features body #date#date#date { display: none !important; }
 html.mynt-removed-features body #searchbar { inset-block-start: calc(50vh - 96px) !important; }
 html.mynt-removed-features body #quickLinksRow { inset-block-start: calc(50vh + 12px) !important; }
 html.mynt-removed-features body #pomodoroCont#pomodoroCont {
-    position: fixed !important; inset: 16px auto auto 20px !important; translate: none !important; transform: none !important; scale: 1 !important;
+    position: fixed !important; inset: 16px auto auto 20px !important; transform: none !important;
     width: 48px !important; height: 48px !important; margin: 0 !important; border-radius: 50% !important;
     align-items: center; justify-content: center; /* display stays with component-manager so the owner can hide it */
 }
@@ -141,7 +141,7 @@ html.mynt-removed-features body #quickLinksRow #toolsCont a .tIcon { flex: 0 0 2
     html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 6px; row-gap: 6px; }
     html.mynt-removed-features body #pomodoroCont#pomodoroCont { inset: 10px auto auto 10px !important; width: 42px !important; height: 42px !important; }
     html.mynt-removed-features body #homeToolbar :is(#googleAppsCont, #bookmarkButton),
-    html.mynt-removed-features body :is(#wallpaperGalleryBtn, #menuButton) { width: 42px !important; height: 42px !important; min-width: 42px !important; min-height: 42px !important; scale: 1 !important; }
+    html.mynt-removed-features body :is(#wallpaperGalleryBtn, #menuButton) { width: 42px !important; height: 42px !important; min-width: 42px !important; min-height: 42px !important; }
 }
 /* Pomodoro: the panel drops straight below its corner button (a dragged panel keeps its inline position),
    the footer stats sit centered, and the corner button shows an elapsed-time ring while a session is active. */
@@ -161,15 +161,15 @@ html.black-theme.mynt-removed-features body #pomodoroCont#pomodoroCont.pomodoro-
 /* Visual polish: one bright, near-opaque surface for search, pills, corner buttons and quote
    (translucent glass turned muddy over dark wallpaper areas), larger search group, quote as a slim caption. */
 html.mynt-removed-features body {
-  --mynt-glass: rgba(248, 250, 254, .95);
-  --mynt-glass-strong: rgba(252, 253, 255, .97);
+  --mynt-glass: rgb(248 250 254 / var(--transparency, 90%));
+  --mynt-glass-strong: rgb(252 253 255 / var(--transparency, 90%));
   --mynt-glass-edge: rgba(255, 255, 255, .7);
   --mynt-glass-shadow: 0 10px 30px rgba(18, 38, 66, .16), 0 1px 2px rgba(18, 38, 66, .08);
   --mynt-ink: #1d2b3e;
   --mynt-ink-soft: #4a5a70;
 }
 html.black-theme.mynt-removed-features body {
-  --mynt-glass: rgba(32, 34, 40, .92); --mynt-glass-strong: rgba(32, 34, 40, .95); --mynt-glass-edge: rgba(255, 255, 255, .10);
+  --mynt-glass: rgb(32 34 40 / var(--transparency, 90%)); --mynt-glass-strong: rgb(32 34 40 / var(--transparency, 90%)); --mynt-glass-edge: rgba(255, 255, 255, .10);
   --mynt-ink: #e4e9f1; --mynt-ink-soft: #b4bfce;
 }
 /* Adaptive background keeps its computed surface; high contrast gets solid surfaces and a visible edge. */
