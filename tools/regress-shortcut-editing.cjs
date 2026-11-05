@@ -130,6 +130,7 @@ class Element {
     getAttribute(key) { return Object.hasOwn(this.attributes, key) ? this.attributes[key] : null; }
     removeAttribute(key) { delete this.attributes[key]; }
     addEventListener(type, fn) { (this.listeners.get(type) || this.listeners.set(type, []).get(type)).push(fn); }
+    removeEventListener(type, fn) { this.listeners.set(type, (this.listeners.get(type) || []).filter(listener => listener !== fn)); }
     emit(type, extra = {}) {
         const event = { type, target: this, preventDefault() { this.defaultPrevented = true; }, stopPropagation() {}, ...extra };
         for (const fn of this.listeners.get(type) || []) fn.call(this, event);
@@ -165,6 +166,7 @@ function createDocument() {
     document.documentElement.appendChild(document.body);
     document.activeElement = document.body;
     document.createElement = tag => new Element(tag, document);
+    document.createDocumentFragment = () => new Element("fragment", document);
     document.getElementById = id => document.documentElement.all().find(node => node.id === id) || null;
     document.querySelector = selector => document.documentElement.querySelector(selector);
     document.querySelectorAll = selector => document.documentElement.querySelectorAll(selector);

@@ -2106,8 +2106,12 @@ body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp > span:first-child {
    2. 鉛筆／釘選：白色 SVG 背景 → mask 形狀 + 變數填色（約 18px 視覺）
    ========================================================================== */
 
-.todolistitem .todopinbtn,
-.todolistitem .todoeditbtn {
+.todolistitem .todopinbtn::after,
+.todolistitem .todoeditbtn::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
 	background-image: none; /* 移除原本看不見的白色 SVG 背景 */
 	background-color: var(--todo-icon-color); /* 遮罩內實際顯示的顏色 */
 	-webkit-mask-repeat: no-repeat;
@@ -2118,30 +2122,30 @@ body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp > span:first-child {
 	mask-size: 18px 18px;
 }
 
-.todolistitem .todoeditbtn {
+.todolistitem .todoeditbtn::after {
 	-webkit-mask-image: url("../svgs/todo-edit-do.svg");
 	mask-image: url("../svgs/todo-edit-do.svg");
 }
 
-.todolistitem .todopinbtn {
+.todolistitem .todopinbtn::after {
 	-webkit-mask-image: url("../svgs/todo-pin-stroke.svg");
 	mask-image: url("../svgs/todo-pin-stroke.svg");
 }
 
-.todolistitem.edit .todoeditbtn {
+.todolistitem.edit .todoeditbtn::after {
 	-webkit-mask-image: url("../svgs/todo-edit-done.svg");
 	mask-image: url("../svgs/todo-edit-done.svg");
 }
 
-.todolistitem.pinned .todopinbtn {
+.todolistitem.pinned .todopinbtn::after {
 	-webkit-mask-image: url("../svgs/todo-pin-fill.svg");
 	mask-image: url("../svgs/todo-pin-fill.svg");
 	background-color: var(--todo-icon-hover-color); /* 已釘選＝啟用態，用較深色 */
 }
 
 /* 遮罩圖示的懸浮要改 background-color（color 對 mask 無效） */
-.todolistitem .todopinbtn:hover,
-.todolistitem .todoeditbtn:hover {
+.todolistitem .todopinbtn:hover::after,
+.todolistitem .todoeditbtn:hover::after {
 	background-color: var(--todo-icon-hover-color);
 }
 
@@ -2235,6 +2239,22 @@ body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp > span:first-child {
 .todolistitem.edit {
 	color: var(--todo-item-text);
 }
+
+/* Native checkbox replaces the decorative completion circle. */
+.todolistitem::before { display: none; }
+.todolistitem .todocomplete {
+	position: absolute;
+	inset-inline-start: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 20px;
+	height: 20px;
+	margin: 0;
+	accent-color: var(--todo-icon-hover-color);
+}
+.todolistitem .todocomplete:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.todolistitem button { border: none; padding: 0; font-family: inherit; }
+.todolistitem .todopinbtn, .todolistitem .todoeditbtn { background: transparent; }
 /* ==== award-fix-pomodoro-layout.css ==== */
 /* 番茄鐘主面板的緊湊排版與動作層級。
    第 13 輪改用 --pomo-* 即時配色，保留儲存座標、縮放與獨立計時視窗。

@@ -433,6 +433,38 @@ if (typeof document !== "undefined") {
             renderHabits();
         }
 
+        function deleteHabit(id) {
+            habits = readHabits();
+            const index = habits.findIndex(item => item.id === id && item.source === null);
+            if (habitsStorageInvalid || index < 0) return false;
+            const previousStorage = localStorage.getItem(KEYS.habits);
+            const previousRecovery = localStorage.getItem("myntHabitRecoveryV1");
+            const record = { version: 1, index, item: habits[index] };
+            const next = habits.filter(item => item.id !== id);
+            try {
+                window.MyntMcpData.validateHabitRecovery(JSON.stringify(record));
+                if (previousRecovery !== null) window.MyntMcpData.validateHabitRecovery(previousRecovery);
+                myntValidateHabits(next);
+                localStorage.setItem(KEYS.habits, JSON.stringify(next));
+                localStorage.setItem("myntHabitRecoveryV1", JSON.stringify(record));
+            } catch (error) {
+                try {
+                    if (previousStorage === null) localStorage.removeItem(KEYS.habits);
+                    else localStorage.setItem(KEYS.habits, previousStorage);
+                    if (previousRecovery === null) localStorage.removeItem("myntHabitRecoveryV1");
+                    else localStorage.setItem("myntHabitRecoveryV1", previousRecovery);
+                } catch (rollbackError) { console.error("Habit delete rollback failed:", rollbackError); }
+                console.error("Habit delete failed:", error);
+                renderHabits();
+                return false;
+            }
+            habits = next;
+            document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
+            renderHabits();
+            document.getElementById("habitInput").focus();
+            return true;
+        }
+
         function renderHabits() {
             const list = document.getElementById("habitList");
             const today = myntDateKey();
@@ -481,9 +513,7 @@ if (typeof document !== "undefined") {
                     remove.addEventListener("click", async () => {
                         const message = format("habitDeleteConfirm", "Delete habit ‘{name}’?", { name: habit.name });
                         if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
-                        habits = habits.filter(item => item.id !== habit.id);
-                        saveHabits();
-                        renderHabits();
+                        deleteHabit(habit.id);
                     });
                     row.appendChild(remove);
                 }
@@ -1157,6 +1187,24 @@ if (typeof document !== "undefined") {
             });
         }
 
+        async function shortcutCommands(query) {
+            if (!query) return [];
+            if (typeof safeBookmarkLink !== "function") {
+                try { await window.myntLazy?.load("bookmarks"); } catch { return []; }
+                if (typeof safeBookmarkLink !== "function") return [];
+            }
+            return (window.myntShortcuts?.getItems() || []).flatMap((item, index) => {
+                const url = safeBookmarkLink(item.url);
+                if (!url) return [];
+                const command = {
+                    id: `shortcut-${index}`, labelText: item.name || url, infoText: url,
+                    group: "commandGroupShortcut", searchText: url,
+                    run: () => { window.location.href = url; }
+                };
+                return matchesCommand(command, query) ? [command] : [];
+            });
+        }
+
         async function renderCommands(query = "") {
             const token = ++commandRenderToken;
             filteredCommands = [];
@@ -1199,9 +1247,9 @@ if (typeof document !== "undefined") {
                 ...collectLinkCommands("#toolsCont a", "commandGroupAi", normalized),
                 ...collectLinkCommands("#iconContainer a", "commandGroupGoogle", normalized)
             ].filter(command => !hiddenCommandIds.has(command.id));
-            const bookmarks = await bookmarkCommands(normalized);
+            const [shortcuts, bookmarks] = await Promise.all([shortcutCommands(normalized), bookmarkCommands(normalized)]);
             if (token !== commandRenderToken) return;
-            filteredCommands = [...base, ...bookmarks].slice(0, 40);
+            filteredCommands = [...base, ...shortcuts, ...bookmarks].slice(0, 40);
             commandReadyToken = token;
             activeCommandIndex = Math.min(activeCommandIndex, Math.max(0, filteredCommands.length - 1));
             const list = document.getElementById("commandPaletteList");

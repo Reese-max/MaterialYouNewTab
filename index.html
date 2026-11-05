@@ -1024,17 +1024,17 @@
     </div>
 
     <!-- Settings Modal (hidden by default) -->
-    <div id="aiToolsSettingsModal" class="ai-settings-modal" style="display: none;">
+    <dialog id="aiToolsSettingsModal" class="ai-settings-modal" aria-labelledby="aiSettingsHeader" aria-describedby="aiSettingsIntro">
         <div class="ai-modal-content">
             <div class="ai-modal-header">
                 <h3 id="aiSettingsHeader">AI Tools Settings</h3>
-                <div id="closeAISettingsBtn" class="ai-close-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                <button id="closeAISettingsBtn" type="button" class="ai-close-button" aria-label="關閉 AI 工具設定" autofocus>
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
-                </div>
+                </button>
             </div>
             <p id="aiSettingsIntro">Select which AI tools to display</p>
             <div class="ai-tools-list">
@@ -1047,10 +1047,7 @@
                 <button id="saveAISettingsBtn" class="ai-save-button">Save</button>
             </div>
         </div>
-    </div>
-
-    <!-- Modal Overlay (hidden by default) -->
-    <div id="aiToolsSettingsOverlay" class="ai-modal-overlay" style="display: none;"></div>
+    </dialog>
     <!-- ------------ end of AI-Tools------------------ -->
 
     <!-- -------------- Footer Toast ------------------ -->

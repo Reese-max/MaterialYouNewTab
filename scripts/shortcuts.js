@@ -260,6 +260,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         dom.newShortcutButton.classList.toggle("inactive", amount >= MAX_SHORTCUTS);
 
         setupDragAndDrop();
+        updateShortcutIndices();
     }
 
     // Creates a shortcut entry element for the settings panel
@@ -314,6 +315,31 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const fileInput = entry.querySelector(".iconFileInput");
         const iconInput = entry.querySelector(".iconURL");
         const deleteBtn = entry.querySelector(".shortcutDelete button");
+
+        for (const [direction, symbol, offset] of [["Up", "↑", -1], ["Down", "↓", 1]]) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `shortcutMove${direction}`;
+            button.textContent = symbol;
+            const template = translations[currentLanguage]?.[`shortcutMove${direction}`] || translations.en[`shortcutMove${direction}`];
+            button.setAttribute("aria-label", template.replace("{name}", name));
+            button.disabled = offset < 0 ? index === 0 : index === shortcutsCache.length - 1;
+            button.addEventListener("click", () => {
+                const rows = [...dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")];
+                const from = rows.indexOf(entry), to = from + offset;
+                if (from < 0 || to < 0 || to >= rows.length) return;
+                const originalOrder = readShortcutOrder();
+                dom.shortcutSettingsContainer.insertBefore(entry, offset < 0 ? rows[to] : rows[to].nextSibling);
+                try { saveShortcutOrder(originalOrder); }
+                finally {
+                    updateShortcutIndices();
+                    const current = dom.shortcutSettingsContainer.contains(entry) ? entry : dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")[from];
+                    const preferred = current?.querySelector(`.shortcutMove${direction}`);
+                    (preferred?.disabled ? current.querySelector(`.shortcutMove${direction === "Up" ? "Down" : "Up"}`) : preferred)?.focus();
+                }
+            });
+            entry.querySelector(".shortcutActions").appendChild(button);
+        }
 
         attachInputListeners(inputs, entry);
 
@@ -966,8 +992,16 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Updates indices of all shortcut entries after reordering
     function updateShortcutIndices() {
-        document.querySelectorAll(".shortcutSettingsEntry").forEach((entry, index) => {
+        const entries = document.querySelectorAll(".shortcutSettingsEntry");
+        entries.forEach((entry, index) => {
             entry._index = index;
+            for (const direction of ["Up", "Down"]) {
+                const button = entry.querySelector(`.shortcutMove${direction}`);
+                if (!button) continue;
+                button.disabled = direction === "Up" ? index === 0 : index === entries.length - 1;
+                const template = translations[currentLanguage]?.[`shortcutMove${direction}`] || translations.en[`shortcutMove${direction}`];
+                button.setAttribute("aria-label", template.replace("{name}", entry.querySelector(".shortcutName").value));
+            }
         });
     }
 
@@ -1144,6 +1178,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
         saveShortcut(entry);
         renderShortcut(PLACEHOLDER.name, PLACEHOLDER.url, "", currentAmount);
+        updateShortcutIndices();
     }
 
     // Deletes a shortcut atomically and records it for recovery

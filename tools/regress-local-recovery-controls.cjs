@@ -264,7 +264,7 @@ function settingsBackup(recovery = todo) {
     const states = [], loadContext = vm.createContext({ localStorage: { getItem: key => key === "shortcutAmount" ? "49" : "" },
         presets: [], PLACEHOLDER: { name: "Fixture", url: "https://example.org" }, MAX_SHORTCUTS: 50,
         dom: { shortcutSettingsContainer: { appendChild() {} }, newShortcutButton: { classList: { toggle: (name, active) => states.push(active) } } },
-        createShortcutEntry() {}, renderShortcut() {}, setupDragAndDrop() {} });
+        createShortcutEntry() {}, renderShortcut() {}, setupDragAndDrop() {}, updateShortcutIndices() {} });
     vm.runInContext(`let shortcutsCache=[]; ${loadSource}; loadShortcuts();`, loadContext);
     assert.equal(states.at(-1), false, "A deletion from a full list re-enables the Add shortcut control");
     const dashboardSource = read("scripts/dashboard-tools.js");

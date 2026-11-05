@@ -239,6 +239,10 @@
         <p>「今日考古題」預設顯示，啟用時會在閒置後從 raw.githubusercontent.com 的 Reese-max/police-exam-archive 公開題庫下載並快取當日題目。GitHub 會收到一般網路請求資訊（例如 IP），請求不含待辦、便籤或書籤。可在設定停用此卡片，停止後續自動題庫請求。</p>
         <p>只有按下每日焦點的「問 GPT 拆解步驟」時，才會透過 chatgpt.com/?q= 開啟已填入的提示，包含目前焦點文字、選擇的科目及距考試天數。這些內容會傳至 OpenAI，並可能留在瀏覽器歷史；請勿填入不想分享的私人資料。MYNT 不會自動替您送出聊天訊息。</p>
         <h3>本機儲存</h3>
+        <p>專注紀錄 myntFocusLog 的第 2 版項目保存每輪完成時的實際分鐘與當時科目，切換科目或計時長度不會改寫過去紀錄。舊紀錄缺少實際時長，固定以每輪 25 分鐘估算並保留原科目。資料只存在本機並沿用既有備份範圍。</p>
+        <p>Version 2 entries in myntFocusLog retain each completed round’s actual minutes and subject. Later timer or subject changes do not rewrite earlier rounds. Legacy rounds lack duration data and use a fixed 25-minute estimate with their original subject. Records remain local and use the existing backup scope.</p>
+        <p>一般待辦與習慣介面的刪除也會在既有 myntTodoRecoveryV1／myntHabitRecoveryV1 保留最後一筆項目及原位置；習慣包含完整打卡日期。寫入失敗會嘗試回滾；再次刪除會取代同類型的上一筆復原紀錄。復原不需要連接 MCP。</p>
+        <p>Task and habit deletions in the ordinary UI retain the last item and its original position in myntTodoRecoveryV1 / myntHabitRecoveryV1, including habit check-in dates. Failed writes attempt rollback. Another UI deletion replaces the preceding recovery item in that list. Undo needs no MCP connection.</p>
         <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、首頁稱呼、每日焦點文字／完成狀態／延續日期、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。首頁稱呼只會顯示在本機問候語中；每日焦點也不會自動分享給呆呆。兩者都會包含在您主動匯出的 MYNT 備份檔。呆呆受限配對權杖與最近已確認／拒絕的操作 ID 存在 extension storage，不會進入 MYNT 一般備份檔；重設 MYNT 或解除連動時會清除。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
         <p>控制中心的服務狀態只會在 localStorage 記錄服務識別名稱、成功或失敗結果、HTTP 狀態碼及時間；不會記錄完整網址、搜尋文字、位置、API 金鑰，也不會傳送至專案營運者。</p>
 

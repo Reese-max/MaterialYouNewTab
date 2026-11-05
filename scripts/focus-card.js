@@ -54,16 +54,25 @@ function myntChatGptUrl(prompt) {
     return `https://chatgpt.com/?q=${encodeURIComponent(String(prompt).slice(0, 1500))}`;
 }
 
-function myntRecordFocusLog(log, focus, keep = 14) {
+function myntRecordFocusLog(log, focus, keep = 14, round = null) {
     const next = log && typeof log === "object" && !Array.isArray(log) ? { ...log } : {};
     if (focus?.date && focus.text) {
         const steps = Array.isArray(focus.steps) ? focus.steps : [];
+        const previous = next[focus.date];
+        // v2 freezes legacy estimates at 25 minutes; new rounds retain actual duration/subject.
+        const sessions = Array.isArray(previous?.sessions) ? [...previous.sessions] : [];
+        const legacyRounds = previous?.r || focus.rounds;
+        const legacy = previous?.v === 2 ? previous.legacy : legacyRounds ? { r: legacyRounds, s: previous?.s || focus.subject || "" } : undefined;
+        if (round) sessions.push({ minutes: round.minutes, subject: focus.subject || "" });
         next[focus.date] = {
+            v: 2,
             t: focus.text.slice(0, 160),
             ...(focus.subject ? { s: focus.subject } : {}),
             c: focus.completed ? 1 : 0,
             ...(focus.rounds ? { r: focus.rounds } : {}),
-            ...(steps.length ? { st: `${steps.filter(step => step.done).length}/${steps.length}` } : {})
+            ...(steps.length ? { st: `${steps.filter(step => step.done).length}/${steps.length}` } : {}),
+            sessions,
+            ...(legacy ? { legacy } : {})
         };
     }
     for (const key of Object.keys(next).sort().reverse().slice(keep)) delete next[key];
@@ -76,18 +85,21 @@ function myntExamArchiveUrl(saved) {
     return /^https:\/\/[^\s"'<>]+$/.test(String(saved || "")) ? saved : MYNT_EXAM_ARCHIVE_URL;
 }
 
-// Minutes per subject over the last 7 days (today included), from focus-log rounds.
+// Old records have no actual duration: use a stable 25-minute estimate.
 function myntWeeklySubjectMinutes(log, workMinutes = 25, now = new Date()) {
-    const per = Math.max(1, Number(workMinutes) || 25);
     const totals = {};
+    const add = (subject, minutes) => { totals[subject || "other"] = (totals[subject || "other"] || 0) + minutes; };
     for (let i = 0; i < 7; i++) {
         const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
         const entry = log?.[key];
-        const rounds = Number(entry?.r) || 0;
-        if (!entry || !rounds) continue;
-        const subject = entry.s || "other";
-        totals[subject] = (totals[subject] || 0) + rounds * per;
+        if (!entry) continue;
+        if (entry.v === 2 && Array.isArray(entry.sessions)) {
+            for (const session of entry.sessions) {
+                if (Number.isFinite(session?.minutes) && session.minutes > 0 && session.minutes <= 120 && typeof session.subject === "string") add(session.subject, session.minutes);
+            }
+            if (entry.legacy?.r) add(entry.legacy.s, entry.legacy.r * 25);
+        } else if (entry.r) add(entry.s, entry.r * 25);
     }
     return Object.entries(totals).sort((a, b) => (a[0] === "other") - (b[0] === "other") || b[1] - a[1]);
 }
@@ -128,10 +140,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if (message) flash.timer = setTimeout(() => { note.hidden = true; }, 4000);
     }
 
-    function writeLog(focus) {
+    function writeLog(focus, round = null) {
         let log = {};
         try { log = JSON.parse(localStorage.getItem(LOG_KEY) || "{}"); } catch {}
-        const next = JSON.stringify(myntRecordFocusLog(log, focus));
+        const next = JSON.stringify(myntRecordFocusLog(log, focus, 14, round));
         if (next !== lastHistoryWrite) {
             localStorage.setItem(LOG_KEY, next);
             lastHistoryWrite = next;
@@ -298,9 +310,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     document.addEventListener("mynt:focus-breakdown-status", event => {
         if (!event.detail?.ok) flash(t("dailyFocusDaidaiFailed", "DaiDai is unavailable. Use ChatGPT and paste the answer."));
     });
-    document.addEventListener("mynt:pomodoro-complete", () => {
+    document.addEventListener("mynt:pomodoro-complete", event => {
         const focus = api.get();
-        if (focus.linked && focus.text && !focus.completed) api.update({ rounds: (focus.rounds || 0) + 1 });
+        if (focus.linked && focus.text && !focus.completed) {
+            const minutes = Math.max(1, Math.min(120, Number(event.detail?.minutes) || 25));
+            writeLog(focus, { minutes });
+            api.update({ rounds: (focus.rounds || 0) + 1 });
+        }
     });
     document.addEventListener("mynt:focus-completed", () => {
         // Reuse the shared shuffle bag so the bottom quote line advances; no extra toast.

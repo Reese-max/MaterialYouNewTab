@@ -60,14 +60,27 @@ function setTodoDaidaiLabel(button, title) {
 function createTodoItemDOM(id, title, status, pinned) {
     let li = document.createElement("li");
     li.textContent = title;
+    const words = typeof translations === "undefined" ? {} : translations;
+    const language = localStorage.getItem("selectedLanguage") || "zh_TW";
+    const label = (key, fallback) => words[language]?.[key] || words.en?.[key] || fallback;
+    const completed = document.createElement("input");
+    completed.type = "checkbox";
+    completed.className = "todocomplete";
+    completed.checked = status === "completed";
+    completed.setAttribute("aria-label", title);
+    li.appendChild(completed);
 
     // Create and append edit button
-    const editbtn = document.createElement("span");
+    const editbtn = document.createElement("button");
+    editbtn.type = "button";
+    editbtn.setAttribute("aria-label", label("todoEditLabel", "Edit task"));
     editbtn.setAttribute("class", "todoeditbtn");
     li.appendChild(editbtn);
 
     // Create and append remove button
-    const removebtn = document.createElement("span");
+    const removebtn = document.createElement("button");
+    removebtn.type = "button";
+    removebtn.setAttribute("aria-label", label("todoDeleteLabel", "Delete task"));
     removebtn.setAttribute("class", "todoremovebtn");
     removebtn.textContent = "\u00d7";
     li.appendChild(removebtn);
@@ -94,7 +107,10 @@ function createTodoItemDOM(id, title, status, pinned) {
     }
 
     // Create and append pin button
-    const pinbtn = document.createElement("span");
+    const pinbtn = document.createElement("button");
+    pinbtn.type = "button";
+    pinbtn.setAttribute("aria-label", label("todoPinLabel", "Pin task"));
+    pinbtn.setAttribute("aria-pressed", String(Boolean(pinned)));
     pinbtn.setAttribute("class", "todopinbtn");
     li.appendChild(pinbtn);
 
@@ -106,6 +122,46 @@ function createTodoItemDOM(id, title, status, pinned) {
     return li; // Return the created `li` element
 }
 
+function deleteTodo(id) {
+    if (todoStorageInvalid || !Object.hasOwn(todoList, id)) return false;
+    const previousStorage = localStorage.getItem("todoList");
+    const previousRecovery = localStorage.getItem("myntTodoRecoveryV1");
+    const entries = Object.entries(todoList);
+    const index = entries.findIndex(([key]) => key === id);
+    const next = Object.fromEntries(entries.filter(([key]) => key !== id));
+    const record = { version: 1, index, item: { id, ...todoList[id] } };
+    try {
+        if (JSON.stringify(JSON.parse(previousStorage || "{}")) !== JSON.stringify(todoList)) throw Error("Task data changed");
+        window.MyntMcpData.validateTodoRecovery(JSON.stringify(record));
+        if (previousRecovery !== null) window.MyntMcpData.validateTodoRecovery(previousRecovery);
+        localStorage.setItem("todoList", JSON.stringify(next));
+        localStorage.setItem("myntTodoRecoveryV1", JSON.stringify(record));
+    } catch (error) {
+        try {
+            if (previousStorage === null) localStorage.removeItem("todoList");
+            else localStorage.setItem("todoList", previousStorage);
+            if (previousRecovery === null) localStorage.removeItem("myntTodoRecoveryV1");
+            else localStorage.setItem("myntTodoRecoveryV1", previousRecovery);
+        } catch (rollbackError) { console.error("Task delete rollback failed:", rollbackError); }
+        console.error("Task delete failed:", error);
+        todoRecoveryControl?.refresh();
+        return false;
+    }
+    todoList = next;
+    ShowToDoList();
+    notifyTodoUpdated();
+    todoInput.focus();
+    return true;
+}
+
+todoulList.addEventListener("change", event => {
+    if (!event.target.classList.contains("todocomplete")) return;
+    const li = event.target.parentElement;
+    todoList[li.dataset.todoitem].status = event.target.checked ? "completed" : "pending";
+    li.classList.toggle("checked", event.target.checked);
+    SaveToDoData();
+});
+
 // Event delegation for task check and remove
 todoulList.addEventListener("click", (event) => {
     if (event.target.tagName === "LI") {
@@ -113,18 +169,18 @@ todoulList.addEventListener("click", (event) => {
         event.target.classList.toggle("checked"); // Check the clicked LI tag
         let id = event.target.dataset.todoitem;
         todoList[id].status = ((todoList[id].status === "completed") ? "pending" : "completed"); // Update status
+        event.target.querySelector(".todocomplete").checked = todoList[id].status === "completed";
         SaveToDoData(); // Save Changes
     }
     else if (event.target.classList.contains("todoremovebtn")) {
         let id = event.target.parentElement.dataset.todoitem;
-        event.target.parentElement.remove(); // Remove the clicked LI tag
-        delete todoList[id]; // Remove the deleted List item data
-        SaveToDoData(); // Save Changes
+        deleteTodo(id);
     }
     else if (event.target.classList.contains("todopinbtn")) {
         event.target.parentElement.classList.toggle("pinned"); // Check the clicked LI tag
         let id = event.target.parentElement.dataset.todoitem;
         todoList[id].pinned = (todoList[id].pinned !== true); // Update status
+        event.target.setAttribute("aria-pressed", String(todoList[id].pinned));
         SaveToDoData(); // Save Changes
     }
     else if (event.target.classList.contains("todoeditbtn")) {
@@ -162,6 +218,7 @@ todoulList.addEventListener("click", (event) => {
                 todo.title = (newTitle !== "") ? newTitle : previousTitle; // Check for empty title
                 const daidaiButton = li.querySelector(".todoDaidaiBtn");
                 if (daidaiButton) setTodoDaidaiLabel(daidaiButton, todo.title);
+                li.querySelector(".todocomplete")?.setAttribute("aria-label", todo.title);
                 const textNode = document.createTextNode(todo.title);
                 li.insertBefore(textNode, input);
                 li.removeChild(input);
@@ -198,8 +255,10 @@ todoulList.addEventListener("click", (event) => {
             input.addEventListener("keydown", function (e) {
                 if (e.key === "Enter") {
                     input.blur(); // triggers saveEdit
+                    li.querySelector(".todoeditbtn")?.focus();
                 } else if (e.key === "Escape") {
                     cancelEdit();
+                    li.querySelector(".todoeditbtn")?.focus();
                 }
             });
         }
@@ -211,6 +270,11 @@ function SaveToDoData() {
     if (todoStorageInvalid || !todoList) return false;
     try { const current=JSON.parse(localStorage.getItem("todoList") || "{}"); if(!current || Array.isArray(current) || typeof current!=="object") throw Error("Invalid todo data"); } catch { todoStorageInvalid=true; return false; }
     localStorage.setItem("todoList", JSON.stringify(todoList));
+    notifyTodoUpdated();
+    return true;
+}
+
+function notifyTodoUpdated() {
     const items = Object.entries(todoList).map(([id, todo]) => ({ id, ...todo }));
     document.dispatchEvent(new CustomEvent("mynt:todo-updated", {
         detail: {

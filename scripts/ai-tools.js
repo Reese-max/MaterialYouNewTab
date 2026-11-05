@@ -63,7 +63,6 @@ const aiToolName = document.getElementById("toolsCont");
 const shortcuts = document.getElementById("shortcutsContainer");
 const aiToolsIcon = document.getElementById("aiToolsIcon");
 const aiToolsSettingsModal = document.getElementById("aiToolsSettingsModal");
-const aiToolsSettingsOverlay = document.getElementById("aiToolsSettingsOverlay");
 const aiToolsForm = document.getElementById("aiToolsForm");
 const closeAISettingsBtn = document.getElementById("closeAISettingsBtn");
 const resetAISettingsBtn = document.getElementById("resetAISettingsBtn");
@@ -72,6 +71,7 @@ const aiToolsEditButton = document.getElementById("aiToolsEditButton");
 const aiToolsCont = document.getElementById("aiToolsCont");
 const aiToolsEditField = document.getElementById("aiToolsEditField");
 const mobileAIToolsQuery = matchMedia("(max-width: 500px)");
+let aiSettingsReturnFocus = null;
 const aiToolsMoreButton = document.createElement("button");
 const aiToolsOverflowMenu = document.createElement("div");
 
@@ -264,6 +264,8 @@ aiToolsForm.addEventListener("click", async (event) => {
 
 // Function to show AI Tools settings modal
 function showAIToolsSettings() {
+    if (aiToolsSettingsModal.open) return;
+    aiSettingsReturnFocus = document.activeElement;
     // Clear previous form content
     aiToolsForm.innerHTML = "";
 
@@ -272,9 +274,9 @@ function showAIToolsSettings() {
     // Generate the form with the saved settings
     generateAIToolsForm(savedSettings);
 
-    // Show modal and overlay
-    aiToolsSettingsModal.style.display = "block";
-    aiToolsSettingsOverlay.style.display = "block";
+    closeAISettingsBtn.setAttribute("aria-label", translations[currentLanguage]?.aiSettingsClose || translations.en.aiSettingsClose);
+    aiToolsSettingsModal.showModal();
+    closeAISettingsBtn.focus();
 }
 
 // Function to update the enabled/disabled state of reorder buttons
@@ -299,9 +301,13 @@ function updateReorderButtonStates() {
 
 // Function to close settings modal
 function closeAIToolsSettings() {
-    aiToolsSettingsModal.style.display = "none";
-    aiToolsSettingsOverlay.style.display = "none";
+    aiToolsSettingsModal.close();
 }
+
+aiToolsSettingsModal.addEventListener("close", () => {
+    if (aiSettingsReturnFocus?.isConnected) aiSettingsReturnFocus.focus();
+    aiSettingsReturnFocus = null;
+});
 
 // Function to toggle AI Tools panel
 let isAIToolsTransitioning = false;
@@ -482,8 +488,12 @@ document.addEventListener("DOMContentLoaded", function () {
         closeAIToolsSettings();
     });
 
-    // Settings overlay click handler
-    aiToolsSettingsOverlay.addEventListener("click", closeAIToolsSettings);
+    // The native dialog handles Escape, focus containment and modal semantics.
+    aiToolsSettingsModal.addEventListener("click", event => {
+        if (event.target !== aiToolsSettingsModal) return;
+        const rect = aiToolsSettingsModal.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeAIToolsSettings();
+    });
 
     // Handle checkbox state for AI Tools visibility
     const aiToolsCheckbox = document.getElementById("aiToolsCheckbox");
@@ -514,7 +524,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Collapse when clicking outside toolsCont (but not if settings modal is open)
     document.addEventListener("click", (event) => {
-        const isSettingsModalOpen = aiToolsSettingsModal.style.display === "block";
+        const isSettingsModalOpen = aiToolsSettingsModal.open;
         if (!aiToolsCont.contains(event.target)) closeMobileAIToolsOverflow();
         if (!aiToolsCont.contains(event.target) && aiToolName.style.display === "flex" && !isSettingsModalOpen) {
             toggleAITools();
