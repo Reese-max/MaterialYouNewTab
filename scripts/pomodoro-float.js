@@ -330,6 +330,7 @@
         settings = next; renderAppearance(); syncForm();
         return { ...settings };
     }
+    window.myntPomoFloat = { isOpen: () => Boolean(floating && !floating.closed) };
     window.myntPomoAppearance = { getSettings: () => ({ ...settings }), applySettings,
         ...createRemoteAppearance({ storage: localStorage, getSettings: () => settings, setSettings: value => { settings = value; }, hasImage: () => Boolean(imageUrl), render: () => { renderAppearance({ suppressPlayback: true }); syncForm(); } })
     };
@@ -590,7 +591,8 @@
             });
             label.append(caption, input); durations.append(label); durationFields[key] = { input, caption };
         }
-        options.append(taskLabel, durations, durationError, secondary, el(doc, 'p', t('note'), 'mynt-pomo-note'));
+        const optionsNote = el(doc, 'p', t('note'), 'mynt-pomo-note');
+        options.append(taskLabel, durations, durationError, secondary, optionsNote);
         const audioRow = el(doc, 'div', '', 'mynt-pomo-audio');
         const music = window.myntPomoMusic;
         const ambient = window.myntAmbientAudio;
@@ -663,7 +665,7 @@
             for (const [key, { caption }] of Object.entries(durationFields)) caption.textContent = t(key);
             if (durationError.textContent) durationError.textContent = t('durationError');
             if (resetPrompt) { resetPrompt.setAttribute('aria-label', t('resetConfirm')); resetPrompt.querySelector('p').textContent = t('resetConfirm'); }
-            options.querySelectorAll('.mynt-pomo-note').at(-1).textContent = t('note');
+            optionsNote.textContent = t('note');
             if (noteKey) setNote(noteKey, noteQuiet);
             refresh();
         }

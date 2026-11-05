@@ -493,6 +493,8 @@ const localeLoads = new Map();
 document.getElementById("languageSelector").addEventListener("change", async (event) => {
     const lang = event.target.value, request = ++languageRequest;
     if (!Object.hasOwn(localeSources, lang)) return;
+    // Live switching only keeps an open floating timer connected; a reload relabels every main-page module.
+    if (!window.myntPomoFloat?.isOpen()) { saveLanguageStatus("selectedLanguage", lang); location.reload(); return; }
     try {
         if (!translations[lang]) {
             if (!localeLoads.has(lang)) localeLoads.set(lang, new Promise((resolve, reject) => {

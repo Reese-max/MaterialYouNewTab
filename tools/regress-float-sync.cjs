@@ -113,13 +113,17 @@ assert.equal(ctx.pomodoroPhaseLabel.textContent,'工作','Idle main panel must r
     }
     // Exercise the real language-selection handler, including loading a packaged locale.
     const languageSource = read('scripts/languages.js');
-    const selector = new Node(); let applied = '', reloaded = false;
+    const selector = new Node(); let applied = '', reloaded = false, floatOpen = false, savedLanguage = '';
     const lc = vm.createContext({ document: { getElementById: () => selector, createElement: () => ({}), head: { append(script) {
         vm.runInContext(read(script.src), lc); script.onload();
-    } } }, currentLanguage:'en', isRTL:false, rtlLanguages:[], applyLanguage(lang) { applied = lang; }, location: { reload() { reloaded = true; } } });
+    } } }, currentLanguage:'en', isRTL:false, rtlLanguages:[], applyLanguage(lang) { applied = lang; }, location: { reload() { reloaded = true; } },
+        window: { myntPomoFloat: { isOpen: () => floatOpen } }, saveLanguageStatus(key, value) { savedLanguage = value; } });
     vm.runInContext(read('locales/en.js'), lc);
     vm.runInContext(languageSource.slice(languageSource.indexOf('function readLocaleSources'), languageSource.indexOf('const savedLanguage')), lc);
     vm.runInContext(languageSource.slice(languageSource.indexOf('let languageRequest'), languageSource.indexOf('// Function to apply the language when')), lc);
+    selector.value = 'zh_TW'; await selector.emit('change');
+    assert.equal(reloaded, true, 'Without a floating window the main page reloads so every module relabels');
+    assert.equal(savedLanguage, 'zh_TW'); assert.equal(applied, ''); reloaded = false; floatOpen = true;
     selector.value = 'zh_TW'; await selector.emit('change'); assert.equal(applied,'zh_TW'); assert.equal(reloaded,false, 'switching language preserves the live timer/window');
     assert.equal(lc.currentLanguage, 'zh_TW');
     const pendingLocales = [];
@@ -195,5 +199,7 @@ assert.equal(ctx.pomodoroPhaseLabel.textContent,'工作','Idle main panel must r
     assert.equal(pipNote.textContent,'','a rejection after close cannot mutate the detached window status');
     assert.equal(counts(),0); assert.equal(musicSubscriptions,0); assert.equal(timerSubscriptions,0);
     player.close(); empty.close();
+    // Real NodeList has no .at(); the synthetic DOM returns arrays, so guard the shipped source directly.
+    assert.doesNotMatch(read('scripts/pomodoro-float.js'), /querySelectorAll\([^)]*\)\.(at|find|map|filter)\(/, 'NodeList has no array methods in real browsers');
     console.log('FLOAT_SYNC_OK: music/ambient both directions, shared wording, live today/subject, language relabel/loading/fallback, strict durations/countdown preservation, close/reload cleanup');
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => clearTimeout(watchdog));
