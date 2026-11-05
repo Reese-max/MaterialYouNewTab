@@ -12,6 +12,8 @@
     let activeNodes = [];
     let currentType = "rain";
     let isPlaying = false;
+    let stopTimer = null;
+    let playRevision = 0;
 
     function getAudioContext() {
         if (!audioCtx) {
@@ -23,9 +25,6 @@
                 masterGain.gain.setValueAtTime(savedVol, audioCtx.currentTime);
                 masterGain.connect(audioCtx.destination);
             }
-        }
-        if (audioCtx && audioCtx.state === "suspended") {
-            audioCtx.resume();
         }
         return audioCtx;
     }
@@ -158,6 +157,9 @@
     }
 
     function stop(immediate = false) {
+        playRevision++;
+        clearTimeout(stopTimer);
+        stopTimer = null;
         if (!isPlaying && activeNodes.length === 0) return;
         const ctx = getAudioContext();
         if (!ctx || immediate) {
@@ -170,7 +172,8 @@
         if (masterGain) {
             masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
             masterGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-            setTimeout(() => {
+            stopTimer = setTimeout(() => {
+                stopTimer = null;
                 cleanupNodes();
                 isPlaying = false;
                 document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
@@ -182,27 +185,44 @@
         }
     }
 
-    function play(type = currentType) {
+    async function play(type = currentType) {
+        const revision = ++playRevision;
+        clearTimeout(stopTimer);
+        stopTimer = null;
         cleanupNodes();
-        const ctx = getAudioContext();
-        if (!ctx) return;
+        isPlaying = false;
+        try {
+            if (!["rain", "ocean", "whitenoise", "campfire"].includes(type)) throw new Error("Invalid ambient type");
+            const ctx = getAudioContext();
+            if (!ctx) throw new Error("Audio unavailable");
+            if (ctx.state !== "running") await ctx.resume();
+            if (revision !== playRevision) return false;
+            if (ctx.state !== "running") throw new Error("Browser gesture required");
 
-        currentType = type;
-        localStorage.setItem("myntAmbientType", type);
+            currentType = type;
+            localStorage.setItem("myntAmbientType", type);
 
-        const targetVol = parseFloat(localStorage.getItem("myntAmbientVolume") || "0.5");
-        if (masterGain) {
-            masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-            masterGain.gain.linearRampToValueAtTime(targetVol, ctx.currentTime + 0.8);
+            const targetVol = parseFloat(localStorage.getItem("myntAmbientVolume") || "0.5");
+            if (masterGain) {
+                masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+                masterGain.gain.linearRampToValueAtTime(targetVol, ctx.currentTime + 0.8);
+            }
+
+            if (type === "rain") startRain(ctx);
+            else if (type === "ocean") startOcean(ctx);
+            else if (type === "whitenoise") startWhiteNoise(ctx);
+            else if (type === "campfire") startCampfire(ctx);
+
+            isPlaying = true;
+            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: true, type: currentType } }));
+            return true;
+        } catch (error) {
+            if (revision !== playRevision) return false;
+            cleanupNodes();
+            isPlaying = false;
+            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType, error: true } }));
+            return false;
         }
-
-        if (type === "rain") startRain(ctx);
-        else if (type === "ocean") startOcean(ctx);
-        else if (type === "whitenoise") startWhiteNoise(ctx);
-        else if (type === "campfire") startCampfire(ctx);
-
-        isPlaying = true;
-        document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: true, type: currentType } }));
     }
 
     function setVolume(vol) {
@@ -215,7 +235,7 @@
 
     function toggle(type) {
         if (isPlaying) stop();
-        else play(type || currentType);
+        else return play(type || currentType);
     }
 
     // Expose global API
@@ -227,7 +247,7 @@
             gate();const ctx=getAudioContext();if(!ctx)throw Error('Audio unavailable');
             if(ctx.state!=='running')await ctx.resume();
             gate();if(ctx.state!=='running')throw Error('Browser gesture required');
-            play(type);if(ctx.state!=='running'){stop(true);throw Error('Browser gesture required');}
+            if(!await play(type)){stop(true);throw Error('Browser gesture required');}
         },
         stop,
 

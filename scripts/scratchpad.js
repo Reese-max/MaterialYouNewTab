@@ -179,6 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Smart list continuation and tab indentation
     scratchpadInput.addEventListener("keydown", function (e) {
+        if (e.isComposing || e.keyCode === 229) return;
         if (e.ctrlKey && e.key === "Enter") {
             e.preventDefault();
             const start = this.selectionStart;
@@ -192,7 +193,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 this.value = text.substring(0, lineStart) + newLine + (lineEnd === -1 ? "" : text.substring(lineEnd));
                 this.selectionStart = this.selectionEnd = start + 1;
             } else if (currentLine.includes("- [x]") || currentLine.includes("- [X]")) {
-                const newLine = currentLine.replace(/- [[xX]]/, "- [ ]");
+                const newLine = currentLine.replace(/- \[[xX]\]/, "- [ ]");
                 this.value = text.substring(0, lineStart) + newLine + (lineEnd === -1 ? "" : text.substring(lineEnd));
                 this.selectionStart = this.selectionEnd = Math.max(lineStart, start - 1);
             }

@@ -79,6 +79,7 @@ if (typeof document !== "undefined") (fn => (document.readyState === "loading" ?
     let syncTimer = null;
     let polling = false;
     let pendingAction = null;
+    let finishingAction = false;
     let pendingPlan = null;
     let pendingUndo = null;
     let feedbackTimer = null;
@@ -443,7 +444,9 @@ if (typeof document !== "undefined") (fn => (document.readyState === "loading" ?
 
     async function finishAction(decision, apply = false) {
         const action = pendingAction;
-        if (!action) return;
+        if (!action || finishingAction || decisions.has(action.id)) return;
+        finishingAction = true;
+        confirmButton.disabled = rejectButton.disabled = true;
         let finalDecision = decision;
         let undo = null;
         if (apply) {
@@ -464,11 +467,13 @@ if (typeof document !== "undefined") (fn => (document.readyState === "loading" ?
         pendingAction = null;
         pendingPlan = null;
         actionDialog.close();
+        finishingAction = false;
+        rejectButton.disabled = false;
         if (finalDecision === "confirmed") showActionFeedback(undo);
         if (finalDecision === "confirmed" && action.type === "todo.create" && Date.now() < focusBreakdownUntil) {
             document.dispatchEvent(new CustomEvent("mynt:focus-steps-add", { detail: { titles: [action.title] } }));
         }
-        else if (apply) notify(t("daidaiActionFailed", "The change could not be applied."));
+        if (apply && finalDecision !== "confirmed") notify(t("daidaiActionFailed", "The change could not be applied."));
         setTimeout(() => void pollActions(), 0);
     }
 

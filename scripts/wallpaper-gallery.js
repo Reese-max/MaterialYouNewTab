@@ -266,12 +266,16 @@
     async function addFiles(fileList) {
         const files = Array.from(fileList || []);
         let last = null;
+        let added = 0, failed = 0;
         for (const file of files) {
-            try { last = (await addBlob(file, file.name)) || last; } catch (e) { console.warn("MYNT wallpaper add failed", e); }
+            try {
+                const item = await addBlob(file, file.name);
+                if (item) { last = item; added++; } else failed++;
+            } catch (e) { failed++; console.warn("MYNT wallpaper add failed", e); }
         }
         await renderGallery();
         if (last) await applyItem(last);
-        setStatus(t("wallpaperAdded", "Added") + " " + files.length);
+        setStatus(t("wallpaperAdded", "Added") + " " + added + (failed ? " · " + t("wallpaperImportFailed", "Could not add {count} file(s). Please retry.").replace("{count}", failed) : ""));
     }
 
     async function addUrl(url) {

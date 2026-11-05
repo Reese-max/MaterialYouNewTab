@@ -21,6 +21,10 @@
 		"newtab": "index.html"
 	},
 	"incognito": "spanning",
+	"background": {
+		"scripts": ["scripts/background.js"],
+		"persistent": false
+	},
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{c30c387e-cd01-42b4-b5c7-6af2d820535b}",

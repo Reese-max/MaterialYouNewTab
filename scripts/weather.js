@@ -537,6 +537,7 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                     }
                 };
                 updateTemperatureDisplay();
+                fahrenheitCheckbox.onchange = updateTemperatureDisplay;
 
                 // Setting weather Icon
                 const newWIcon = parsedData.current.condition.icon;

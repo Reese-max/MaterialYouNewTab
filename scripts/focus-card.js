@@ -217,10 +217,19 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     function prompt() {
         const focus = api.get();
+        let days = null;
+        try {
+            const core = window.MYNTCountdownCore;
+            const raw = localStorage.getItem(core.KEY);
+            const model = raw === null ? core.migrateLegacy(localStorage.getItem("myntExamDate")) : core.validate(JSON.parse(raw));
+            const next = core.sortEvents(model.events.filter(event => event.category === "exam"))
+                .map(event => core.dayInfo(event)).find(info => info.days >= 0);
+            days = next?.days ?? null;
+        } catch { /* Invalid countdown data must not revive a stale legacy date. */ }
         return myntBuildFocusPrompt({
             text: focus.text,
             subject: focus.subject ? MYNT_FOCUS_SUBJECTS.find(item => item[0] === focus.subject)?.[1] : "",
-            days: myntDaysUntil(localStorage.getItem("myntExamDate"))
+            days
         });
     }
 

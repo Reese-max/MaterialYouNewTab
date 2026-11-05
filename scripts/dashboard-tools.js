@@ -524,8 +524,16 @@ if (typeof document !== "undefined") {
             markSystemHabit("pomodoro");
             renderFocusStats();
         });
+        let previousTodoStatuses = new Map();
+        try {
+            previousTodoStatuses = new Map(Object.entries(JSON.parse(localStorage.getItem("todoList") || "{}"))
+                .map(([id, todo]) => [id, todo?.status]));
+        } catch { /* The To-do module owns invalid data recovery. */ }
         document.addEventListener("mynt:todo-updated", event => {
-            if (Number(event.detail?.completed) > 0) markSystemHabit("todo");
+            const items = event.detail?.items;
+            if (!Array.isArray(items)) return;
+            if (items.some(todo => todo.status === "completed" && previousTodoStatuses.get(todo.id) !== "completed")) markSystemHabit("todo");
+            previousTodoStatuses = new Map(items.map(todo => [todo.id, todo.status]));
         });
         document.addEventListener("DOMContentLoaded", () => {
             habitRecoveryControl = window.MyntRecoveryControls?.create({
@@ -533,12 +541,6 @@ if (typeof document !== "undefined") {
                 before: document.getElementById("habitList"), focusTarget: document.getElementById("habitInput"),
                 validateCurrent: () => myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"))
             });
-            try {
-                const todos = JSON.parse(localStorage.getItem("todoList") || "{}");
-                if (Object.values(todos).some(todo => todo?.status === "completed")) markSystemHabit("todo");
-            } catch {
-                // The To-do module owns recovery of invalid stored data.
-            }
         }, { once: true });
 
         // Accessibility settings use native media preferences by default.
@@ -1084,6 +1086,7 @@ if (typeof document !== "undefined") {
         let filteredCommands = [];
         let activeCommandIndex = 0;
         let commandRenderToken = 0;
+        let commandReadyToken = -1;
 
         function commandLabel(command) {
             return command.labelText || t(command.label, command.id);
@@ -1114,10 +1117,15 @@ if (typeof document !== "undefined") {
             }).filter(command => command.labelText && matchesCommand(command, query));
         }
 
-        function bookmarkCommands(query) {
+        async function bookmarkCommands(query) {
             if (!query) return Promise.resolve([]);
+            if (typeof safeBookmarkLink !== "function") {
+                try { await window.myntLazy?.load("bookmarks"); } catch { return []; }
+                if (typeof safeBookmarkLink !== "function") return [];
+            }
             const found = new Map();
             const add = (title, url) => {
+                url = safeBookmarkLink(url);
                 if (!url || found.has(url) || found.size >= 8) return;
                 found.set(url, {
                     id: `bookmark-${found.size}`,
@@ -1151,6 +1159,9 @@ if (typeof document !== "undefined") {
 
         async function renderCommands(query = "") {
             const token = ++commandRenderToken;
+            filteredCommands = [];
+            document.getElementById("commandPaletteList").replaceChildren();
+            updateCommandSelection();
             const normalized = query.trim().toLocaleLowerCase();
             const workspaceLaunchCommands = workspaces.filter(p => p.urls && p.urls.length > 0).map(preset => ({
                 id: `launch-workspace-${preset.id}`,
@@ -1191,6 +1202,7 @@ if (typeof document !== "undefined") {
             const bookmarks = await bookmarkCommands(normalized);
             if (token !== commandRenderToken) return;
             filteredCommands = [...base, ...bookmarks].slice(0, 40);
+            commandReadyToken = token;
             activeCommandIndex = Math.min(activeCommandIndex, Math.max(0, filteredCommands.length - 1));
             const list = document.getElementById("commandPaletteList");
             list.replaceChildren();
@@ -1216,7 +1228,7 @@ if (typeof document !== "undefined") {
                     activeCommandIndex = index;
                     updateCommandSelection();
                 });
-                button.addEventListener("click", () => runCommand(command));
+                button.addEventListener("click", () => { if (token === commandRenderToken) runCommand(command); });
                 list.appendChild(button);
             });
             document.getElementById("commandPaletteEmpty").hidden = filteredCommands.length > 0;
@@ -1261,6 +1273,7 @@ if (typeof document !== "undefined") {
             renderCommands(event.target.value);
         });
         document.getElementById("commandPaletteInput").addEventListener("keydown", event => {
+            if (event.isComposing || event.keyCode === 229 || commandReadyToken !== commandRenderToken) return;
             if (event.key === "ArrowDown" && filteredCommands.length) {
                 event.preventDefault();
                 activeCommandIndex = (activeCommandIndex + 1) % filteredCommands.length;

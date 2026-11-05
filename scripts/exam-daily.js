@@ -88,6 +88,7 @@ if (typeof document !== "undefined") (function () {
         const panel = $("examDailyPanel");
         const toggle = $("examDailyCheckbox");
         let loading = null;
+        let loadingDate = null;
 
         function texts() {
             $("examDailyChipText").textContent = L("今日考古題", "Daily exam question");
@@ -160,7 +161,7 @@ if (typeof document !== "undefined") (function () {
                 const q = myntExamExtract(await res.json(), state.id);
                 if (q) {
                     const value = { ...q, date: today };
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(value));
+                    if (todayKey() === today) localStorage.setItem(CACHE_KEY, JSON.stringify(value));
                     return value;
                 }
                 // Excluded or changed upstream: move on to the next question in the bag.
@@ -170,12 +171,17 @@ if (typeof document !== "undefined") (function () {
         }
 
         function ensure() {
-            if (!loading) loading = load().then(q => { render(q); return q; }, () => {
+            const date = todayKey();
+            if (!loading || loadingDate !== date) {
+                loadingDate = date;
+                loading = load().then(q => { if (todayKey() === date) render(q); return q; }, () => {
+                if (loadingDate !== date) return null;
                 const old = todayCache();
                 render(old, !old);
                 loading = null;
                 return null;
             });
+            }
             return loading;
         }
 
@@ -202,6 +208,9 @@ if (typeof document !== "undefined") (function () {
         document.addEventListener("keydown", e => { if (e.key === "Escape" && !panel.hidden && !document.querySelector("dialog[open]")) setOpen(false); });
         toggle?.addEventListener("change", () => { localStorage.setItem(VISIBLE_KEY, String(toggle.checked)); applyVisible(); });
         document.addEventListener('mynt:mcp-settings-refresh', applyVisible);
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState !== "hidden" && !root.hidden) ensure();
+        });
         texts();
         applyVisible();
         // Warm today's cache once the page is idle so the question is ready offline later.

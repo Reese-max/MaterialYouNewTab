@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Allow pressing Enter to save the proxy
     userProxyInput.addEventListener("keydown", (event) => {
+        if (event.isComposing || event.keyCode === 229) return;
         if (event.key === "Enter") {
             saveProxyButton.click();
         }
@@ -170,6 +171,7 @@ searchInput.addEventListener("input", async function () {
 });
 
 searchInput.addEventListener("keydown", function (e) {
+    if (e.isComposing || e.keyCode === 229) return;
     const activeItem = resultBox.querySelector(".active");
     if (e.key === "Escape" && !e.isComposing) {
         e.preventDefault();
@@ -213,7 +215,7 @@ searchInput.addEventListener("keydown", function (e) {
 
             if (cursorAtEnd) {
                 e.preventDefault();
-                const suggestionText = activeItem.textContent;
+                const suggestionText = activeItem.getAttribute("data-query") || activeItem.textContent;
                 this.value = suggestionText;
             }
 

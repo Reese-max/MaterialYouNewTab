@@ -1234,20 +1234,21 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const iconInput = entry.querySelector(".iconURL");
         const icon = iconInput.value || "";
 
-        localStorage.setItem(`shortcutName${index}`, name);
-        localStorage.setItem(`shortcutURL${index}`, url);
-
-        // Try to save icon separately to handle quota errors gracefully
+        const previousStorage = snapshotShortcutStorage();
         try {
+            localStorage.setItem(`shortcutName${index}`, name);
+            localStorage.setItem(`shortcutURL${index}`, url);
             localStorage.setItem(`shortcutIcon${index}`, icon);
         } catch (iconError) {
+            try { restoreShortcutStorage(previousStorage); }
+            catch (rollbackError) { console.error("Shortcut save rollback failed:", rollbackError); }
+            entry.querySelector(".shortcutName").value = previousStorage.get(`shortcutName${index}`) || "";
+            entry.querySelector(".URL").value = previousStorage.get(`shortcutURL${index}`) || "";
+            iconInput.value = previousStorage.get(`shortcutIcon${index}`) || "";
             if (isQuotaExceededError(iconError)) {
-                // Icon is too large, clear it from input and localStorage
-                iconInput.value = "";
-                localStorage.removeItem(`shortcutIcon${index}`);
-
                 const iconStorageQuotaMessage = translations[currentLanguage]?.iconStorageQuotaMessage || translations["en"].iconStorageQuotaMessage;
                 alertPrompt(iconStorageQuotaMessage);
+                return;
             } else {
                 throw iconError;
             }

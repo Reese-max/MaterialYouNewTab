@@ -227,7 +227,13 @@ document.addEventListener("DOMContentLoaded", function () {
     function stopAmbient() {
         if (globalThis.myntAmbientAudio?.isPlaying()) globalThis.myntAmbientAudio.stop();
     }
-    function startPomodoro() { return timer.start(); }
+    function startPomodoro() {
+        // Start audio during the user gesture, before the timer's asynchronous lock.
+        if (getPomodoroBool(KEYS.ambientAuto, true) && timer.getState().phase === "work" && !timer.getState().isRunning) {
+            void globalThis.myntAmbientAudio?.play(pomodoroAmbientSelect?.value || localStorage.getItem("myntAmbientType") || "rain");
+        }
+        return timer.start();
+    }
     function pausePomodoro() { stopAmbient(); return timer.pause(); }
     function resetPomodoro() { stopAmbient(); return timer.reset(); }
 
@@ -805,6 +811,11 @@ document.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("mynt:ambient-state", function (e) {
             if (pomodoroAmbientToggleBtn) {
                 pomodoroAmbientToggleBtn.classList.toggle("active", e.detail?.isPlaying === true);
+                pomodoroAmbientToggleBtn.setAttribute("aria-pressed", String(e.detail?.isPlaying === true));
+                const status = document.getElementById("pomodoroAmbientStatus");
+                if (status) status.textContent = e.detail?.error
+                    ? getPomodoroText("pomodoroAmbientFailed", "Audio could not start. Press the headphones button to retry.")
+                    : e.detail?.isPlaying ? getPomodoroText("pomodoroAmbientPlaying", "Ambient audio playing") : "";
             }
         });
 

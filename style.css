@@ -8805,6 +8805,7 @@ html:has(body[data-workspace-background="video"]) {
 /* ------------ Pomodoro Ambient Sound Controller ------------ */
 .pomodoroAmbientRow {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
 	gap: 8px;
@@ -8814,6 +8815,14 @@ html:has(body[data-workspace-background="video"]) {
 	border-radius: 999px;
 	backdrop-filter: blur(10px);
 }
+
+#pomodoroAmbientStatus {
+	flex-basis: 100%;
+	order: 1;
+	overflow-wrap: anywhere;
+}
+
+#pomodoroAmbientStatus:empty { display: none; }
 
 .pomodoroAmbientToggleBtn {
 	appearance: none;
