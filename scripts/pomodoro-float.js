@@ -33,7 +33,12 @@
         durationError: ['Enter whole minutes: work 1–120; breaks 1–60.', '請輸入整數分鐘：工作 1–120；休息 1–60。'],
         musicPlay: ['Play music', '播放音樂'], musicPause: ['Pause music', '暫停音樂'], musicNext: ['Next track', '下一首'],
         ambientPlay: ['Play ambient audio', '播放環境音'], ambientPause: ['Pause ambient audio', '暫停環境音'], ambientType: ['Ambient sound type', '環境音類型'],
-        ambient_rain: ['🌧️ Rain', '🌧️ 雨聲'], ambient_ocean: ['🌊 Ocean', '🌊 海浪'], ambient_whitenoise: ['☕ White noise', '☕ 白噪音'], ambient_campfire: ['🪵 Campfire', '🪵 柴火'],
+        ambient_nature: ['Nature', '自然'], ambient_noise: ['Noise', '噪音'],
+        ambient_rain: ['🌧️ Rain', '🌧️ 雨聲'], ambient_thunder: ['⛈️ Thunderstorm', '⛈️ 雷雨'],
+        ambient_ocean: ['🌊 Ocean', '🌊 海浪'], ambient_stream: ['🏞️ Stream', '🏞️ 溪流'],
+        ambient_wind: ['🍃 Wind', '🍃 風聲'], ambient_forest: ['🐦 Forest birds', '🐦 森林鳥鳴'],
+        ambient_night: ['🦗 Summer night', '🦗 夏夜蟲鳴'], ambient_campfire: ['🪵 Campfire', '🪵 柴火'],
+        ambient_whitenoise: ['☕ White noise', '☕ 白噪音'], ambient_pink: ['🌸 Pink noise', '🌸 粉紅噪音'], ambient_brown: ['🟤 Brown noise', '🟤 棕色噪音'],
         ready: ['Saved on this device only.', '僅儲存在此裝置。'], missing: ['Choose a local image first.', '請先選擇本機圖片。']
     };
     function language() {
@@ -602,7 +607,7 @@
         const music = window.myntPomoMusic;
         const ambient = window.myntAmbientAudio;
         const panelAmbientSelect = document.getElementById('pomodoroAmbientSelect');
-        const ambientTypes = ['rain', 'ocean', 'whitenoise', 'campfire'];
+        const ambientTypes = ambient?.types || [];
         const ambientChoice = () => {
             let saved;
             try { saved = localStorage.getItem('myntAmbientType'); } catch (_) { /* use the panel or player */ }
@@ -640,8 +645,12 @@
         const trackName = el(doc, 'span', '', 'mynt-pomo-track-name'), musicIndicator = equalizer();
         trackText.append(trackName, musicIndicator); musicRow.append(musicButton, trackText, nextButton);
         const ambientSelect = el(doc, 'select', '', 'mynt-pomo-ambient-select');
-        for (const type of ambientTypes) {
-            const option = el(doc, 'option'); option.value = type; ambientSelect.append(option);
+        for (const kind of ['nature', 'noise']) {
+            const group = el(doc, 'optgroup'); group.setAttribute('data-ambient-group', kind);
+            for (const type of ambientTypes.filter(type => ['whitenoise', 'pink', 'brown'].includes(type) === (kind === 'noise'))) {
+                const option = el(doc, 'option'); option.value = type; group.append(option);
+            }
+            ambientSelect.append(group);
         }
         async function controlAmbient(action) {
             if (disconnected || win.closed) return;
@@ -686,7 +695,7 @@
             const ambientState = ambient?.getState(), type = ambientState?.playing && ambientTypes.includes(ambientState.type) ? ambientState.type : ambientChoice();
             if (panelAmbientSelect) panelAmbientSelect.value = type;
             ambientSelect.value = type; ambientSelect.setAttribute('aria-label', t('ambientType'));
-            for (const option of ambientSelect.children) option.textContent = t('ambient_' + option.value);
+            relabelAmbient(ambientSelect);
             renderTransport(ambientRow, ambientButton, ambientIndicator, ambientState?.playing, `${t(ambientState?.playing ? 'ambientPause' : 'ambientPlay')}: ${t('ambient_' + type)}`);
             audioRow.hidden = musicRow.hidden && ambientRow.hidden;
         }
@@ -717,6 +726,7 @@
         const refresh = () => { render(window.myntPomodoro.getState()); renderAudio(); };
         function relabel() {
             if (disconnected || win.closed) return;
+            relabelAmbient(panelAmbientSelect);
             doc.documentElement.lang = document.documentElement.lang; doc.documentElement.dir = document.documentElement.dir;
             doc.title = heading.textContent = t('float'); summary.textContent = t('options'); taskCaption.textContent = task.placeholder = t('task');
             for (const button of main.querySelectorAll('button')) {
@@ -778,7 +788,13 @@
         } catch (_) { if (floating) { floating.close(); clearFloat(floating); } setStatus(t('unsupported')); }
         finally { opening = false; }
     }
+    function relabelAmbient(select) {
+        if (!select) return;
+        for (const option of select.querySelectorAll('option')) option.textContent = t('ambient_' + option.value);
+        for (const group of select.querySelectorAll('optgroup')) group.label = t('ambient_' + group.getAttribute('data-ambient-group'));
+    }
     function init() {
+        relabelAmbient(document.getElementById('pomodoroAmbientSelect'));
         const connectAnchor = () => installPanelAnchor(window.myntPomodoro, document.getElementById('pomodoroPanel'), document.getElementById('pomodoroCont'), window);
         // defer 腳本可能早於計時器的 DOMContentLoaded 初始化執行。
         if (window.myntPomodoro?.open) connectAnchor();

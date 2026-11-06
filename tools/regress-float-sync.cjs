@@ -33,6 +33,7 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     const panelSelect = document.createElement('select'); panelSelect.id = 'pomodoroAmbientSelect'; panelSelect.value = 'rain'; panel.append(panelSelect);
     let ambientPlaying = false, ambientType = 'rain', ambientPlays = [];
     window.myntAmbientAudio = {
+        types: ['rain', 'thunder', 'ocean', 'stream', 'wind', 'forest', 'night', 'campfire', 'whitenoise', 'pink', 'brown'],
         getState: () => ({ type: ambientType, playing: ambientPlaying }),
         async play(type) { ambientType = type; ambientPlaying = true; ambientPlays.push(type); storage.setItem('myntAmbientType', type); await document.emit('mynt:ambient-state'); return true; },
         async toggle(type) { if (!ambientPlaying) return this.play(type); ambientPlaying = false; await document.emit('mynt:ambient-state'); }
@@ -157,7 +158,9 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     assert.equal(nextButton.getAttribute('aria-label'), '下一首'); assert.ok(nextButton.querySelector('svg'), 'relabel preserves the next icon');
     assert.equal(musicButton.getAttribute('aria-label'), '播放音樂: b');
     assert.equal(ambientSelect.getAttribute('aria-label'), '環境音類型');
-    assert.deepEqual(Array.from(ambientSelect.children, option => option.textContent), ['🌧️ 雨聲', '🌊 海浪', '☕ 白噪音', '🪵 柴火']);
+    assert.deepEqual(Array.from(ambientSelect.children, group => group.label), ['自然', '噪音']);
+    assert.deepEqual(Array.from(ambientSelect.querySelectorAll('option'), option => option.value), window.myntAmbientAudio.types, 'floating types preserve the shared order');
+    assert.deepEqual(Array.from(ambientSelect.querySelectorAll('option'), option => option.textContent), ['🌧️ 雨聲', '⛈️ 雷雨', '🌊 海浪', '🏞️ 溪流', '🍃 風聲', '🐦 森林鳥鳴', '🦗 夏夜蟲鳴', '🪵 柴火', '☕ 白噪音', '🌸 粉紅噪音', '🟤 棕色噪音']);
     assert.equal(ambientButton.getAttribute('aria-label'), '播放環境音: 🌧️ 雨聲');
     const localizedPlay = musicButton.emit('click'); await time.flush(); await localizedPlay;
     await ambientButton.emit('click'); await document.emit('mynt:language-changed');
@@ -167,7 +170,8 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     await musicButton.emit('click'); await time.flush(); await ambientButton.emit('click');
     saved.set('selectedLanguage','fr'); document.documentElement.lang = 'fr'; await document.emit('mynt:language-changed');
     assert.equal(q('.pomodoroPhaseLabel').textContent,'Travail'); assert.equal(q('summary').textContent,dictionaries.en.pomoFloat_options, 'missing locale keys use English');
-    assert.equal(nextButton.getAttribute('aria-label'), 'Next track'); assert.equal(ambientSelect.children[0].textContent, '🌧️ Rain');
+    assert.equal(nextButton.getAttribute('aria-label'), 'Next track'); assert.equal(ambientSelect.querySelector('option').textContent, '🌧️ Rain');
+    assert.deepEqual(Array.from(ambientSelect.children, group => group.label), ['Nature', 'Noise'], 'other locales use English group labels');
     {
     const s = read('scripts/pomodoro.js');
 const listeners={};const phase={};
