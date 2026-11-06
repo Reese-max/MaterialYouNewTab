@@ -94,6 +94,17 @@ function fixture(options = {}) {
     document.dispatchEvent = event => document.emit(event.type, event);
     const search = document.createElement('section'); search.id = 'rightDiv';
     search.rect = { left: 100, top: 180, width: 300, height: 60 }; document.body.append(search);
+    if (options.shortcuts) {
+        const width = options.width || 1366, height = options.height || 768;
+        const row = document.createElement('div'); row.id = 'quickLinksRow';
+        row.style.transform = 'translateX(-50%)';
+        row.rect = { left: (width - Math.min(900, width - 24)) / 2, top: height / 2 + 16, width: Math.min(900, width - 24), height: width < 600 ? 140 : 44 };
+        const shortcuts = document.createElement('div'); shortcuts.id = 'shortcutsContainer';
+        const aiTools = document.createElement('div'); aiTools.id = 'aiToolsCont';
+        for (const el of [shortcuts, aiTools]) el.rect = { left: 100, top: 400, width: 240, height: 44 };
+        if (options.quickLinks) { row.append(shortcuts, aiTools); document.body.append(row); }
+        else document.body.append(shortcuts, aiTools);
+    }
     if (options.widgets) {
         const widgets = document.createElement('aside'); widgets.id = 'myntHomeWidgets';
         widgets.rect = { left: 680, top: 180, width: 320, height: 400 }; document.body.append(widgets);
@@ -101,7 +112,8 @@ function fixture(options = {}) {
     const setting = document.createElement('input'); setting.id = 'layoutEditCheckbox'; document.body.append(setting);
     const events = new Map(); let writes = 0, blocked = false, readBlocked = false, profileReadsLeft = Infinity;
     const context = {
-        document, CustomEvent: class { constructor(type, detail = {}) { this.type = type; Object.assign(this, detail); } }, innerWidth: options.width || 1200, innerHeight: 800,
+        document, CustomEvent: class { constructor(type, detail = {}) { this.type = type; Object.assign(this, detail); } }, innerWidth: options.width || 1200, innerHeight: options.height || 800,
+        confirm: () => true,
         translations: { en: { profilesWide: 'profilesWide', profilesNarrow: 'profilesNarrow' } },
         setTimeout: () => 1, clearTimeout() {}, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
         localStorage: { getItem(key) {
@@ -410,10 +422,83 @@ test('Pending draft remains visible and discard hides the recovery-only dock wit
     assert.equal(saved(app), bytes); assert.equal(app.writes(), 0);
 });
 
-let failures = 0;
-for (const { name, run } of tests) {
-    try { run(); console.log(`PASS: ${name}`); }
-    catch (error) { failures++; console.error(`FAIL: ${name}\n${error.stack}`); }
-}
-if (failures) { console.error(`LAYOUT_DAILY_FAILED: ${failures}/${tests.length}`); process.exitCode = 1; }
-else console.log(`LAYOUT_DAILY_OK: ${tests.length} integration regressions passed; storage was in-memory only`);
+test('Quick links resolve to the row, ignore old AI offsets, and retain legacy targets without the row', () => {
+    for (const quickLinks of [true, false]) {
+        const data = profileData(), blocks = { shortcuts: { x: .03, y: .04, s: .8 }, aiTools: { x: -.02, y: .05, s: .9 } };
+        data.profiles[0].layouts.wide.blocks = clone(blocks);
+        const app = fixture({ data, shortcuts: true, quickLinks, width: 1366, height: 768 });
+        const target = app.id(quickLinks ? 'quickLinksRow' : 'shortcutsContainer');
+        assert.equal(target.dataset.myntLayout, 'shortcuts');
+        assert.equal(target.style.translate, `${blocks.shortcuts.x * 1366}px ${blocks.shortcuts.y * 768}px`);
+        assert.equal(target.style.scale, '0.8');
+        const ai = app.id('aiToolsCont');
+        assert.equal(ai.dataset.myntLayout, quickLinks ? undefined : 'aiTools');
+        assert.deepEqual(clone(app.api.get()).blocks, blocks, 'Old aiTools data stays valid and is not rewritten');
+        assert.doesNotThrow(() => app.api.setEditing(true));
+        const overlay = id => app.document.all().find(node => node.dataset.block === id);
+        assert.equal(overlay('shortcuts').hidden, false);
+        if (quickLinks) {
+            assert.equal(overlay('aiTools'), undefined);
+            assert.equal(target.style.transform, 'translateX(-50%)', 'Translate and scale must preserve the row centering transform');
+            assert.equal(app.id('shortcutsContainer').style.translate, undefined);
+        } else assert.equal(overlay('aiTools').hidden, false);
+        assert.equal(parseFloat(overlay('shortcuts').style.width), target.getBoundingClientRect().width);
+        app.api.cancel();
+    }
+});
+
+test('Quick-link move/resize, undo/redo, cancel, reset and reload work in both viewport profiles', async () => {
+    for (const [width, height, variant] of [[1366, 768, 'wide'], [420, 800, 'narrow']]) {
+        const data = profileData();
+        for (const size of ['wide', 'narrow']) data.profiles[0].layouts[size].blocks = { shortcuts: { x: .02, y: .03, s: .7 }, aiTools: { x: .2, y: -.1, s: 2 } };
+        const options = { data, shortcuts: true, quickLinks: true, width, height };
+        const app = fixture(options), bytes = saved(app), row = app.id('quickLinksRow');
+        const rect = () => clone(row.getBoundingClientRect()), original = rect();
+        const overlay = () => app.document.all().find(node => node.dataset.block === 'shortcuts');
+        const inside = () => { const r = rect(); assert(r.left >= 4 && r.top >= 4 && r.right <= width - 4 && r.bottom <= height - 4, JSON.stringify(r)); };
+        app.api.setEditing(true);
+        const move = overlay().querySelector('.myntLayoutMove');
+        move.emit('pointerdown', { clientX: 0, clientY: 0 });
+        move.emit('pointermove', { clientX: 50, clientY: 150 }); move.emit('pointerup');
+        assert.equal(rect().top, original.top + 150); assert.notDeepEqual(rect(), original); inside();
+        const moved = rect();
+        app.api.undo(); assert.deepEqual(rect(), original);
+        app.api.redo(); assert.deepEqual(rect(), moved);
+        const resize = overlay().querySelector('.myntLayoutResize');
+        resize.emit('pointerdown', { clientX: 0, clientY: 0 });
+        resize.emit('pointermove', { clientX: 60, clientY: 10 }); resize.emit('pointerup');
+        assert(rect().width > moved.width); inside();
+        const resized = rect(); app.api.cancel();
+        assert.deepEqual(rect(), original); assert.equal(saved(app), bytes);
+        app.api.setEditing(true);
+        const handle = overlay().querySelector('.myntLayoutMove');
+        handle.emit('pointerdown', { clientX: 0, clientY: 0 });
+        handle.emit('pointermove', { clientX: 3000, clientY: 3000 }); handle.emit('pointerup'); inside();
+        const draft = clone(app.api.get());
+        app.id('myntLayoutSave').click();
+        const stored = JSON.parse(saved(app));
+        assert.deepEqual(stored.profiles[0].layouts[variant].blocks, draft.blocks);
+        const other = variant === 'wide' ? 'narrow' : 'wide';
+        assert.deepEqual(stored.profiles[0].layouts[other], JSON.parse(bytes).profiles[0].layouts[other]);
+        const reloaded = fixture({ ...options, data: stored });
+        assert.deepEqual(clone(reloaded.id('quickLinksRow').getBoundingClientRect()), rect());
+        app.api.setEditing(true); overlay().querySelector('.myntLayoutMove').focus();
+        app.id('myntLayoutResetSelected').click();
+        assert.equal(row.style.translate, undefined); assert.equal(row.style.scale, undefined);
+        app.api.undo(); assert.equal(row.style.scale, String(draft.blocks.shortcuts.s));
+        app.id('myntLayoutReset').click(); await Promise.resolve();
+        assert.deepEqual(clone(app.api.get().blocks), {}); assert.equal(row.style.translate, undefined);
+        app.api.undo(); assert.deepEqual(clone(app.api.get().blocks), draft.blocks);
+        app.api.cancel(); assert.notDeepEqual(resized, original);
+    }
+});
+
+(async () => {
+    let failures = 0;
+    for (const { name, run } of tests) {
+        try { await run(); console.log(`PASS: ${name}`); }
+        catch (error) { failures++; console.error(`FAIL: ${name}\n${error.stack}`); }
+    }
+    if (failures) { console.error(`LAYOUT_DAILY_FAILED: ${failures}/${tests.length}`); process.exitCode = 1; }
+    else console.log(`LAYOUT_DAILY_OK: ${tests.length} integration regressions passed; storage was in-memory only`);
+})();

@@ -930,7 +930,7 @@ const en = {
     "layoutBlockFocus": "Today’s focus",
     "layoutBlockSearch": "Search bar",
     "layoutBlockAiTools": "AI tools",
-    "layoutBlockShortcuts": "Shortcuts",
+    "layoutBlockShortcuts": "Quick links",
     "layoutBlockQuote": "Quote",
     "layoutBlockExam": "Daily exam",
     "layoutBlockPomodoro": "Pomodoro",

@@ -8,7 +8,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["focus", ".ttteexxtt", "layoutBlockFocus", "Today’s focus"],
     ["search", "#rightDiv", "layoutBlockSearch", "Search bar"],
     ["aiTools", "#aiToolsCont", "layoutBlockAiTools", "AI tools"],
-    ["shortcuts", "#shortcutsContainer", "layoutBlockShortcuts", "Shortcuts"],
+    ["shortcuts", "#shortcutsContainer", "layoutBlockShortcuts", "Quick links"],
     ["quote", "#studyQuote", "layoutBlockQuote", "Quote"],
     ["countdowns", "#eventCountdownCard", "layoutBlockCountdowns", "Countdowns"],
     ["exam", "#examDaily", "layoutBlockExam", "Daily exam"],
@@ -236,8 +236,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         setting?.setAttribute("aria-describedby", "layoutEditInfo myntLayoutSaveStatus");
         announce(t("layoutDragGuard", "Drag handles are available only in edit mode"));
     }
-    // Centered home fixes the search bar itself; its static wrapper has no usable rectangle.
-    const elementsFor = selector => [...document.querySelectorAll(selector === "#rightDiv" && document.getElementById("searchbar") ? "#searchbar" : selector)];
+    // Centered home fixes the search bar and the whole pill row; their wrappers have no usable box.
+    const elementsFor = selector => {
+        if (selector === "#rightDiv" && document.getElementById("searchbar")) selector = "#searchbar";
+        if (document.getElementById("quickLinksRow")) {
+            if (selector === "#shortcutsContainer") selector = "#quickLinksRow";
+            else if (selector === "#aiToolsCont") return [];
+        }
+        return [...document.querySelectorAll(selector)];
+    };
     const visible = el => {
         const style = getComputedStyle(el), rect = el.getBoundingClientRect();
         return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
@@ -396,7 +403,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function buildOverlays() {
         for (const entry of MYNT_LAYOUT_BLOCKS) {
             const [id] = entry, name = blockName(entry), overlay = document.createElement("div");
-            if (MYNT_REMOVED_LAYOUT_IDS.has(id)) continue;
+            if (MYNT_REMOVED_LAYOUT_IDS.has(id) || (id === "aiTools" && document.getElementById("quickLinksRow"))) continue;
             overlay.className = "myntLayoutOverlay"; overlay.dataset.block = id;
             overlay.setAttribute("role", "group"); overlay.setAttribute("aria-label", name);
             const handle = button("", `⠿ ${name}`);

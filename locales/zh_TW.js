@@ -930,7 +930,7 @@ const zh_TW = {
     "layoutBlockFocus": "今日焦點",
     "layoutBlockSearch": "搜尋列",
     "layoutBlockAiTools": "AI 工具",
-    "layoutBlockShortcuts": "捷徑",
+    "layoutBlockShortcuts": "快速連結列",
     "layoutBlockQuote": "鼓勵語",
     "layoutBlockExam": "今日考古題",
     "layoutBlockPomodoro": "番茄鐘",
