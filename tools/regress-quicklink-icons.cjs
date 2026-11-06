@@ -185,6 +185,11 @@ assert.match(read('scripts/local-mcp-data.js'), /'aiToolsSettings','aiToolsCusto
 const adapter = require(path.join(root, 'scripts/local-mcp-data.js'));
 assert.doesNotThrow(() => adapter.validateBackupStorage({ aiToolsCustom: JSON.stringify({ chatGPT: { icon: 'mynt-icon:book' } }) }));
 assert.throws(() => adapter.validateBackupStorage({ aiToolsCustom: '{broken' }));
+// Three ~136 KB uploaded icons (~408 KB JSON) must still back up; the shared 200 KB read cap must not apply here.
+const bigIcon = 'data:image/png;base64,iVBORw0KGgo' + 'A'.repeat(136000);
+assert.doesNotThrow(() => adapter.validateBackupStorage({ aiToolsCustom: JSON.stringify({ chatGPT: { icon: bigIcon }, claude: { icon: bigIcon }, youtube: { icon: bigIcon } }) }));
+assert.throws(() => adapter.validateBackupStorage({ aiToolsCustom: JSON.stringify({ chatGPT: { icon: 'data:image/png;base64,' + 'A'.repeat(1024 * 1024) } }) }));
+for (const flag of ['\u{1F1F9}\u{1F1FC}', '1\uFE0F\u20E3']) assert.ok(!icons.process('mynt-emoji:' + flag).error, 'flag and keycap emoji are single emoji');
 const html = read('index.html');
 assert(html.indexOf('scripts/quicklink-icons.js') < html.indexOf('scripts/shortcuts.js'));
 assert(html.includes('styles/quicklink-icons.css'));

@@ -28,7 +28,7 @@
         translate: 'M2 5h13M8 2v3M4 5c0 6 7 10 10 11M12 5c0 6-7 10-10 11M13 22l5-12 5 12M15 18h6'
     });
     const graphemes = value => typeof Intl.Segmenter === 'function'
-        ? [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value)].map(part => part.segment) : [];
+        ? [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value)].map(part => part.segment) : Array.from(value);
     const unsafeText = /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u;
     const t = key => (typeof translations !== 'undefined'
         ? translations[typeof currentLanguage !== 'undefined' ? currentLanguage : 'en']?.[key] || translations.en?.[key] : '') || key;
@@ -70,7 +70,7 @@
         if (value.startsWith('mynt-icon:')) return Object.hasOwn(glyphs, value.slice(10)) ? valid(value) : invalid('invalidIcon');
         if (value.startsWith('mynt-emoji:')) {
             const text = value.slice(11);
-            return graphemes(text).length === 1 && /\p{Extended_Pictographic}/u.test(text) && !unsafeText.test(text) ? valid(value) : invalid('invalidIcon');
+            return graphemes(text).length === 1 && /\p{Extended_Pictographic}|\p{Regional_Indicator}|⃣/u.test(text) && !unsafeText.test(text) ? valid(value) : invalid('invalidIcon');
         }
         if (value.startsWith('mynt-text:')) {
             const match = value.match(/^mynt-text:([\s\S]+):(#[\da-f]{6})$/iu);

@@ -664,7 +664,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         });
 
         inputs[0].addEventListener("keydown", e => e.key === "Enter" && inputs[1].focus());
-        inputs[1].addEventListener("keydown", e => e.key === "Enter" && inputs[2].focus());
+        inputs[1].addEventListener("keydown", e => e.key === "Enter" && entry.querySelector(".quicklinkChooseIcon")?.focus());
         inputs[2].addEventListener("keydown", e => {
             if (e.key !== "Enter") return;
             e.preventDefault();
