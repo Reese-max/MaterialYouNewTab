@@ -16,7 +16,8 @@ const words = code => vm.runInNewContext(read(`locales/${code}.js`) + `\n;${code
 
 const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved asynchronous operation'); process.exitCode = 1; }, 10000);
 (async () => {
-    const time = fixture.clock(), shared = fixture.sharedStore(time, [fixture.seed('a'), fixture.seed('b')]);
+    const longName = '雨夜讀書 Lo-fi 長版本專注音樂合輯.WAV';
+    const time = fixture.clock(), shared = fixture.sharedStore(time, [fixture.seed('a'), fixture.seed('b'), { ...fixture.seed('c'), name: longName }]);
     const player = await fixture.tab(shared, time);
     assert.equal(typeof player.api.subscribe, 'function', 'music exposes an observable existing player');
     const document = doc(), window = new Node(), mount = document.createElement('div'), panel = document.createElement('div');
@@ -29,8 +30,13 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     window.myntPomodoro = { ...timer, getContext: () => ({ sessionsToday: today }), subscribe(fn) { timerSubscriptions++; const off = timer.subscribe(fn); return () => { timerSubscriptions--; off(); }; } };
     window.myntPomoMusic = { ...player.api, subscribe(fn) { musicSubscriptions++; const off = player.api.subscribe(fn); return () => { musicSubscriptions--; off(); }; } };
     window.myntFocus = { get: () => ({ subject }) };
-    let ambientPlaying = false;
-    window.myntAmbientAudio = { getState: () => ({ playing: ambientPlaying }), async toggle() { ambientPlaying = !ambientPlaying; await document.emit('mynt:ambient-state'); } };
+    const panelSelect = document.createElement('select'); panelSelect.id = 'pomodoroAmbientSelect'; panelSelect.value = 'rain'; panel.append(panelSelect);
+    let ambientPlaying = false, ambientType = 'rain', ambientPlays = [];
+    window.myntAmbientAudio = {
+        getState: () => ({ type: ambientType, playing: ambientPlaying }),
+        async play(type) { ambientType = type; ambientPlaying = true; ambientPlays.push(type); storage.setItem('myntAmbientType', type); await document.emit('mynt:ambient-state'); return true; },
+        async toggle(type) { if (!ambientPlaying) return this.play(type); ambientPlaying = false; await document.emit('mynt:ambient-state'); }
+    };
     window.open = () => popup = win();
     const dictionaries = { en: words('en'), zh_TW: words('zh_TW'), fr: { pomodoroWork: 'Travail' } };
     const observers = [];
@@ -41,17 +47,42 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     const open = async () => { await mount.querySelector('.mynt-pomo-open-popup').emit('click'); return popup.document; };
     let pd = await open();
     const q = selector => pd.querySelector(selector);
-    const [musicButton, ambientButton] = q('.mynt-pomo-audio').children;
-    assert.equal(musicButton.hidden, false); assert.match(musicButton.textContent, /a.mp3/);
+    const musicRow = q('.mynt-pomo-music-row'), ambientRow = q('.mynt-pomo-ambient-row');
+    assert.ok(musicRow && ambientRow, 'music and ambient have separate readable controls');
+    const musicButton = musicRow.querySelector('button'), ambientButton = ambientRow.querySelector('button');
+    const trackName = q('.mynt-pomo-track-name'), nextButton = q('.mynt-pomo-next'), ambientSelect = q('.mynt-pomo-ambient-select');
+    const playPath = 'M8 5v14l11-7z', pausePath = 'M6 19h4V5H6zm8-14v14h4V5z';
+    const audioState = (row, button, playing) => {
+        assert.equal(button.getAttribute('aria-pressed'), String(playing));
+        assert.equal(button.querySelector('path').getAttribute('d'), playing ? pausePath : playPath);
+        assert.equal(row.classList.contains('is-playing'), playing);
+        assert.equal(row.querySelector('.mynt-pomo-equalizer').hidden, !playing);
+    };
+    assert.equal(musicRow.hidden, false); assert.equal(trackName.textContent, 'a'); assert.equal(trackName.title, 'a.mp3');
+    assert.equal(nextButton.hidden, false); assert.equal(nextButton.getAttribute('aria-label'), 'Next track');
+    audioState(musicRow, musicButton, false); audioState(ambientRow, ambientButton, false);
+    assert.equal(musicButton.getAttribute('aria-label'), 'Play music: a');
+    const reordered = player.api.getTracks();
+    window.myntPomoMusic.getTracks = () => [reordered[0], reordered[2], reordered[1]];
+    for (const expected of ['c', 'b', 'a']) {
+        const next = nextButton.emit('click'); await time.flush(); await next;
+        assert.equal(player.api.getPlayback().selectedId, expected, 'next follows API order and wraps');
+        assert.equal(player.api.getPlayback().playing, true, 'next starts the selected track');
+        assert.equal(trackName.textContent, expected === 'c' ? longName.slice(0, -4) : expected);
+        assert.equal(trackName.title, expected === 'c' ? longName : `${expected}.mp3`); audioState(musicRow, musicButton, true);
+    }
+    window.myntPomoMusic.getTracks = player.api.getTracks;
+    player.api.pauseImmediate(); await time.flush();
     const musicStart = musicButton.emit('click'); await time.flush(); await musicStart;
     assert.equal(player.api.getPlayback().playing, true, 'float drives the main player');
-    assert.equal(musicButton.getAttribute('aria-pressed'), 'true');
+    audioState(musicRow, musicButton, true);
     assert.ok(player.nodes.some(node => node.dataset.playing === 'true'), 'main transport reflects float playback');
     await musicButton.emit('click'); await time.flush();
     assert.equal(player.api.getPlayback().playing, false);
     const play = player.api.play('b'); await time.flush(); await play;
-    assert.match(musicButton.textContent, /Pause music: b.mp3/, 'main track/play change reaches float');
-    player.api.pauseImmediate(); assert.match(musicButton.textContent, /Play music/);
+    assert.equal(trackName.textContent, 'b', 'main track change reaches the separate track label');
+    assert.equal(musicButton.getAttribute('aria-label'), 'Pause music: b');
+    player.api.pauseImmediate(); assert.match(musicButton.getAttribute('aria-label'), /Play music/); audioState(musicRow, musicButton, false);
     await time.flush();
     const audio = player.audios.at(-1), originalPlay = audio.play;
     audio.play = async () => { const error = Error('gesture required'); error.name = 'NotAllowedError'; throw error; };
@@ -60,10 +91,40 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     assert.ok(pd.querySelectorAll('.mynt-pomo-note').at(-1).textContent, 'Failed music playback must announce an accessible error in the floating window');
     audio.play = originalPlay;
     await ambientButton.emit('click'); assert.equal(ambientPlaying, true); assert.equal(ambientButton.getAttribute('aria-pressed'), 'true');
+    audioState(ambientRow, ambientButton, true);
+    ambientSelect.value = 'ocean'; await ambientSelect.emit('change');
+    assert.equal(ambientType, 'ocean'); assert.equal(ambientPlays.at(-1), 'ocean', 'changing a playing sound calls the existing API');
+    assert.equal(panelSelect.value, 'ocean'); assert.equal(saved.get('myntAmbientType'), 'ocean');
+    await ambientButton.emit('click'); const playCount = ambientPlays.length;
+    ambientSelect.value = 'campfire'; await ambientSelect.emit('change');
+    assert.equal(ambientPlays.length, playCount, 'changing a stopped sound never starts audio');
+    assert.equal(ambientPlaying, false); assert.equal(panelSelect.value, 'campfire'); assert.equal(saved.get('myntAmbientType'), 'campfire');
+    await document.emit('mynt:ambient-state'); assert.equal(ambientSelect.value, 'campfire', 'stale stopped API type does not overwrite the choice');
+    panelSelect.value = 'whitenoise'; storage.setItem('myntAmbientType', 'whitenoise'); await panelSelect.emit('change');
+    assert.equal(ambientSelect.value, 'whitenoise', 'stopped panel choice reaches the float');
+    await ambientButton.emit('click'); assert.equal(ambientType, 'whitenoise'); audioState(ambientRow, ambientButton, true);
+    panelSelect.value = 'ocean'; await window.myntAmbientAudio.play(panelSelect.value); await panelSelect.emit('change');
+    assert.equal(ambientSelect.value, 'ocean', 'playing panel choice switches and reaches the float');
+    await window.myntAmbientAudio.play('rain');
+    assert.equal(ambientSelect.value, 'rain'); assert.equal(panelSelect.value, 'rain', 'main API playback updates both selectors');
+    ambientSelect.value = 'invalid'; await ambientSelect.emit('change');
+    assert.equal(ambientType, 'rain', 'invalid sound never reaches the API');
+    assert.equal(panelSelect.value, 'rain');
     const retry = musicButton.emit('click'); await time.flush(); await retry;
     assert.equal(player.api.getPlayback().playing, true); assert.equal(pd.querySelectorAll('.mynt-pomo-note').at(-1).textContent, '');
     player.api.pauseImmediate(); await time.flush();
     ambientPlaying = false; await document.emit('mynt:ambient-state'); assert.equal(ambientButton.getAttribute('aria-pressed'), 'false');
+    storage.setItem('myntAmbientType', 'ocean'); await window.emit('storage', { key: 'myntAmbientType', newValue: 'ocean' });
+    assert.equal(ambientSelect.value, 'ocean'); assert.equal(panelSelect.value, 'ocean', 'storage selection reaches both controls');
+    panelSelect.value = 'rain'; storage.setItem('myntAmbientType', 'rain'); await panelSelect.emit('change');
+    // Another tab saved a newer choice while this panel select is stale: storage wins on the next render.
+    storage.setItem('myntAmbientType', 'campfire'); await document.emit('mynt:ambient-state');
+    assert.equal(ambientSelect.value, 'campfire', 'stored ambient choice beats a stale panel select'); assert.equal(panelSelect.value, 'campfire');
+    storage.setItem('myntAmbientType', 'rain'); await document.emit('mynt:ambient-state');
+    const workingPlay = window.myntPomoMusic.play;
+    window.myntPomoMusic.play = async () => ({ selectedId: 'missing', playing: true });
+    await nextButton.emit('click'); assert.ok(pd.querySelectorAll('.mynt-pomo-note').at(-1).textContent, 'a missing requested track cannot be mistaken for successful playback');
+    window.myntPomoMusic.play = workingPlay;
     assert.equal(q('.pomodoroPhaseLabel').textContent, dictionaries.en.pomodoroWork);
     assert.match(q('.pomodoroRoundDisplay').textContent, /Today 2 · Database/);
     today = 3; await document.emit('mynt:pomodoro-complete'); assert.match(q('.pomodoroRoundDisplay').textContent, /Today 3/);
@@ -93,8 +154,20 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     saved.set('selectedLanguage','zh_TW'); document.documentElement.lang = 'zh-TW'; await document.emit('mynt:language-changed');
     assert.equal(q('.pomodoroPhaseLabel').textContent, dictionaries.zh_TW.pomodoroWork);
     assert.equal(q('summary').textContent, '計時選項'); assert.match(q('.pomodoroRoundDisplay').textContent, /資安/);
+    assert.equal(nextButton.getAttribute('aria-label'), '下一首'); assert.ok(nextButton.querySelector('svg'), 'relabel preserves the next icon');
+    assert.equal(musicButton.getAttribute('aria-label'), '播放音樂: b');
+    assert.equal(ambientSelect.getAttribute('aria-label'), '環境音類型');
+    assert.deepEqual(Array.from(ambientSelect.children, option => option.textContent), ['🌧️ 雨聲', '🌊 海浪', '☕ 白噪音', '🪵 柴火']);
+    assert.equal(ambientButton.getAttribute('aria-label'), '播放環境音: 🌧️ 雨聲');
+    const localizedPlay = musicButton.emit('click'); await time.flush(); await localizedPlay;
+    await ambientButton.emit('click'); await document.emit('mynt:language-changed');
+    assert.equal(musicButton.getAttribute('aria-label'), '暫停音樂: b');
+    assert.equal(ambientButton.getAttribute('aria-label'), '暫停環境音: 🌧️ 雨聲');
+    audioState(musicRow, musicButton, true); audioState(ambientRow, ambientButton, true);
+    await musicButton.emit('click'); await time.flush(); await ambientButton.emit('click');
     saved.set('selectedLanguage','fr'); document.documentElement.lang = 'fr'; await document.emit('mynt:language-changed');
     assert.equal(q('.pomodoroPhaseLabel').textContent,'Travail'); assert.equal(q('summary').textContent,dictionaries.en.pomoFloat_options, 'missing locale keys use English');
+    assert.equal(nextButton.getAttribute('aria-label'), 'Next track'); assert.equal(ambientSelect.children[0].textContent, '🌧️ Rain');
     {
     const s = read('scripts/pomodoro.js');
 const listeners={};const phase={};
@@ -146,24 +219,34 @@ assert.equal(ctx.pomodoroPhaseLabel.textContent,'工作','Idle main panel must r
     await firstFrench; await secondFrench; assert.equal(applied, 'fr');
     const counts = () => ['mynt:language-changed','mynt:ambient-state','mynt:focus-changed','mynt:pomodoro-complete'].reduce((n,event) => n + (document.listeners[event]?.length || 0), 0);
     assert.equal(counts(),4); assert.equal(musicSubscriptions,1); assert.equal(timerSubscriptions,1);
+    assert.equal(panelSelect.listeners.change.length, 1); assert.equal(window.listeners.storage.length, 2);
     await popup.close(); assert.equal(counts(),0); assert.equal(musicSubscriptions,0); assert.equal(timerSubscriptions,0);
+    for (const node of [musicButton, nextButton, ambientButton, ambientSelect, panelSelect]) {
+        assert.equal(Object.values(node.listeners).flat().length, 0, 'every audio listener is removed on close');
+    }
+    assert.equal(window.listeners.storage.length, 1, 'float storage listener is removed, original appearance listener remains');
     assert.ok(observers.some(o => o.disconnected));
     pd = await open(); await window.emit('pagehide'); assert.equal(counts(),0); assert.equal(musicSubscriptions,0); assert.equal(timerSubscriptions,0);
     assert.equal(q('.mynt-pomo-primary').disabled,true); assert.match(pd.querySelectorAll('.mynt-pomo-note').at(-1).textContent,/Original tab closed/);
+    assert.equal(q('.mynt-pomo-ambient-select').disabled, true, 'disconnect disables the new selector too');
+    assert.equal(panelSelect.listeners.change.length, 0);
     await popup.close();
     denyLanguage = true; pd = await open();
     assert.equal(q('.pomodoroPhaseLabel').textContent, 'Travail', 'storage read failure falls back to active page language');
     await popup.close(); denyLanguage = false;
     pd = await open();
     const resume = player.api.play('b'); await time.flush(); await resume;
-    assert.equal(q('.mynt-pomo-audio').children[0].getAttribute('aria-pressed'), 'true');
+    assert.equal(q('.mynt-pomo-music-row').querySelector('button').getAttribute('aria-pressed'), 'true');
+    player.action('c','remove').emit('click'); await time.flush();
     player.action('b','remove').emit('click'); await time.flush();
     assert.equal(player.api.getPlayback().playing, false, 'deleting a playing track stops the existing player');
-    assert.match(q('.mynt-pomo-audio').children[0].textContent, /a.mp3/, 'deletion selects and reflects the surviving track');
+    assert.equal(q('.mynt-pomo-track-name').textContent, 'a', 'deletion selects and reflects the surviving track');
+    assert.equal(q('.mynt-pomo-next').hidden, true, 'one remaining track hides next');
     await popup.close();
     // No configured local tracks: hide the music transport, preserve ambient audio.
     const emptyTime = fixture.clock(), empty = await fixture.tab(fixture.sharedStore(emptyTime), emptyTime);
-    window.myntPomoMusic = empty.api; pd = await open(); assert.equal(q('.mynt-pomo-audio').children[0].hidden,true);
+    window.myntPomoMusic = empty.api; pd = await open(); assert.equal(q('.mynt-pomo-music-row').hidden,true);
+    assert.equal(q('.mynt-pomo-ambient-row').hidden, false);
     await popup.close();
     pd = await open();
     const beforeQueuedStart = JSON.stringify(timer.getState());
@@ -189,17 +272,22 @@ assert.equal(ctx.pomodoroPhaseLabel.textContent,'工作','Idle main panel must r
     const pipNote = pd.querySelectorAll('.mynt-pomo-note').at(-1);
     const ambientToggle = window.myntAmbientAudio.toggle;
     window.myntAmbientAudio.toggle = async () => false;
-    await q('.mynt-pomo-audio').children[1].emit('click'); await new Promise(setImmediate);
+    await q('.mynt-pomo-ambient-row').querySelector('button').emit('click'); await new Promise(setImmediate);
     assert.ok(pipNote.textContent,'ambient false result exposes an error too');
     window.myntAmbientAudio.toggle = ambientToggle;
-    await q('.mynt-pomo-audio').children[1].emit('click'); await new Promise(setImmediate);
+    await q('.mynt-pomo-ambient-row').querySelector('button').emit('click'); await new Promise(setImmediate);
     assert.equal(pipNote.textContent,'','successful ambient retry clears the error');
-    const lateMusic = q('.mynt-pomo-audio').children[0].emit('click'); await popup.close();
+    const lateMusic = q('.mynt-pomo-music-row').querySelector('button').emit('click'); await popup.close();
     rejectPendingMusic(Error('late music rejection')); await lateMusic;
     assert.equal(pipNote.textContent,'','a rejection after close cannot mutate the detached window status');
     assert.equal(counts(),0); assert.equal(musicSubscriptions,0); assert.equal(timerSubscriptions,0);
     player.close(); empty.close();
     // Real NodeList has no .at(); the synthetic DOM returns arrays, so guard the shipped source directly.
     assert.doesNotMatch(read('scripts/pomodoro-float.js'), /querySelectorAll\([^)]*\)\.(at|find|map|filter)\(/, 'NodeList has no array methods in real browsers');
-    console.log('FLOAT_SYNC_OK: music/ambient both directions, shared wording, live today/subject, language relabel/loading/fallback, strict durations/countdown preservation, close/reload cleanup');
+    const css = read('styles/pomodoro-float.css');
+    assert.match(css, /width: max\(44px, 2\.75rem\); height: max\(44px, 2\.75rem\)/, 'audio icon targets never shrink below 44px');
+    assert.match(css, /min-height: max\(44px, 2\.75rem\)/, 'native sound selector keeps its touch target');
+    assert.match(css, /html\.mynt-pomo-float-root\.myntHighContrast \.mynt-pomo-equalizer i \{ animation: none; \}/);
+    assert.match(css, /@media \(prefers-reduced-motion: reduce\), \(forced-colors: active\) \{ \.mynt-pomo-equalizer i \{ animation: none; \} \}/);
+    console.log('FLOAT_SYNC_OK: separate extension-free title/full-name tooltip, ordered next/wrap/single-track hiding, music/ambient both directions, stopped/playing sound choice and panel/storage sync, SVG/ARIA/playing indicator, language relabel/fallback, strict durations/countdown preservation, complete audio listener cleanup');
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => clearTimeout(watchdog));

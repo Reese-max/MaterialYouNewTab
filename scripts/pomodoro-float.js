@@ -31,7 +31,10 @@
         round: ['Rounds', '輪數'], today: ['Today', '今日'],
         workMinutes: ['Work Duration', '工作時間'], shortBreakMinutes: ['Short Break', '短休息'], longBreakMinutes: ['Long Break', '長休息'],
         durationError: ['Enter whole minutes: work 1–120; breaks 1–60.', '請輸入整數分鐘：工作 1–120；休息 1–60。'],
-        musicPlay: ['Play music', '播放音樂'], musicPause: ['Pause music', '暫停音樂'], ambientPlay: ['Play ambient audio', '播放環境音'], ambientPause: ['Pause ambient audio', '暫停環境音'], ready: ['Saved on this device only.', '僅儲存在此裝置。'], missing: ['Choose a local image first.', '請先選擇本機圖片。']
+        musicPlay: ['Play music', '播放音樂'], musicPause: ['Pause music', '暫停音樂'], musicNext: ['Next track', '下一首'],
+        ambientPlay: ['Play ambient audio', '播放環境音'], ambientPause: ['Pause ambient audio', '暫停環境音'], ambientType: ['Ambient sound type', '環境音類型'],
+        ambient_rain: ['🌧️ Rain', '🌧️ 雨聲'], ambient_ocean: ['🌊 Ocean', '🌊 海浪'], ambient_whitenoise: ['☕ White noise', '☕ 白噪音'], ambient_campfire: ['🪵 Campfire', '🪵 柴火'],
+        ready: ['Saved on this device only.', '僅儲存在此裝置。'], missing: ['Choose a local image first.', '請先選擇本機圖片。']
     };
     function language() {
         let saved;
@@ -594,38 +597,98 @@
         const optionsNote = el(doc, 'p', t('note'), 'mynt-pomo-note');
         options.append(taskLabel, durations, durationError, secondary, optionsNote);
         const audioRow = el(doc, 'div', '', 'mynt-pomo-audio');
+        const musicRow = el(doc, 'div', '', 'mynt-pomo-music-row');
+        const ambientRow = el(doc, 'div', '', 'mynt-pomo-ambient-row');
         const music = window.myntPomoMusic;
         const ambient = window.myntAmbientAudio;
+        const panelAmbientSelect = document.getElementById('pomodoroAmbientSelect');
+        const ambientTypes = ['rain', 'ocean', 'whitenoise', 'campfire'];
+        const ambientChoice = () => {
+            let saved;
+            try { saved = localStorage.getItem('myntAmbientType'); } catch (_) { /* use the panel or player */ }
+            // Storage first: another tab may have changed the choice while this tab's panel select went stale.
+            return [saved, panelAmbientSelect?.value, ambient?.getState().type].find(type => ambientTypes.includes(type)) || 'rain';
+        };
+        const audioButton = (className, path, action) => {
+            const node = el(doc, 'button', '', className); node.type = 'button'; node.append(icon(path));
+            listen(node, 'click', action); return node;
+        };
+        const equalizer = () => {
+            const node = el(doc, 'span', '', 'mynt-pomo-equalizer'); node.setAttribute('aria-hidden', 'true');
+            node.append(el(doc, 'i'), el(doc, 'i'), el(doc, 'i')); return node;
+        };
         let musicBusy = false;
-        const musicButton = button(doc, 'musicPlay', async () => {
+        async function controlMusic(next = false) {
             if (musicBusy || disconnected || win.closed) return;
             musicBusy = true;
             try {
-                if (music.getPlayback().playing) music.pauseImmediate();
-                else if (!(await music.play())?.playing) { setNote('audioError'); return; }
+                if (!next && music.getPlayback().playing) music.pauseImmediate();
+                else {
+                    const tracks = music.getTracks(), selected = music.getPlayback().selectedId;
+                    const index = tracks.findIndex(track => track.id === selected);
+                    const id = tracks[next ? (index + 1) % tracks.length : Math.max(0, index)]?.id;
+                    const result = id && await music.play(id);
+                    if (!result?.playing || result.selectedId !== id) { setNote('audioError'); return; }
+                }
                 if (noteKey === 'audioError') setNote('');
             } catch (_) { setNote('audioError'); }
             finally { musicBusy = false; renderAudio(); }
-        });
-        const ambientButton = button(doc, 'ambientPlay', () => {
+        }
+        const musicButton = audioButton('mynt-pomo-audio-toggle', playPath, () => controlMusic());
+        const nextButton = audioButton('mynt-pomo-next', 'M6 18l8.5-6L6 6v12zM16 6v12h2V6z', () => controlMusic(true));
+        const trackText = el(doc, 'div', '', 'mynt-pomo-track');
+        const trackName = el(doc, 'span', '', 'mynt-pomo-track-name'), musicIndicator = equalizer();
+        trackText.append(trackName, musicIndicator); musicRow.append(musicButton, trackText, nextButton);
+        const ambientSelect = el(doc, 'select', '', 'mynt-pomo-ambient-select');
+        for (const type of ambientTypes) {
+            const option = el(doc, 'option'); option.value = type; ambientSelect.append(option);
+        }
+        async function controlAmbient(action) {
             if (disconnected || win.closed) return;
-            Promise.resolve().then(() => ambient.toggle(document.getElementById('pomodoroAmbientSelect')?.value || localStorage.getItem('myntAmbientType') || 'rain')).then(result => {
-                if (result === false) setNote('audioError');
+            try {
+                if (await action() === false) setNote('audioError');
                 else if (noteKey === 'audioError') setNote('');
-            }).catch(() => setNote('audioError'));
+            } catch (_) { setNote('audioError'); }
+            finally { renderAudio(); }
+        }
+        const ambientButton = audioButton('mynt-pomo-audio-toggle', playPath, () => controlAmbient(() => ambient.toggle(ambientChoice())));
+        listen(ambientSelect, 'change', () => controlAmbient(() => {
+            const type = ambientSelect.value;
+            if (!ambientTypes.includes(type)) throw Error('Invalid ambient type');
+            localStorage.setItem('myntAmbientType', type);
+            if (panelAmbientSelect) panelAmbientSelect.value = type;
+            if (ambient.getState().playing) return ambient.play(type);
+        }));
+        if (panelAmbientSelect) listen(panelAmbientSelect, 'change', renderAudio);
+        listen(window, 'storage', event => {
+            if (event.key !== 'myntAmbientType' && event.key !== null) return;
+            if (panelAmbientSelect && ambientTypes.includes(event.newValue)) panelAmbientSelect.value = event.newValue;
+            renderAudio();
         });
-        audioRow.append(musicButton, ambientButton);
+        const ambientIndicator = equalizer(); ambientRow.append(ambientButton, ambientSelect, ambientIndicator);
+        audioRow.append(musicRow, ambientRow);
+        function renderTransport(row, button, indicator, playing, label) {
+            row.classList.toggle('is-playing', !!playing); indicator.hidden = !playing;
+            button.firstChild.firstChild.setAttribute('d', playing ? pausePath : playPath);
+            button.setAttribute('aria-label', label); button.title = label;
+            button.setAttribute('aria-pressed', String(!!playing));
+        }
         function renderAudio() {
             if (disconnected || win.closed) return;
-            const state = music?.getPlayback(), track = music?.getTracks().find(item => item.id === state?.selectedId);
-            musicButton.hidden = !track;
-            const label = t(state?.playing ? 'musicPause' : 'musicPlay');
-            musicButton.textContent = `${label}: ${track?.name || ''}`; musicButton.title = musicButton.textContent;
-            musicButton.setAttribute('aria-label', musicButton.textContent); musicButton.setAttribute('aria-pressed', String(!!state?.playing));
-            ambientButton.hidden = !ambient;
-            ambientButton.textContent = t(ambient?.getState().playing ? 'ambientPause' : 'ambientPlay');
-            ambientButton.setAttribute('aria-pressed', String(!!ambient?.getState().playing));
-            audioRow.hidden = musicButton.hidden && ambientButton.hidden;
+            const state = music?.getPlayback(), tracks = music?.getTracks() || [];
+            const track = tracks.find(item => item.id === state?.selectedId) || tracks[0];
+            musicRow.hidden = !tracks.length; nextButton.hidden = tracks.length < 2;
+            trackName.textContent = (track?.name || '').replace(/\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm)$/i, '');
+            trackName.title = track?.name || '';
+            renderTransport(musicRow, musicButton, musicIndicator, state?.playing, `${t(state?.playing ? 'musicPause' : 'musicPlay')}: ${trackName.textContent}`);
+            nextButton.title = t('musicNext'); nextButton.setAttribute('aria-label', t('musicNext'));
+            ambientRow.hidden = !ambient;
+            const ambientState = ambient?.getState(), type = ambientState?.playing && ambientTypes.includes(ambientState.type) ? ambientState.type : ambientChoice();
+            if (panelAmbientSelect) panelAmbientSelect.value = type;
+            ambientSelect.value = type; ambientSelect.setAttribute('aria-label', t('ambientType'));
+            for (const option of ambientSelect.children) option.textContent = t('ambient_' + option.value);
+            renderTransport(ambientRow, ambientButton, ambientIndicator, ambientState?.playing, `${t(ambientState?.playing ? 'ambientPause' : 'ambientPlay')}: ${t('ambient_' + type)}`);
+            audioRow.hidden = musicRow.hidden && ambientRow.hidden;
         }
         main.append(audioRow, options, note); doc.body.append(main);
         const render = state => {
@@ -658,7 +721,7 @@
             doc.title = heading.textContent = t('float'); summary.textContent = t('options'); taskCaption.textContent = task.placeholder = t('task');
             for (const button of main.querySelectorAll('button')) {
                 const key = button.getAttribute('data-pomo-label');
-                if (button === toggle || button === musicButton || button === ambientButton) continue;
+                if (button === toggle || button === musicButton || button === ambientButton || button === nextButton) continue;
                 if (button === reset) { button.title = t('reset'); button.setAttribute('aria-label', t('reset')); }
                 else if (key) button.textContent = t(key);
             }
@@ -692,7 +755,7 @@
             cleanup();
             if (!win.closed && ordinary) {
                 setNote('disconnected');
-                for (const field of main.querySelectorAll('button,input')) if (field !== close) field.disabled = true;
+                for (const field of main.querySelectorAll('button,input,select')) if (field !== close) field.disabled = true;
                 if (floatVideo) floatVideo.pause();
             }
         };
