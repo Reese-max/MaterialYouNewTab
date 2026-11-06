@@ -19,7 +19,7 @@ const definitions=[
  ['mynt_language_update','Preview language change requirements; cannot reload or refetch quotes through MCP.','language',{language:en(LOCALES)}]
 ];
 const tools=definitions.map(([name,description,domain,patch])=>({name,description,readOnly:!patch,annotations:{readOnlyHint:!patch,destructiveHint:false,openWorldHint:false},inputSchema:obj(patch?{...patch,expectedRevision:{type:'string',pattern:'^[a-f0-9]{64}$',maxLength:64},requestId:str(100)}:{},patch?['expectedRevision']:[])}));
-const KEY={clock:['clocktype','hourformat','greetingEnabled','myntGreetingName','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField','greetingField'],search:['showShortcutSwitch','aiModeIconVisible','motivationalQuotesVisible'],ai:['aiToolsSettings','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
+const KEY={clock:['clocktype','hourformat','greetingEnabled','myntGreetingName','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField','greetingField'],search:['showShortcutSwitch','aiModeIconVisible','motivationalQuotesVisible'],ai:['aiToolsSettings','aiToolsCustom','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v)&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
 function fail(code,message){const error=Error(message);error.code=code;throw error;}
 function validate(v,s,path='args'){
@@ -54,7 +54,8 @@ async function execute(name,args={},context={}){
  try{
   const def=definitions.find(v=>v[0]===name),tool=tools.find(v=>v.name===name);if(!def)fail('UNKNOWN_TOOL','Unknown preferences tool');validate(args,tool.inputSchema);
   const domain=def[2],storage=context.storage||root.localStorage;if(!storage)fail('UNAVAILABLE','Local storage unavailable');
-  const expected=KEY[domain].map(key=>({key,value:storage.getItem(key)}));if(expected.some(v=>v.value!==null&&v.value.length>4096))fail('INVALID_STORAGE','Oversized preference preserved');
+  // Three 100 KiB SVG uploads can expand to about 900 KiB after URL encoding.
+  const expected=KEY[domain].map(key=>({key,value:storage.getItem(key)}));if(expected.some(v=>v.value!==null&&v.value.length>(v.key==='aiToolsCustom'?1024*1024:4096)))fail('INVALID_STORAGE','Oversized preference preserved');
   const raw=Object.fromEntries(expected.map(v=>[v.key,v.value])),current=get(domain,raw),rev=await revision(expected,context);
   context.assertAccess?.();if(tool.readOnly)return{ok:true,revision:rev,data:current};
   if(args.expectedRevision!==rev)fail('CONFLICT','Preferences changed; read them again');

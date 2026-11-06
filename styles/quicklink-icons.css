@@ -1,0 +1,59 @@
+/* Shared icons inherit the chip accent; user text is always a text node. */
+.quicklinkIcon { display: inline-flex; width: 100%; height: 100%; align-items: center; justify-content: center; object-fit: contain; vertical-align: middle; }
+.quicklinkIcon-icon { color: var(--darkColor-blue, #435f91); }
+.shortcutLogoContainer, .tIcon, .quicklinkIconPreview > :first-child, .quicklinkChoosePreview, .aiToolCurrentIcon, .quicklinkSwatchPreview { container-type: size; }
+.quicklinkIcon-text { box-sizing: border-box; border-radius: 25%; font: 700 .8em/1 system-ui, sans-serif; overflow: hidden; }
+.quicklinkIcon-emoji { font: 1em/1 "Segoe UI Emoji", "Apple Color Emoji", sans-serif; }
+.quicklinkChooseIcon { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid currentColor; border-radius: 18px; background: transparent; color: inherit; cursor: pointer; align-self: start; text-align: start; overflow-wrap: anywhere; }
+.quicklinkChoosePreview, .aiToolCurrentIcon { display: inline-flex; flex: 0 0 24px; width: 24px; height: 24px; }
+.quicklinkChoosePreview > img, .quicklinkChoosePreview > svg, .aiToolCurrentIcon > svg { width: 100%; height: 100%; object-fit: contain; }
+.quicklinkIconDialog { box-sizing: border-box; width: min(540px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; padding: 20px; border: 1px solid currentColor; border-radius: 24px; color: var(--textColorDark-blue, #1b3041); background: var(--bg-color-blue, #bbd6fd); }
+.quicklinkIconDialog::backdrop { background: rgb(0 0 0 / .45); }
+.quicklinkIconDialog h3 { margin: 0 0 16px; }
+.quicklinkIconPreview { box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: fit-content; max-width: 100%; padding: 10px 16px; margin-block-end: 16px; border-radius: 24px; background: color-mix(in srgb, currentColor 10%, transparent); overflow-wrap: anywhere; }
+.quicklinkIconPreview > :first-child { flex: 0 0 28px; width: 28px; height: 28px; }
+.quicklinkIconPreview svg, .quicklinkIconPreview img { width: 100%; height: 100%; object-fit: contain; }
+.quicklinkIconDialog button, .quicklinkIconDialog input { box-sizing: border-box; min-width: 44px; min-height: 44px; font: inherit; }
+.quicklinkIconDialog button { border: 1px solid transparent; border-radius: 12px; padding: 8px; color: inherit; background: color-mix(in srgb, currentColor 10%, transparent); cursor: pointer; }
+.quicklinkIconDialog .quicklinkIcon-icon { color: inherit; }
+.quicklinkIconDialog :focus-visible, .quicklinkChooseIcon:focus-visible, .aiToolEdit:focus-visible, .aiToolCustomFields :focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+.quicklinkIconTabs { display: flex; flex-wrap: wrap; gap: 4px; margin-block-end: 12px; }
+.quicklinkIconTabs [aria-selected="true"], .quicklinkIconGrid [aria-pressed="true"] { border-color: currentColor; box-shadow: inset 0 0 0 1px currentColor; }
+.quicklinkIconPanel[hidden] { display: none; }
+.quicklinkIconPanel label, .aiToolCustomFields label { display: flex; flex-direction: column; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
+.quicklinkIconPanel { min-height: 100px; }
+.quicklinkIconPanel input:not([type="color"]) { box-sizing: border-box; width: 100%; min-width: 0; padding: 8px; border: 1px solid currentColor; border-radius: 8px; background: color-mix(in srgb, currentColor 10%, transparent); color: inherit; }
+.quicklinkIconGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 6px; }
+.quicklinkIconGrid button { display: flex; align-items: center; justify-content: center; }
+.quicklinkIconGrid svg { width: 28px; height: 28px; }
+.quicklinkIconSwatches { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 10px; }
+.quicklinkIconSwatches button { border: 1px solid currentColor; }
+.quicklinkSwatchPreview { display: block; width: 28px; height: 28px; }
+.quicklinkIconActions { display: flex; justify-content: end; flex-wrap: wrap; gap: 10px; }
+.quicklinkIconError, .aiToolCustomError { margin-block: 8px; overflow-wrap: anywhere; }
+.quicklinkIconError:empty, .aiToolCustomError:empty { display: none; }
+#aiToolsSettingsModal { box-sizing: border-box; width: min(600px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; }
+#aiToolsSettingsModal .ai-tools-list { max-height: min(65dvh, 540px); }
+#aiToolsSettingsModal .ai-tools-list #aiToolsForm .ai-tool-option { flex-wrap: wrap; gap: 8px; }
+.aiToolCustomFields { display: grid; gap: 10px; flex: 1 0 100%; min-width: 0; }
+.aiToolCustomFields[hidden] { display: none; }
+.aiToolEdit { min-width: 44px; min-height: 44px; border: 1px solid currentColor; border-radius: 12px; padding: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.aiToolCustomFields input { box-sizing: border-box; min-height: 44px; width: 100%; padding: 8px; border: 1px solid currentColor; border-radius: 8px; background: transparent; color: inherit; font: inherit; }
+#aiToolsForm .ai-tool-reorder button, #aiToolsForm .ai-tool-controls label { min-width: 44px; min-height: 44px; }
+#aiToolsForm .ai-tool-controls { display: flex; align-items: center; flex: 1; min-width: 0; gap: 6px; }
+#aiToolsForm .ai-tool-controls label { display: flex; align-items: center; overflow-wrap: anywhere; }
+#aiToolsForm .ai-tool-reorder { flex-shrink: 0; }
+.black-theme .quicklinkIconDialog { color: var(--textColorDark-dark, #d6d6d6); background: var(--bg-color-dark, #171615); }
+.black-theme .quicklinkIconDialog button, .black-theme .quicklinkIconDialog input, .black-theme .quicklinkIconPreview { background: var(--accentLightTint-dark, #3c3c3c); color: inherit; }
+.black-theme .quicklinkIcon-icon { color: var(--textColorDark-dark, #d6d6d6); }
+@media (max-width: 500px) {
+    #aiToolsSettingsModal { padding: 16px; }
+    .quicklinkIconDialog { padding: 16px; }
+    .quicklinkIconTabs button { flex: 1 0 auto; }
+}
+@media (forced-colors: active) {
+    .quicklinkIconDialog, .quicklinkIconDialog button, .quicklinkChooseIcon, .aiToolCustomFields input { border: 1px solid ButtonText; }
+    .quicklinkIconTabs [aria-selected="true"], .quicklinkIconGrid [aria-pressed="true"] { outline: 2px solid Highlight; }
+    .quicklinkIcon-text { background: Canvas !important; color: CanvasText !important; border: 1px solid CanvasText; }
+    .quicklinkIcon-icon { color: CanvasText; }
+}

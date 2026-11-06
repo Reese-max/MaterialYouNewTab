@@ -166,6 +166,7 @@ function createDocument() {
     document.documentElement.appendChild(document.body);
     document.activeElement = document.body;
     document.createElement = tag => new Element(tag, document);
+    document.createElementNS = (_ns, tag) => new Element(tag, document);
     document.createDocumentFragment = () => new Element("fragment", document);
     document.getElementById = id => document.documentElement.all().find(node => node.id === id) || null;
     document.querySelector = selector => document.documentElement.querySelector(selector);
@@ -246,6 +247,7 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
     context.window = context;
     vm.runInContext(read("scripts/storage-sync.js"), context);
     vm.runInContext(read("scripts/local-recovery-controls.js"), context);
+    vm.runInContext(read("scripts/quicklink-icons.js"), context);
     vm.runInContext(read("scripts/shortcuts.js"), context, { filename: "scripts/shortcuts.js" });
     document.emit("DOMContentLoaded");
     return {

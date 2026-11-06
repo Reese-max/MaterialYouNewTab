@@ -393,10 +393,16 @@ async function execute(name,args={},context={}) {
  } catch(error) {const known=['CONFLICT','STORAGE_FAILURE','ROLLBACK_FAILED','INVALID_TRANSACTION','ACCESS_REVOKED','EDITOR_BUSY','UNAVAILABLE'];const code=error.code||(known.includes(error.message)?error.message:'invalid_storage');const message=error.code||known.includes(error.message)?error.message:'Data validation failed; existing data preserved';return {ok:false,code,error:{code:code.toUpperCase(),message},message};}
 }
 function validateBackupStorage(saved) {
+ if(Object.hasOwn(saved,'aiToolsCustom')) {
+  const icons=root.MyntQuicklinkIcons||(node&&require('./quicklink-icons.js'));
+  if(!icons)fail('invalid_storage','AI icon validator unavailable');
+  icons.customOverrides(parse(saved.aiToolsCustom),true);
+ }
+
  // Other structured settings have tolerant on-device normalizers. At the
  // import boundary malformed JSON must never become a silent default/reset.
  if(Object.hasOwn(saved,'weatherLocation')&&(typeof saved.weatherLocation!=='string'||saved.weatherLocation.length>512))fail('invalid_storage','Invalid weather location');
- for(const key of ['pomodoroState','myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','myntAdaptiveBackground','aiToolsSettings','myntFocusHistory','weatherParsedData','myntWallpaperHiddenBuiltins']) {
+ for(const key of ['pomodoroState','myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','myntAdaptiveBackground','aiToolsSettings','aiToolsCustom','myntFocusHistory','weatherParsedData','myntWallpaperHiddenBuiltins']) {
   if(!Object.hasOwn(saved,key))continue;
   const value=parse(saved[key]);
   if(value===null||typeof value!=='object')fail('invalid_storage','Invalid structured setting');
