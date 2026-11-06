@@ -834,6 +834,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (method === "start" || method === "pause") return timer[method](gate);
                 return timer[method](value, gate);
             },
+            getContext: () => ({ sessionsToday: getSessionsToday() }),
             getState: timer.getState,
             subscribe: timer.subscribe,
             // 首頁精簡卡沿用計時操作，不自動展開面板。
@@ -847,6 +848,7 @@ document.addEventListener("DOMContentLoaded", function () {
             isRunning: () => pomodoroState.isRunning === true
         };
 
+        document.addEventListener("mynt:language-changed", updatePomodoroUI);
         initPomodoro();
         timer.subscribe(state => {
             if (state.isRunning && !pomodoroState.isRunning && state.phase === "work" && getPomodoroBool(KEYS.ambientAuto, true)) {
