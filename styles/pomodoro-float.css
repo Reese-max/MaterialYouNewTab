@@ -260,15 +260,36 @@ html.mynt-pomo-float-root { font-size: calc(clamp(16px, min(5vw, 3.5vh), 26px) *
     .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
 }
 
-/* Shared audio transports keep the compact window to one extra row. */
-.mynt-pomo-audio { display: flex; gap: 6px; width: min(100%, 23.75rem); min-width: 0; }
-.mynt-pomo-audio[hidden], .mynt-pomo-audio button[hidden] { display: none; }
-.mynt-pomo-audio button { flex: 1 1 0; min-width: 0; min-height: 44px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .75rem; }
+/* Separate transports leave the full available width for track and sound names. */
+.mynt-pomo-audio { display: grid; gap: .375rem; width: min(100%, 26rem); min-width: 0; flex: 0 0 auto; text-align: start; }
+.mynt-pomo-music-row, .mynt-pomo-ambient-row { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.mynt-pomo-ambient-row { position: relative; }
+.mynt-pomo-audio button {
+    display: grid; place-items: center; flex: 0 0 auto; width: max(44px, 2.75rem); height: max(44px, 2.75rem);
+    min-height: 44px; padding: .5rem; border-radius: 50%;
+}
+.mynt-pomo-track { display: flex; align-items: center; gap: .5rem; flex: 1; min-width: 0; }
+.mynt-pomo-track-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8125rem; }
+.mynt-pomo-ambient-select {
+    flex: 1; min-width: 0; max-width: 100%; min-height: max(44px, 2.75rem); border: 1px solid var(--pomo-border);
+    border-radius: .875rem; padding: .375rem .5rem; font: inherit; font-size: .8125rem; background: var(--pomo-surface); color: var(--pomo-fg);
+}
+.mynt-pomo-audio .is-playing .mynt-pomo-audio-toggle { background: var(--pomo-accent); color: var(--pomo-on-accent); border-color: var(--pomo-accent); }
+.mynt-pomo-equalizer { display: flex; align-items: center; gap: .125rem; flex: 0 0 auto; height: 1rem; color: var(--pomo-accent); }
+.mynt-pomo-equalizer i { width: .1875rem; height: 70%; background: currentColor; transform-origin: center; animation: myntPomoEqualizer .9s ease-in-out infinite alternate; }
+.mynt-pomo-ambient-row .mynt-pomo-equalizer { position: absolute; inset-inline-end: 1.75rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.mynt-pomo-ambient-row.is-playing .mynt-pomo-ambient-select { padding-inline-end: 3rem; }
+.mynt-pomo-equalizer i:nth-child(2) { height: 100%; animation-delay: -.3s; }
+.mynt-pomo-equalizer i:nth-child(3) { height: 45%; animation-delay: -.6s; }
+@keyframes myntPomoEqualizer { to { transform: scaleY(.4); } }
+html.mynt-pomo-float-root.myntHighContrast .mynt-pomo-equalizer i { animation: none; }
+@media (prefers-reduced-motion: reduce), (forced-colors: active) { .mynt-pomo-equalizer i { animation: none; } }
 .mynt-pomo-durations { display: grid; gap: 8px; }
 .mynt-pomo-durations label { min-width: 0; }
 .mynt-pomo-durations input { width: 100%; min-width: 0; min-height: 44px; }
 .mynt-pomo-float .pomodoroRoundDisplay { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-height: 480px) {
-    .mynt-pomo-float:has(.mynt-pomo-audio:not([hidden])) .mynt-pomo-card { --pomo-ring-size: min(38vh, 160px); }
+    .mynt-pomo-float:has(.mynt-pomo-audio:not([hidden])) .mynt-pomo-card { --pomo-ring-size: min(30vh, 128px); }
+    .mynt-pomo-float:has(.mynt-pomo-audio:not([hidden])) .mynt-pomo-card:has(.mynt-pomo-task-preview:not([hidden])) { --pomo-ring-size: min(24vh, 100px); }
     .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
 }

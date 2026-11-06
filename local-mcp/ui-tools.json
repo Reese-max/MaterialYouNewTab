@@ -75,9 +75,16 @@
           "type": "string",
           "enum": [
             "rain",
+            "thunder",
             "ocean",
+            "stream",
+            "wind",
+            "forest",
+            "night",
+            "campfire",
             "whitenoise",
-            "campfire"
+            "pink",
+            "brown"
           ]
         },
         "volume": {

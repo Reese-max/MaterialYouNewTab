@@ -5,255 +5,243 @@
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
 (function () {
-    let audioCtx = null;
-    let masterGain = null;
-    let activeNodes = [];
-    let currentType = "rain";
-    let isPlaying = false;
-    let stopTimer = null;
-    let playRevision = 0;
-
+    'use strict';
+    const types = Object.freeze(['rain', 'thunder', 'ocean', 'stream', 'wind', 'forest', 'night', 'campfire', 'whitenoise', 'pink', 'brown']);
+    // Balance the volume-1 Chromium baseline before the unchanged master limiter.
+    const typeGains = Object.freeze({
+        rain: 1, thunder: 1, ocean: .45, stream: .8, wind: 1.1,
+        forest: 3.5, night: 3, campfire: .5, whitenoise: .4, pink: .4, brown: .35
+    });
+    const buffers = new Map(), voices = new Set();
+    let audioCtx, masterGain, limiter, currentVoice, playRevision = 0, isPlaying = false;
+    const savedType = localStorage.getItem('myntAmbientType');
+    let currentType = types.includes(savedType) ? savedType : 'rain';
+    // While stopped the panel/float choice lives only in storage; read it so state and toggle follow it.
+    const storedType = () => { try { const v = localStorage.getItem('myntAmbientType'); return types.includes(v) ? v : currentType; } catch (_) { return currentType; } };
+    const random = (min, max) => min + Math.random() * (max - min);
+    function volume() {
+        const raw = localStorage.getItem('myntAmbientVolume'), value = raw === null ? .5 : Number(raw);
+        return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : .5;
+    }
     function getAudioContext() {
         if (!audioCtx) {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                audioCtx = new AudioContextClass();
-                masterGain = audioCtx.createGain();
-                const savedVol = parseFloat(localStorage.getItem("myntAmbientVolume") || "0.5");
-                masterGain.gain.setValueAtTime(savedVol, audioCtx.currentTime);
-                masterGain.connect(audioCtx.destination);
-            }
+            if (AudioContextClass) audioCtx = new AudioContextClass();
         }
         return audioCtx;
     }
-
-    function createNoiseBuffer(durationSec = 5, type = "pink") {
-        const ctx = getAudioContext();
-        if (!ctx) return null;
-        const bufferSize = ctx.sampleRate * durationSec;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-
-        if (type === "white") {
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * 0.15;
-            }
-        } else if (type === "pink") {
-            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-            for (let i = 0; i < bufferSize; i++) {
-                const white = Math.random() * 2 - 1;
-                b0 = 0.99886 * b0 + white * 0.0555179;
-                b1 = 0.99332 * b1 + white * 0.0750759;
-                b2 = 0.96900 * b2 + white * 0.1538520;
-                b3 = 0.86650 * b3 + white * 0.3104856;
-                b4 = 0.55000 * b4 + white * 0.5329522;
-                b5 = -0.7616 * b5 - white * 0.0168980;
-                data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
-                b6 = white * 0.115926;
-            }
-        } else if (type === "brown") {
-            let lastOut = 0.0;
-            for (let i = 0; i < bufferSize; i++) {
-                const white = Math.random() * 2 - 1;
-                data[i] = (lastOut + (0.02 * white)) / 1.02;
-                lastOut = data[i];
-                data[i] *= 0.5;
-            }
+    function output(ctx) {
+        if (masterGain) return;
+        masterGain = ctx.createGain(); masterGain.gain.setValueAtTime(volume(), ctx.currentTime);
+        limiter = ctx.createDynamicsCompressor();
+        for (const [key, value] of Object.entries({ threshold: -12, knee: 6, ratio: 20, attack: .003, release: .25 })) limiter[key].setValueAtTime(value, ctx.currentTime);
+        masterGain.connect(limiter); limiter.connect(ctx.destination);
+    }
+    function noise(ctx, colour) {
+        if (buffers.has(colour)) return buffers.get(colour);
+        const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 12), ctx.sampleRate), data = buffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, brown = 0, sum = 0;
+        for (let i = 0; i < data.length; i++) {
+            const white = random(-1, 1);
+            if (colour === 'pink') {
+                b0 = .99886 * b0 + white * .0555179; b1 = .99332 * b1 + white * .0750759;
+                b2 = .969 * b2 + white * .153852; b3 = .8665 * b3 + white * .3104856;
+                b4 = .55 * b4 + white * .5329522; b5 = -.7616 * b5 - white * .016898;
+                data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * .5362) * .11;
+                b6 = white * .115926;
+            } else if (colour === 'brown') {
+                brown = (brown + .02 * white) / 1.02; data[i] = brown * 3.5;
+            } else data[i] = white * .5;
+            sum += data[i];
         }
-        return buffer;
+        const mean = sum / data.length;
+        for (let i = 0; i < data.length; i++) data[i] = Math.max(-.9, Math.min(.9, data[i] - mean));
+        // Crossfade the tail into the first 100ms; looping resumes after that head.
+        const overlap = Math.floor(ctx.sampleRate * .1);
+        for (let i = 0; i < overlap; i++) {
+            const mix = i / (overlap - 1), tail = data.length - overlap + i;
+            data[tail] = data[tail] * (1 - mix) + data[i] * mix;
+        }
+        buffers.set(colour, buffer); return buffer;
     }
-
-    function startRain(ctx) {
-        const buffer = createNoiseBuffer(5, "pink");
-        if (!buffer) return;
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(1000, ctx.currentTime);
-
-        source.connect(filter);
-        filter.connect(masterGain);
-        source.start();
-        activeNodes.push(source, filter);
+    function track(voice, node) { voice.nodes.add(node); return node; }
+    function release(voice, nodes) {
+        for (const node of nodes) {
+            node.onended = null;
+            try { node.stop?.(); } catch (_) { /* already ended */ }
+            node.disconnect(); voice.nodes.delete(node);
+        }
     }
-
-    function startOcean(ctx) {
-        const buffer = createNoiseBuffer(6, "brown");
-        if (!buffer) return;
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(400, ctx.currentTime);
-
-        // LFO for wave modulation
-        const lfo = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        lfo.frequency.setValueAtTime(0.12, ctx.currentTime); // ~8 sec wave period
-        lfoGain.gain.setValueAtTime(300, ctx.currentTime);
-
-        lfo.connect(lfoGain);
-        lfoGain.connect(filter.frequency);
-
-        source.connect(filter);
-        filter.connect(masterGain);
-
-        source.start();
-        lfo.start();
-        activeNodes.push(source, filter, lfo, lfoGain);
+    function dispose(voice) {
+        clearTimeout(voice.timer); clearTimeout(voice.fadeTimer);
+        release(voice, [...voice.nodes]); voices.delete(voice);
+        if (!voices.size && masterGain) { masterGain.disconnect(); limiter.disconnect(); masterGain = limiter = null; }
     }
-
-    function startWhiteNoise(ctx) {
-        const buffer = createNoiseBuffer(4, "pink");
-        if (!buffer) return;
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(3000, ctx.currentTime);
-
-        source.connect(filter);
-        filter.connect(masterGain);
-        source.start();
-        activeNodes.push(source, filter);
+    function gainAt(voice, now) {
+        const f = voice.fade;
+        return f ? f.from + (f.to - f.from) * Math.max(0, Math.min(1, (now - f.start) / (f.end - f.start))) : 0;
     }
-
-    function startCampfire(ctx) {
-        const buffer = createNoiseBuffer(5, "brown");
-        if (!buffer) return;
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(600, ctx.currentTime);
-
-        source.connect(filter);
-        filter.connect(masterGain);
-        source.start();
-        activeNodes.push(source, filter);
+    function fade(voice, target, seconds) {
+        const now = audioCtx.currentTime, from = gainAt(voice, now);
+        voice.bus.gain.cancelScheduledValues(now); voice.bus.gain.setValueAtTime(from, now);
+        voice.bus.gain.linearRampToValueAtTime(target, now + seconds);
+        voice.fade = { from, to: target, start: now, end: now + seconds };
     }
-
-    function cleanupNodes() {
-        if (activeNodes.length) {
-            activeNodes.forEach(node => {
-                try {
-                    if (typeof node.stop === "function") node.stop();
-                    if (typeof node.disconnect === "function") node.disconnect();
-                } catch (e) {}
+    function retire(voice, seconds) {
+        clearTimeout(voice.timer); clearTimeout(voice.fadeTimer);
+        if (gainAt(voice, audioCtx.currentTime) === 0) { dispose(voice); return; }
+        fade(voice, 0, seconds); voice.fadeTimer = setTimeout(() => dispose(voice), seconds * 1000 + 20);
+    }
+    function filter(voice, type, hz, q = .7, at = audioCtx.currentTime) {
+        const node = track(voice, audioCtx.createBiquadFilter()); node.type = type;
+        node.frequency.setValueAtTime(hz, at); node.Q.setValueAtTime(q, at); return node;
+    }
+    function layer(voice, colour, level, kind = 'lowpass', hz = 6000, q = .7) {
+        const source = track(voice, audioCtx.createBufferSource()), tone = filter(voice, kind, hz, q), amp = track(voice, audioCtx.createGain());
+        source.buffer = noise(audioCtx, colour); source.loop = true; source.loopStart = .1; source.loopEnd = source.buffer.duration;
+        amp.gain.setValueAtTime(level, audioCtx.currentTime); source.connect(tone); tone.connect(amp); amp.connect(voice.bus);
+        source.start(audioCtx.currentTime, random(.1, source.buffer.duration - .1)); return { source, tone, amp };
+    }
+    function envelope(param, at, duration, peak, attack) {
+        param.setValueAtTime(0, at); param.linearRampToValueAtTime(peak, at + attack); param.linearRampToValueAtTime(0, at + duration);
+    }
+    function burst(voice, at, duration, level, kind, hz, attack = .003, colour = 'white', q = .7) {
+        const source = track(voice, audioCtx.createBufferSource()), tone = filter(voice, kind, hz, q, at), amp = track(voice, audioCtx.createGain());
+        source.buffer = noise(audioCtx, colour); envelope(amp.gain, at, duration, level, attack);
+        source.connect(tone); tone.connect(amp); amp.connect(voice.bus); source.onended = () => release(voice, [source, tone, amp]);
+        source.start(at, random(.1, 4)); source.stop(at + duration); return tone;
+    }
+    function chirp(voice, at, duration, hz, endHz, level) {
+        const source = track(voice, audioCtx.createOscillator()), amp = track(voice, audioCtx.createGain());
+        source.type = 'sine'; source.frequency.setValueAtTime(hz, at); source.frequency.exponentialRampToValueAtTime(endHz, at + duration);
+        envelope(amp.gain, at, duration, level, Math.min(.012, duration / 3));
+        source.connect(amp); amp.connect(voice.bus); source.onended = () => release(voice, [source, amp]);
+        source.start(at); source.stop(at + duration);
+    }
+    function every(voice, first, schedule) { voice.events.push({ next: audioCtx.currentTime + first, schedule }); }
+    function drift(voice, bed, low, high, minSeconds = 3, maxSeconds = 7) {
+        every(voice, 0, at => {
+            const duration = random(minSeconds, maxSeconds); bed.amp.gain.linearRampToValueAtTime(random(low, high), at + duration); return duration;
+        });
+    }
+    function rain(voice) {
+        const bed = layer(voice, 'pink', .62, 'bandpass', 1800, .45);
+        layer(voice, 'white', .09, 'highpass', 6500); drift(voice, bed, .43, .75);
+        every(voice, .05, at => {
+            burst(voice, at, random(.012, .045), random(.04, .13), 'bandpass', random(1800, 6000)); return random(.045, .24);
+        });
+    }
+    function synthesize(voice, type) {
+        if (type === 'rain' || type === 'thunder') {
+            rain(voice);
+            if (type === 'thunder') every(voice, random(4, 9), at => {
+                const duration = random(4, 7), tone = burst(voice, at, duration, random(.8, 1.3), 'lowpass', 180, 1.1, 'brown');
+                tone.frequency.linearRampToValueAtTime(65, at + duration); return random(13, 28);
             });
-            activeNodes = [];
-        }
+        } else if (type === 'ocean') {
+            const surf = layer(voice, 'brown', .4, 'lowpass', 450), foam = layer(voice, 'pink', .12, 'bandpass', 1600, .45);
+            layer(voice, 'white', .035, 'lowpass', 4500);
+            every(voice, 0, at => {
+                const duration = random(6, 12), crest = at + duration * .45;
+                for (const [param, low, high] of [[surf.amp.gain, .25, random(1.1, 1.6)], [surf.tone.frequency, 250, random(1200, 2200)], [foam.amp.gain, .08, random(.35, .55)]]) {
+                    param.setValueAtTime(low, at); param.linearRampToValueAtTime(high, crest); param.linearRampToValueAtTime(low, at + duration);
+                }
+                return duration;
+            });
+        } else if (type === 'campfire') {
+            const bed = layer(voice, 'brown', .7, 'lowpass', 420); drift(voice, bed, .5, .9, 2, 5);
+            layer(voice, 'pink', .09, 'bandpass', 1300);
+            every(voice, .02, at => {
+                burst(voice, at, random(.018, .1), random(.2, .6), 'highpass', random(1200, 2600));
+                if (Math.random() < .22) for (let i = 1; i <= 3; i++) burst(voice, at + i * .025, .025, random(.12, .35), 'highpass', 2200);
+                return random(.07, .6);
+            });
+        } else if (type === 'stream') {
+            const bed = layer(voice, 'pink', .65, 'bandpass', 2200, .5); drift(voice, bed, .5, .75, 2, 4); layer(voice, 'brown', .25, 'lowpass', 700);
+            every(voice, .02, at => {
+                const tone = burst(voice, at, random(.04, .13), random(.12, .3), 'bandpass', random(600, 2400), .01, 'white', 5);
+                tone.frequency.exponentialRampToValueAtTime(random(400, 900), at + .08); return random(.025, .12);
+            });
+        } else if (type === 'wind' || type === 'forest') {
+            const bed = layer(voice, 'pink', type === 'wind' ? .7 : .15, 'bandpass', 500, .55);
+            every(voice, 0, at => {
+                const duration = random(4, 9), level = type === 'wind' ? random(.35, .9) : random(.08, .18);
+                bed.amp.gain.linearRampToValueAtTime(level, at + duration); bed.tone.frequency.linearRampToValueAtTime(random(300, 1400), at + duration); return duration;
+            });
+            if (type === 'forest') every(voice, random(.3, 1.5), at => {
+                const hz = random(1800, 3600), count = Math.floor(random(2, 5));
+                for (let i = 0; i < count; i++) chirp(voice, at + i * .16, random(.08, .14), hz, hz * random(1.2, 1.8), random(.045, .09));
+                return random(1.6, 5);
+            });
+        } else if (type === 'night') {
+            layer(voice, 'pink', .08, 'lowpass', 1700);
+            every(voice, .1, at => {
+                const hz = random(4200, 4900), count = Math.floor(random(3, 6));
+                for (let i = 0; i < count; i++) chirp(voice, at + i * .07, .035, hz, hz * .98, random(.035, .065));
+                return random(.65, 1.5);
+            });
+        } else if (type === 'whitenoise') layer(voice, 'white', .65, 'lowpass', 8500);
+        else if (type === 'pink') layer(voice, 'pink', .8, 'lowpass', 14000);
+        else if (type === 'brown') layer(voice, 'brown', 1.2, 'lowpass', 2000);
     }
-
+    function schedule(voice) {
+        const now = audioCtx.currentTime;
+        for (const event of voice.events) {
+            // Skip missed events in a throttled tab rather than replaying the backlog.
+            event.next = Math.max(event.next, now + .015);
+            while (event.next < now + .35) event.next += event.schedule(event.next);
+        }
+        if (voice.events.length) voice.timer = setTimeout(() => schedule(voice), 100);
+    }
+    function notify(error = false) {
+        document.dispatchEvent(new CustomEvent('mynt:ambient-state', { detail: { isPlaying, type: currentType, ...(error ? { error: true } : {}) } }));
+    }
     function stop(immediate = false) {
-        playRevision++;
-        clearTimeout(stopTimer);
-        stopTimer = null;
-        if (!isPlaying && activeNodes.length === 0) return;
-        const ctx = getAudioContext();
-        if (!ctx || immediate) {
-            cleanupNodes();
-            isPlaying = false;
-            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
-            return;
-        }
-
-        if (masterGain) {
-            masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-            stopTimer = setTimeout(() => {
-                stopTimer = null;
-                cleanupNodes();
-                isPlaying = false;
-                document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
-            }, 520);
-        } else {
-            cleanupNodes();
-            isPlaying = false;
-            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType } }));
-        }
+        playRevision++; currentVoice = null; isPlaying = false;
+        for (const voice of [...voices]) immediate ? dispose(voice) : retire(voice, .3);
+        notify();
     }
-
-    async function play(type = currentType) {
-        const revision = ++playRevision;
-        clearTimeout(stopTimer);
-        stopTimer = null;
-        cleanupNodes();
-        isPlaying = false;
+    async function play(type = currentType, gate) {
+        if (!types.includes(type)) return false;
+        const revision = ++playRevision; let voice;
         try {
-            if (!["rain", "ocean", "whitenoise", "campfire"].includes(type)) throw new Error("Invalid ambient type");
-            const ctx = getAudioContext();
-            if (!ctx) throw new Error("Audio unavailable");
-            if (ctx.state !== "running") await ctx.resume();
+            gate?.(); const ctx = getAudioContext(); if (!ctx) throw Error('Audio unavailable');
+            if (ctx.state !== 'running') await ctx.resume();
             if (revision !== playRevision) return false;
-            if (ctx.state !== "running") throw new Error("Browser gesture required");
-
-            currentType = type;
-            localStorage.setItem("myntAmbientType", type);
-
-            const targetVol = parseFloat(localStorage.getItem("myntAmbientVolume") || "0.5");
-            if (masterGain) {
-                masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-                masterGain.gain.linearRampToValueAtTime(targetVol, ctx.currentTime + 0.8);
-            }
-
-            if (type === "rain") startRain(ctx);
-            else if (type === "ocean") startOcean(ctx);
-            else if (type === "whitenoise") startWhiteNoise(ctx);
-            else if (type === "campfire") startCampfire(ctx);
-
-            isPlaying = true;
-            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: true, type: currentType } }));
-            return true;
+            gate?.(); if (ctx.state !== 'running') throw Error('Browser gesture required');
+            if (currentVoice && type === currentType && isPlaying) return true;
+            localStorage.setItem('myntAmbientType', type); output(ctx);
+            voice = { nodes: new Set(), events: [], timer: null, fadeTimer: null };
+            voice.bus = track(voice, ctx.createGain()); voice.bus.gain.setValueAtTime(0, ctx.currentTime); voice.bus.connect(masterGain); voices.add(voice);
+            synthesize(voice, type); schedule(voice);
+            for (const previous of [...voices]) if (previous !== voice && previous.fade?.to !== 0) retire(previous, .45);
+            fade(voice, typeGains[type], .45); currentVoice = voice; currentType = type; isPlaying = true; notify(); return true;
         } catch (error) {
+            if (voice) dispose(voice);
             if (revision !== playRevision) return false;
-            cleanupNodes();
-            isPlaying = false;
-            document.dispatchEvent(new CustomEvent("mynt:ambient-state", { detail: { isPlaying: false, type: currentType, error: true } }));
+            if (!currentVoice) { isPlaying = false; notify(true); }
+            if (gate) throw error;
             return false;
         }
     }
-
-    function setVolume(vol) {
-        const clamped = Math.max(0, Math.min(1, parseFloat(vol)));
-        localStorage.setItem("myntAmbientVolume", String(clamped));
-        if (masterGain && audioCtx) {
-            masterGain.gain.setValueAtTime(clamped, audioCtx.currentTime);
+    function setVolume(value) {
+        const parsed = Number.parseFloat(value); if (!Number.isFinite(parsed)) return;
+        const clamped = Math.max(0, Math.min(1, parsed)); localStorage.setItem('myntAmbientVolume', String(clamped));
+        if (masterGain) {
+            masterGain.gain.cancelScheduledValues(audioCtx.currentTime); masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+            masterGain.gain.linearRampToValueAtTime(clamped, audioCtx.currentTime + .03);
         }
     }
-
-    function toggle(type) {
-        if (isPlaying) stop();
-        else return play(type || currentType);
-    }
-
-    // Expose global API
     globalThis.myntAmbientAudio = {
-        play,
-        getState: () => ({type:currentType, playing:isPlaying && audioCtx?.state==='running', volume:Number(localStorage.getItem('myntAmbientVolume') || .5)}),
+        types, play, stop, setVolume,
+        getState: () => ({ type: isPlaying ? currentType : storedType(), playing: isPlaying && audioCtx?.state === 'running', volume: volume() }),
         async playRemote(type, gate) {
-            if(!['rain','ocean','whitenoise','campfire'].includes(type)||typeof gate!=='function')throw Error('Invalid ambient operation');
-            gate();const ctx=getAudioContext();if(!ctx)throw Error('Audio unavailable');
-            if(ctx.state!=='running')await ctx.resume();
-            gate();if(ctx.state!=='running')throw Error('Browser gesture required');
-            if(!await play(type)){stop(true);throw Error('Browser gesture required');}
+            if (!types.includes(type) || typeof gate !== 'function') throw Error('Invalid ambient operation');
+            if (!await play(type, gate)) throw Error('Browser gesture required');
         },
-        stop,
-
-        toggle,
-        setVolume,
-        getType: () => currentType,
-        isPlaying: () => isPlaying
+        toggle: type => isPlaying ? stop() : play(type || storedType()),
+        getType: () => currentType, isPlaying: () => isPlaying
     };
+    window.addEventListener('pagehide', () => stop(true));
 })();

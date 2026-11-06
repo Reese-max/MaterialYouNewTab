@@ -33,7 +33,7 @@ function context(extra = {}) {
     document.getElementById = id => { if (!nodes.has(id)) nodes.set(id, node()); return nodes.get(id); };
     document.querySelectorAll = () => [];
     document.createElement = () => node(); document.body = node();
-    const c = { document, window: {}, localStorage: store(), console: { ...console, warn() {} }, URL, setTimeout: () => 1, clearTimeout() {},
+    const c = { document, window: { addEventListener() {} }, localStorage: store(), console: { ...console, warn() {} }, URL, setTimeout: () => 1, clearTimeout() {},
         CustomEvent: class { constructor(type, init) { this.type = type; Object.assign(this, init); } }, ...extra };
     document.dispatchEvent = e => document.emit(e.type, e);
     vm.createContext(c);
@@ -169,9 +169,9 @@ test('focus-study#6', async () => {
 
 test('focus-study#8', async () => {
     const tasks = new Map(), sources = []; let seq = 0;
-    function audioNode() { return { gain: { value: .5, setValueAtTime() {}, linearRampToValueAtTime() {} }, frequency: { setValueAtTime() {} }, connect() {}, start() {}, stop() { this.stopped = true; }, disconnect() {} }; }
+    function audioNode() { const param = () => ({ value: .5, setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {}, cancelScheduledValues() {} }); return { gain: param(), frequency: param(), Q: param(), threshold: param(), knee: param(), ratio: param(), attack: param(), release: param(), connect() {}, start() {}, stop(at) { this.stopAt = at; if (at === undefined) this.stopped = true; }, disconnect() {} }; }
     const c = context({ setTimeout: fn => { tasks.set(++seq, fn); return seq; }, clearTimeout: id => tasks.delete(id) });
-    c.window.AudioContext = class { constructor() { this.state = 'running'; this.currentTime = 0; this.sampleRate = 4; } createGain() { return audioNode(); } createBuffer(n, size) { return { getChannelData: () => new Float32Array(size) }; } createBufferSource() { const n = audioNode(); sources.push(n); return n; } createBiquadFilter() { return audioNode(); } createOscillator() { return audioNode(); } };
+    c.window.AudioContext = class { constructor() { this.state = 'running'; this.currentTime = 0; this.sampleRate = 4; } createDynamicsCompressor() { return audioNode(); } createGain() { return audioNode(); } createBuffer(n, size) { return { getChannelData: () => new Float32Array(size) }; } createBufferSource() { const n = audioNode(); sources.push(n); return n; } createBiquadFilter() { return audioNode(); } createOscillator() { return audioNode(); } };
     run(c, read('scripts/ambient-sound.js')); const a = c.myntAmbientAudio;
     await a.play('rain'); a.stop(); await a.play('campfire'); for (const fn of [...tasks.values()]) fn();
     assert.equal(a.isPlaying(), true); assert.ok(!sources.at(-1).stopped);

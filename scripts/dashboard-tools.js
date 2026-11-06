@@ -1148,6 +1148,13 @@ if (typeof document !== "undefined") {
             { id: "ambientOcean", label: "commandAmbientOcean", info: "commandAmbientOceanInfo", run: () => globalThis.myntAmbientAudio?.play("ocean") },
             { id: "ambientWhite", label: "commandAmbientWhite", info: "commandAmbientWhiteInfo", run: () => globalThis.myntAmbientAudio?.play("whitenoise") },
             { id: "ambientFire", label: "commandAmbientFire", info: "commandAmbientFireInfo", run: () => globalThis.myntAmbientAudio?.play("campfire") },
+            { id: "ambientThunder", label: "commandAmbientThunder", info: "commandAmbientThunderInfo", run: () => globalThis.myntAmbientAudio?.play("thunder") },
+            { id: "ambientStream", label: "commandAmbientStream", info: "commandAmbientStreamInfo", run: () => globalThis.myntAmbientAudio?.play("stream") },
+            { id: "ambientWind", label: "commandAmbientWind", info: "commandAmbientWindInfo", run: () => globalThis.myntAmbientAudio?.play("wind") },
+            { id: "ambientForest", label: "commandAmbientForest", info: "commandAmbientForestInfo", run: () => globalThis.myntAmbientAudio?.play("forest") },
+            { id: "ambientNight", label: "commandAmbientNight", info: "commandAmbientNightInfo", run: () => globalThis.myntAmbientAudio?.play("night") },
+            { id: "ambientPink", label: "commandAmbientPink", info: "commandAmbientPinkInfo", run: () => globalThis.myntAmbientAudio?.play("pink") },
+            { id: "ambientBrown", label: "commandAmbientBrown", info: "commandAmbientBrownInfo", run: () => globalThis.myntAmbientAudio?.play("brown") },
             { id: "scratchpadCopy", label: "commandScratchpadCopy", info: "commandScratchpadCopyInfo", run: () => document.getElementById("scratchpadCopyBtn")?.click() },
             { id: "toggleTheme", label: "commandToggleTheme", info: "commandToggleThemeInfo", run: () => {
                 const darkRadio = document.getElementById("darkTheme");
