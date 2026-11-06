@@ -20,6 +20,9 @@ body #date {
 }
 body:has(#digitalClock[style*="display: block"]) #date { inset-block-start: calc(16vh + 162px) !important; }
 body #rightDiv { position: static !important; }
+/* Fixed children must use the viewport even when legacy edit-mode transforms return. */
+body .centerDiv,
+body #rightDiv { transform: none !important; translate: none !important; scale: none !important; }
 body #searchbar {
     position: fixed !important; inset: 47vh auto auto 50% !important; z-index: 2;
     width: min(640px, calc(100vw - 32px)) !important; max-width: none !important;
