@@ -189,9 +189,7 @@ function initializeClock() {
 
             const formattedDate = dateDisplay[currentLanguage] || dateDisplay.default;
             if (analogDate.textContent !== formattedDate) analogDate.textContent = formattedDate;
-            const newDateString = document.body.dataset.workspaceBackground === "video"
-                ? getGreeting()
-                : formattedDate;
+            const newDateString = formattedDate;
             // Update date if date actually changed or if it's the first time
             if (newDateString !== lastDateString) {
                 document.getElementById("date").innerText = newDateString;
@@ -326,6 +324,9 @@ function initializeClock() {
         };
 
         const newDigitalDateString = dateFormats[currentLanguage] || dateFormats.default;
+        const dateElement = document.getElementById("date");
+        dateElement.style.display = "block";
+        if (dateElement.textContent !== newDigitalDateString) dateElement.textContent = newDigitalDateString;
         // Update date if date actually changed or if it's the first time
         if (newDigitalDateString !== lastDigitalDateString) {
             document.getElementById("digidate").textContent = newDigitalDateString;
@@ -408,18 +409,6 @@ function initializeClock() {
             document.getElementById("amPm").textContent = ""; // Clear AM/PM for 24-hour format
         }
 
-        const clocktype1 = localStorage.getItem("clocktype");
-        const dateElement = document.getElementById("date");
-        if (clocktype1 === "digital" && isGreetingEnabled) {
-            const newGreeting = getGreeting();
-            if (newGreeting !== lastGreetingString) {
-                dateElement.style.display = "block";
-                dateElement.innerText = newGreeting;
-                lastGreetingString = newGreeting;
-            }
-        } else if (clocktype1 === "digital") {
-            dateElement.style.display = "none";  // Hide the greeting
-        }
     }
 
     // Function to start the analog clock

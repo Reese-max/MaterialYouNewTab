@@ -321,6 +321,7 @@ if (typeof document !== "undefined") {
         let focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
 
         function migratePomodoroToday() {
+            focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
             const sessions = Math.max(0, Number(localStorage.getItem("pomodoroSessionsToday")) || 0);
             if (!sessions || localStorage.getItem("pomodoroSessionsDate") !== new Date().toDateString()) return;
             const today = myntDateKey();
@@ -411,14 +412,36 @@ if (typeof document !== "undefined") {
             }
         }
         let habits = readHabits();
+        let habitsBaseline = JSON.parse(JSON.stringify(habits));
 
         function saveHabits() {
             if (habitsStorageInvalid) return false;
+            let current;
             try {
-                myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
-                myntValidateHabits(habits);
+                current = myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
             } catch (_) { habitsStorageInvalid = true; return false; }
+            try {
+                if (window.MyntStorageSync) {
+                    const byId = items => Object.fromEntries(items.map(item => [item.id, item]));
+                    const base = byId(habitsBaseline), draft = byId(habits), remote = byId(current);
+                    for (const habit of habits) {
+                        if (!base[habit.id] || !remote[habit.id]) continue;
+                        const before = base[habit.id].doneDates;
+                        const dates = remote[habit.id].doneDates.filter(date => !before.includes(date) || habit.doneDates.includes(date));
+                        habit.doneDates = [...new Set([...dates, ...habit.doneDates.filter(date => !before.includes(date))])].sort().slice(-400);
+                        base[habit.id] = { ...base[habit.id], doneDates: remote[habit.id].doneDates };
+                    }
+                    habits = Object.values(window.MyntStorageSync.mergeRecords(base, draft, remote));
+                }
+                myntValidateHabits(habits);
+            } catch (_) {
+                habits = current;
+                habitsBaseline = JSON.parse(JSON.stringify(current));
+                renderHabits();
+                return false;
+            }
             localStorage.setItem(KEYS.habits, JSON.stringify(habits));
+            habitsBaseline = JSON.parse(JSON.stringify(habits));
             document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
             return true;
         }
@@ -431,6 +454,39 @@ if (typeof document !== "undefined") {
             habit.doneDates = habit.doneDates.slice(-400);
             saveHabits();
             renderHabits();
+        }
+
+        function deleteHabit(id) {
+            habits = readHabits();
+            const index = habits.findIndex(item => item.id === id && item.source === null);
+            if (habitsStorageInvalid || index < 0) return false;
+            const previousStorage = localStorage.getItem(KEYS.habits);
+            const previousRecovery = localStorage.getItem("myntHabitRecoveryV1");
+            const record = { version: 1, index, item: habits[index] };
+            const next = habits.filter(item => item.id !== id);
+            try {
+                window.MyntMcpData.validateHabitRecovery(JSON.stringify(record));
+                if (previousRecovery !== null) window.MyntMcpData.validateHabitRecovery(previousRecovery);
+                myntValidateHabits(next);
+                localStorage.setItem(KEYS.habits, JSON.stringify(next));
+                localStorage.setItem("myntHabitRecoveryV1", JSON.stringify(record));
+            } catch (error) {
+                try {
+                    if (previousStorage === null) localStorage.removeItem(KEYS.habits);
+                    else localStorage.setItem(KEYS.habits, previousStorage);
+                    if (previousRecovery === null) localStorage.removeItem("myntHabitRecoveryV1");
+                    else localStorage.setItem("myntHabitRecoveryV1", previousRecovery);
+                } catch (rollbackError) { console.error("Habit delete rollback failed:", rollbackError); }
+                console.error("Habit delete failed:", error);
+                renderHabits();
+                return false;
+            }
+            habits = next;
+            habitsBaseline = JSON.parse(JSON.stringify(habits));
+            document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
+            renderHabits();
+            document.getElementById("habitInput").focus();
+            return true;
         }
 
         function renderHabits() {
@@ -481,9 +537,7 @@ if (typeof document !== "undefined") {
                     remove.addEventListener("click", async () => {
                         const message = format("habitDeleteConfirm", "Delete habit ‘{name}’?", { name: habit.name });
                         if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
-                        habits = habits.filter(item => item.id !== habit.id);
-                        saveHabits();
-                        renderHabits();
+                        deleteHabit(habit.id);
                     });
                     row.appendChild(remove);
                 }
@@ -509,7 +563,7 @@ if (typeof document !== "undefined") {
             }
             const id = globalThis.crypto?.randomUUID?.() || `custom-${Date.now()}`;
             habits.push({ id, source: null, name: name.slice(0, 60), doneDates: [] });
-            saveHabits();
+            if (!saveHabits()) return;
             input.value = "";
             renderHabits();
         });
@@ -518,14 +572,24 @@ if (typeof document !== "undefined") {
         document.addEventListener("mynt:pomodoro-complete", event => {
             const minutes = Math.max(1, Math.min(120, Math.floor(Number(event.detail?.minutes) || 25)));
             const today = myntDateKey();
+            // The timer dispatches completion while holding its existing Web Lock.
+            focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
             const saved = focusHistory[today] || { sessions: 0, minutes: 0 };
             focusHistory[today] = { sessions: saved.sessions + 1, minutes: saved.minutes + minutes };
             saveFocusHistory();
             markSystemHabit("pomodoro");
             renderFocusStats();
         });
+        let previousTodoStatuses = new Map();
+        try {
+            previousTodoStatuses = new Map(Object.entries(JSON.parse(localStorage.getItem("todoList") || "{}"))
+                .map(([id, todo]) => [id, todo?.status]));
+        } catch { /* The To-do module owns invalid data recovery. */ }
         document.addEventListener("mynt:todo-updated", event => {
-            if (Number(event.detail?.completed) > 0) markSystemHabit("todo");
+            const items = event.detail?.items;
+            if (!Array.isArray(items)) return;
+            if (items.some(todo => todo.status === "completed" && previousTodoStatuses.get(todo.id) !== "completed")) markSystemHabit("todo");
+            previousTodoStatuses = new Map(items.map(todo => [todo.id, todo.status]));
         });
         document.addEventListener("DOMContentLoaded", () => {
             habitRecoveryControl = window.MyntRecoveryControls?.create({
@@ -533,12 +597,6 @@ if (typeof document !== "undefined") {
                 before: document.getElementById("habitList"), focusTarget: document.getElementById("habitInput"),
                 validateCurrent: () => myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"))
             });
-            try {
-                const todos = JSON.parse(localStorage.getItem("todoList") || "{}");
-                if (Object.values(todos).some(todo => todo?.status === "completed")) markSystemHabit("todo");
-            } catch {
-                // The To-do module owns recovery of invalid stored data.
-            }
         }, { once: true });
 
         // Accessibility settings use native media preferences by default.
@@ -702,6 +760,8 @@ if (typeof document !== "undefined") {
             }
         ];
         let workspaces = myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null), workspaceDefaults);
+        let workspaceBaseline = localStorage.getItem(KEYS.workspaces);
+        let workspaceEditorBaseline = workspaceBaseline;
         let applyingWorkspace = false;
         const restoredWorkspace = workspaces.find(item => item.id === localStorage.getItem(KEYS.workspace));
         if (restoredWorkspace) {
@@ -710,7 +770,14 @@ if (typeof document !== "undefined") {
         }
 
         function saveWorkspaces() {
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceBaseline) {
+                window.MyntStorageSync.preserve(JSON.stringify(workspaces, null, 2));
+                window.myntDashboard.reloadWorkspaces();
+                return false;
+            }
             localStorage.setItem(KEYS.workspaces, JSON.stringify(workspaces));
+            workspaceBaseline = localStorage.getItem(KEYS.workspaces);
+            return true;
         }
 
         function workspaceBackgroundName(background) {
@@ -789,6 +856,7 @@ if (typeof document !== "undefined") {
         }
 
         function openWorkspaceEditor(preset = null) {
+            workspaceEditorBaseline = localStorage.getItem(KEYS.workspaces);
             const editor = document.getElementById("workspaceEditorForm");
             const current = preset || {
                 id: "",
@@ -844,10 +912,16 @@ if (typeof document !== "undefined") {
             };
             const preset = myntNormalizeWorkspaces([draft])[0];
             if (!preset) return nameInput.reportValidity();
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceEditorBaseline) {
+                window.MyntStorageSync.preserve(JSON.stringify(draft, null, 2));
+                window.myntDashboard.reloadWorkspaces();
+                nameInput.setCustomValidity(t("storageConflictSaved", "Another tab changed this data. Your draft was kept in Scratchpad; the latest data has been loaded."));
+                return nameInput.reportValidity();
+            }
             const index = workspaces.findIndex(item => item.id === oldId);
             if (index === -1) workspaces.push(preset);
             else workspaces[index] = preset;
-            saveWorkspaces();
+            if (!saveWorkspaces()) return;
             closeWorkspaceEditor();
             applyWorkspace(preset.id);
         });
@@ -857,8 +931,12 @@ if (typeof document !== "undefined") {
             if (!preset) return;
             const message = format("workspaceDeleteConfirm", "Delete mode ‘{name}’?", { name: preset.name });
             if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceEditorBaseline) {
+                window.myntDashboard.reloadWorkspaces();
+                return;
+            }
             workspaces = workspaces.filter(item => item.id !== id);
-            saveWorkspaces();
+            if (!saveWorkspaces()) return;
             if (localStorage.getItem(KEYS.workspace) === id) localStorage.removeItem(KEYS.workspace);
             closeWorkspaceEditor();
             renderWorkspace();
@@ -1028,6 +1106,10 @@ if (typeof document !== "undefined") {
             if (event.target === controlDialog) controlDialog.close();
         });
 
+        // Commands that would reopen or write into features removed from the homepage (scripts/removed-features.js).
+        const REMOVED_COMMANDS = { todo: ["todo", "quick-create-task"], scratchpad: ["scratchpad", "scratchpadCopy"], focus: ["focus-history", "focus-gpt"], exam: ["exam-today"] };
+        const hiddenCommandIds = new Set((window.MYNT_REMOVED_COMPONENT_IDS || []).flatMap(id => REMOVED_COMMANDS[id] || []));
+
         function ensureWidget(checkboxId, triggerId, visibleSelector) {
             const checkbox = document.getElementById(checkboxId);
             if (checkbox && !checkbox.checked) checkbox.click();
@@ -1080,6 +1162,7 @@ if (typeof document !== "undefined") {
         let filteredCommands = [];
         let activeCommandIndex = 0;
         let commandRenderToken = 0;
+        let commandReadyToken = -1;
 
         function commandLabel(command) {
             return command.labelText || t(command.label, command.id);
@@ -1110,10 +1193,15 @@ if (typeof document !== "undefined") {
             }).filter(command => command.labelText && matchesCommand(command, query));
         }
 
-        function bookmarkCommands(query) {
+        async function bookmarkCommands(query) {
             if (!query) return Promise.resolve([]);
+            if (typeof safeBookmarkLink !== "function") {
+                try { await window.myntLazy?.load("bookmarks"); } catch { return []; }
+                if (typeof safeBookmarkLink !== "function") return [];
+            }
             const found = new Map();
             const add = (title, url) => {
+                url = safeBookmarkLink(url);
                 if (!url || found.has(url) || found.size >= 8) return;
                 found.set(url, {
                     id: `bookmark-${found.size}`,
@@ -1145,8 +1233,29 @@ if (typeof document !== "undefined") {
             });
         }
 
+        async function shortcutCommands(query) {
+            if (!query) return [];
+            if (typeof safeBookmarkLink !== "function") {
+                try { await window.myntLazy?.load("bookmarks"); } catch { return []; }
+                if (typeof safeBookmarkLink !== "function") return [];
+            }
+            return (window.myntShortcuts?.getItems() || []).flatMap((item, index) => {
+                const url = safeBookmarkLink(item.url);
+                if (!url) return [];
+                const command = {
+                    id: `shortcut-${index}`, labelText: item.name || url, infoText: url,
+                    group: "commandGroupShortcut", searchText: url,
+                    run: () => { window.location.href = url; }
+                };
+                return matchesCommand(command, query) ? [command] : [];
+            });
+        }
+
         async function renderCommands(query = "") {
             const token = ++commandRenderToken;
+            filteredCommands = [];
+            document.getElementById("commandPaletteList").replaceChildren();
+            updateCommandSelection();
             const normalized = query.trim().toLocaleLowerCase();
             const workspaceLaunchCommands = workspaces.filter(p => p.urls && p.urls.length > 0).map(preset => ({
                 id: `launch-workspace-${preset.id}`,
@@ -1183,10 +1292,11 @@ if (typeof document !== "undefined") {
                 ...workspaceLaunchCommands,
                 ...collectLinkCommands("#toolsCont a", "commandGroupAi", normalized),
                 ...collectLinkCommands("#iconContainer a", "commandGroupGoogle", normalized)
-            ];
-            const bookmarks = await bookmarkCommands(normalized);
+            ].filter(command => !hiddenCommandIds.has(command.id));
+            const [shortcuts, bookmarks] = await Promise.all([shortcutCommands(normalized), bookmarkCommands(normalized)]);
             if (token !== commandRenderToken) return;
-            filteredCommands = [...base, ...bookmarks].slice(0, 40);
+            filteredCommands = [...base, ...shortcuts, ...bookmarks].slice(0, 40);
+            commandReadyToken = token;
             activeCommandIndex = Math.min(activeCommandIndex, Math.max(0, filteredCommands.length - 1));
             const list = document.getElementById("commandPaletteList");
             list.replaceChildren();
@@ -1212,7 +1322,7 @@ if (typeof document !== "undefined") {
                     activeCommandIndex = index;
                     updateCommandSelection();
                 });
-                button.addEventListener("click", () => runCommand(command));
+                button.addEventListener("click", () => { if (token === commandRenderToken) runCommand(command); });
                 list.appendChild(button);
             });
             document.getElementById("commandPaletteEmpty").hidden = filteredCommands.length > 0;
@@ -1257,6 +1367,7 @@ if (typeof document !== "undefined") {
             renderCommands(event.target.value);
         });
         document.getElementById("commandPaletteInput").addEventListener("keydown", event => {
+            if (event.isComposing || event.keyCode === 229 || commandReadyToken !== commandRenderToken) return;
             if (event.key === "ArrowDown" && filteredCommands.length) {
                 event.preventDefault();
                 activeCommandIndex = (activeCommandIndex + 1) % filteredCommands.length;
@@ -1323,13 +1434,16 @@ if (typeof document !== "undefined") {
 
         window.myntDashboard = {
             getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
-            reloadHabits: () => { habits=readHabits(); renderHabits(); },
+            reloadHabits: () => { habits=readHabits(); habitsBaseline=JSON.parse(JSON.stringify(habits)); renderHabits(); },
             getWorkspacePresets: () => JSON.parse(JSON.stringify(workspaces)),
-            reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); renderWorkspace(); },
+            reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); workspaceBaseline=localStorage.getItem(KEYS.workspaces); renderWorkspace(); },
             reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); }
         };
-        window.addEventListener("storage", event => {
-            if (event.key === KEYS.habits || event.key === null) window.myntDashboard.reloadHabits();
+        window.MyntStorageSync?.watch([KEYS.habits, KEYS.workspaces, KEYS.workspace, KEYS.focusHistory], () => {
+            window.myntDashboard.reloadHabits();
+            window.myntDashboard.reloadWorkspaces();
+            focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
+            renderFocusStats();
         });
         localizeStaticUI();
         migratePomodoroToday();

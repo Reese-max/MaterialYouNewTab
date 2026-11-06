@@ -960,7 +960,8 @@ document.addEventListener("keydown", event => {
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+// Lazy-loaded by lazy-loader.js after DOMContentLoaded, so run as soon as the DOM is ready.
+(fn => (document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn()))(() => {
     bookmarksCheckbox.addEventListener("change", () => updateBookmarkUI(bookmarksCheckbox.checked));
     bookmarkGridCheckbox.addEventListener("change", () => {
         saveCheckboxState("bookmarkGridCheckboxState", bookmarkGridCheckbox);

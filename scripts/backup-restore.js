@@ -12,7 +12,8 @@ const BACKUP_FORMAT = "material-you-newtab";
 const BACKUP_VERSION = 3;
 const MAX_BACKUP_FILE_SIZE = 32 * 1024 * 1024;
 const SENSITIVE_LOCAL_STORAGE_KEYS = new Set(["weatherApiKey"]);
-const TRANSIENT_LOCAL_STORAGE_KEYS = new Set(["myntPomoMusicOwnerV1"]);
+const RESTORE_JOURNAL_KEY = "myntRestoreJournalV1";
+const TRANSIENT_LOCAL_STORAGE_KEYS = new Set(["myntPomoMusicOwnerV1", RESTORE_JOURNAL_KEY]);
 const MEDIA_LOCAL_STORAGE_KEYS = new Set(["myntPomodoroAppearance.v1", "myntPomoMusicSettingsV1", "myntPomoScenarios"]);
 function isMediaLocalStorageKey(key) { return key.startsWith("myntWallpaper") || MEDIA_LOCAL_STORAGE_KEYS.has(key); }
 const INDEXED_DB_KEYS = new Set(["backgroundImage", "lastUpdateTime", "imageType"]);
@@ -47,6 +48,7 @@ const BACKUP_WORDS = {
     backupRestoreWorking: ["Restoring local data. Keep this tab open until it finishes.", "正在還原本機資料，完成前請勿關閉此分頁。"],
     backupRestoreCancelled: ["Restore cancelled. No data changed.", "已取消還原，未變更任何資料。"],
     backupRestoreRolledBack: ["Restore failed. The previous local data was restored.", "還原失敗，已恢復原有本機資料。"],
+    backupRestoreConflict: ["Restore stopped. Concurrent changes were kept; unchanged data was recovered.", "還原已停止。已保留其他分頁的新資料，並回復未發生衝突的資料。"],
     backupRollbackFailed: ["Restore and recovery could not finish. Keep this tab open and retain your backup file. Details: ", "還原及回復未能完成。請保留此分頁及備份檔。詳細資訊："]
 };
 
@@ -97,6 +99,7 @@ function isPlainRecord(value) {
 function snapshotLocalStorage({ includeSensitive = true } = {}) {
     const snapshot = Object.create(null);
     Object.keys(localStorage).forEach((key) => {
+        if (key === RESTORE_JOURNAL_KEY) return;
         if (includeSensitive || (!SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key))) {
             snapshot[key] = localStorage.getItem(key);
         }
@@ -300,6 +303,11 @@ function isValidBackupFile(backup) {
     if ("createdAt" in backup && (typeof backup.createdAt !== "string" || Number.isNaN(Date.parse(backup.createdAt)))) return false;
     const settings = Object.entries(backup.localStorage);
     if (settings.length > 1000 || settings.some(([key, value]) => key.length > 512 || typeof value !== "string")) return false;
+    if (Object.prototype.hasOwnProperty.call(backup.localStorage, RESTORE_JOURNAL_KEY)) return false;
+    try {
+        if (typeof MyntMcpData === "undefined" || !MyntMcpData.validateBackupStorage) return false;
+        MyntMcpData.validateBackupStorage(backup.localStorage);
+    } catch (_) { return false; }
     for (const key of ["myntSearchVisible", "myntGalleryEntryVisible", "myntProfilesEntryVisible", "myntAdaptiveEntryVisible"]) {
         if (Object.prototype.hasOwnProperty.call(backup.localStorage, key) && !["true", "false"].includes(backup.localStorage[key])) return false;
     }
@@ -369,13 +377,13 @@ function prepareBackupForRestore(backup) {
 function replaceLocalStorage(entries) {
     const next = new Map(entries);
     // Do not clear the storage area: preserve unchanged values and minimize writes.
-    Object.keys(localStorage).forEach(key => { if (!next.has(key)) localStorage.removeItem(key); });
+    Object.keys(localStorage).forEach(key => { if (key !== RESTORE_JOURNAL_KEY && !next.has(key)) localStorage.removeItem(key); });
     entries.forEach(([key, value]) => { if (localStorage.getItem(key) !== value) localStorage.setItem(key, value); });
 }
 async function replaceDatabaseEntries(open, storeName, entries, keyPath) {
     const db = await open();
     try {
-        const transaction = db.transaction(storeName, "readwrite");
+        const transaction = restoreWrite(() => db.transaction(storeName, "readwrite"));
         const completion = transactionCompleted(transaction);
         try {
             const store = transaction.objectStore(storeName);
@@ -396,45 +404,115 @@ function replaceMediaEntries(key, entries) {
     return replaceDatabaseEntries(() => openMediaDatabase(config), config.store, entries, config.keyPath);
 }
 
-// Separate IndexedDB databases cannot share an atomic transaction. Snapshot all
-// stores before writing, use atomic per-store transactions, and undo every
-// committed store after an ordinary failure. Closing the tab mid-restore is unsafe.
-async function restoreData(backup) {
-    const prepared = prepareBackupForRestore(backup);
-    const previousLocalStorage = Object.entries(snapshotLocalStorage());
-    // An omitted store is NOT an empty store. Settings-only restore must work
-    // even when a media database is blocked/unavailable, and never touch it.
-    const previousIndexedDB = prepared.indexedDBEntries === null ? null : await readIndexedDBEntries();
-    const previousMedia = Object.create(null);
-    if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) previousMedia[key] = await readMediaEntries(key);
-    const preservedEntries = previousLocalStorage.filter(([key]) => SENSITIVE_LOCAL_STORAGE_KEYS.has(key) || TRANSIENT_LOCAL_STORAGE_KEYS.has(key) ||
-        (prepared.scope !== "full" && isMediaLocalStorageKey(key)));
-    const unownedWallpaper = previousIndexedDB?.filter(([key]) => !INDEXED_DB_KEYS.has(key)) || [];
-    let wallpaperWritten = false;
-    const mediaWritten = [];
-    try {
-        replaceLocalStorage([...prepared.localStorageEntries, ...preservedEntries]);
-        if (prepared.indexedDBEntries !== null) {
-            await replaceIndexedDB([...prepared.indexedDBEntries, ...unownedWallpaper]);
-            wallpaperWritten = true;
+function restoreWrite(fn) { return globalThis.MyntRestoreGuard ? MyntRestoreGuard.allow(fn) : fn(); }
+function restoreLock(fn) { return globalThis.MyntRestoreGuard ? MyntRestoreGuard.lock(fn) : fn(); }
+function saveRestoreJournal(journal) {
+    restoreWrite(() => localStorage.setItem(RESTORE_JOURNAL_KEY, JSON.stringify(journal)));
+    if (globalThis.MyntRestoreGuard) document.documentElement.inert = true;
+}
+function clearRestoreJournal() {
+    restoreWrite(() => localStorage.removeItem(RESTORE_JOURNAL_KEY));
+    if (globalThis.MyntRestoreGuard) document.documentElement.inert = false;
+}
+async function encodedRestoreValue(value) {
+    // Refuse unsupported preimages instead of silently changing their types in JSON.
+    if (estimateBackupBytes(value) > MAX_BACKUP_FILE_SIZE) throw backupSizeError('full');
+    return encodeBackupValue(value, { bytes: 0 });
+}
+function sameRestoreEntries(left, right) {
+    const canonical = value => Array.isArray(value) ? Array.from(value, canonical) : isPlainRecord(value) ?
+        Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+    const sorted = entries => canonical([...entries].sort((a, b) => {
+        const first = JSON.stringify(a[0]), second = JSON.stringify(b[0]);
+        return first < second ? -1 : first > second ? 1 : 0;
+    }));
+    // IndexedDB enumerates by key, independent of the import's insertion order.
+    return JSON.stringify(sorted(left)) === JSON.stringify(sorted(right));
+}
+// A write-ahead journal includes exact preimages (including Blob bytes) and the
+// expected postimages. Persist progress BEFORE each independently atomic store.
+async function recoverInterruptedRestore() {
+    const raw = localStorage.getItem(RESTORE_JOURNAL_KEY);
+    if (raw === null) return false;
+    const journal = JSON.parse(raw);
+    if (journal.version !== 1) throw Error('Invalid restore journal');
+    if (journal.phase === 'snapshot') { clearRestoreJournal(); return false; }
+    if (journal.phase !== 'apply' || !Array.isArray(journal.localBefore) || !Array.isArray(journal.localAfter) || !Array.isArray(journal.stores)) throw Error('Invalid restore journal');
+    const errors = []; let conflict = false;
+    if (journal.localStarted) {
+        const before = new Map(journal.localBefore), after = new Map(journal.localAfter);
+        // Release newly imported/shrunken values before growing old values, so
+        // recovery does not need more quota than the original snapshot did.
+        const keys = [...new Set([...before.keys(), ...after.keys()])].sort((a, b) =>
+            ((before.get(a)?.length || 0) - (localStorage.getItem(a)?.length || 0)) -
+            ((before.get(b)?.length || 0) - (localStorage.getItem(b)?.length || 0)));
+        for (const key of keys) {
+            const current = localStorage.getItem(key), old = before.get(key) ?? null, expected = after.get(key) ?? null;
+            if (current === old) continue;
+            if (current !== expected) { conflict = true; continue; }
+            try { restoreWrite(() => old === null ? localStorage.removeItem(key) : localStorage.setItem(key, old)); } catch (error) { errors.push(error); }
         }
-        if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) {
-            await replaceMediaEntries(key, prepared.media[key]);
-            mediaWritten.push(key);
-        }
-    } catch (restoreError) {
-        const rollbackErrors = [];
-        // Independent recovery attempts: one failed store must not skip the others.
-        try { replaceLocalStorage(previousLocalStorage); } catch (error) { rollbackErrors.push(error); }
-        if (wallpaperWritten) {
-            try { await replaceIndexedDB(previousIndexedDB); } catch (error) { rollbackErrors.push(error); }
-        }
-        for (const key of mediaWritten.reverse()) {
-            try { await replaceMediaEntries(key, previousMedia[key]); } catch (error) { rollbackErrors.push(error); }
-        }
-        if (rollbackErrors.length) throw new Error(getTranslatedText("backupRollbackFailed") + [restoreError, ...rollbackErrors].map(getErrorMessage).join("; "));
-        throw new Error(getTranslatedText("backupRestoreRolledBack") + " " + getErrorMessage(restoreError));
     }
+    for (const item of [...journal.stores].reverse()) {
+        if (!item.started) continue;
+        try {
+            const current = await encodedRestoreValue(item.key === 'wallpaper' ? await readIndexedDBEntries() : await readMediaEntries(item.key));
+            if (sameRestoreEntries(current, item.before)) continue;
+            if (!sameRestoreEntries(current, item.after)) { conflict = true; continue; }
+            const entries = decodeBackupValue(item.before);
+            if (item.key === 'wallpaper') await replaceIndexedDB(entries); else await replaceMediaEntries(item.key, entries);
+        } catch (error) { errors.push(error); }
+    }
+    if (errors.length) throw new Error(getTranslatedText('backupRollbackFailed') + errors.map(getErrorMessage).join('; '));
+    clearRestoreJournal();
+    return conflict;
+}
+async function applyRestore(prepared) {
+    if (localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) throw Error('MYNT_RESTORE_BUSY');
+    saveRestoreJournal({ version: 1, phase: 'snapshot' });
+    try {
+        const previousLocalStorage = Object.entries(snapshotLocalStorage());
+        // An omitted store is NOT an empty store. Settings-only restore must work
+        // even when a media database is blocked/unavailable, and never touch it.
+        const previousIndexedDB = prepared.indexedDBEntries === null ? null : await readIndexedDBEntries();
+        const previousMedia = Object.create(null);
+        if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) previousMedia[key] = await readMediaEntries(key);
+        const preservedEntries = previousLocalStorage.filter(([key]) => SENSITIVE_LOCAL_STORAGE_KEYS.has(key) || TRANSIENT_LOCAL_STORAGE_KEYS.has(key) ||
+            (prepared.scope !== "full" && isMediaLocalStorageKey(key)));
+        const unownedWallpaper = previousIndexedDB?.filter(([key]) => !INDEXED_DB_KEYS.has(key)) || [];
+        const localBefore = previousLocalStorage.filter(([key]) => !preservedEntries.some(([saved]) => saved === key));
+        const journal = { version: 1, phase: 'apply', localBefore, localAfter: prepared.localStorageEntries, localStarted: false, stores: [] };
+        if (prepared.indexedDBEntries !== null) journal.stores.push({ key: 'wallpaper', before: await encodedRestoreValue(previousIndexedDB), after: await encodedRestoreValue([...prepared.indexedDBEntries, ...unownedWallpaper]) });
+        if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) journal.stores.push({ key, before: await encodedRestoreValue(previousMedia[key]), after: await encodedRestoreValue(prepared.media[key]) });
+        // Detect an older tab/writer that did not participate in the admission gate.
+        if (JSON.stringify(snapshotLocalStorage()) !== JSON.stringify(Object.fromEntries(previousLocalStorage))) throw Error(getTranslatedText('backupRestoreConflict'));
+        // ponytail: snapshots must fit localStorage quota; use an IDB journal if larger restores are needed.
+        saveRestoreJournal(journal); // Quota failure here leaves all domain data intact.
+        try {
+            journal.localStarted = true; saveRestoreJournal(journal);
+            restoreWrite(() => replaceLocalStorage([...prepared.localStorageEntries, ...preservedEntries]));
+            for (const item of journal.stores) {
+                const current = await encodedRestoreValue(item.key === 'wallpaper' ? await readIndexedDBEntries() : await readMediaEntries(item.key));
+                if (!sameRestoreEntries(current, item.before)) throw Error(getTranslatedText('backupRestoreConflict'));
+                item.started = true; saveRestoreJournal(journal);
+                if (item.key === 'wallpaper') await replaceIndexedDB(decodeBackupValue(item.after));
+                else await replaceMediaEntries(item.key, decodeBackupValue(item.after));
+            }
+        } catch (restoreError) {
+            const conflict = await recoverInterruptedRestore() || getErrorMessage(restoreError) === getTranslatedText('backupRestoreConflict');
+            throw new Error(getTranslatedText(conflict ? 'backupRestoreConflict' : 'backupRestoreRolledBack') + ' ' + getErrorMessage(restoreError));
+        }
+        clearRestoreJournal();
+    } catch (error) {
+        // Snapshot preparation never changes domain data. Failed recovery keeps
+        // the full apply journal, blocking writers until a later startup retries.
+        if (JSON.parse(localStorage.getItem(RESTORE_JOURNAL_KEY) || 'null')?.phase === 'snapshot') clearRestoreJournal();
+        throw error;
+    }
+}
+async function restoreData(backup) {
+    const prepared = prepareBackupForRestore(backup); // Invalid imports make ZERO writes.
+    return restoreLock(() => applyRestore(prepared));
 }
 function backupScopePreview(backup) {
     const counts = { settings: Object.keys(backup.localStorage).filter(key => !SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key) &&
@@ -463,8 +541,14 @@ async function validateAndRestoreData(event) {
         location.reload();
     } catch (error) {
         const message = getTranslatedText("restorefailed") + getErrorMessage(error);
-        setBackupStatus(message); await alertPrompt(message);
-    } finally { setBackupBusy(false); input.value = ""; }
+        setBackupStatus(message);
+        if (globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) {
+            if (typeof alert === 'function') alert(message);
+        } else await alertPrompt(message);
+    } finally {
+        setBackupBusy(Boolean(globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null));
+        input.value = "";
+    }
 }
 
 // Existing reset remains distinct from full restore: timer/gallery media is kept.
@@ -481,3 +565,21 @@ resetButton.addEventListener("click", async () => {
         await alertPrompt(getTranslatedText("restorefailed") + getErrorMessage(error));
     }
 });
+
+// An interrupted restore is undone under the same cross-tab owner lock. The
+// early admission guard keeps UI and every normal storage writer closed until
+// recovery succeeds; reload then initializes all domains from recovered data.
+if (globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) {
+    setBackupBusy(true);
+    setBackupStatus(getTranslatedText('backupRestoreWorking'));
+    globalThis.myntRestoreReady = restoreLock(async () => {
+        const conflict = await recoverInterruptedRestore();
+        if (conflict && typeof alert === 'function') alert(getTranslatedText('backupRestoreConflict'));
+        location.reload();
+    }).catch(error => {
+        const message = getTranslatedText('backupRollbackFailed') + getErrorMessage(error);
+        setBackupStatus(message);
+        // Native alert remains accessible while ordinary page controls are inert.
+        if (typeof alert === 'function') alert(message);
+    });
+}

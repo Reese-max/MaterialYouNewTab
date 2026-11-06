@@ -14,12 +14,15 @@
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
     <meta name="google-site-verification" content="j8K161R-W9yVVDoylaoPd2twGbjToAC3EzAFfZU1YOY" />
     <title>新分頁</title>
+    <script src="scripts/restore-guard.js"></script>
+    <script src="scripts/removed-features.js"></script>
     <link href="style.css" rel="stylesheet">
     <link href="styles/focus-card.css" rel="stylesheet">
     <link href="styles/layout-editor.css" rel="stylesheet">
     <link href="styles/quote-contrast.css" rel="stylesheet">
     <link href="styles/exam-daily.css" rel="stylesheet">
     <link href="styles/mynt-dialog.css" rel="stylesheet">
+    <link href="styles/removed-features.css" rel="stylesheet">
     <link href="./favicon/icon48.png" id="favicon" rel="icon" type="image/png">
 
     <!-- SCRIPTS -->
@@ -30,6 +33,7 @@
     <script defer src="scripts/menu-shortcut-page.js"></script>
     <script defer src="scripts/theme.js"></script>
     <script defer src="scripts/browser-utils.js"></script>
+    <script defer src="scripts/storage-sync.js"></script>
     <script defer src="scripts/dashboard-tools.js"></script>
     <script defer src="scripts/alert-modal.js"></script>
     <script defer src="scripts/wallpaper.js"></script>
@@ -47,6 +51,7 @@
     <script defer src="scripts/focus-card.js"></script>
     <script defer src="scripts/exam-daily.js"></script>
     <script defer src="scripts/layout-profiles.js"></script>
+    <script defer src="scripts/centered-layout.js"></script>
     <script defer src="scripts/layout-draft.js"></script>
     <script defer src="scripts/layout-editor.js"></script>
     <script defer src="scripts/search.js"></script>
@@ -92,6 +97,7 @@
     <link href="styles/adaptive-background.css" rel="stylesheet">
     <link href="styles/manual-editor-controls.css" rel="stylesheet">
     <link href="styles/award.css" rel="stylesheet">
+    <link href="styles/centered-home.css" rel="stylesheet">
     <script defer src="scripts/adaptive-core.js"></script>
     <script defer src="scripts/adaptive-background.js"></script>
 </head>
@@ -203,7 +209,8 @@
             </button>
         </div>
         <div class="pomodoroAmbientRow" id="pomodoroAmbientRow">
-            <button class="pomodoroAmbientToggleBtn" id="pomodoroAmbientToggleBtn" type="button" title="Ambient Sound">🎧</button>
+            <button class="pomodoroAmbientToggleBtn" id="pomodoroAmbientToggleBtn" type="button" title="Ambient Sound" aria-pressed="false">🎧</button>
+            <span id="pomodoroAmbientStatus" role="status" aria-live="polite"></span>
             <select id="pomodoroAmbientSelect" class="pomodoroAmbientSelect" aria-label="Ambient Sound Type">
                 <option value="rain">🌧️ Rain</option>
                 <option value="ocean">🌊 Ocean</option>
@@ -234,15 +241,6 @@
         </svg>
     </div>
 
-    <button class="bookmark-button" id="bookmarkButton" type="button" aria-controls="bookmarkSidebar" aria-expanded="false">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill-rule="evenodd"
-                d="M7 2a3 3 0 0 0-3 3v15.138a1.5 1.5 0 0 0 2.244 1.303l5.26-3.006a1 1 0 0 1 .992 0l5.26 3.006A1.5 1.5 0 0 0 20 20.138V5a3 3 0 0 0-3-3z"
-                clip-rule="evenodd" />
-        </svg>
-        <!-- Text to appear on hover -->
-        <span class="tooltip-text homeActionHint" id="bookmarksHover">書籤</span>
-    </button>
     <div id="bookmarksContainer">
         <div id="bookmarkSidebar" class="bookmark-sidebar" role="dialog" aria-modal="true"
             aria-labelledby="bookmarksHeading" aria-hidden="true" inert>
@@ -351,6 +349,7 @@
 
     <!----------------------- Google App Menu Setup Starting ----------------------->
     <!-- 9 Dot Icon -->
+    <div class="homeToolbar" id="homeToolbar">
     <button class="googleAppsCont" id="googleAppsCont" type="button" aria-controls="iconContainer" aria-expanded="false">
         <svg class="dot-icon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24">
             <path
@@ -359,6 +358,11 @@
         <!-- Text to appear on hover -->
         <span class="tooltip-text" id="googleAppsHover">Google Apps</span>
     </button>
+    <button class="bookmark-button" id="bookmarkButton" type="button" aria-controls="bookmarkSidebar" aria-expanded="false" aria-label="書籤">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M7 2a3 3 0 0 0-3 3v15.138a1.5 1.5 0 0 0 2.244 1.303l5.26-3.006a1 1 0 0 1 .992 0l5.26 3.006A1.5 1.5 0 0 0 20 20.138V5a3 3 0 0 0-3-3z" clip-rule="evenodd" /></svg>
+        <span class="tooltip-text homeActionHint" id="bookmarksHover">書籤</span>
+    </button>
+    </div>
 
     <!-- Centered Icon Container -->
     <div id="iconContainer" class="icon-container" style="display: none;">
@@ -800,9 +804,9 @@
                     </div>
                     <p id="dailyFocusNote" role="status" aria-live="polite" hidden></p>
                 </div>
-                <div id="date"></div>
             </div>
         </div>
+        <div id="date"></div>
         <!-- ---------end of leftDiv--------------- -->
 
         <div class="rightDiv" id="rightDiv">
@@ -957,6 +961,7 @@
     <!---End of centerDiv--->
 
     <!-- ------shortcuts------------------ -->
+    <div id="quickLinksRow" role="group" aria-label="快速連結">
     <div id="shortcuts-section">
         <div class="wrapper">
             <div id="flexMonitor"></div>
@@ -1017,19 +1022,21 @@
             </a>
         </div>
     </div>
+    <button id="addQuickLinkButton" type="button" aria-label="新增捷徑" title="新增捷徑">+</button>
+    </div>
 
     <!-- Settings Modal (hidden by default) -->
-    <div id="aiToolsSettingsModal" class="ai-settings-modal" style="display: none;">
+    <dialog id="aiToolsSettingsModal" class="ai-settings-modal" aria-labelledby="aiSettingsHeader" aria-describedby="aiSettingsIntro">
         <div class="ai-modal-content">
             <div class="ai-modal-header">
                 <h3 id="aiSettingsHeader">AI Tools Settings</h3>
-                <div id="closeAISettingsBtn" class="ai-close-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                <button id="closeAISettingsBtn" type="button" class="ai-close-button" aria-label="關閉 AI 工具設定" autofocus>
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
-                </div>
+                </button>
             </div>
             <p id="aiSettingsIntro">Select which AI tools to display</p>
             <div class="ai-tools-list">
@@ -1042,10 +1049,7 @@
                 <button id="saveAISettingsBtn" class="ai-save-button">Save</button>
             </div>
         </div>
-    </div>
-
-    <!-- Modal Overlay (hidden by default) -->
-    <div id="aiToolsSettingsOverlay" class="ai-modal-overlay" style="display: none;"></div>
+    </dialog>
     <!-- ------------ end of AI-Tools------------------ -->
 
     <!-- -------------- Footer Toast ------------------ -->

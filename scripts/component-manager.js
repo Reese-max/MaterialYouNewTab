@@ -3,6 +3,7 @@
     'use strict';
     const core = root.MYNTComponentVisibilityCore;
     if (!core || typeof document === 'undefined') return;
+    const removed = new Set(root.MYNT_REMOVED_COMPONENT_IDS || []);
     const text = (zh, en) => { try { return (localStorage.getItem('selectedLanguage') || 'zh_TW') === 'zh_TW' ? zh : en; } catch (_) { return zh; } };
     const translated = (key, zh, en) => { try { return (typeof translations !== 'undefined' && translations[localStorage.getItem('selectedLanguage') || 'zh_TW']?.[key]) || text(zh, en); } catch (_) { return text(zh, en); } };
     let panel, status, queued = false;
@@ -23,8 +24,11 @@
                 : item.id === 'aiTools' ? ['aiToolsEditField'] : [];
             for (const id of settingsRows) document.getElementById(id)?.classList.toggle('inactive', !item.visible);
             for (const selector of item.selectors) for (const node of document.querySelectorAll(selector)) {
-                node.toggleAttribute('data-mynt-component-hidden', !item.visible);
-                if (item.display) { node.setAttribute('data-mynt-component-display', item.display); node.style.setProperty('--mynt-component-display', item.display); }
+                const isRemoved = removed.has(item.id);
+                node.toggleAttribute('data-mynt-component-hidden', item.id === 'focus' ? !item.visible : isRemoved || !item.visible);
+                const display = isRemoved && item.id !== 'focus' ? 'none' : item.display;
+                if (display) { node.setAttribute('data-mynt-component-display', display); node.style.setProperty('--mynt-component-display', display); }
+                if (item.id === 'focus') node.inert = isRemoved;
             }
             for (const selector of item.panelSelectors) for (const node of document.querySelectorAll(selector)) node.toggleAttribute('data-mynt-component-hidden', !item.visible);
             if (item.id === 'clock') {
@@ -111,7 +115,7 @@
         const summary = document.createElement('summary'); summary.textContent = translated('componentsTitle', '元件管理', 'Manage components'); panel.append(summary);
         const note = document.createElement('p'); note.textContent = text('勾選加入首頁，取消即可隱藏。資料、計時與排版會保留；設定入口永遠可用。', 'Check to show on your home page. Hiding keeps data, timers and layouts. Settings always remains available.'); panel.append(note);
         const list = document.createElement('div'); list.className = 'mynt-component-list';
-        for (const item of core.definitions) {
+        for (const item of core.definitions.filter(item => !removed.has(item.id))) {
             const label = document.createElement('label'), input = document.createElement('input'), name = document.createElement('span');
             input.type = 'checkbox'; input.id = `myntComponent-${item.id}`; name.textContent = item.id === 'homeWidgets' ? translated('homeWidgetsSetting', item.labelZh, item.labelEn) : text(item.labelZh, item.labelEn);
             input.addEventListener('change', () => { try { change(item.id, input.checked); } catch (error) { status.textContent = error.rollbackFailed ? text('瀏覽器儲存空間無法使用，部分顯示設定可能尚未回復。請勿清除資料，重新開啟後檢查。', 'Storage is unavailable; some visibility settings may not have rolled back. Do not clear data. Reopen and check.') : text('儲存失敗或資料格式異常，原有資料已保留。請重試或檢查備份。', 'Could not save, or stored data is invalid. Existing data was preserved. Retry or check your backup.'); refresh(); } });

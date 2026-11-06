@@ -3646,7 +3646,16 @@ body[data-bg="wallpaper"] .aiToolsCont .toolsCont a {
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 	z-index: 1001;
 	width: 380px;
+	max-width: calc(100vw - 24px);
+	max-height: calc(100dvh - 24px);
+	margin: 0;
+	border: none;
+	overflow: auto;
 }
+
+.ai-settings-modal::backdrop { background: rgba(0, 0, 0, 0.45); }
+.ai-settings-modal .ai-close-button { background: transparent; border: none; padding: 6px; display: flex; }
+.ai-settings-modal button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .ai-settings-modal .ai-modal-header {
 	display: flex;
@@ -4592,6 +4601,25 @@ input:checked + .toggle:before {
 	min-width: 0;
 }
 
+.shortcutFieldMessage {
+	margin-top: 2px;
+	font-size: 0.72rem;
+	line-height: 1.3;
+	color: var(--textColorDark-blue);
+	opacity: 0.85;
+	overflow-wrap: anywhere;
+}
+
+.shortcutFieldMessage[hidden] {
+	display: none;
+}
+
+.shortcutSettingsEntry input[aria-invalid="true"] {
+	outline: 1px solid #d32f2f;
+	outline-offset: 1px;
+	border-radius: 2px;
+}
+
 /* Drag and drop styles */
 .shortcutSettingsEntry.dragging {
 	opacity: 0.5;
@@ -4642,10 +4670,23 @@ input:checked + .toggle:before {
 
 .shortcutActions {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
 	margin-inline-start: 8px;
 }
+
+.shortcutMoveUp, .shortcutMoveDown {
+	width: 32px;
+	height: 32px;
+	border: none;
+	border-radius: 7px;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	cursor: pointer;
+}
+.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { opacity: 0.4; cursor: default; }
+.shortcutMoveUp:focus-visible, .shortcutMoveDown:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .shortcutDelete button,
 .uploadCustomIconButton {
@@ -8786,6 +8827,7 @@ html:has(body[data-workspace-background="video"]) {
 /* ------------ Pomodoro Ambient Sound Controller ------------ */
 .pomodoroAmbientRow {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
 	gap: 8px;
@@ -8795,6 +8837,14 @@ html:has(body[data-workspace-background="video"]) {
 	border-radius: 999px;
 	backdrop-filter: blur(10px);
 }
+
+#pomodoroAmbientStatus {
+	flex-basis: 100%;
+	order: 1;
+	overflow-wrap: anywhere;
+}
+
+#pomodoroAmbientStatus:empty { display: none; }
 
 .pomodoroAmbientToggleBtn {
 	appearance: none;

@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(process.argv[2] || process.cwd(), 'scripts/backup-restore.js'), 'utf8');
 
-function environment() {
+function environment(resume) {
     const databases = new Map(), faults = {}, writes = [], alerts = [], confirmations = [], downloads = [];
     const storage = Object.create(null);
     Object.defineProperties(storage, {
@@ -64,14 +64,13 @@ function environment() {
     }
     let reloads = 0, accepted = true;
     const context = vm.createContext({
-        Blob, URL, Uint8Array, atob, FileReader: Reader, indexedDB, localStorage: storage, console,
+        Blob, URL, Uint8Array, atob, MyntMcpData: require('../scripts/local-mcp-data.js'), FileReader: Reader, indexedDB, localStorage: storage, console,
         setTimeout: fn => { fn(); }, currentLanguage: 'en', translations: { en: { failedbackup: 'Backup failed: ', restorefailed: 'Restore failed: ', restorecompleted: 'Restored.' } },
-        document: { getElementById: id => nodes[id], body: { appendChild() {} }, createElement: () => ({ click() { downloads.push(this.download); }, remove() {} }) },
+        document: { documentElement: { inert: false }, getElementById: id => nodes[id], body: { appendChild() {} }, createElement: () => ({ click() { downloads.push(this.download); }, remove() {} }) },
         confirmPrompt: async text => { confirmations.push(text); return accepted; }, alertPrompt: async text => { alerts.push(text); }, location: { reload() { reloads++; } },
         storeName: 'backgroundImages', openDatabase: async () => connection('ImageDB'),
         seed(name, store, keyPath, entries) { databases.set(name, { store, keyPath, entries: new Map(entries) }); }
     });
-    vm.runInContext(source, context);
     vm.runInContext(`
         seed('ImageDB', 'backgroundImages', null, [['backgroundImage', new Blob(['old wallpaper'], {type:'image/png'})], ['lastUpdateTime', '2026-10-20T00:00:00Z'], ['imageType','upload'], ['future-metadata','keep me']]);
         seed('MYNTWallpaperGallery', 'items', 'id', [['old-gallery',{id:'old-gallery',name:'old.png',type:'image',source:'upload',added:1,blob:new Blob(['old gallery'],{type:'image/png'})}]]);
@@ -79,9 +78,26 @@ function environment() {
         seed('myntPomodoroMusicV1', 'tracks', 'id', [['old-track',{id:'old-track',name:'old.mp3',blob:new Blob(['old audio'],{type:'audio/mpeg'})}]]);
         localStorage.setItem('weatherApiKey','fixture-secret-do-not-export');
         localStorage.setItem('myntPomoMusicOwnerV1','fixture-active-tab');
-        localStorage.setItem('todoList',JSON.stringify({today:[{title:'existing task',completed:false}]}));
-        localStorage.setItem('myntLayout','existing manual layout');
+        localStorage.setItem('todoList',JSON.stringify({texisting:{title:'existing task',status:'pending',pinned:false}}));
+        localStorage.setItem('myntLayout','{"version":2,"locked":true,"snap":false,"blocks":{}}');
     `, context);
+    if (resume) {
+        for (const key of Object.keys(storage)) delete storage[key];
+        Object.assign(storage, resume.local);
+        for (const [key, value] of resume.databases) {
+            context.resumeEntries = [...value.entries];
+            // Real IndexedDB returns structured clones in the requesting realm.
+            const entries = vm.runInContext(`(function clone(v) {
+                if(v instanceof Blob || v===null || typeof v!=='object')return v;
+                if(Array.isArray(v))return Array.from(v,clone);
+                return Object.fromEntries(Object.entries(v).map(([k,item])=>[k,clone(item)]));
+            })(resumeEntries)`, context);
+            databases.set(key, { ...value, entries: new Map(entries) });
+        }
+        context.MyntRestoreGuard = { allow: fn => fn(), lock: fn => Promise.resolve().then(fn) };
+        context.document.documentElement.inert = true;
+    }
+    vm.runInContext(source, context);
     const run = code => vm.runInContext(code, context);
     return { run, context, databases, faults, writes, alerts, confirmations, downloads, nodes, storage, accept: value => accepted = value, reloads: () => reloads };
 }
@@ -95,15 +111,15 @@ async function snapshot(env) {
     return { local: { ...env.storage }, stores: await canonical(Object.fromEntries([...env.databases].map(([key, value]) => [key, [...value.entries]]))) };
 }
 const newFixture = `({format:'material-you-newtab',version:3,createdAt:'2026-10-23T10:00:00Z',
-    localStorage:{selectedLanguage:'zh_TW',myntWallpaperCurrent:'none',myntWallpaperMode:'fixed',myntLayout:'manual layout kept exactly',
-        myntLayoutProfiles:'profiles fixture',todoList:'{"today":[{"title":"備份待辦","completed":false}]}',myntScratchpadContent:'fixture scratchpad',
+    localStorage:{selectedLanguage:'zh_TW',myntWallpaperCurrent:'none',myntWallpaperMode:'fixed',myntLayout:'{"version":2,"locked":true,"snap":false,"blocks":{}}',
+        todoList:'{"today":{"title":"備份待辦","status":"pending","pinned":false}}',myntScratchpadContent:'fixture scratchpad',
         myntPomoMusicSettingsV1:'{"selectedId":"song"}',weatherApiKey:'untrusted-import-key',myntPomoMusicOwnerV1:'untrusted-owner',
         pomodoroState:'{"version":2,"phase":"work","timeRemaining":120,"totalTime":120,"currentRound":1,"isRunning":true,"endAt":1792749660000}'},
     indexedDB:{backgroundImage:{isBlob:true,blob:'data:image/png;base64,bmV3IHdhbGxwYXBlcg=='},lastUpdateTime:'2026-10-23T00:00:00Z',imageType:'upload'},
     media:{version:1,gallery:[['photo',{id:'photo',name:'photo.png',type:'image',source:'upload',added:5,removedAt:10,blob:{isBlob:true,blob:'data:image/png;base64,Z2FsbGVyeQ=='}}],['link',{id:'link',name:'linked video',type:'video',source:'url',src:'https://example.test/video.mp4',added:6}]],timerImage:[['background',{isBlob:true,blob:'data:image/webp;base64,dGltZXI='}]],music:[['song',{id:'song',name:'song.mp3',blob:{isBlob:true,blob:'data:audio/mpeg;base64,bXVzaWM='}}]]}})`;
 function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
 
-(async () => {
+if (require.main === module) (async () => {
     const exporting = environment();
     const beforeExport = await snapshot(exporting);
     const result = await exporting.run('createBackup()');
@@ -137,7 +153,7 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     assert.deepEqual(profiles.validate(JSON.parse(full.storage.myntLayoutProfiles), myntNormalizeLayout), profileData);
     assert.equal(full.storage.myntScratchpadContent, 'fixture scratchpad');
     assert.equal(full.storage.myntWallpaperCurrent, 'none');
-    assert.equal(JSON.parse(full.storage.todoList).today[0].title, '備份待辦');
+    assert.equal(JSON.parse(full.storage.todoList).today.title, '備份待辦');
     assert.equal(full.storage.weatherApiKey, 'fixture-secret-do-not-export');
     assert.equal(full.storage.myntPomoMusicOwnerV1, 'fixture-active-tab');
     assert.equal(JSON.parse(full.storage.pomodoroState).isRunning, false);
@@ -160,7 +176,9 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     recoveryFailure.faults.failWrites = new Set(['myntPomodoroMusicV1:1', 'MYNTWallpaperGallery:2']);
     await assert.rejects(recoveryFailure.run('restoreData(fixture)'), /Restore and recovery could not finish/);
     const partialRecovery = await snapshot(recoveryFailure);
-    assert.deepEqual(partialRecovery.local, beforeRecoveryFailure.local);
+    assert(partialRecovery.local.myntRestoreJournalV1, 'failed recovery must retain the durable journal');
+    const { myntRestoreJournalV1, ...recoveredLocal } = partialRecovery.local;
+    assert.deepEqual(recoveredLocal, beforeRecoveryFailure.local);
     for (const key of ['ImageDB', 'MyntPomodoroAppearance', 'myntPomodoroMusicV1']) assert.deepEqual(partialRecovery.stores[key], beforeRecoveryFailure.stores[key]);
     assert.equal(recoveryFailure.reloads(), 0);
 
@@ -187,8 +205,8 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     }
 
     const legacy = environment(), beforeLegacy = await snapshot(legacy);
-    await legacy.run('restoreData({version:2,localStorage:{myntLayout:"legacy layout"},indexedDB:{}})');
-    assert.equal(legacy.storage.myntLayout, 'legacy layout');
+    await legacy.run('restoreData({version:2,localStorage:{myntLayout:JSON.stringify({version:1,blocks:{}})},indexedDB:{}})');
+    assert.equal(legacy.storage.myntLayout, JSON.stringify({version:1,blocks:{}}));
     for (const key of ['MYNTWallpaperGallery', 'MyntPomodoroAppearance', 'myntPomodoroMusicV1']) {
         assert.deepEqual((await snapshot(legacy)).stores[key], beforeLegacy.stores[key], 'legacy backup cannot clear media absent from its file');
     }
@@ -218,3 +236,5 @@ function loadFixture(env) { env.run(`globalThis.fixture = ${newFixture};`); }
     assert.equal(oversized.writes.length, 0);
     console.log('BACKUP_COMPLETION_OK: full v3 export/restore, exact media bytes, layout/tasks/notes, removed gallery, safe timer pause, exclusions, legacy media preservation, schema/version/size/security rejection, confirmation/cancel/reload, all-store rollback, synchronous transaction abort and oversized export without omission. Isolated fixtures only.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
+module.exports = { environment, loadFixture, snapshot };

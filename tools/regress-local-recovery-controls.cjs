@@ -199,7 +199,7 @@ function settingsBackup(recovery = todo) {
     assert.equal(unfocused.document.activeElement, outside, "An unfocused invocation never claims keyboard focus");
 
     const backup = backupFixture({ myntTodoRecoveryV1: JSON.stringify(todo), myntShortcutRecoveryV1: JSON.stringify(shortcut), myntHabitRecoveryV1: JSON.stringify(habit),
-        weatherApiKey: "FIXTURE_SECRET", myntWallpaperCurrent: "private photo", myntPomoMusicSettingsV1: "private music" });
+        weatherApiKey: "FIXTURE_SECRET", myntWallpaperCurrent: "private photo", myntPomoMusicSettingsV1: JSON.stringify({ selectedId: "private music" }) });
     const exported = await backup.run('createBackup("settings")');
     assert.equal(exported.backup.localStorage.myntTodoRecoveryV1, JSON.stringify(todo));
     assert.equal(exported.backup.localStorage.myntShortcutRecoveryV1, JSON.stringify(shortcut));
@@ -261,11 +261,14 @@ function settingsBackup(recovery = todo) {
     assert.equal(dragList.events.dragstart.length, 1, "Reload must not duplicate delegated drag handlers");
     assert.equal(dragDocument.events.dragend.length, 1); assert.equal(dragWindow.events.blur.length, 1);
     const loadSource = shortcutsSource.slice(shortcutsSource.indexOf("    function loadShortcuts()"), shortcutsSource.indexOf("    // Creates a shortcut entry element"));
+    const rememberSource = shortcutsSource.slice(shortcutsSource.indexOf("    function rememberShortcutStorage()"), shortcutsSource.indexOf("    function checkShortcutFreshness()"));
     const states = [], loadContext = vm.createContext({ localStorage: { getItem: key => key === "shortcutAmount" ? "49" : "" },
         presets: [], PLACEHOLDER: { name: "Fixture", url: "https://example.org" }, MAX_SHORTCUTS: 50,
         dom: { shortcutSettingsContainer: { appendChild() {} }, newShortcutButton: { classList: { toggle: (name, active) => states.push(active) } } },
-        createShortcutEntry() {}, renderShortcut() {}, setupDragAndDrop() {} });
-    vm.runInContext(`let shortcutsCache=[]; ${loadSource}; loadShortcuts();`, loadContext);
+        createShortcutEntry() {}, renderShortcut() {}, setupDragAndDrop() {}, updateShortcutIndices() {},
+        myntShortcutDefault: require(path.join(root, "scripts/shortcuts.js")).myntShortcutDefault });
+    loadContext.window = {};
+    vm.runInContext(`let shortcutsCache=[]; ${rememberSource}; ${loadSource}; loadShortcuts();`, loadContext);
     assert.equal(states.at(-1), false, "A deletion from a full list re-enables the Add shortcut control");
     const dashboardSource = read("scripts/dashboard-tools.js");
     const habitReadSource = dashboardSource.slice(dashboardSource.indexOf("        let habitsStorageInvalid"), dashboardSource.indexOf("        function markSystemHabit"));

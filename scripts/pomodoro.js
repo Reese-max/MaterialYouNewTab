@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const pomodoroCheckbox = document.getElementById("pomodoroCheckbox");
     const pomodoroCont = document.getElementById("pomodoroCont");
     const pomodoroIcon = document.getElementById("pomodoroIcon");
+    const pomodoroHover = document.getElementById("pomodoroHover");
     const pomodoroPanel = document.getElementById("pomodoroPanel");
     const pomodoroBgVideo = document.querySelector(".pomodoro-bg-video");
     const pomodoroPhaseLabel = document.getElementById("pomodoroPhaseLabel");
@@ -210,6 +211,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Sessions today
         pomodoroSessionsCount.textContent = getSessionsToday();
+
+        // The corner button mirrors an active countdown, so the panel can stay closed.
+        const active = pomodoroState.isRunning || pomodoroState.timeRemaining !== pomodoroState.totalTime;
+        const label = getPomodoroText("pomodoroHover", "Pomodoro") + (active ? " " + pomodoroTimeDisplay.textContent : "");
+        pomodoroCont.classList.toggle("pomodoro-active", active);
+        pomodoroCont.classList.toggle("pomodoro-break", pomodoroState.phase !== "work");
+        pomodoroCont.style.setProperty("--pomo-elapsed", (1 - progress).toFixed(4));
+        pomodoroCont.setAttribute("aria-label", label);
+        // languages.js owns the tooltip text (applied on window load); the countdown rides in data-time.
+        if (pomodoroHover) pomodoroHover.dataset.time = active ? " " + pomodoroTimeDisplay.textContent : "";
     }
 
     // --- Timer controls: one shared wall-clock source for every view. ---
@@ -519,8 +530,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Escape closes the panel and returns focus to its corner button.
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape" || !panelOpen || e.defaultPrevented) return;
+        e.preventDefault();
+        const focusInside = pomodoroPanel.contains(document.activeElement);
+        closePanel();
+        if (focusInside || document.activeElement === document.body) pomodoroCont.focus();
+    });
+
     document.addEventListener("click", function (e) {
-        if (pomoDragJustEnded) return;
+        // Scripted clicks (e.g. upstream loadCheckboxState restoring a checkbox) are not the user clicking outside.
+        if (pomoDragJustEnded || e.isTrusted === false) return;
         if (panelOpen && !pomodoroPanel.contains(e.target) && !pomodoroCont.contains(e.target)) {
             closePanel();
         }
@@ -785,6 +806,11 @@ document.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("mynt:ambient-state", function (e) {
             if (pomodoroAmbientToggleBtn) {
                 pomodoroAmbientToggleBtn.classList.toggle("active", e.detail?.isPlaying === true);
+                pomodoroAmbientToggleBtn.setAttribute("aria-pressed", String(e.detail?.isPlaying === true));
+                const status = document.getElementById("pomodoroAmbientStatus");
+                if (status) status.textContent = e.detail?.error
+                    ? getPomodoroText("pomodoroAmbientFailed", "Audio could not start. Press the headphones button to retry.")
+                    : e.detail?.isPlaying ? getPomodoroText("pomodoroAmbientPlaying", "Ambient audio playing") : "";
             }
         });
 
@@ -823,6 +849,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         initPomodoro();
         timer.subscribe(state => {
+            if (state.isRunning && !pomodoroState.isRunning && state.phase === "work" && getPomodoroBool(KEYS.ambientAuto, true)) {
+                void globalThis.myntAmbientAudio?.play(pomodoroAmbientSelect?.value || localStorage.getItem("myntAmbientType") || "rain");
+            }
             pomodoroState = state;
             updatePomodoroUI();
             pomodoroWorkInput.value = state.durations.workMinutes;

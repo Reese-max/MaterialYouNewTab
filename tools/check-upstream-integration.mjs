@@ -7,6 +7,7 @@ import vm from "node:vm";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 const manifest = JSON.parse(read("manifest.json"));
+const firefoxManifest = JSON.parse(read("manifest(firefox).json"));
 const html = read("index.html");
 const languages = read("scripts/languages.js");
 const shortcuts = read("scripts/shortcuts.js");
@@ -18,6 +19,10 @@ const privacy = read("privacy-policy.html");
 
 assert.equal(manifest.background.service_worker, "scripts/background.js");
 assert.ok(existsSync(resolve(root, manifest.background.service_worker)));
+assert.equal(firefoxManifest.manifest_version, 2);
+assert.deepEqual(firefoxManifest.background.scripts, ["scripts/background.js"]);
+assert.equal(firefoxManifest.background.persistent, false);
+assert.ok(existsSync(resolve(root, firefoxManifest.background.scripts[0])));
 assert.match(background, /runtime\.onInstalled/);
 assert.match(background, /docs\/whats-new\.html/);
 assert.match(background, /Reese-max\/MaterialYouNewTab/);

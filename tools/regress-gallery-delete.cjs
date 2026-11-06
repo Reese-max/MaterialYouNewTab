@@ -8,7 +8,7 @@ const bar={hidden:true},undo={focus(){}};
 const c={console,Date,Map,Set,window:{myntDialog:{confirm:async()=>{confirmations++;return accept;}}},
  document:{getElementById:id=>id==='wallpaperUndoBar'?bar:id==='wallpaperUndoBtn'?undo:null}, t:(k,f)=>f,
  hiddenIds:()=>new Set(hidden),saveHidden:h=>hidden=h,localStorage:{getItem:()=>current,removeItem:()=>current=null},KEY_CURRENT:'current',
- tx:async(mode,fn)=>{if(fail)throw Error('quota');const copy=new Map(map);const result=await fn({getAll:()=>[...copy.values()],put:x=>copy.set(x.id,x)});if(mode==='readwrite'){map.clear();copy.forEach((v,k)=>map.set(k,v));}return result;},reqP:async x=>x,
+ tx:async(mode,fn)=>{if(fail)throw Error('quota');const copy=new Map(map);const result=await fn({get:id=>copy.get(id),getAll:()=>[...copy.values()],put:x=>copy.set(x.id,x)});if(mode==='readwrite'){map.clear();copy.forEach((v,k)=>map.set(k,v));}return result;},reqP:async x=>x,
  next:async()=>{nexts++;current='b';return true;},URL:{revokeObjectURL(){}},setTimeout,clearTimeout};
 vm.createContext(c);vm.runInContext(between('    async function allItems(', '    // Items that take part'),c);
 vm.runInContext(between('    // ---------- Gallery UI ----------','    function renderSelection()'),c);

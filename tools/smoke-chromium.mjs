@@ -339,6 +339,52 @@ async function main() {
         return {escapeKeptDraft,centered,legacyPreserved:localStorage.getItem('myntLayout')==='{malformed-review-fixture',saved:!!first,previousPreserved:JSON.stringify(first.profiles[0].previous)===JSON.stringify(second.profiles[0].previous)};
     })()`);
     for(const [key,value] of Object.entries(review))assert.equal(value,true,'Review regression: '+key);
+    const manualCss = await evaluate(`(async () => {
+        const ids=['pomodoroCont','bookmarkButton'];
+        const components=['pomodoro','bookmarks'];
+        const blocks={pomodoro:{x:.1,y:.15,s:1.5},bookmarks:{x:-.1,y:.15,s:1.5}};
+        const previous=MYNTComponentVisibilityCore.definitions.filter(item=>components.includes(item.id))
+            .flatMap(item=>item.keys).map(key=>[key,localStorage.getItem(key)]);
+        const settled=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        const rect=id=>{
+            const el=document.getElementById(id),r=el.getBoundingClientRect(),style=getComputedStyle(el);
+            return {x:r.x,y:r.y,w:r.width,h:r.height,display:style.display,visibility:style.visibility,translate:style.translate,scale:style.scale};
+        };
+        try {
+            // Use the settings UI's validated visibility writes, not inline display overrides.
+            for(const id of components){
+                const toggle=document.getElementById('myntComponent-'+id);
+                if(!toggle.checked)toggle.click();
+            }
+            window.myntLayout.replaceSaved({version:2,blocks:{}});
+            await settled();
+            const defaults=ids.map(rect);
+            window.myntLayout.replaceSaved({version:2,blocks});
+            await settled();
+            const moved=ids.map(rect);
+            window.myntLayout.replaceSaved({version:2,blocks:{}});
+            await settled();
+            return {defaults,moved,reset:ids.map(rect),blocks:components.map(id=>blocks[id]),viewport:[innerWidth,innerHeight]};
+        } finally {
+            for(const [key,value] of previous){if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}
+            window.myntComponents.refresh();
+        }
+    })()`);
+    const {defaults,moved,reset,blocks,viewport:[vw,vh]}=manualCss;
+    const cssDiagnostics=JSON.stringify(manualCss);
+    assert.ok([...defaults,...moved,...reset].every(r=>r.w>0&&r.h>0&&r.display!=='none'&&r.visibility==='visible'),
+        'B5 layout measurements require visible pomodoro/bookmarks: '+cssDiagnostics);
+    assert.ok(moved.every((r,i)=>{
+        const xy=r.translate.split(/\s+/u).map(parseFloat);
+        return xy.length===2&&Math.abs(xy[0]-blocks[i].x*vw)<.001&&Math.abs(xy[1]-blocks[i].y*vh)<.001&&Number(r.scale)===blocks[i].s;
+    }),
+        'B5 visible computed translate/scale must equal saved values: '+cssDiagnostics);
+    assert.ok(moved.every((r,i)=>Math.abs(r.w-defaults[i].w*blocks[i].s)<1&&Math.abs(r.h-defaults[i].h*blocks[i].s)<1
+        &&Math.abs(r.y-defaults[i].y-blocks[i].y*vh)<1&&Math.abs(r.x-defaults[i].x-blocks[i].x*vw)<1)
+        &&reset.every((r,i)=>['x','y','w','h'].every(key=>Math.abs(r[key]-defaults[i][key])<1)
+            &&r.translate===defaults[i].translate&&r.scale===defaults[i].scale),
+        'B5 manual positions and scale must win over centered CSS; reset restores defaults: '+cssDiagnostics);
+    console.log('B5_CSS_LAYOUT_OK');
     // Reset only this disposable test's layout fixture; no user's browser data is used.
     await evaluate(`localStorage.removeItem('myntLayout');localStorage.removeItem('myntLayoutProfiles')`);
     await reloadAndWait();
@@ -385,46 +431,62 @@ async function main() {
     assert.equal(await evaluate(`document.querySelector('#videoBg').paused`),true,"Previously paused video unexpectedly resumed");
     await browserClient.send("Target.closeTarget", { targetId: otherTabId });
 
-    // Pomodoro behavior in the actual disposable extension profile, not a DOM mock.
-    const pomoStarted = await evaluate(`(async () => {
-        await myntPomodoro.setTask('CI focus task');
-        await myntPomodoro.start();
-        return myntPomodoro.getState().isRunning;
+    // Pomodoro behavior requires its component to be enabled in a fresh profile.
+    const previousPomodoroVisibility = await evaluate(`(() => {
+        const previous=MYNTComponentVisibilityCore.definitions.find(item=>item.id==='pomodoro')
+            .keys.map(key=>[key,localStorage.getItem(key)]);
+        const toggle=document.getElementById('myntComponent-pomodoro');
+        if(!toggle.checked)toggle.click();
+        return previous;
     })()`);
-    assert.equal(pomoStarted, true, 'Pomodoro did not start in extension');
-    await delay(1100);
-    const pomoPaused = await evaluate(`(async () => { await myntPomodoro.pause(); return myntPomodoro.getState(); })()`);
-    assert.equal(pomoPaused.isRunning, false);
-    assert.equal(pomoPaused.task, 'CI focus task');
-    assert.ok(pomoPaused.timeRemaining < pomoPaused.totalTime, 'Wall clock did not advance');
-    await reloadAndWait();
-    const pomoReload = await evaluate('myntPomodoro.getState()');
-    assert.equal(pomoReload.timeRemaining, pomoPaused.timeRemaining, 'Paused duration changed on reload');
-    assert.equal(pomoReload.task, 'CI focus task');
-    await evaluate(`localStorage.setItem('myntPomoStudioMode','full');localStorage.setItem('pomodoroPanelScale','150');localStorage.removeItem('pomodoroPanelPosition')`);
-    await reloadAndWait();
-    await evaluate('myntPomodoro.open()');
-    await delay(600);
-    assert.equal(await evaluate(`(() => {const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();return r.bottom<=innerHeight+1&&r.right<=innerWidth+1&&Math.abs(r.width/p.offsetWidth-1.5)<.02;})()`),true,'Animated full panel at saved 150% scale must fit');
-    await evaluate(`(() => {
-        myntPomodoro.open();
-        const p=document.querySelector('#pomodoroPanel');
-        p.style.animation='none';p.style.transform='scale(1.5)';p.style.top=(innerHeight-180)+'px';
-        localStorage.setItem('pomodoroPanelPosition',JSON.stringify({top:innerHeight-180,left:15}));
-        const b=document.querySelector('[aria-controls="myntPomoExtras"]');
-        if(b.getAttribute('aria-expanded')!=='true')b.click();
-    })()`);
-    await delay(200);
-    const pomoGeometry = await evaluate(`(() => {
-        const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();
-        const inBounds=r.top>=-1&&r.bottom<=innerHeight+1&&r.left>=-1&&r.right<=innerWidth+1;
-        const savedUnchanged=JSON.parse(localStorage.getItem('pomodoroPanelPosition')).top===innerHeight-180;
-        const scalePreserved=p.style.transform==='scale(1.5)';
-        document.querySelector('#myntPomoExtras').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
-        const collapsed=document.querySelector('#myntPomoExtras').hidden;
-        return {inBounds,savedUnchanged,collapsed,scalePreserved};
-    })()`);
-    for(const [key,value] of Object.entries(pomoGeometry))assert.equal(value,true,'Pomodoro panel: '+key);
+    let pomoGeometry;
+    try {
+        // Pomodoro behavior in the actual disposable extension profile, not a DOM mock.
+        const pomoStarted = await evaluate(`(async () => {
+            await myntPomodoro.setTask('CI focus task');
+            await myntPomodoro.start();
+            return myntPomodoro.getState().isRunning;
+        })()`);
+        assert.equal(pomoStarted, true, 'Pomodoro did not start in extension');
+        await delay(1100);
+        const pomoPaused = await evaluate(`(async () => { await myntPomodoro.pause(); return myntPomodoro.getState(); })()`);
+        assert.equal(pomoPaused.isRunning, false);
+        assert.equal(pomoPaused.task, 'CI focus task');
+        assert.ok(pomoPaused.timeRemaining < pomoPaused.totalTime, 'Wall clock did not advance');
+        await reloadAndWait();
+        const pomoReload = await evaluate('myntPomodoro.getState()');
+        assert.equal(pomoReload.timeRemaining, pomoPaused.timeRemaining, 'Paused duration changed on reload');
+        assert.equal(pomoReload.task, 'CI focus task');
+        await evaluate(`localStorage.setItem('myntPomoStudioMode','full');localStorage.setItem('pomodoroPanelScale','150');localStorage.removeItem('pomodoroPanelPosition')`);
+        await reloadAndWait();
+        await evaluate('myntPomodoro.open()');
+        await delay(600);
+        assert.equal(await evaluate(`(() => {const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();return r.bottom<=innerHeight+1&&r.right<=innerWidth+1&&Math.abs(r.width/p.offsetWidth-1.5)<.02;})()`),true,'Animated full panel at saved 150% scale must fit');
+        await evaluate(`(() => {
+            myntPomodoro.open();
+            const p=document.querySelector('#pomodoroPanel');
+            p.style.animation='none';p.style.transform='scale(1.5)';p.style.top=(innerHeight-180)+'px';
+            localStorage.setItem('pomodoroPanelPosition',JSON.stringify({top:innerHeight-180,left:15}));
+            const b=document.querySelector('[aria-controls="myntPomoExtras"]');
+            if(b.getAttribute('aria-expanded')!=='true')b.click();
+        })()`);
+        await delay(200);
+        pomoGeometry = await evaluate(`(() => {
+            const p=document.querySelector('#pomodoroPanel'),r=p.getBoundingClientRect();
+            const inBounds=r.top>=-1&&r.bottom<=innerHeight+1&&r.left>=-1&&r.right<=innerWidth+1;
+            const savedUnchanged=JSON.parse(localStorage.getItem('pomodoroPanelPosition')).top===innerHeight-180;
+            const scalePreserved=p.style.transform==='scale(1.5)';
+            document.querySelector('#myntPomoExtras').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+            const collapsed=document.querySelector('#myntPomoExtras').hidden;
+            return {inBounds,savedUnchanged,collapsed,scalePreserved};
+        })()`);
+        for(const [key,value] of Object.entries(pomoGeometry))assert.equal(value,true,'Pomodoro panel: '+key);
+    } finally {
+        await evaluate(`(() => {
+            for(const [key,value] of ${JSON.stringify(previousPomodoroVisibility)}){if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}
+            window.myntComponents.refresh();
+        })()`);
+    }
 
     const initial = await evaluate(`(() => ({
         url: location.href,

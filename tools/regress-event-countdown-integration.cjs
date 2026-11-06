@@ -42,7 +42,7 @@ function environment(initial = {}) {
         getElementById: id => ids.get(id), createElement: tag => new Node(tag), addEventListener: (type, fn) => { documentEvents[type] = fn; } };
     for (const id of ['backupBtn', 'restoreBtn', 'fileInput', 'resetsettings', 'backupScopeSelect', 'eventCountdownCard', 'eventCountdownManage']) { const n = new Node('button'); n.id = id; document.body.append(n); if (id === 'backupScopeSelect') n.value = 'full'; }
     const context = vm.createContext({ document, localStorage: storage, console, Blob, URL, Uint8Array, atob, Intl,
-        currentLanguage: 'en', translations: { en: {} },
+        MyntMcpData: require('../scripts/local-mcp-data.js'), currentLanguage: 'en', translations: { en: {} },
         setTimeout: (fn, delay) => { timers.set(++sequence, { fn, delay }); return sequence; }, clearTimeout: id => timers.delete(id),
         addEventListener: (type, fn) => { windowEvents[type] = fn; }, crypto: { randomUUID: () => 'fixture-event' } });
     context.window = context;
@@ -94,7 +94,7 @@ function status(env) { return env.descendants(env.ids.get('eventCountdownDialog'
         if (scope === 'settings') { assert.equal(env.storage.myntWallpaperCurrent, 'preserve-photo'); assert.equal(env.reads.length, 0); assert.equal(env.context.dbWrites.length, 0); assert(!Object.hasOwn(exported.backup, 'media')); }
         delete valid.localStorage[KEY]; assert(env.run('isValidBackupFile(fixture)'), 'absent countdown key remains compatible');
     }
-    for (const version of [undefined, 1, 2]) { const env = backupEnvironment(); env.context.old = {version,localStorage:{todoList:'old'},indexedDB:{}}; if(version===undefined) delete env.context.old.version; assert(env.run('isValidBackupFile(JSON.parse(JSON.stringify(old)))')); }
+    for (const version of [undefined, 1, 2]) { const env = backupEnvironment(); env.context.old = {version,localStorage:{todoList:JSON.stringify({told:{title:'old',status:'pending',pinned:false}})},indexedDB:{}}; if(version===undefined) delete env.context.old.version; assert(env.run('isValidBackupFile(JSON.parse(JSON.stringify(old)))')); }
     const { MYNT_LAYOUT_BLOCKS, myntNormalizeLayout } = require(path.join(root, 'scripts/layout-editor.js'));
     const blocks = Object.fromEntries(MYNT_LAYOUT_BLOCKS.map(([id], i) => [id, {x:0.01*(i+1),y:0.1,s:1.1}]));
     assert(Object.hasOwn(blocks,'countdowns')); assert(Object.hasOwn(blocks,'exam'));

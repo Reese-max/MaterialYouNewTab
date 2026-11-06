@@ -137,7 +137,8 @@ function focusLog(raw) {
  const value=parse(raw,{});if(!plain(value)||Object.keys(value).length>3660)fail('invalid_storage','Invalid focus log preserved');
  for(const [date,item] of Object.entries(value)) {
   try{core().parseDate(date);}catch{fail('invalid_storage','Invalid focus log date preserved');}
-  if(!plain(item)||Object.keys(item).some(k=>!['t','s','c','r','st'].includes(k))||typeof item.t!=='string'||item.t.length>160||![0,1].includes(item.c)||item.s!==undefined&&(typeof item.s!=='string'||item.s.length>20)||item.r!==undefined&&(!Number.isInteger(item.r)||item.r<0||item.r>100000)||item.st!==undefined&&(typeof item.st!=='string'||!/^([0-3])\/([0-3])$/.test(item.st)||Number(item.st[0])>Number(item.st[2])))fail('invalid_storage','Invalid focus log entry preserved');
+  if(!plain(item)||Object.keys(item).some(k=>!['t','s','c','r','st','v','sessions','legacy'].includes(k))||typeof item.t!=='string'||item.t.length>160||![0,1].includes(item.c)||item.s!==undefined&&(typeof item.s!=='string'||item.s.length>20)||item.r!==undefined&&(!Number.isInteger(item.r)||item.r<0||item.r>100000)||item.st!==undefined&&(typeof item.st!=='string'||!/^([0-3])\/([0-3])$/.test(item.st)||Number(item.st[0])>Number(item.st[2])))fail('invalid_storage','Invalid focus log entry preserved');
+  if(item.v!==undefined&&item.v!==2||item.v===2&&!Array.isArray(item.sessions)||item.sessions!==undefined&&(item.v!==2||!Array.isArray(item.sessions)||item.sessions.length>100000||item.sessions.some(s=>!plain(s)||Object.keys(s).some(k=>!['minutes','subject'].includes(k))||!Number.isFinite(s.minutes)||s.minutes<=0||s.minutes>120||typeof s.subject!=='string'||s.subject.length>20))||item.legacy!==undefined&&(item.v!==2||!plain(item.legacy)||Object.keys(item.legacy).some(k=>!['r','s'].includes(k))||!Number.isInteger(item.legacy.r)||item.legacy.r<0||item.legacy.r>100000||typeof item.legacy.s!=='string'||item.legacy.s.length>20))fail('invalid_storage','Invalid focus sessions preserved');
  }
  return value;
 }
@@ -169,21 +170,28 @@ function shortcutRecovery(raw) {
  if(!plain(value)||Object.keys(value).some(k=>!['version','index','item'].includes(k))||value.version!==1||!Number.isInteger(value.index)||value.index<0||value.index>=50)fail('invalid_storage','Invalid shortcut recovery preserved');
  return {version:1,index:value.index,item:shortcutItem(value.item)};
 }
+function storedShortcut(raw,index) {
+ const defaults=(root.myntShortcutDefault||(node&&require('./shortcuts.js').myntShortcutDefault))(index);
+ return shortcutItem({name:raw['shortcutName'+index]||defaults.name,url:raw['shortcutURL'+index]||defaults.url,icon:raw['shortcutIcon'+index]||''});
+}
 async function shortcutExecute(name,args,context) {
  const storage=context.storage||root.localStorage;if(!storage)fail('unavailable','Storage unavailable');
  const snapshotKeys=['shortcutAmount','myntShortcutRecoveryV1',...Array.from({length:50},(_,i)=>['shortcutName'+i,'shortcutURL'+i,'shortcutIcon'+i]).flat()];
  const expected=snapshotKeys.map(key=>({key,value:storage.getItem(key)})),raw=Object.fromEntries(expected.map(v=>[v.key,v.value]));
  const recovery=shortcutRecovery(raw.myntShortcutRecoveryV1);let items=[],defaultsNotPersisted=raw.shortcutAmount===null;
  if(defaultsNotPersisted) {
-  if(expected.slice(2).some(e=>e.value!==null))fail('invalid_storage','Shortcut count is missing but stored entries exist; original data preserved');
   const get=context.getShortcutItems||root.myntShortcuts?.getItems;
-  if(!get&&name==='mynt_shortcuts_mutate')fail('action_required','Shortcut defaults unavailable; open the shortcut editor first');
-  items=get?get():[];
+  if(expected.slice(2).some(e=>e.value!==null))items=Array.from({length:6},(_,i)=>storedShortcut(raw,i));
+  else {
+   if(!get&&name==='mynt_shortcuts_mutate')fail('action_required','Shortcut defaults unavailable; open the shortcut editor first');
+   items=get?get():[];
+  }
  } else {
   if(!/^\d{1,2}$/.test(raw.shortcutAmount)||Number(raw.shortcutAmount)<1||Number(raw.shortcutAmount)>50)fail('invalid_storage','Invalid shortcut count preserved');
-  items=Array.from({length:Number(raw.shortcutAmount)},(_,i)=>({name:raw['shortcutName'+i],url:raw['shortcutURL'+i],icon:raw['shortcutIcon'+i]||''}));
+  items=Array.from({length:Number(raw.shortcutAmount)},(_,i)=>storedShortcut(raw,i));
  }
  if(!Array.isArray(items)||items.length>50)fail('invalid_storage','Invalid shortcut list preserved');items=items.map(shortcutItem);
+ const previousCount=items.length;
  const identity=item=>token([item.name,item.url,item.icon],context).then(hash=>'s'+hash);
  const ids=await Promise.all(items.map(identity));
  const publicItem=async(item,slot)=>{
@@ -224,11 +232,10 @@ async function shortcutExecute(name,args,context) {
   }
  }
  if(retained)shortcutRecovery(JSON.stringify(retained));
- if(!defaultsNotPersisted&&items.length>Number(raw.shortcutAmount))for(let i=Number(raw.shortcutAmount);i<items.length;i++)if(['shortcutName','shortcutURL','shortcutIcon'].some(prefix=>raw[prefix+i]!==null))fail('action_required','Orphaned shortcut data occupies the next slot; recover it in the browser first');
+ if(items.length>previousCount)for(let i=previousCount;i<items.length;i++)if(['shortcutName','shortcutURL','shortcutIcon'].some(prefix=>raw[prefix+i]!==null))fail('action_required','Orphaned shortcut data occupies the next slot; recover it in the browser first');
  const targets=new Map([['shortcutAmount',String(items.length)],['myntShortcutRecoveryV1',retained?JSON.stringify(retained):null]]);
  for(let i=0;i<50;i++) {const item=items[i];targets.set('shortcutName'+i,item?item.name:null);targets.set('shortcutURL'+i,item?item.url:null);targets.set('shortcutIcon'+i,item?item.icon:null);}
  // Preserve data outside the declared active range instead of silently clearing orphaned values.
- const previousCount=defaultsNotPersisted?items.length:Number(raw.shortcutAmount);
  for(let i=Math.max(previousCount,items.length);i<50;i++)for(const prefix of ['shortcutName','shortcutURL','shortcutIcon'])targets.set(prefix+i,raw[prefix+i]);
  const writes=expected.filter(e=>targets.get(e.key)!==e.value).map(e=>({key:e.key,value:targets.get(e.key)}));
  const nextExpected=expected.map(e=>({key:e.key,value:targets.get(e.key)}));defaultsNotPersisted=false;
@@ -385,5 +392,33 @@ async function execute(name,args={},context={}) {
   return {...result,...committed};
  } catch(error) {const known=['CONFLICT','STORAGE_FAILURE','ROLLBACK_FAILED','INVALID_TRANSACTION','ACCESS_REVOKED','EDITOR_BUSY','UNAVAILABLE'];const code=error.code||(known.includes(error.message)?error.message:'invalid_storage');const message=error.code||known.includes(error.message)?error.message:'Data validation failed; existing data preserved';return {ok:false,code,error:{code:code.toUpperCase(),message},message};}
 }
-const api=Object.freeze({tools,execute,familyMatrix,validateTodoRecovery:todoRecovery,validateShortcutRecovery:shortcutRecovery,validateHabitRecovery:habitRecovery});root.MyntMcpData=api;if(node)module.exports=api;
+function validateBackupStorage(saved) {
+ // Other structured settings have tolerant on-device normalizers. At the
+ // import boundary malformed JSON must never become a silent default/reset.
+ if(Object.hasOwn(saved,'weatherLocation')&&(typeof saved.weatherLocation!=='string'||saved.weatherLocation.length>512))fail('invalid_storage','Invalid weather location');
+ for(const key of ['pomodoroState','myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','myntAdaptiveBackground','aiToolsSettings','myntFocusHistory','weatherParsedData','myntWallpaperHiddenBuiltins']) {
+  if(!Object.hasOwn(saved,key))continue;
+  const value=parse(saved[key]);
+  if(value===null||typeof value!=='object')fail('invalid_storage','Invalid structured setting');
+ }
+ for(const domain of Object.keys(keys)) {
+  if(!keys[domain].some(key=>Object.hasOwn(saved,key)))continue;
+  state(domain,keys[domain].map(key=>saved[key]??null),{});
+ }
+ // Migration is intentionally tolerant for existing on-device layouts. Imports
+ // must validate the legacy record as well, even when profiles are also present.
+ if(Object.hasOwn(saved,'myntLayout')) {
+  const value=parse(saved.myntLayout);
+  if(!plain(value)||![undefined,1,2].includes(value.version)||!plain(value.blocks))fail('invalid_storage','Invalid legacy layout');
+  profiles().validateLayout({...value,version:2,snap:value.snap??false,locked:value.locked??true},normalizeLayout);
+ }
+ if(Object.hasOwn(saved,'myntFocusLog'))focusLog(saved.myntFocusLog);
+ if(Object.hasOwn(saved,'shortcutAmount')) {
+  if(!/^\d{1,2}$/.test(saved.shortcutAmount)||Number(saved.shortcutAmount)<1||Number(saved.shortcutAmount)>50)fail('invalid_storage','Invalid shortcut count');
+ }
+ if(Object.hasOwn(saved,'shortcutAmount')||Object.keys(saved).some(key=>/^shortcut(?:Name|URL|Icon)\d+$/.test(key)))
+  for(let i=0;i<Number(saved.shortcutAmount??6);i++)storedShortcut(saved,i);
+ return true;
+}
+const api=Object.freeze({tools,execute,familyMatrix,validateBackupStorage,validateTodoRecovery:todoRecovery,validateShortcutRecovery:shortcutRecovery,validateHabitRecovery:habitRecovery});root.MyntMcpData=api;if(node)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

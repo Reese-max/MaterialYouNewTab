@@ -67,8 +67,10 @@ suite in an approved environment allowing private Unix sockets before release.
 1. Review the tool catalog and information visible to connected AI clients.
    Backup previews omit secrets and media bytes; never add credentials to generic
    settings tools or client config.
-2. Approve the browser's nativeMessaging permission and exact extension build.
-   The shipped live manifests do not activate this permission automatically.
+2. Review the exact extension build. Chromium and Firefox declare nativeMessaging
+   in optional_permissions only. Clicking Connect in MYNT requests browser approval
+   before connecting; denial leaves the bridge off. No permission is requested
+   at startup. Host registration remains a separate explicitly approved step.
 3. Copy and customize a template from `templates/` outside the repository only
    after approval. Use an absolute Node binary path and this checkout's absolute
    native-host script path. Make the launcher executable. Host name is

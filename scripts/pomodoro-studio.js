@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  // A sticky, paint-contained backdrop stays visible without extending scroll overflow.
  const backdrops=['.pomodoro-bg-video','.pomodoro-bg-overlay'].map(selector=>panel.querySelector(':scope > '+selector)).filter(Boolean);
  const backdrop=document.createElement('div');backdrop.className='pomoStudioBackdrop';backdrop.setAttribute('aria-hidden','true');panel.prepend(backdrop);backdrop.append(...backdrops);
- const fitBackdrop=css=>{const height=panel.clientHeight;if(!height)return;const top=parseFloat(css.paddingTop)||0,left=parseFloat(css.paddingLeft)||0,right=parseFloat(css.paddingRight)||0;backdrop.style.height=height+'px';backdrop.style.top=-top+'px';backdrop.style.marginTop=-top+'px';backdrop.style.marginLeft=-left+'px';backdrop.style.marginRight=-right+'px';backdrop.style.marginBottom=(top-height)+'px';backdrop.style.width='calc(100% + '+(left+right)+'px)';};
+ const fitBackdrop=css=>{if(!panel.clientHeight)return;const px=name=>parseFloat(css[name])||0,box=px('height');/* Floor the fractional padding box: a rounded-up clientHeight overflows by a subpixel and shows a scrollbar. */const height=Math.floor(css.boxSizing==='border-box'?box-px('borderTopWidth')-px('borderBottomWidth'):box+px('paddingTop')+px('paddingBottom'));if(!(height>0))return;const top=parseFloat(css.paddingTop)||0,left=parseFloat(css.paddingLeft)||0,right=parseFloat(css.paddingRight)||0;backdrop.style.height=height+'px';backdrop.style.top=-top+'px';backdrop.style.marginTop=-top+'px';backdrop.style.marginLeft=-left+'px';backdrop.style.marginRight=-right+'px';backdrop.style.marginBottom=(top-height)+'px';backdrop.style.width='calc(100% + '+(left+right)+'px)';};
  // Transient viewport safety after disclosure growth; never changes saved drag coordinates.
  let fitFrame=0;const keepVisible=()=>{if(fitFrame)return;fitFrame=requestAnimationFrame(()=>{
   fitFrame=0;if(!panel.offsetWidth||!panel.offsetHeight)return;
@@ -188,7 +188,9 @@ document.addEventListener('DOMContentLoaded',()=>{
  custom.onclick=()=>{full=true;setMode();scenarios.open=true;try{localStorage.setItem(MODE,'full');}catch{}requestAnimationFrame(()=>{keepVisible();durationInputs.workMinutes.focus({preventScroll:true});durationInputs.workMinutes.scrollIntoView({block:'nearest'});});};
  const updateRemove=()=>{remove.disabled=Number(select.value)<builtin.length;};select.onchange=updateRemove;render();updateRemove();
  const alarmNotes=el('details');alarmNotes.className='pomoStudioAlarmNotes';alarmNotes.append(el('summary',t('pomoStudioAlarmNotes','提示音與使用說明')),alarmLabel,limits);
- settings.append(scenarios);extras.prepend(cards,settings);extras.append(alarmNotes);
+ settings.append(scenarios);const cardsLabel=el('p',t('pomoStudioFocusBreak','專注／休息（分）'));cardsLabel.className='pomoStudioCardsLabel';cardsLabel.setAttribute('aria-hidden','true');extras.prepend(cardsLabel,cards,settings);extras.append(alarmNotes);
+ // The ordinary-window action closes the card in reading and focus order too, not only visually.
+ const ordinaryWindow=extras.querySelector(':scope > .mynt-pomo-open-popup');if(ordinaryWindow){const note=ordinaryWindow.nextElementSibling;extras.append(ordinaryWindow);if(note&&note.classList.contains('mynt-pomo-note'))extras.append(note);}
  const stats=el('div');stats.className='pomoStudioStats';for(const selector of ['.pomodoroSessionsToday','.pomodoroFocusSummary']){const child=panel.querySelector(selector);if(child)stats.append(child);}if(stats.children.length)panel.append(stats);
  // Both primary states keep an identical footprint; labels and keyboard focus survive swaps.
  const controls=panel.querySelector('.pomodoroControls'),start=panel.querySelector('#pomodoroStartBtn'),pause=panel.querySelector('#pomodoroPauseBtn'),reset=panel.querySelector('#pomodoroResetBtn');

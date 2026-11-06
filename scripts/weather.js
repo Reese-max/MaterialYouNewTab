@@ -354,6 +354,28 @@ async function getWeatherData({ allowNetwork = true } = {}) {
         }
     }
 
+    const weatherStatus = document.createElement("small");
+    weatherStatus.id = "weatherCacheStatus";
+    weatherStatus.setAttribute("role", "status");
+    weatherStatus.setAttribute("aria-live", "polite");
+    document.getElementById("hideWeather").append(weatherStatus);
+    let weatherFetching = false, lastWeatherAttempt = -Infinity;
+    const retentionTime = savedApiKey ? 435000 : 960000;
+    function showWeatherTime(time, stale) {
+        if (!Number.isFinite(time)) return;
+        const key = stale ? "weatherStale" : "weatherUpdatedAt";
+        const label = translations[currentLanguage]?.[key] || translations.en[key];
+        weatherStatus.textContent = label.replace("{time}", new Date(time).toLocaleString(currentLanguage.replace("_", "-")));
+        weatherStatus.dataset.stale = String(stale);
+    }
+    function refreshWeather() {
+        if (!document.hidden && isWeatherWidgetRendered() && localStorage.getItem("hideWeatherVisible") !== "true" && Date.now() - lastWeatherAttempt >= 60000) fetchWeather();
+    }
+    document.addEventListener("visibilitychange", refreshWeather);
+    setInterval(refreshWeather, 60000);
+    // Show cached weather before GPS/IP lookups can wait on an offline connection.
+    await fetchWeather(true);
+
     // Fetch location based on user preference
     await (async function initializeLocation() {
         try {
@@ -381,17 +403,26 @@ async function getWeatherData({ allowNetwork = true } = {}) {
     })();
 
     // Fetch weather data based on a location
-    async function fetchWeather() {
+    async function fetchWeather(cacheOnly = false) {
+        if (weatherFetching) return;
+        weatherFetching = true;
+        if (!cacheOnly) lastWeatherAttempt = Date.now();
+        let weatherParsedTime;
         try {
             let parsedData = JSON.parse(localStorage.getItem("weatherParsedData"));
-            const weatherParsedTime = parseInt(localStorage.getItem("weatherParsedTime"));
+            weatherParsedTime = parseInt(localStorage.getItem("weatherParsedTime"));
             const weatherParsedLocation = localStorage.getItem("weatherParsedLocation");
             const weatherParsedLang = localStorage.getItem("weatherParsedLang");
 
-            const retentionTime = savedApiKey ? 435000 : 960000; // 7.25 min for user-entered API key, 16 min otherwise
+            const cacheMatches = weatherParsedLang === currentLanguage && (weatherParsedLocation === currentUserLocation || (!savedLocation && (!currentUserLocation || currentUserLocation === "auto:ip")));
+            if (parsedData && cacheMatches) {
+                UpdateWeather();
+                showWeatherTime(weatherParsedTime, !Number.isFinite(weatherParsedTime) || Date.now() - weatherParsedTime > retentionTime);
+            }
+            if (cacheOnly) return;
 
             if (!parsedData ||
-                ((Date.now() - weatherParsedTime) > retentionTime) ||
+                !Number.isFinite(weatherParsedTime) || ((Date.now() - weatherParsedTime) > retentionTime) ||
                 (weatherParsedLocation !== currentUserLocation) ||
                 (weatherParsedLang !== currentLanguage)) {
 
@@ -404,6 +435,7 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                 let data = await fetch(weatherApi);
                 if (!data.ok) throw new Error(`Weather lookup failed (${data.status}).`);
                 parsedData = await data.json();
+                if (parsedData.error) throw Error("Weather service returned an error");
                 if (!parsedData.error) {
                     // Extract only the necessary fields before saving
                     const filteredData = {
@@ -440,11 +472,13 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                     localStorage.setItem("weatherParsedTime", Date.now()); // Save time of last fetching
                     localStorage.setItem("weatherParsedLocation", currentUserLocation); // Save user location
                     localStorage.setItem("weatherParsedLang", currentLanguage); // Save language preference
+                    weatherParsedTime = Date.now();
                 }
             }
 
             // Update weather data
             UpdateWeather();
+            showWeatherTime(weatherParsedTime, false);
 
             function UpdateWeather() {
                 // Weather data
@@ -537,6 +571,7 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                     }
                 };
                 updateTemperatureDisplay();
+                fahrenheitCheckbox.onchange = updateTemperatureDisplay;
 
                 // Setting weather Icon
                 const newWIcon = parsedData.current.condition.icon;
@@ -596,19 +631,19 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                 // Switch icon on hover
                 let hoverTimeout;
 
-                locationTile.addEventListener("mouseenter", () => {
+                locationTile.onmouseenter = () => {
                     hoverTimeout = setTimeout(() => {
                         locationIcon.src = getToggleIcon();
                     }, 120);
-                });
+                };
 
-                locationTile.addEventListener("mouseleave", () => {
+                locationTile.onmouseleave = () => {
                     clearTimeout(hoverTimeout);
                     locationIcon.src = "./svgs/location.svg";
-                });
+                };
 
                 // Toggle on click
-                locationIcon.addEventListener("click", (e) => {
+                locationIcon.onclick = (e) => {
                     e.stopPropagation();
                     isLocationHidden = !isLocationHidden;
                     localStorage.setItem("locationHidden", isLocationHidden);
@@ -618,11 +653,12 @@ async function getWeatherData({ allowNetwork = true } = {}) {
                     if (locationTile.matches(":hover")) {
                         locationIcon.src = getToggleIcon();
                     }
-                });
+                };
             }
         } catch (error) {
+            showWeatherTime(weatherParsedTime, true);
             console.error("Error fetching weather data:", error);
-        }
+        } finally { weatherFetching = false; }
     }
 }
 

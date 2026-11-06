@@ -1,4 +1,4 @@
-/* Local MCP bridge: disabled by default; no permission request or host registration. */
+/* Local MCP bridge: disabled by default; optional permission on trusted connect only. */
 (function(root){
 'use strict';
 const HOST='io.mynt.local_mcp', MAX=262144;
@@ -113,7 +113,8 @@ const init=()=>{
    if(!api?.runtime?.connectNative){tell('mcpExtensionRequired','A separately approved native host and extension permission are required; web preview cannot connect.');return;}
    connect.disabled=true;
    try{
-     if(!(await api.permissions.contains({permissions:['nativeMessaging']}))){connect.disabled=false;tell('mcpPermissionRequired','Native messaging is not enabled. No permission was requested. See the setup guide.');return;}
+     // Request directly in the trusted click stack to preserve browser user activation.
+     if(!(await api.permissions.request({permissions:['nativeMessaging']}))){connect.disabled=false;tell('mcpPermissionRequired','Native messaging permission was not granted. The bridge remains disconnected.');return;}
      connect.disabled=true;port=api.runtime.connectNative(HOST);access();disconnect.disabled=false;
      const connectedPort=port;
      port.onMessage.addListener(async request=>{if(port!==connectedPort)return;if(request?.kind==='ready'){tell('mcpConnected','Connected for this session. Closing this page disconnects.');return;}if(request?.kind==='bridge_error'){stop();tell('mcpHostUnavailable','Native host unavailable. Disconnected; check current state before retrying a pending change.');return;}const result=await engine.execute(request);try{if(connectedPort===port)connectedPort.postMessage({id:request?.id,...result});}catch{stop();}});

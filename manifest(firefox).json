@@ -6,6 +6,7 @@
 	"permissions": ["storage"],
 	"optional_permissions": [
 		"bookmarks",
+		"nativeMessaging",
 		"https://www.google.com/*",
 		"http://127.0.0.1/*"
 	],
@@ -21,6 +22,10 @@
 		"newtab": "index.html"
 	},
 	"incognito": "spanning",
+	"background": {
+		"scripts": ["scripts/background.js"],
+		"persistent": false
+	},
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{c30c387e-cd01-42b4-b5c7-6af2d820535b}",
