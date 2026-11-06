@@ -1,0 +1,404 @@
+/* The current bookmark DOM, isolated from the legacy .folder/list rules. */
+#bookmarkSidebar {
+    --bookmark-muted: color-mix(in srgb, var(--textColorDark-blue) 76%, transparent);
+    --bookmark-hover: color-mix(in srgb, var(--darkColor-blue) 12%, transparent);
+    --bookmark-edge: color-mix(in srgb, var(--textColorDark-blue) 22%, transparent);
+    --bookmark-danger: #b3261e;
+    display: flex;
+    flex-direction: column;
+    max-inline-size: 100vw;
+    overflow: hidden;
+    text-align: start;
+    color: var(--textColorDark-blue);
+}
+
+#bookmarkSidebar .bookmark-sidebar-header,
+#bookmarkSidebar .bookmark-search-container,
+#bookmarkSidebar .bookmark-shortcut-status { flex-shrink: 0; }
+#bookmarkSidebar .bookmark-heading-copy { flex: 1; }
+#bookmarkSidebar .bookmark-search-container { inline-size: 100%; }
+#bookmarkSidebar #bookmarkContent {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-block-size: 0;
+    min-inline-size: 0;
+}
+#bookmarkSidebar [hidden] { display: none !important; }
+#bookmarkSidebar #bookmarkList {
+    display: block;
+    flex: 1;
+    block-size: auto;
+    min-block-size: 0;
+    margin: 0;
+    padding: 8px 16px 24px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--darkColor-blue) transparent;
+    scroll-padding-block: 8px;
+    text-align: start;
+}
+
+#bookmarkSidebar #bookmarkList :is(.bookmark-section, .bookmark-folder) {
+    display: block;
+    grid-column: 1 / -1;
+    inline-size: 100%;
+    min-inline-size: 0;
+    padding: 0;
+}
+#bookmarkSidebar #bookmarkList .bookmark-section + .bookmark-section { margin-block-start: 16px; }
+#bookmarkSidebar .bookmark-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 32px;
+    padding-inline: 8px;
+    margin-block-end: 4px;
+    color: var(--bookmark-muted);
+}
+#bookmarkSidebar .bookmark-section-header h3 {
+    margin: 0;
+    font-size: .8125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: start;
+}
+#bookmarkSidebar .bookmark-section-header > span {
+    min-inline-size: 24px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--bookmark-hover);
+    font-size: .6875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+#bookmarkSidebar .bookmark-section-empty {
+    margin: 0;
+    padding: 4px 8px 8px;
+    color: var(--bookmark-muted);
+    font-size: .8125rem;
+    line-height: 1.6;
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+#bookmarkSidebar #bookmarkList :is(.bookmark-section-list, .bookmark-folder-children) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+#bookmarkSidebar #bookmarkList :is(.bookmark-item, .bookmark-folder-row) {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 0 4px;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 52px;
+    padding: 0 4px;
+    border-radius: 14px;
+}
+#bookmarkSidebar #bookmarkList :is(.bookmark-item, .bookmark-folder-row):is(:hover, :focus-within) {
+    background: var(--bookmark-hover);
+}
+#bookmarkSidebar #bookmarkList .bookmark-item > a,
+#bookmarkSidebar .bookmark-folder-disclosure {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 52px;
+    padding: 4px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+}
+#bookmarkSidebar #bookmarkList .bookmark-item > a::before,
+#bookmarkSidebar #bookmarkList .bookmark-item > a::after { content: none; }
+
+/* Padding makes a 20px image inside a 36px tile without another wrapper. */
+#bookmarkSidebar #bookmarkList .bookmark-item > a .favicon {
+    flex: 0 0 36px;
+    inline-size: 36px;
+    block-size: 36px;
+    margin: 0;
+    padding: 8px;
+    border-radius: 12px;
+    background: var(--whitishColor-blue);
+    object-fit: contain;
+    filter: none;
+}
+#bookmarkSidebar #bookmarkList .bookmark-item-copy {
+    display: grid;
+    flex: 1;
+    gap: 2px;
+    min-inline-size: 0;
+    text-align: start;
+}
+#bookmarkSidebar #bookmarkList .bookmark-item-copy :is(strong, small) {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+#bookmarkSidebar #bookmarkList .bookmark-item-copy strong { font-size: .9rem; font-weight: 600; }
+#bookmarkSidebar #bookmarkList .bookmark-item-copy small { color: var(--bookmark-muted); font-size: .75rem; opacity: 1; }
+
+#bookmarkSidebar .bookmark-folder-disclosure > svg {
+    flex: 0 0 36px;
+    inline-size: 36px;
+    block-size: 36px;
+    padding: 8px;
+    border-radius: 12px;
+    background: var(--bookmark-hover);
+}
+#bookmarkSidebar .bookmark-folder-disclosure > span:not(.bookmark-folder-chevron) {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .9rem;
+    font-weight: 600;
+}
+#bookmarkSidebar .bookmark-folder-chevron {
+    display: grid;
+    place-items: center;
+    flex: 0 0 20px;
+    inline-size: 20px;
+    block-size: 20px;
+    color: var(--bookmark-muted);
+    font-size: 0;
+}
+#bookmarkSidebar .bookmark-folder-chevron::before {
+    content: "";
+    inline-size: 8px;
+    block-size: 8px;
+    border-block-end: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(-45deg);
+}
+#bookmarkSidebar .bookmark-folder-chevron:dir(rtl)::before { transform: rotate(135deg); }
+#bookmarkSidebar .bookmark-folder-disclosure[aria-expanded="true"] .bookmark-folder-chevron::before { transform: rotate(45deg); }
+#bookmarkSidebar #bookmarkList .bookmark-folder-children {
+    margin-block: 4px;
+    margin-inline-start: 22px;
+    padding-inline-start: 10px;
+    border-inline-start: 1px solid var(--bookmark-edge);
+}
+
+#bookmarkSidebar .bookmark-action-menu { min-inline-size: 0; }
+#bookmarkSidebar :is(.bookmark-action-menu, .bookmark-display-options) > summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 40px;
+    padding: 8px;
+    border-radius: 50%;
+    color: inherit;
+    cursor: pointer;
+    list-style: none;
+}
+#bookmarkSidebar :is(.bookmark-action-menu, .bookmark-display-options) > summary::-webkit-details-marker { display: none; }
+#bookmarkSidebar :is(.bookmark-action-menu, .bookmark-display-options) > summary::marker { content: ""; }
+#bookmarkSidebar .bookmark-action-menu > summary { inline-size: 40px; opacity: .55; }
+#bookmarkSidebar .bookmark-action-menu > summary svg { inline-size: 20px; block-size: 20px; fill: currentColor; }
+#bookmarkSidebar :is(.bookmark-item, .bookmark-folder-row):is(:hover, :focus-within) > .bookmark-action-menu > summary,
+#bookmarkSidebar .bookmark-action-menu[open] > summary { opacity: 1; }
+#bookmarkSidebar .bookmark-action-menu > summary:hover { background: var(--bookmark-hover); }
+/* Keep the open menu in flow so both the final row and the panel edge stay reachable. */
+#bookmarkSidebar .bookmark-action-menu[open] { grid-column: 1 / -1; margin-block-start: -46px; }
+#bookmarkSidebar .bookmark-action-menu[open] > summary { margin-inline-start: auto; }
+#bookmarkSidebar .bookmark-action-popover {
+    position: static;
+    min-inline-size: min(160px, 100%);
+    margin-block: 8px 4px;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--whitishColor-blue);
+    box-shadow: 0 4px 16px rgb(0 0 0 / .16);
+}
+#bookmarkSidebar .bookmark-action-popover :is(.bookmark-favorite-button, .bookmark-move-button, .bookmark-shortcut-button, .bookmark-edit-button, .bookmark-delete-button) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    inline-size: 100%;
+    min-block-size: 40px;
+    block-size: auto;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font-size: .8125rem;
+    line-height: 1.5;
+    text-align: start;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+#bookmarkSidebar .bookmark-action-popover button:hover:not(:disabled) { background: var(--bookmark-hover); }
+#bookmarkSidebar .bookmark-action-popover .bookmark-delete-button {
+    margin-block-start: 4px;
+    border-block-start: 1px solid var(--bookmark-edge);
+    color: var(--bookmark-danger);
+}
+#bookmarkSidebar button:disabled { opacity: .45; cursor: default; }
+
+#bookmarkSidebar .bookmark-display-options { flex-shrink: 0; padding-block: 0 8px; padding-inline: 24px 16px; }
+#bookmarkSidebar .bookmark-display-options > summary {
+    justify-content: flex-start;
+    gap: 12px;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    padding-inline: 12px;
+    border: 1px solid var(--bookmark-edge);
+    border-radius: 24px;
+    font-size: .8125rem;
+    text-align: start;
+}
+#bookmarkSidebar .bookmark-display-options > summary::after {
+    content: "";
+    inline-size: 7px;
+    block-size: 7px;
+    margin-inline: 4px;
+    border-inline-end: 1.5px solid currentColor;
+    border-block-end: 1.5px solid currentColor;
+    transform: rotate(45deg);
+}
+#bookmarkSidebar .bookmark-display-options[open] > summary::after { transform: rotate(225deg); }
+#bookmarkSidebar .bookmark-display-options:dir(rtl) > summary::after { transform: rotate(-45deg); }
+#bookmarkSidebar .bookmark-display-options:dir(rtl)[open] > summary::after { transform: rotate(135deg); }
+#bookmarkSidebar .bookmark-controls-container {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 16px;
+    margin-block-start: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--whitishColor-blue);
+}
+#bookmarkSidebar .bookmark-control-group { min-inline-size: 0; max-inline-size: 100%; }
+#bookmarkSidebar .bookmark-control-group h3 { font-size: .75rem; color: var(--bookmark-muted); white-space: normal; text-align: start; }
+#bookmarkSidebar .button-group { max-inline-size: 100%; background: transparent; }
+#bookmarkSidebar :is(.bookmark-sort-button, .bookmark-view-as-button) {
+    min-block-size: 40px;
+    min-inline-size: 40px;
+    block-size: auto;
+    color: inherit;
+    white-space: normal;
+}
+#bookmarkSidebar #bookmarkDisplayOptions :is(.bookmark-sort-button, .bookmark-view-as-button)[aria-pressed="true"] {
+    background: var(--bg-color-blue);
+    color: var(--textColorDark-blue);
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px var(--bookmark-edge);
+}
+#bookmarkSidebar .bookmark-undo-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 12px;
+    margin: 8px 16px;
+    padding-block: 4px;
+    padding-inline: 16px 6px;
+    border-radius: 28px;
+    background: var(--bg-color-blue);
+    font-size: .8125rem;
+}
+#bookmarkSidebar #bookmarkUndoMessage { min-inline-size: 0; overflow-wrap: anywhere; }
+#bookmarkSidebar #bookmarkUndoButton {
+    flex-shrink: 0;
+    min-inline-size: 44px;
+    min-block-size: 40px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 24px;
+    background: var(--whitishColor-blue);
+    color: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+#bookmarkSidebar #clearSearchButton:not([hidden]) { display: grid; place-items: center; min-inline-size: 40px; min-block-size: 40px; border-radius: 50%; }
+#bookmarkSidebar :is(button, summary, a[href]):focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+#bookmarkSidebar #bookmarkSearch:focus-visible { outline: 2px solid var(--darkColor-blue) !important; outline-offset: 2px; }
+
+/* Nested lists own their grid; sections and folders keep the whole row. */
+#bookmarkSidebar #bookmarkList.grid-view :is(.bookmark-section-list, .bookmark-folder-children) {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 8px;
+}
+#bookmarkSidebar #bookmarkList.grid-view :is(.bookmark-section-list, .bookmark-folder-children):not(:has(> .bookmark-item)) { row-gap: 2px; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+}
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > a {
+    flex-direction: column;
+    gap: 6px;
+    min-block-size: 0;
+    padding: 10px;
+}
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > a .favicon { flex-basis: 44px; inline-size: 44px; block-size: 44px; padding: 12px; border-radius: 16px; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item-copy { display: block; inline-size: 100%; text-align: center; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item-copy strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item-copy small { display: none; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-end: 4px;
+    background: var(--whitishColor-blue);
+    opacity: 0;
+}
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item:is(:hover, :focus-within) > .bookmark-action-menu > summary,
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu[open] > summary { opacity: 1; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item:has(> .bookmark-action-menu[open]) { grid-column: 1 / -1; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu[open] { margin-block-start: 0; }
+
+/* Theme variables already follow the selected palette, including dark mode. */
+#bookmarkSidebar:where(.black-theme, .black-theme *) { --bookmark-hover: color-mix(in srgb, var(--textColorDark-blue) 10%, transparent); --bookmark-danger: #f2b8b5; }
+
+@media (hover: none) {
+    #bookmarkSidebar .bookmark-action-menu > summary,
+    #bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary { opacity: 1; }
+}
+@media (max-width: 480px) {
+    #bookmarkSidebar { inline-size: 100vw; border-radius: 0; }
+    #bookmarkSidebar .topOutRoundCorner { display: none; }
+    #bookmarkSidebar .bookmark-sidebar-header { padding-inline: 20px; }
+}
+@media (forced-colors: active) {
+    #bookmarkSidebar { --bookmark-muted: CanvasText; --bookmark-edge: CanvasText; --bookmark-hover: Canvas; --bookmark-danger: ButtonText; border: 1px solid CanvasText; }
+    #bookmarkSidebar :is(.bookmark-action-popover, .bookmark-controls-container, .bookmark-undo-bar, .bookmark-section-header > span) { border: 1px solid CanvasText; box-shadow: none; }
+    #bookmarkSidebar #bookmarkList :is(.bookmark-item, .bookmark-folder-row):is(:hover, :focus-within) { outline: 1px solid Highlight; outline-offset: -1px; }
+    #bookmarkSidebar .bookmark-action-menu > summary,
+    #bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary { opacity: 1; }
+    #bookmarkSidebar :is(button, summary, a[href]):focus-visible { outline: 2px solid Highlight; }
+}
+
+/* Header actions: the shared light chip loses contrast against the dark palette. */
+.black-theme #bookmarkSidebar .bookmark-header-actions button {
+	background: rgb(255 255 255 / 0.14);
+	color: var(--textColorDark-blue);
+}
