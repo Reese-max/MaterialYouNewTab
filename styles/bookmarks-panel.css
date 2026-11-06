@@ -402,3 +402,19 @@
 	background: rgb(255 255 255 / 0.14);
 	color: var(--textColorDark-blue);
 }
+
+/* An open menu is pulled up beside its row; let its empty area pass clicks through to the bookmark link. */
+#bookmarkSidebar .bookmark-action-menu[open] { pointer-events: none; }
+#bookmarkSidebar .bookmark-action-menu[open] > * { pointer-events: auto; }
+
+/* Dark palette: --whitishColor-blue becomes light grey while text stays light, so raised surfaces need a dark fill. */
+.black-theme #bookmarkSidebar :is(.bookmark-action-popover, .bookmark-controls-container, #bookmarkUndoButton),
+.black-theme #bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary {
+	background: #2f2f2f;
+	color: var(--textColorDark-blue);
+}
+
+@media (forced-colors: active) {
+	#bookmarkSidebar :is(.bookmark-sort-button, .bookmark-view-as-button)[aria-pressed="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+	#bookmarkSidebar #bookmarkSearch { border: 1px solid CanvasText !important; }
+}
