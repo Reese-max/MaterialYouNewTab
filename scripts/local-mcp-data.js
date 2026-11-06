@@ -393,11 +393,20 @@ async function execute(name,args={},context={}) {
  } catch(error) {const known=['CONFLICT','STORAGE_FAILURE','ROLLBACK_FAILED','INVALID_TRANSACTION','ACCESS_REVOKED','EDITOR_BUSY','UNAVAILABLE'];const code=error.code||(known.includes(error.message)?error.message:'invalid_storage');const message=error.code||known.includes(error.message)?error.message:'Data validation failed; existing data preserved';return {ok:false,code,error:{code:code.toUpperCase(),message},message};}
 }
 function validateBackupStorage(saved) {
+ if(Object.hasOwn(saved,'aiToolsCustom')) {
+  const icons=root.MyntQuicklinkIcons||(node&&require('./quicklink-icons.js'));
+  if(!icons)fail('invalid_storage','AI icon validator unavailable');
+  // Uploaded icons make this key larger than other settings; same 1 MiB cap as local-mcp-preferences.
+  if(typeof saved.aiToolsCustom!=='string'||saved.aiToolsCustom.length>1024*1024)fail('data_too_large','AI tool customisation too large');
+  let custom;try{custom=JSON.parse(saved.aiToolsCustom);}catch{fail('invalid_storage','Malformed stored JSON preserved unchanged');}
+  icons.customOverrides(custom,true);
+ }
+
  // Other structured settings have tolerant on-device normalizers. At the
  // import boundary malformed JSON must never become a silent default/reset.
  if(Object.hasOwn(saved,'weatherLocation')&&(typeof saved.weatherLocation!=='string'||saved.weatherLocation.length>512))fail('invalid_storage','Invalid weather location');
- for(const key of ['pomodoroState','myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','myntAdaptiveBackground','aiToolsSettings','myntFocusHistory','weatherParsedData','myntWallpaperHiddenBuiltins']) {
-  if(!Object.hasOwn(saved,key))continue;
+ for(const key of ['pomodoroState','myntPomodoroAppearance.v1','myntPomoMusicSettingsV1','myntPomoScenarios','myntAdaptiveBackground','aiToolsSettings','aiToolsCustom','myntFocusHistory','weatherParsedData','myntWallpaperHiddenBuiltins']) {
+  if(!Object.hasOwn(saved,key)||key==='aiToolsCustom')continue; // validated above with its larger cap
   const value=parse(saved[key]);
   if(value===null||typeof value!=='object')fail('invalid_storage','Invalid structured setting');
  }

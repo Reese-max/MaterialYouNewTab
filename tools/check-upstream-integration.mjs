@@ -10,7 +10,8 @@ const manifest = JSON.parse(read("manifest.json"));
 const firefoxManifest = JSON.parse(read("manifest(firefox).json"));
 const html = read("index.html");
 const languages = read("scripts/languages.js");
-const shortcuts = read("scripts/shortcuts.js");
+// SVG validation is shared with the AI editor; inspect the same assertions across both files.
+const shortcuts = read("scripts/shortcuts.js") + "\n" + read("scripts/quicklink-icons.js");
 const quotes = read("scripts/quotes.js");
 const aiTools = read("scripts/ai-tools.js");
 const background = read("scripts/background.js");

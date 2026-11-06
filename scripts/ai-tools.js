@@ -58,6 +58,16 @@ function loadAIToolsSettings() {
     return settings;
 }
 
+function loadAIToolsCustom() {
+    try { return MyntQuicklinkIcons.customOverrides(JSON.parse(localStorage.getItem("aiToolsCustom") || "{}")); }
+    catch { return {}; }
+}
+
+function resetAIToolsCustom() {
+    localStorage.removeItem("aiToolsCustom");
+    applyAIToolsSettings(getDefaultAIToolsSettings());
+}
+
 // DOM Elements
 const aiToolName = document.getElementById("toolsCont");
 const shortcuts = document.getElementById("shortcutsContainer");
@@ -72,6 +82,7 @@ const aiToolsCont = document.getElementById("aiToolsCont");
 const aiToolsEditField = document.getElementById("aiToolsEditField");
 const mobileAIToolsQuery = matchMedia("(max-width: 500px)");
 let aiSettingsReturnFocus = null;
+let aiToolsEditorBaseline = null;
 const aiToolsMoreButton = document.createElement("button");
 const aiToolsOverflowMenu = document.createElement("div");
 
@@ -181,13 +192,22 @@ function animateReorder(element1, element2, direction) {
 // Function to apply saved settings (visibility and order)
 function applyAIToolsSettings(settingsOverride) {
     const settingsToApply = settingsOverride || loadAIToolsSettings();
+    const custom = loadAIToolsCustom();
 
     // Create a map of current tool elements for quick lookup
     const toolElements = new Map();
     const allToolLinks = aiToolsCont.querySelectorAll("a");
     allToolLinks.forEach(link => {
         const toolId = [...link.children].find(el => aiToolsRaw.some(t => t.id === el.id))?.id;
-        if (toolId) toolElements.set(toolId, link);
+        if (toolId) {
+            toolElements.set(toolId, link);
+            const icon = link.querySelector(".tIcon");
+            if (!link._myntDefault) link._myntDefault = { url: link.href, icon: [...icon.children] };
+            const overrides = custom[toolId] || {};
+            link.href = overrides.url || link._myntDefault.url;
+            link.querySelector(".tLabel").textContent = overrides.label || translations[currentLanguage]?.[toolId] || translations.en[toolId];
+            MyntQuicklinkIcons.render(icon, overrides.icon || "", { automatic: target => target.replaceChildren(...link._myntDefault.icon) });
+        }
     });
 
     // Clear container
@@ -210,28 +230,72 @@ function applyAIToolsSettings(settingsOverride) {
 // Function to generate the AI Tools settings form elements
 function generateAIToolsForm(settings) {
     aiToolsForm.innerHTML = "";
+    aiToolsEditorBaseline = ["aiToolsSettings", "aiToolsCustom"].map(key => localStorage.getItem(key));
 
+    const custom = loadAIToolsCustom();
     // Create form elements
     settings.forEach((settingItem, index) => {
         const toolId = getAIToolId(settingItem);
         const isVisible = typeof settingItem === "string";
 
         const originalTool = aiTools.find(t => t.id === toolId);
-        const toolLabel = originalTool?.label || toolId;
+        const toolLabel = translations[currentLanguage]?.[toolId] || originalTool?.label || toolId;
 
         const toolOption = document.createElement("div");
         toolOption.className = "ai-tool-option";
         toolOption.dataset.toolId = toolId;
-        toolOption.innerHTML = `
-            <div class="ai-tool-controls">
-                <input type="checkbox" id="setting_${toolId}" ${isVisible ? "checked" : ""}>
-                <label for="setting_${toolId}">${toolLabel}</label>
-            </div>
-            <div class="ai-tool-reorder">
-                <button type="button" class="reorder-up" ${index === 0 ? "disabled" : ""}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M10.974 8.192a1.465 1.465 0 0 1 2.07 0l5.527 5.524a1.465 1.465 0 1 1-2.073 2.072l-4.49-4.488-4.488 4.49a1.465 1.465 0 1 1-2.073-2.072Z"/></svg></button>
-                <button type="button" class="reorder-down" ${index === settings.length - 1 ? "disabled" : ""}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M13.047 15.809a1.47 1.47 0 0 1-2.076 0l-5.54-5.54a1.47 1.47 0 1 1 2.077-2.076l4.501 4.5 4.501-4.5a1.469 1.469 0 0 1 2.078 2.076l-5.54 5.54z"/></svg></button>
-            </div>
-        `;
+        const controls = document.createElement("div"); controls.className = "ai-tool-controls";
+        const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.id = `setting_${toolId}`; checkbox.checked = isVisible;
+        const label = document.createElement("label"); label.setAttribute("for", checkbox.id); label.textContent = custom[toolId]?.label || toolLabel;
+        controls.append(checkbox, label);
+        const reorder = document.createElement("div"); reorder.className = "ai-tool-reorder";
+        for (const [direction, symbol, disabled] of [["up", "↑", index === 0], ["down", "↓", index === settings.length - 1]]) {
+            const button = document.createElement("button"); button.type = "button"; button.className = `reorder-${direction}`; button.textContent = symbol; button.disabled = disabled;
+            button.setAttribute("aria-label", MyntQuicklinkIcons.t(direction === "up" ? "shortcutMoveUp" : "shortcutMoveDown").replace("{name}", toolLabel));
+            reorder.appendChild(button);
+        }
+        toolOption.append(controls, reorder);
+        const fields = document.createElement("div");
+        fields.className = "aiToolCustomFields"; fields.id = `aiToolFields_${toolId}`; fields.hidden = true;
+        const edit = document.createElement("button"); edit.type = "button"; edit.className = "aiToolEdit";
+        edit.textContent = MyntQuicklinkIcons.t("quicklinkEdit");
+        edit.setAttribute("aria-expanded", "false"); edit.setAttribute("aria-controls", fields.id);
+        edit.setAttribute("aria-label", MyntQuicklinkIcons.t("quicklinkEdit") + "：" + label.textContent);
+        edit.addEventListener("click", () => {
+            fields.hidden = !fields.hidden; edit.setAttribute("aria-expanded", String(!fields.hidden));
+        });
+        const currentIcon = document.createElement("span"); currentIcon.className = "aiToolCurrentIcon";
+        currentIcon.setAttribute("aria-hidden", "true");
+        controls.appendChild(currentIcon); toolOption.appendChild(edit);
+        const overrides = custom[toolId] || {};
+        const toolLink = document.getElementById(toolId)?.parentElement;
+        function field(key, className, value, placeholder) {
+            const label = document.createElement("label");
+            label.textContent = MyntQuicklinkIcons.t(key);
+            const input = document.createElement("input");
+            input.type = "text"; input.className = className; input.value = value || ""; input.placeholder = placeholder || "";
+            if (className === "aiToolName") input.maxLength = 80; // Code-point validation also handles supplementary characters.
+            label.appendChild(input); fields.appendChild(label); return input;
+        }
+        const nameInput = field("quicklinkName", "aiToolName", overrides.label, toolLabel);
+        const urlInput = field("quicklinkUrl", "aiToolUrl", overrides.url, toolLink?._myntDefault?.url || toolLink?.href);
+        const iconInput = document.createElement("input"); iconInput.type = "hidden"; iconInput.className = "aiToolIcon"; iconInput.value = overrides.icon || ""; fields.appendChild(iconInput);
+        const automatic = target => {
+            // Preview clones only bundled default artwork; never serialized user content.
+            const artwork = toolLink?._myntDefault?.icon || [];
+            target.replaceChildren(...artwork.map(node => node.cloneNode(true)));
+        };
+        const refreshCurrentIcon = () => MyntQuicklinkIcons.render(currentIcon, iconInput.value, { automatic });
+        refreshCurrentIcon();
+        fields.appendChild(MyntQuicklinkIcons.chooseButton({
+            getValue: () => iconInput.value,
+            getLabel: () => nameInput.value || toolLabel,
+            getUrl: () => urlInput.value || toolLink?._myntDefault?.url,
+            automatic,
+            onSelect(value) { iconInput.value = value; refreshCurrentIcon(); }
+        }));
+        const error = document.createElement("p"); error.className = "aiToolCustomError"; error.setAttribute("role", "status"); fields.appendChild(error);
+        toolOption.appendChild(fields);
         aiToolsForm.appendChild(toolOption);
     });
 
@@ -297,6 +361,14 @@ function updateReorderButtonStates() {
             downButton.disabled = index === toolOptions.length - 1;
         }
     });
+}
+
+function aiToolsEditorIsFresh() {
+    const current = ["aiToolsSettings", "aiToolsCustom"].map(key => localStorage.getItem(key));
+    if (!aiToolsEditorBaseline || current.every((value, index) => value === aiToolsEditorBaseline[index])) return true;
+    const error = aiToolsForm.querySelector(".aiToolCustomError");
+    if (error) { const option = error.closest(".ai-tool-option"); if (option.querySelector(".aiToolCustomFields").hidden) option.querySelector(".aiToolEdit").click(); error.textContent = MyntQuicklinkIcons.t("quicklinkConflict"); }
+    return false;
 }
 
 // Function to close settings modal
@@ -409,6 +481,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Reset button in settings modal
     resetAISettingsBtn.addEventListener("click", function () {
+        if (!aiToolsEditorIsFresh()) return;
+        resetAIToolsCustom();
         // Create default settings
         const defaultSettings = getDefaultAIToolsSettings();
 
@@ -457,7 +531,32 @@ document.addEventListener("DOMContentLoaded", function () {
     saveAISettingsBtn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        if (!aiToolsEditorIsFresh()) return;
 
+        const custom = {};
+        for (const option of document.querySelectorAll(".ai-tool-option")) {
+            const name = option.querySelector(".aiToolName"), url = option.querySelector(".aiToolUrl"), icon = option.querySelector(".aiToolIcon");
+            const fields = { label: name.value.trim(), url: url.value.trim(), icon: icon.value.trim() };
+            try {
+                const clean = MyntQuicklinkIcons.customOverrides({ [option.dataset.toolId]: fields }, true);
+                const toolId = option.dataset.toolId, overrides = clean[toolId];
+                if (overrides) {
+                    const defaultLabel = translations[currentLanguage]?.[toolId] || translations.en[toolId];
+                    if (overrides.label === defaultLabel) delete overrides.label;
+                    if (overrides.url === document.getElementById(toolId)?.parentElement?._myntDefault?.url) delete overrides.url;
+                    if (!Object.keys(overrides).length) delete clean[toolId];
+                }
+                Object.assign(custom, clean);
+                option.querySelector(".aiToolCustomError").textContent = "";
+                [name, url, icon].forEach(input => input.removeAttribute("aria-invalid"));
+            } catch {
+                option.querySelector(".aiToolCustomError").textContent = MyntQuicklinkIcons.t("quicklinkInvalidFields");
+                const editor = option.querySelector(".aiToolCustomFields");
+                if (editor.hidden) option.querySelector(".aiToolEdit").click();
+                const invalid = Array.from(fields.label).length > 40 ? name : fields.url && !MyntQuicklinkIcons.normalizeWebsiteUrl(fields.url) ? url : icon;
+                invalid.setAttribute("aria-invalid", "true"); (invalid === icon ? option.querySelector(".quicklinkChooseIcon") : invalid).focus(); return;
+            }
+        }
         const newSettings = [];
         const toolOptions = document.querySelectorAll(".ai-tool-option");
 
@@ -479,7 +578,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // Save settings to localStorage
-        localStorage.setItem("aiToolsSettings", JSON.stringify(newSettings));
+        // Roll back both keys if storage fails partway through saving.
+        const previousSettings = localStorage.getItem("aiToolsSettings");
+        const previousCustom = localStorage.getItem("aiToolsCustom");
+        try {
+            localStorage.setItem("aiToolsSettings", JSON.stringify(newSettings));
+            if (Object.keys(custom).length) localStorage.setItem("aiToolsCustom", JSON.stringify(custom));
+            else localStorage.removeItem("aiToolsCustom");
+        } catch {
+            try {
+                if (previousSettings === null) localStorage.removeItem("aiToolsSettings"); else localStorage.setItem("aiToolsSettings", previousSettings);
+                if (previousCustom === null) localStorage.removeItem("aiToolsCustom"); else localStorage.setItem("aiToolsCustom", previousCustom);
+            } catch { /* Keep the modal and its draft available for recovery. */ }
+            const error = aiToolsForm.querySelector(".aiToolCustomError");
+            if (error) { const option = error.closest(".ai-tool-option"); if (option.querySelector(".aiToolCustomFields").hidden) option.querySelector(".aiToolEdit").click(); error.textContent = MyntQuicklinkIcons.t("quicklinkSaveFailed"); }
+            return;
+        }
 
         // Apply new settings
         applyAIToolsSettings();
@@ -533,6 +647,13 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("keydown", event => {
         if (event.key === "Escape") closeMobileAIToolsOverflow();
     });
+});
+
+// Preserve an open editor's draft while applying remote saved values to the chips.
+window.MyntStorageSync?.watch(["aiToolsSettings", "aiToolsCustom"], () => applyAIToolsSettings());
+document.addEventListener("mynt:language-changed", () => {
+    applyAIToolsSettings();
+    if (!aiToolsSettingsModal.open) generateAIToolsForm(loadAIToolsSettings());
 });
 
 // The adapter validates this array before committing. Avoid the ordinary loader's writes.
