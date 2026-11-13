@@ -34,3 +34,20 @@
 @media(forced-colors:active){#myntPomoExtras{background:Canvas;color:CanvasText;}#myntPomoExtras button,#myntPomoStudioMount button{border:1px solid ButtonText;}}
 /* The open timer is a temporary overlay, never a saved layout change. */
 body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
+/* Full settings: one control language (dark field, light hairline, 12-14px radius). */
+#myntPomoExtras summary {font-size:13px;letter-spacing:.02em;}
+#myntPomoExtras label {color:#ffffffd9;}
+#myntPomoExtras label:has(> input[type=checkbox]) {grid-template-columns:1fr auto;align-items:center;min-height:44px;margin:4px 0;cursor:pointer;}
+#myntPomoExtras input[type=checkbox] {width:20px;height:20px;min-height:0;margin:0;cursor:pointer;accent-color:var(--bg-color-blue,#bbd6fd);}
+#myntPomoExtras input[type=color] {height:44px;padding:4px;cursor:pointer;}
+#myntPomoExtras input[type=file] {padding:5px;color:#ffffffc9;}
+#myntPomoExtras input[type=file]::file-selector-button {font:inherit;min-height:32px;margin-inline-end:8px;border:1px solid #ffffff40;border-radius:10px;background:#ffffff1f;color:#fff;padding:4px 10px;cursor:pointer;}
+#myntPomoExtras .mynt-pomo-music select {width:100%;color:#fff;background:rgba(0,0,0,.18);border:1px solid #ffffff40;border-radius:12px;padding:8px;}
+#myntPomoExtras .mynt-pomo-music button {border-radius:14px;border-color:#ffffff30;}
+#myntPomoExtras .mynt-music-controls {gap:8px;}
+#myntPomoExtras form > button,#myntPomoExtras > button {width:100%;}
+#myntPomoExtras button:disabled {opacity:.45;cursor:default;}
+#myntPomoExtras .pomodoroAmbientToggleBtn {display:inline-flex;align-items:center;justify-content:center;min-width:44px;color:#fff;}
+#myntPomoExtras .pomodoroAmbientToggleBtn svg {fill:currentColor;}
+#myntPomoExtras .pomodoroAmbientSelect {font-size:12px;font-weight:400;}
+#myntPomoExtras .mynt-pomo-music label {justify-content:stretch;}
