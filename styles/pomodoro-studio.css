@@ -83,3 +83,10 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 #pomodoroPanel .pomodoroRingFg {stroke:#fff;stroke-width:8;filter:none;}
 #pomodoroPanel .pomodoroRingFg.break-ring {stroke:#81d884;filter:none;}
 #pomodoroPanel .pomodoroRingBg {stroke:rgba(255,255,255,.24);}
+/* Checkbox in the field language: empty = dark box, checked = filled with a tick (state is not colour-only). */
+#myntPomoExtras input[type=checkbox] {appearance:none;-webkit-appearance:none;display:inline-grid;place-content:center;border:1px solid #ffffff73;border-radius:6px;background:rgba(0,0,0,.18);}
+#myntPomoExtras input[type=checkbox]:checked {background:var(--bg-color-blue,#bbd6fd);border-color:transparent;}
+#myntPomoExtras input[type=checkbox]:checked::after {content:"";width:10px;height:5px;border:solid var(--textColorDark-blue,#1b3041);border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg);}
+@media(forced-colors:active){#myntPomoExtras input[type=checkbox]{appearance:auto;-webkit-appearance:auto;}}
+#myntPomoExtras .mynt-pomo-music {margin-block:0;}
+#myntPomoExtras > .mynt-pomo-open-popup {margin:12px 0 4px;}
