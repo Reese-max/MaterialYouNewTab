@@ -99,6 +99,20 @@ document.addEventListener("DOMContentLoaded", function () {
         return translations[currentLanguage]?.[key] || translations["en"]?.[key] || fallback;
     }
 
+    // Icon-only controls and ambient options follow the UI language; the English markup is the fallback.
+    [[pomodoroStartBtn, "pomodoroStart"], [pomodoroPauseBtn, "pomodoroPause"], [pomodoroResetBtn, "pomodoroReset"], [pomodoroAmbientToggleBtn, "pomodoroAmbientToggle"]].forEach(function (pair) {
+        if (!pair[0]) return;
+        const label = getPomodoroText(pair[1], pair[0].title);
+        pair[0].title = label;
+        pair[0].setAttribute("aria-label", label);
+    });
+    if (pomodoroAmbientSelect) pomodoroAmbientSelect.setAttribute("aria-label", getPomodoroText("pomodoroAmbientType", "Ambient sound type"));
+    if (pomodoroAmbientVol) pomodoroAmbientVol.setAttribute("aria-label", getPomodoroText("pomodoroAmbientVolume", "Ambient sound volume"));
+    const ambientOptionKeys = { rain: "pomodoroAmbientRain", ocean: "pomodoroAmbientOcean", whitenoise: "pomodoroAmbientNoise", campfire: "pomodoroAmbientFire" };
+    Array.from(pomodoroAmbientSelect ? pomodoroAmbientSelect.options : []).forEach(function (option) {
+        if (ambientOptionKeys[option.value]) option.textContent = getPomodoroText(ambientOptionKeys[option.value], option.textContent);
+    });
+
     let pomodoroState;
     const timer = window.MyntPomodoroTimer.create({
         storage: browserStorage,
