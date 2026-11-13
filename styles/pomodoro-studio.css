@@ -200,3 +200,8 @@ html.myntHighContrast #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > bu
 #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]:checked { background: var(--pomo-accent, #d7e8ff); border-color: var(--pomo-accent, #d7e8ff); }
 #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]:checked::before { transform: scale(1); }
 @media (forced-colors: active) { #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox] { appearance: auto; -webkit-appearance: auto; } #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]::before { content: none; } }
+/* Settings rhythm: 8px between sibling controls, 16px between labelled groups; checkbox edge reads without its fill. */
+#pomodoroPanel #myntPomoExtras .pomoStudioScenarios > label { margin-bottom: 0; }
+#pomodoroPanel #myntPomoExtras .pomoStudioScenarios > input { margin-top: 8px; }
+#pomodoroPanel #myntPomoMusicMount .mynt-music-preferences > label:not(:first-child):not(.mynt-music-shuffle) { margin-top: 16px; }
+#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]:not(:checked) { border-color: color-mix(in srgb, var(--pomo-fg, #fff) 55%, transparent); }
