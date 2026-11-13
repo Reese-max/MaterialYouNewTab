@@ -51,3 +51,12 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 #myntPomoExtras .pomodoroAmbientToggleBtn svg {fill:currentColor;}
 #myntPomoExtras .pomodoroAmbientSelect {font-size:12px;font-weight:400;}
 #myntPomoExtras .mynt-pomo-music label {justify-content:stretch;}
+/* Timer card: one filled primary action; secondary actions share one outline style; readable footer. */
+#pomodoroPanel #pomodoroStartBtn,#pomodoroPanel #pomodoroPauseBtn {width:56px;height:56px;background:#fff;box-shadow:0 4px 14px #0005;}
+#pomodoroPanel #pomodoroStartBtn:hover,#pomodoroPanel #pomodoroPauseBtn:hover {background:#fff;}
+#pomodoroPanel #pomodoroStartBtn svg,#pomodoroPanel #pomodoroPauseBtn svg {fill:var(--textColorDark-blue,#1b3041);}
+#myntPomoStudioMount button {border:1px solid #ffffff38;background:#ffffff19;}
+#pomodoroPanel .pomodoroRoundDisplay {color:#ffffffeb;}
+#pomodoroPanel .pomodoroSessionsToday,#pomodoroPanel .pomodoroFocusSummary {font-size:12px;color:#ffffffeb;text-shadow:0 1px 3px #0008;}
+#pomodoroPanel .pomodoroFocusSummary {gap:6px;margin-top:6px;}
+#pomodoroPanel #pomodoroStatsBtn {padding:2px 12px;border:1px solid #ffffff38;background:#ffffff19;}
