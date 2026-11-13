@@ -60,3 +60,5 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 #pomodoroPanel .pomodoroSessionsToday,#pomodoroPanel .pomodoroFocusSummary {font-size:12px;color:#ffffffeb;text-shadow:0 1px 3px #0008;}
 #pomodoroPanel .pomodoroFocusSummary {gap:6px;margin-top:6px;}
 #pomodoroPanel #pomodoroStatsBtn {padding:2px 12px;border:1px solid #ffffff38;background:#ffffff19;}
+/* Phones: keep designed sizes (44px targets, 12px text); a saved panel scale still applies inline. */
+@media(max-width:500px){#pomodoroPanel{transform:none;}#pomodoroPanel #pomodoroStatsBtn{min-height:44px;}}
