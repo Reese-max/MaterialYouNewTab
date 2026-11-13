@@ -194,3 +194,9 @@ html.myntHighContrast #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > bu
 #pomodoroPanel #myntPomoExtras .pomodoroAmbientToggleBtn.active { background: var(--pomo-accent, #d7e8ff); border-color: var(--pomo-accent, #d7e8ff); color: var(--pomo-on-accent, #183149); }
 #pomodoroPanel #myntPomoExtras .pomodoroAmbientSelect { appearance: auto; padding-inline: 12px; font-weight: 400; }
 #pomodoroPanel #myntPomoExtras .pomodoroAmbientVol { flex: 0 0 100%; height: auto; min-height: 44px; margin: 0; }
+/* Shuffle checkbox: drawn in the field language (white surface, hairline, accent fill when on). */
+#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox] { appearance: none; -webkit-appearance: none; display: inline-grid; place-content: center; flex: 0 0 22px; width: 22px; height: 22px; min-height: 22px; margin: 0; border: 1px solid var(--pomo-border, #ffffff40); border-radius: 7px; background: var(--pomo-surface, #0003); cursor: pointer; }
+#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]::before { content: ""; width: 12px; height: 12px; background: var(--pomo-on-accent, #183149); clip-path: polygon(14% 52%, 0 66%, 40% 100%, 100% 22%, 86% 10%, 38% 70%); transform: scale(0); }
+#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]:checked { background: var(--pomo-accent, #d7e8ff); border-color: var(--pomo-accent, #d7e8ff); }
+#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]:checked::before { transform: scale(1); }
+@media (forced-colors: active) { #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox] { appearance: auto; -webkit-appearance: auto; } #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]::before { content: none; } }
