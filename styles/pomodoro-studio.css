@@ -62,3 +62,6 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 #pomodoroPanel #pomodoroStatsBtn {padding:2px 12px;border:1px solid #ffffff38;background:#ffffff19;}
 /* Phones: keep designed sizes (44px targets, 12px text); a saved panel scale still applies inline. */
 @media(max-width:500px){#pomodoroPanel{transform:none;}#pomodoroPanel #pomodoroStatsBtn{min-height:44px;}}
+/* Text over the video: 45% scrim keeps the 12px footer above 4.5:1 on the brightest frame area measured. */
+#pomodoroPanel > .pomodoro-bg-overlay {background:rgba(0,0,0,.45);}
+.black-theme #pomodoroPanel > .pomodoro-bg-overlay {background:rgba(0,0,0,.5);}
