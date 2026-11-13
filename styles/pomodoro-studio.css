@@ -33,7 +33,8 @@
 .reduced-motion #pomodoroPanel *{animation:none!important;transition:none!important;}
 @media(forced-colors:active){#myntPomoExtras{background:Canvas;color:CanvasText;}#myntPomoExtras button,#myntPomoStudioMount button{border:1px solid ButtonText;}}
 /* The open timer is a temporary overlay, never a saved layout change. */
-body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
+/* Above the collapsed appearance/profile chips (2147483003) so nothing covers the open timer. */
+body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483004;}
 /* Full settings: one control language (dark field, light hairline, 12-14px radius). */
 #myntPomoExtras summary {font-size:13px;letter-spacing:.02em;}
 #myntPomoExtras label {color:#ffffffd9;}
@@ -54,7 +55,7 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 /* Timer card: one filled primary action; secondary actions share one outline style; readable footer. */
 #pomodoroPanel #pomodoroStartBtn,#pomodoroPanel #pomodoroPauseBtn {width:56px;height:56px;background:#fff;box-shadow:0 4px 14px #0005;}
 #pomodoroPanel #pomodoroStartBtn:hover,#pomodoroPanel #pomodoroPauseBtn:hover {background:#fff;}
-#pomodoroPanel #pomodoroStartBtn svg,#pomodoroPanel #pomodoroPauseBtn svg {fill:var(--textColorDark-blue,#1b3041);}
+#pomodoroPanel #pomodoroStartBtn svg,#pomodoroPanel #pomodoroPauseBtn svg {fill:#1b3041;}
 #myntPomoStudioMount button {border:1px solid #ffffff38;background:#ffffff19;}
 #pomodoroPanel .pomodoroRoundDisplay {color:#ffffffeb;}
 #pomodoroPanel .pomodoroSessionsToday,#pomodoroPanel .pomodoroFocusSummary {font-size:12px;color:#ffffffeb;text-shadow:0 1px 3px #0008;}
@@ -85,8 +86,8 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 #pomodoroPanel .pomodoroRingBg {stroke:rgba(255,255,255,.24);}
 /* Checkbox in the field language: empty = dark box, checked = filled with a tick (state is not colour-only). */
 #myntPomoExtras input[type=checkbox] {appearance:none;-webkit-appearance:none;display:inline-grid;place-content:center;border:1px solid #ffffff73;border-radius:6px;background:rgba(0,0,0,.18);}
-#myntPomoExtras input[type=checkbox]:checked {background:var(--bg-color-blue,#bbd6fd);border-color:transparent;}
-#myntPomoExtras input[type=checkbox]:checked::after {content:"";width:10px;height:5px;border:solid var(--textColorDark-blue,#1b3041);border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg);}
+#myntPomoExtras input[type=checkbox]:checked {background:#bbd6fd;border-color:transparent;}
+#myntPomoExtras input[type=checkbox]:checked::after {content:"";width:10px;height:5px;border:solid #1b3041;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg);}
 @media(forced-colors:active){#myntPomoExtras input[type=checkbox]{appearance:auto;-webkit-appearance:auto;}}
 #myntPomoExtras .mynt-pomo-music {margin-block:0;}
 #myntPomoExtras > .mynt-pomo-open-popup {margin:12px 0 4px;}
