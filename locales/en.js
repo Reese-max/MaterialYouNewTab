@@ -333,6 +333,7 @@ const en = {
     "shortcutInputName": "Shortcut Name",
     "shortcutInputUrl": "Shortcut URL",
     "shortcutInputIcon": "Custom Icon: URL or SVG (optional)",
+    "invalidShortcutUrlMessage": "Enter a valid web address, such as example.com.",
     "invalidIconMessage": "Use an HTTPS/HTTP image URL, an image data URL, or valid SVG markup.",
     "invalidSvgMessage": "The SVG is invalid or contains unsafe content.",
     "invalidFileTypeMessage": "Choose a supported image file.",

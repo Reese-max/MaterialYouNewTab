@@ -11,6 +11,9 @@ function myntNormalizeShortcutUrl(url) {
     const candidate = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
     try {
         const parsed = new URL(candidate);
+        // Chromium percent-encodes a space in the host ("not a url") instead of rejecting it;
+        // spaces in the path or query stay valid.
+        if (parsed.hostname.includes("%")) return null;
         return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : null;
     } catch {
         return null;
@@ -56,12 +59,14 @@ document.addEventListener("DOMContentLoaded", function () {
         "image/vnd.microsoft.icon",
         "image/svg+xml",
     ]);
+    // Locales are loaded before DOMContentLoaded and a language change reloads the page.
+    const localized = key => translations[currentLanguage]?.[key] || translations["en"][key];
     const PLACEHOLDER = {
-        name: "新捷徑",
+        name: localized("shortcutDefaultName"),
         url: "https://github.com/Reese-max/MaterialYouNewTab",
-        inputName: "捷徑名稱",
-        inputUrl: "捷徑網址",
-        inputIcon: "自訂圖示：網址或 SVG（選填）"
+        inputName: localized("shortcutInputName"),
+        inputUrl: localized("shortcutInputUrl"),
+        inputIcon: localized("shortcutInputIcon"),
     };
 
     // DOM Elements
@@ -216,20 +221,28 @@ document.addEventListener("DOMContentLoaded", function () {
         clearTimeout(focusTimeoutId);
         const modalContainer = document.getElementById("prompt-modal-container");
         focusTimeoutId = setTimeout(() => {
-            if (modalContainer?.style.display !== "flex")
+            if (modalContainer?.style.display !== "flex") {
                 urlInput.focus();
+                // Only a brand-new entry is pre-selected, so typing replaces the placeholder URL.
+                urlInput.select();
+            }
         }, 800);
     }
 
     // Loads shortcuts from localStorage or uses presets if none exist
     function loadShortcuts() {
-        const amount = localStorage.getItem("shortcutAmount") || presets.length;
-        const deleteInactive = amount <= 1;
+        // A stored "0" means the user removed every shortcut; only a missing key falls back to presets.
+        const storedAmount = localStorage.getItem("shortcutAmount");
+        const amount = storedAmount === null
+            ? presets.length
+            : Math.min(Math.max(parseInt(storedAmount, 10) || 0, 0), MAX_SHORTCUTS);
+        const deleteInactive = false;
 
         shortcutsCache = [];
 
         for (let i = 0; i < amount; i++) {
-            const name = localStorage.getItem(`shortcutName${i}`) || (presets[i] ? presets[i].name : PLACEHOLDER.name);
+            // ?? keeps a deliberately emptied name instead of reviving the preset name on reload.
+            const name = localStorage.getItem(`shortcutName${i}`) ?? (presets[i] ? presets[i].name : PLACEHOLDER.name);
             const url = localStorage.getItem(`shortcutURL${i}`) || (presets[i] ? presets[i].url : PLACEHOLDER.url);
             const icon = localStorage.getItem(`shortcutIcon${i}`) || "";
 
@@ -252,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function createShortcutEntry(name, url, iconUrl, deleteInactive, index) {
         const entry = document.createElement("div");
         entry.className = "shortcutSettingsEntry";
-        entry.draggable = true;
+        // Only the grip is draggable: a draggable row breaks caret placement and text selection in its inputs.
         entry._index = index;
 
         entry.innerHTML = `
@@ -330,13 +343,7 @@ document.addEventListener("DOMContentLoaded", function () {
             function applyIcon(iconValue) {
                 iconInput.value = iconValue;
                 try {
-                    saveShortcut(entry);
-                    renderShortcut(
-                        entry.querySelector(".shortcutName").value,
-                        entry.querySelector(".URL").value,
-                        iconInput.value,
-                        entry._index
-                    );
+                    commitShortcut(entry);
                 } catch (err) {
                     console.error("Failed to save icon:", err);
                     iconInput.value = "";
@@ -636,21 +643,32 @@ document.addEventListener("DOMContentLoaded", function () {
             input.addEventListener("blur", () => {
                 if (input.classList.contains("iconURL")) {
                     validateIconInput(input);
+                } else if (input.classList.contains("URL") && !myntNormalizeShortcutUrl(input.value)) {
+                    // Reject instead of saving a link that cannot open; keep the last saved address.
+                    const isDraft = entry.classList.contains("draft");
+                    const leftEmpty = isDraft && !input.value.trim();
+                    input.value = isDraft ? "" : (shortcutsCache[entry._index]?.url ?? PLACEHOLDER.url);
+                    // A draft that was simply left blank is not an error yet.
+                    if (!leftEmpty) {
+                        alertPrompt(translations[currentLanguage]?.invalidShortcutUrlMessage
+                            || translations.en?.invalidShortcutUrlMessage
+                            || "Enter a valid web address.");
+                    }
                 }
 
-                saveShortcut(entry);
-                renderShortcut(
-                    entry.querySelector(".shortcutName").value,
-                    entry.querySelector(".URL").value,
-                    entry.querySelector(".iconURL").value,
-                    entry._index
-                );
+                commitShortcut(entry);
             });
-            input.addEventListener("focus", e => e.target.select());
         });
 
         inputs[0].addEventListener("keydown", e => e.key === "Enter" && inputs[1].focus());
-        inputs[1].addEventListener("keydown", e => e.key === "Enter" && inputs[2].focus());
+        inputs[1].addEventListener("keydown", e => {
+            if (e.key !== "Enter") return;
+            // Keep this Enter from reaching the invalid-URL prompt that the blur may open, which would dismiss it at once.
+            e.preventDefault();
+            e.stopPropagation();
+            if (myntNormalizeShortcutUrl(inputs[1].value)) inputs[2].focus();
+            else inputs[1].blur();
+        });
         inputs[2].addEventListener("keydown", e => {
             if (e.key !== "Enter") return;
             e.preventDefault();
@@ -862,6 +880,11 @@ document.addEventListener("DOMContentLoaded", function () {
         dom.shortcutSettingsContainer.addEventListener("dragstart", e => {
             const item = e.target.closest(".shortcutSettingsEntry");
             if (item) {
+                // A draft is not stored yet, so it takes no part in reordering.
+                if (item.classList.contains("draft")) {
+                    e.preventDefault();
+                    return;
+                }
                 isReordering = true;
                 draggedElement = item;
                 originalOrder = readShortcutOrder();
@@ -874,11 +897,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 dom.shortcutSettingsContainer.classList.add("dragging-ongoing");
 
                 // Add CSS classes for styling
+                // Deferred: changing the DOM inside dragstart can abort the drag.
                 setTimeout(() => {
                     item.classList.add("dragging");
+                    dom.shortcutSettingsContainer.querySelector(".shortcutSettingsEntry.draft")?.remove();
                 }, 0);
 
                 e.dataTransfer.effectAllowed = "move";
+                // The grip starts the drag, but the preview should still be the whole row.
+                e.dataTransfer.setDragImage(item, dragOffset.x, dragOffset.y);
             }
         });
 
@@ -970,7 +997,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function rebuildShortcutEditor(order) {
         dom.shortcutSettingsContainer.innerHTML = "";
         dom.shortcutsContainer.innerHTML = "";
-        const deleteInactive = order.length <= 1;
+        const deleteInactive = false;
 
         order.forEach((item, index) => {
             dom.shortcutSettingsContainer.appendChild(
@@ -1066,33 +1093,46 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Adds a new shortcut
     function addNewShortcut() {
+        // An unfinished draft is reused instead of stacking empty rows.
+        if (dom.shortcutSettingsContainer.querySelector(".shortcutSettingsEntry.draft")) return;
+
         const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
         if (currentAmount >= MAX_SHORTCUTS) return;
 
-        const newAmount = currentAmount + 1;
-        localStorage.setItem("shortcutAmount", newAmount.toString());
-
-        if (currentAmount >= 1) {
-            document.querySelectorAll(".shortcutDelete button.inactive").forEach(b => {
-                b.classList.remove("inactive");
-            });
-        }
-
-        if (newAmount === MAX_SHORTCUTS) {
-            dom.newShortcutButton.classList.add("inactive");
-        }
-
-        const entry = createShortcutEntry(PLACEHOLDER.name, PLACEHOLDER.url, "", false, currentAmount);
+        // Draft: no default address, and nothing is stored or shown until it has a valid one.
+        const entry = createShortcutEntry(PLACEHOLDER.name, "", "", false, currentAmount);
+        entry.classList.add("draft");
         dom.shortcutSettingsContainer.appendChild(entry);
+    }
+
+    // Saves and renders an entry; a draft becomes a real shortcut once its address is valid.
+    function commitShortcut(entry) {
+        if (entry.classList.contains("draft")) {
+            if (!myntNormalizeShortcutUrl(entry.querySelector(".URL").value)) return;
+            entry.classList.remove("draft");
+            const newAmount = entry._index + 1;
+            localStorage.setItem("shortcutAmount", newAmount.toString());
+            if (newAmount >= MAX_SHORTCUTS) dom.newShortcutButton.classList.add("inactive");
+        }
 
         saveShortcut(entry);
-        renderShortcut(PLACEHOLDER.name, PLACEHOLDER.url, "", currentAmount);
+        renderShortcut(
+            entry.querySelector(".shortcutName").value,
+            entry.querySelector(".URL").value,
+            entry.querySelector(".iconURL").value,
+            entry._index
+        );
     }
 
     // Deletes a shortcut
     function deleteShortcut(entry) {
+        if (entry.classList.contains("draft")) {
+            entry.remove();
+            return;
+        }
+
         const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
-        if (currentAmount <= 1) return;
+        if (currentAmount < 1) return;
 
         const index = entry._index;
         entry.remove();
@@ -1109,12 +1149,8 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem(`shortcutURL${currentAmount - 1}`);
         localStorage.removeItem(`shortcutIcon${currentAmount - 1}`);
         shortcutsCache.length = currentAmount - 1;
-
-        if (currentAmount - 1 === 1) {
-            document.querySelectorAll(".shortcutDelete button").forEach(b => {
-                b.classList.add("inactive");
-            });
-        }
+        // Keeps a trailing draft pointing at the next free slot.
+        updateShortcutIndices();
 
         dom.newShortcutButton.classList.remove("inactive");
     }
