@@ -188,3 +188,9 @@ html.myntHighContrast #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > bu
 }
 /* Phones: keep the designed sizes (44px targets, readable text); a saved panel scale still applies inline. */
 @media (max-width: 500px) { #pomodoroPanel { transform: none; } }
+/* Ambient sound: same field and icon-button language as the rest of the settings; no pill backdrop. */
+#pomodoroPanel #myntPomoExtras .pomodoroAmbientRow { justify-content: flex-start; gap: 8px; padding: 0; border-radius: 0; background: none; backdrop-filter: none; }
+#pomodoroPanel #myntPomoExtras .pomodoroAmbientToggleBtn { display: inline-grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border-radius: 50%; line-height: 0; transform: none; filter: none; }
+#pomodoroPanel #myntPomoExtras .pomodoroAmbientToggleBtn.active { background: var(--pomo-accent, #d7e8ff); border-color: var(--pomo-accent, #d7e8ff); color: var(--pomo-on-accent, #183149); }
+#pomodoroPanel #myntPomoExtras .pomodoroAmbientSelect { appearance: auto; padding-inline: 12px; font-weight: 400; }
+#pomodoroPanel #myntPomoExtras .pomodoroAmbientVol { flex: 0 0 100%; height: auto; min-height: 44px; margin: 0; }
