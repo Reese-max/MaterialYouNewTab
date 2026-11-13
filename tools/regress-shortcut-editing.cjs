@@ -310,16 +310,28 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
     assert.equal(h.recoveryRow().hidden, true, "No recovery record was committed");
 }
 
-// --- Test 3: the last remaining shortcut cannot be deleted.
+// --- Test 3: the last remaining shortcut can be deleted; a stored "0" survives reload.
 {
     const h = harness({ storage: seed(1) });
     const button = h.entries()[0].querySelector(".shortcutDelete button");
-    assert(button.classList.contains("inactive"), "Single shortcut keeps the inactive delete affordance");
+    assert(!button.classList.contains("inactive"), "The last shortcut stays deletable");
     button.emit("click");
-    assert.equal(h.storage.getItem("shortcutAmount"), "1");
-    assert.equal(h.storage.getItem("shortcutName0"), "Alpha");
-    assert.equal(h.storage.getItem("myntShortcutRecoveryV1"), null);
-    assert.equal(h.entries().length, 1);
+    assert.equal(h.storage.getItem("shortcutAmount"), "0");
+    assert.equal(h.storage.getItem("shortcutName0"), null);
+    assert.equal(h.storage.getItem("shortcutURL0"), null);
+    assert.equal(h.storage.getItem("shortcutIcon0"), null);
+    assert.equal(adapter.validateShortcutRecovery(h.storage.getItem("myntShortcutRecoveryV1")).item.name, "Alpha");
+    assert.equal(h.entries().length, 0);
+    assert.equal(adapter.validateBackupStorage(Object.fromEntries(h.storage.data)), true, "A zero-shortcut backup validates");
+
+    const reloaded = harness({ storage: { selectedLanguage: "zh_TW", shortcutAmount: "0" } });
+    assert.equal(reloaded.entries().length, 0, "Stored 0 does not revive the presets");
+    assert.equal(harness().entries().length, 6, "Only a missing amount falls back to the presets");
+    for (const [corrupt, expected] of [["abc", 0], ["-3", 0], ["999", 50]]) {
+        assert.equal(harness({ storage: { shortcutAmount: corrupt } }).entries().length, expected, `Corrupt amount ${corrupt} is clamped`);
+    }
+    const cleared = harness({ storage: seed(2, { shortcutName0: "" }) });
+    assert.equal(cleared.entries()[0].querySelector(".shortcutName").value, "", "A deliberately emptied name stays empty");
 }
 
 // --- Test 4: invalid URL on blur is not saved; field restores and flags invalid.
@@ -367,6 +379,49 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
     urlInput.value = "https://beta.example/";
     urlInput.emit("blur");
     assert.equal(message.hidden, true, "Unique URL clears the duplicate note");
+}
+
+// --- Test 6: a host with a space is invalid; spaces in the path or query stay valid.
+{
+    const { myntNormalizeShortcutUrl } = require(path.join(root, "scripts/shortcuts.js"));
+    assert.equal(myntNormalizeShortcutUrl("not a url"), null);
+    assert.equal(myntNormalizeShortcutUrl("example.com/a b?q=c d"), "https://example.com/a%20b?q=c%20d");
+}
+
+// --- Test 7: "+" adds an unsaved draft; it is stored only once it has a valid URL.
+{
+    const h = harness({ language: "en", storage: seed(2, { selectedLanguage: "en" }) });
+    const before = Object.fromEntries(h.storage.data);
+    const drafts = () => h.entries().filter(entry => entry.classList.contains("draft"));
+    h.el("newShortcutButton").click();
+    h.el("newShortcutButton").click();
+    assert.equal(drafts().length, 1, "A second + reuses the draft");
+    const draft = drafts()[0], urlInput = draft.querySelector("input.URL"), message = draft.querySelector(".shortcutUrlMessage");
+    assert.equal(draft.draggable, false, "Only the grip starts a row drag");
+    assert.equal(urlInput.value, "", "No default URL");
+    assert.equal(draft.querySelector(".shortcutName").value, "New Shortcut", "Default name is localized");
+
+    urlInput.emit("blur");
+    assert.equal(message.hidden, true, "A blank draft is not an error");
+    urlInput.value = "not a url"; urlInput.emit("blur");
+    assert.equal(urlInput.value, ""); assert.equal(message.textContent, "Enter a valid web address, such as example.com.");
+    draft.querySelector(".iconURL").value = "icon-draft"; draft.querySelector(".shortcutName").emit("blur");
+    assert.deepEqual(Object.fromEntries(h.storage.data), before, "Nothing is stored for an unfinished draft");
+    assert.equal(h.el("shortcutsContainer").children.length, 2, "Nothing is rendered for an unfinished draft");
+
+    h.entries()[0].querySelector(".shortcutDelete button").emit("click");
+    assert.equal(drafts()[0], draft, "Deleting a saved row keeps the draft");
+    urlInput.value = "example.org"; urlInput.emit("blur");
+    assert.equal(drafts().length, 0);
+    assert.equal(h.storage.getItem("shortcutAmount"), "2");
+    assert.equal(h.storage.getItem("shortcutURL1"), "example.org");
+    assert.equal(h.storage.getItem("shortcutIcon1"), "icon-draft", "The draft keeps its icon");
+    assert.equal(h.el("shortcutsContainer").children.length, 2);
+
+    h.el("newShortcutButton").click();
+    drafts()[0].querySelector(".shortcutDelete button").emit("click");
+    assert.equal(h.entries().length, 2, "Trash on a draft just removes it");
+    assert.equal(h.storage.getItem("shortcutAmount"), "2");
 }
 
 console.log("SHORTCUT_EDITING_OK");

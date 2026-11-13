@@ -129,15 +129,18 @@ test('P1-2 legacy sparse shortcut MCP read/mutate', async () => {
     }
 });
 test('P1-2 add persists every default and rolls back quota failure', () => {
+    const fill = app => { const url = app.entries()[6].querySelector('.URL'); url.value = 'https://example.com/'; url.emit('blur'); };
     const h = fixture.harness(); h.el('newShortcutButton').click();
+    assert.equal(h.storage.getItem('shortcutAmount'), null, 'An unfinished draft stores nothing');
+    fill(h);
     assert.equal(h.storage.getItem('shortcutAmount'), '7');
     for (let i = 0; i < 7; i++) assert(h.storage.getItem('shortcutName' + i) && h.storage.getItem('shortcutURL' + i));
     assert.equal(adapter.validateBackupStorage(Object.fromEntries(h.storage.data)), true);
     const f = fixture.harness(), before = Object.fromEntries(f.storage.data);
     f.storage.failNext(Object.assign(Error('quota'), { name: 'QuotaExceededError' }), 1, 4);
-    f.el('newShortcutButton').click();
+    f.el('newShortcutButton').click(); fill(f);
     assert.deepEqual(Object.fromEntries(f.storage.data), before);
-    assert.equal(f.entries().length, 6); assert.equal(f.context.myntShortcuts.getItems().length, 6);
+    assert.equal(f.entries().filter(entry => !entry.classList.contains('draft')).length, 6); assert.equal(f.context.myntShortcuts.getItems().length, 6);
 });
 test('P1-2 edit persists complete list and restores default fields on failure', () => {
     const h = fixture.harness(), input = h.entries()[0].querySelector('.shortcutName');

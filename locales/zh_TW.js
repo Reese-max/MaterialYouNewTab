@@ -458,6 +458,7 @@ const zh_TW = {
     "iconFileTooLargeMessage": "圖示檔案為 {size} KB，大小上限為 {max} KB。",
     "iconStorageQuotaMessage": "瀏覽器儲存空間不足，無法儲存此圖示。",
     "shortcutInvalidUrlMessage": "網址無效，已還原為上次儲存的網址。",
+    "invalidShortcutUrlMessage": "請輸入有效的網址，例如 example.com。",
     "shortcutDuplicateUrlMessage": "這個網址已經在其他捷徑中。",
     "recentlyAddedBookmarks": "最近新增",
 
