@@ -186,3 +186,5 @@ html.myntHighContrast #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > bu
     #pomodoroPanel > .pomoStudioBackdrop { visibility: hidden; }
     #pomodoroPanel :is(.pomodoroTimeDisplay, .pomodoroPhaseLabel, .pomodoroRoundDisplay, .pomoStudioStats) { text-shadow: none; }
 }
+/* Phones: keep the designed sizes (44px targets, readable text); a saved panel scale still applies inline. */
+@media (max-width: 500px) { #pomodoroPanel { transform: none; } }
