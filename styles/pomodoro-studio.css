@@ -65,3 +65,17 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 /* Text over the video: 45% scrim keeps the 12px footer above 4.5:1 on the brightest frame area measured. */
 #pomodoroPanel > .pomodoro-bg-overlay {background:rgba(0,0,0,.45);}
 .black-theme #pomodoroPanel > .pomodoro-bg-overlay {background:rgba(0,0,0,.5);}
+/* Settings rhythm: tight inside a section, a clear break between sections, helper text one step down. */
+#myntPomoExtras summary {font-size:14px;padding:14px 0 10px;}
+#myntPomoExtras details[open] {padding-bottom:18px;}
+#myntPomoExtras label {margin:12px 0 0;}
+#myntPomoExtras details > label:first-of-type,#myntPomoExtras form > label:first-of-type {margin-top:2px;}
+#myntPomoExtras form > button,#myntPomoExtras .pomoStudioScenarios > button,#myntPomoExtras .pomoStudioScenarios > input {margin-top:10px;}
+#myntPomoExtras .mynt-pomo-appearance form {display:flex;flex-wrap:wrap;column-gap:8px;}
+#myntPomoExtras .mynt-pomo-appearance form > * {flex:1 1 100%;min-width:0;}
+#myntPomoExtras .mynt-pomo-appearance form > label:has(> input[type=color]) {flex:1 1 40%;}
+#myntPomoExtras .mynt-pomo-music p {margin:0 0 4px;font-size:11px;line-height:1.6;color:#ffffffc9;}
+#myntPomoExtras .mynt-pomo-music .mynt-music-controls {margin:12px 0 0;}
+#myntPomoExtras > .mynt-pomo-open-popup {margin:16px 0 4px;}
+#myntPomoExtras .pomoStudioSettings {padding-top:14px;gap:0;}
+#myntPomoExtras .pomoStudioNote {margin:14px 0 4px;}
