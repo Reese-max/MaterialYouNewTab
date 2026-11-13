@@ -79,3 +79,7 @@ body:not(.mynt-layout-editing) #pomodoroPanel {z-index:2147483002;}
 #myntPomoExtras > .mynt-pomo-open-popup {margin:16px 0 4px;}
 #myntPomoExtras .pomoStudioSettings {padding-top:14px;gap:0;}
 #myntPomoExtras .pomoStudioNote {margin:14px 0 4px;}
+/* Progress ring: flat stroke on an even track, no glow. */
+#pomodoroPanel .pomodoroRingFg {stroke:#fff;stroke-width:8;filter:none;}
+#pomodoroPanel .pomodoroRingFg.break-ring {stroke:#81d884;filter:none;}
+#pomodoroPanel .pomodoroRingBg {stroke:rgba(255,255,255,.24);}
