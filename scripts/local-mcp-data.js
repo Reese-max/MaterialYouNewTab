@@ -162,7 +162,7 @@ const familyMatrix = Object.freeze([
  ['events','read-write','upsert, visibility, recoverable trash/undo'],['todos','read-write','create, edit, complete, pin, recoverable trash and undo'],['focus','read-write','text, completion, subject, steps, linked timer flag'],['scratchpad','read-write','append, unique exact replacement; clipboard/download browser-only'],['manual-layouts','read-write','wide/narrow profiles, revisions, recoverable trash/undo'],['settings','limited-write','explicit safe whitelist only'],['habits','read-write','custom create, rename, today check-in and recoverable trash/undo; no system edits or deletion'],['workspaces','read-write','create/update presets; bounded apply through UI adapter; never launch URLs'],['focus-statistics','read-only','dashboard counts and seven-day session/minute summary'],['backup','metadata-only','export, file preview, restore and reset require browser UI'],['pomodoro','separate-adapter','timer and studio'],['music','separate-adapter','metadata/playback/settings and durable recoverable remove/restore; file picker and autoplay browser constraints'],['wallpapers','separate-adapter','gallery metadata/select/rename/cancel/recoverable remove; bundled hide/restore; file picker browser constraints'],['ambient-sound','separate-adapter','ambient playback and bounded volume through UI adapter'],['bookmarks','permission-gated-read-write','read, create, update, move and recoverable trash/restore through browser adapter'],['shortcuts','read-write','create/update and recoverable trash/undo; at least one active shortcut required by existing browser UI; opaque IDs change after edits; icons private'],['search','limited-write','search row and AI-mode visibility through preferences adapter; fixed Google default and bang metadata; navigation and voice permissions browser-only'],['ai-tools','limited-write','three built-in tools visibility/order through preferences adapter; external navigation browser-only'],['daidai','browser-only','pairing/authentication never exposed'],['weather','browser-only','location and credentials never exposed'],['quotes','separate-adapter','study quote controls through UI adapter'],['daily-exam','browser-only','exam card'],['accessibility','read-write','reduced motion, contrast and text scale; no remote autoplay'],['google-apps','browser-only','launcher'],['clock','read-write','mode, 12-hour format, greeting/name and visibility through preferences adapter; hidden-at-start closure may require browser initialization'],['bongocat','browser-only','decorative widget'],['adaptive-background','separate-adapter','palette, contrast and opacity through UI adapter; no automatic positioning'],['language','action-required','supported locales read; change explicitly requires browser reload and may refetch quotes'],['permissions','browser-only','no remote grants'],['command-palette','browser-only','interactive command palette']
 ].map(([family,support,detail])=>Object.freeze({family,support,detail})));
 function shortcutItem(value) {
- if(!plain(value)||Object.keys(value).some(k=>!['name','url','icon'].includes(k))||typeof value.name!=='string'||!value.name.trim()||value.name.length>200||typeof value.url!=='string'||!value.url||value.url.length>2048||typeof value.icon!=='string'||value.icon.length>150000)fail('invalid_storage','Invalid shortcut preserved');
+ if(!plain(value)||Object.keys(value).some(k=>!['name','url','icon'].includes(k))||typeof value.name!=='string'||value.name.length>200||typeof value.url!=='string'||!value.url||value.url.length>2048||typeof value.icon!=='string'||value.icon.length>150000)fail('invalid_storage','Invalid shortcut preserved');
  return {name:value.name,url:value.url,icon:value.icon};
 }
 function shortcutRecovery(raw) {
@@ -187,7 +187,7 @@ async function shortcutExecute(name,args,context) {
    items=get?get():[];
   }
  } else {
-  if(!/^\d{1,2}$/.test(raw.shortcutAmount)||Number(raw.shortcutAmount)<1||Number(raw.shortcutAmount)>50)fail('invalid_storage','Invalid shortcut count preserved');
+  if(!/^\d{1,2}$/.test(raw.shortcutAmount)||Number(raw.shortcutAmount)>50)fail('invalid_storage','Invalid shortcut count preserved');
   items=Array.from({length:Number(raw.shortcutAmount)},(_,i)=>storedShortcut(raw,i));
  }
  if(!Array.isArray(items)||items.length>50)fail('invalid_storage','Invalid shortcut list preserved');items=items.map(shortcutItem);
@@ -423,7 +423,7 @@ function validateBackupStorage(saved) {
  }
  if(Object.hasOwn(saved,'myntFocusLog'))focusLog(saved.myntFocusLog);
  if(Object.hasOwn(saved,'shortcutAmount')) {
-  if(!/^\d{1,2}$/.test(saved.shortcutAmount)||Number(saved.shortcutAmount)<1||Number(saved.shortcutAmount)>50)fail('invalid_storage','Invalid shortcut count');
+  if(!/^\d{1,2}$/.test(saved.shortcutAmount)||Number(saved.shortcutAmount)>50)fail('invalid_storage','Invalid shortcut count');
  }
  if(Object.hasOwn(saved,'shortcutAmount')||Object.keys(saved).some(key=>/^shortcut(?:Name|URL|Icon)\d+$/.test(key)))
   for(let i=0;i<Number(saved.shortcutAmount??6);i++)storedShortcut(saved,i);

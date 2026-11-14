@@ -458,6 +458,7 @@ const en = {
     "iconFileTooLargeMessage": "Icon file is {size} KB. Maximum is {max} KB.",
     "iconStorageQuotaMessage": "The icon could not be saved because browser storage is full.",
     "shortcutInvalidUrlMessage": "Invalid URL. Reverted to the last saved URL.",
+    "invalidShortcutUrlMessage": "Enter a valid web address, such as example.com.",
     "shortcutDuplicateUrlMessage": "This URL is already used by another shortcut.",
     "recentlyAddedBookmarks": "Recently Added",
 
@@ -820,6 +821,9 @@ const en = {
     "wallpaperAdded": "Added",
     "wallpaperImportFailed": "Could not add {count} file(s). Please retry.",
     "pomodoroAmbientFailed": "Audio could not start. Press the headphones button to retry.",
+    "pomodoroAmbientToggle": "Ambient sound",
+    "pomodoroAmbientType": "Ambient sound type",
+    "pomodoroAmbientVolume": "Ambient sound volume",
     "pomodoroAmbientPlaying": "Ambient audio playing",
     "wallpaperUnsupported": "Unsupported file type",
     "wallpaperInvalidUrl": "Enter an http(s) URL",

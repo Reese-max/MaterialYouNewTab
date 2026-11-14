@@ -847,7 +847,8 @@ function updateBookmarkUI(enabled) {
 function trapBookmarkFocus(event) {
     if (event.key !== "Tab" || !bookmarkSidebar.classList.contains("open") || editBookmarkModal.open) return;
     const focusable = [...bookmarkSidebar.querySelectorAll("button:not([disabled]):not([hidden]), input:not([disabled]), summary, a[href]")]
-        .filter(element => !element.closest("[hidden]") && element.getClientRects().length);
+        // Buttons inside a collapsed action menu still report boxes in Chromium; they cannot take focus.
+        .filter(element => !element.closest("[hidden]") && !element.closest("details:not([open]) > :not(summary)") && element.getClientRects().length);
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable.at(-1);
@@ -946,14 +947,15 @@ bookmarkSidebar.addEventListener("keydown", event => {
 
 document.addEventListener("keydown", event => {
     trapBookmarkFocus(event);
-    if (event.key === "Escape" && bookmarkSidebar.classList.contains("open") && !editBookmarkModal.open) {
+    // A pending mutation means the delete confirmation owns Escape; cancelling it must not close the sidebar.
+    if (event.key === "Escape" && bookmarkSidebar.classList.contains("open") && !editBookmarkModal.open && !bookmarkMutationPending) {
         event.preventDefault();
         closeBookmarkSidebar();
         return;
     }
     const menu = document.getElementById("menuBar");
     const menuOpen = menu && menu.style.display !== "none" && menu.style.display !== "";
-    if (event.key === "ArrowRight" && !event.repeat && !menuOpen && bookmarksCheckbox.checked &&
+    if (event.key === "ArrowRight" && !event.repeat && !menuOpen && bookmarksCheckbox.checked && !bookmarkMutationPending &&
         !["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName) && !event.target.isContentEditable) {
         event.preventDefault();
         toggleBookmarkSidebar();

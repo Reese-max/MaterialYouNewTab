@@ -20,6 +20,9 @@ function myntNormalizeShortcutUrl(url) {
     const candidate = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
     try {
         const parsed = new URL(candidate);
+        // Chromium percent-encodes a space in the host ("not a url") instead of rejecting it;
+        // spaces in the path or query stay valid.
+        if (parsed.hostname.includes("%")) return null;
         return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : null;
     } catch {
         return null;
@@ -67,11 +70,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         "image/svg+xml",
     ]);
     const PLACEHOLDER = {
-        name: "新捷徑",
+        name: shortcutTranslation("shortcutDefaultName") || "新捷徑",
         url: "https://github.com/Reese-max/MaterialYouNewTab",
-        inputName: "捷徑名稱",
-        inputUrl: "捷徑網址",
-        inputIcon: "自訂圖示：網址或 SVG（選填）"
+        inputName: shortcutTranslation("shortcutInputName") || "捷徑名稱",
+        inputUrl: shortcutTranslation("shortcutInputUrl") || "捷徑網址",
+        inputIcon: shortcutTranslation("shortcutInputIcon") || "自訂圖示：網址或 SVG（選填）"
     };
 
     // DOM Elements
@@ -126,6 +129,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     let shortcutBaseline;
     let recoveryControl;
     let shortcutDragInitialized = false;
+    let shortcutMessageSeq = 0;
 
     // Initialization
     loadSettings();
@@ -221,9 +225,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function handleNewShortcutClick() {
         if (this.classList.contains("inactive")) return;
 
-        const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
-        if (currentAmount >= MAX_SHORTCUTS) return;
-
         if (addNewShortcut() === false) return;
 
         // Scroll to the new shortcut and focus on the URL input
@@ -244,20 +245,24 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     // Loads shortcuts from localStorage or uses presets if none exist
     function loadShortcuts() {
         rememberShortcutStorage();
-        const amount = localStorage.getItem("shortcutAmount") || presets.length;
-        const deleteInactive = amount <= 1;
+        // A stored "0" means the user removed every shortcut; only a missing key falls back to presets.
+        const storedAmount = localStorage.getItem("shortcutAmount");
+        const amount = storedAmount === null
+            ? presets.length
+            : Math.min(Math.max(parseInt(storedAmount, 10) || 0, 0), MAX_SHORTCUTS);
 
         shortcutsCache = [];
 
         for (let i = 0; i < amount; i++) {
             const defaults = myntShortcutDefault(i);
-            const name = localStorage.getItem(`shortcutName${i}`) || defaults.name;
+            // ?? keeps a deliberately emptied name instead of reviving the preset name on reload.
+            const name = localStorage.getItem(`shortcutName${i}`) ?? defaults.name;
             const url = localStorage.getItem(`shortcutURL${i}`) || defaults.url;
             const icon = localStorage.getItem(`shortcutIcon${i}`) || "";
 
             shortcutsCache.push({ name, url, icon });
 
-            const entry = createShortcutEntry(name, url, icon, deleteInactive, i);
+            const entry = createShortcutEntry(name, url, icon, i);
             dom.shortcutSettingsContainer.appendChild(entry);
             renderShortcut(name, url, icon, i);
         }
@@ -270,11 +275,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     // Creates a shortcut entry element for the settings panel
-    function createShortcutEntry(name, url, iconUrl, deleteInactive, index) {
+    function createShortcutEntry(name, url, iconUrl, index) {
         const entry = document.createElement("div");
         entry.className = "shortcutSettingsEntry";
-        entry.draggable = true;
+        // Only the grip is draggable: a draggable row breaks caret placement and text selection in its inputs.
         entry._index = index;
+        // Not the index: a draft row outlives rebuilds of the saved rows, so ids must never repeat.
+        const messageId = `shortcutUrlMessage${shortcutMessageSeq++}`;
 
         entry.innerHTML = `
             <div class="grip-container" draggable="true">
@@ -291,9 +298,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 <input class="shortcutName" placeholder="${PLACEHOLDER.inputName}" value="">
                 <div class="shortcutInputRow">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39"/></svg>
-                    <input class="URL" placeholder="${PLACEHOLDER.inputUrl}" value="" aria-describedby="shortcutUrlMessage${index}">
+                    <input class="URL" placeholder="${PLACEHOLDER.inputUrl}" value="" aria-describedby="${messageId}">
                 </div>
-                <div class="shortcutFieldMessage shortcutUrlMessage" id="shortcutUrlMessage${index}" role="status" aria-live="polite" hidden></div>
+                <div class="shortcutFieldMessage shortcutUrlMessage" id="${messageId}" role="status" aria-live="polite" hidden></div>
                 <input class="iconURL" type="hidden" value="">
             </div>
             <div class="shortcutActions">
@@ -304,7 +311,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 </button>
                 <input type="file" class="iconFileInput" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp,image/x-icon,image/vnd.microsoft.icon,image/svg+xml" hidden>
                 <div class="shortcutDelete">
-                    <button class="${deleteInactive ? 'inactive' : ''}">
+                    <button type="button">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                             <path d="M7.8 20.4q-.742 0-1.271-.529Q6 19.343 6 18.6v-12h-.3q-.383 0-.641-.257-.259-.258-.259-.638t.259-.643Q5.317 4.8 5.7 4.8h3.9v-.3q0-.383.259-.641.258-.259.641-.259h3q.383 0 .641.259.259.258.259.641v.3h3.9q.383 0 .641.257.259.257.259.638 0 .38-.259.643-.258.262-.641.262H18v11.99q0 .76-.529 1.285-.529.525-1.271.525Zm8.4-13.8H7.8v12h8.4zm-5.705 10.2q.38 0 .643-.259.262-.259.262-.641V9.3q0-.383-.257-.641-.258-.259-.638-.259t-.643.259Q9.6 8.917 9.6 9.3v6.6q0 .383.257.641.258.259.638.259Zm3 0q.38 0 .643-.259.262-.259.262-.641V9.3q0-.383-.257-.641-.258-.259-.638-.259t-.643.259q-.262.258-.262.641v6.6q0 .383.257.641.258.259.638.259ZM7.8 6.6v12z"/>
                         </svg>
@@ -326,9 +333,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             getValue: () => iconInput.value,
             getLabel: () => entry.querySelector(".shortcutName").value,
             getUrl: () => entry.querySelector(".URL").value,
-            automatic: target => appendShortcutLogo(target, entry.querySelector(".shortcutName").value, entry.querySelector(".URL").value, ""),
+            // Without a valid URL (a new draft) there is no site to take an icon from yet.
+            automatic: target => myntNormalizeShortcutUrl(entry.querySelector(".URL").value) && appendShortcutLogo(target, entry.querySelector(".shortcutName").value, entry.querySelector(".URL").value, ""),
             onSelect(value) {
                 iconInput.value = value;
+                // A draft keeps the chosen icon until it has a valid URL.
+                if (isUnfinishedDraft(entry)) return;
                 if (saveShortcut(entry) === false) return false;
                 renderShortcut(entry.querySelector(".shortcutName").value, entry.querySelector(".URL").value, value, entry._index);
             }
@@ -343,7 +353,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             button.setAttribute("aria-label", template.replace("{name}", name));
             button.disabled = offset < 0 ? index === 0 : index === shortcutsCache.length - 1;
             button.addEventListener("click", () => {
-                const rows = [...dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")];
+                const rows = [...dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry:not(.draft)")];
                 const from = rows.indexOf(entry), to = from + offset;
                 if (from < 0 || to < 0 || to >= rows.length) return;
                 const originalOrder = readShortcutOrder();
@@ -493,6 +503,16 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         if (myntNormalizeShortcutUrl(urlInput.value)) {
             urlInput.removeAttribute("aria-invalid");
             return true;
+        }
+
+        if (entry.classList.contains("draft")) {
+            // A draft has no saved URL to restore, and one simply left blank is not an error yet.
+            const leftBlank = !urlInput.value.trim();
+            urlInput.value = "";
+            if (leftBlank) urlInput.removeAttribute("aria-invalid");
+            else urlInput.setAttribute("aria-invalid", "true");
+            setShortcutUrlMessage(entry, leftBlank ? "" : shortcutTranslation("invalidShortcutUrlMessage"));
+            return false;
         }
 
         const savedUrl = shortcutsCache[entry._index]?.url ?? localStorage.getItem(`shortcutURL${entry._index}`);
@@ -660,11 +680,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                     entry._index
                 );
             });
-            input.addEventListener("focus", e => e.target.select());
         });
 
         inputs[0].addEventListener("keydown", e => e.key === "Enter" && inputs[1].focus());
-        inputs[1].addEventListener("keydown", e => e.key === "Enter" && entry.querySelector(".quicklinkChooseIcon")?.focus());
+        inputs[1].addEventListener("keydown", e => {
+            if (e.key !== "Enter") return;
+            if (myntNormalizeShortcutUrl(inputs[1].value)) entry.querySelector(".quicklinkChooseIcon")?.focus();
+            // Validate in place so the note appears and keyboard focus stays in the field.
+            else commitUrlInput(inputs[1], entry);
+        });
         inputs[2].addEventListener("keydown", e => {
             if (e.key !== "Enter") return;
             e.preventDefault();
@@ -879,6 +903,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         dom.shortcutSettingsContainer.addEventListener("dragstart", e => {
             const item = e.target.closest(".shortcutSettingsEntry");
             if (item) {
+                // A draft is not stored yet, so it takes no part in reordering.
+                if (item.classList.contains("draft")) {
+                    e.preventDefault();
+                    return;
+                }
                 isReordering = true;
                 draggedElement = item;
                 originalOrder = readShortcutOrder();
@@ -891,11 +920,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 dom.shortcutSettingsContainer.classList.add("dragging-ongoing");
 
                 // Add CSS classes for styling
+                // Deferred: changing the DOM inside dragstart aborts the drag in Chromium.
                 setTimeout(() => {
                     item.classList.add("dragging");
+                    draftEntry()?.remove();
                 }, 0);
 
                 e.dataTransfer.effectAllowed = "move";
+                // The grip starts the drag, but the preview is still the whole row.
+                e.dataTransfer.setDragImage?.(item, dragOffset.x, dragOffset.y);
             }
         });
 
@@ -926,7 +959,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Updates indices of all shortcut entries after reordering
     function updateShortcutIndices() {
-        const entries = document.querySelectorAll(".shortcutSettingsEntry");
+        const entries = document.querySelectorAll(".shortcutSettingsEntry:not(.draft)");
+        const draft = draftEntry();
+        if (draft) {
+            draft._index = entries.length;
+            draft.querySelectorAll(".shortcutMoveUp, .shortcutMoveDown").forEach(button => { button.disabled = true; });
+        }
         entries.forEach((entry, index) => {
             entry._index = index;
             for (const direction of ["Up", "Down"]) {
@@ -939,7 +977,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         });
     }
 
-    function readShortcutOrder(entries = dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")) {
+    function draftEntry() {
+        return dom.shortcutSettingsContainer.querySelector(".shortcutSettingsEntry.draft");
+    }
+
+    function isUnfinishedDraft(entry) {
+        return entry.classList.contains("draft") && !myntNormalizeShortcutUrl(entry.querySelector(".URL").value);
+    }
+
+    function readShortcutOrder(entries = dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry:not(.draft)")) {
         return Array.from(entries).map(entry => ({
             name: entry.querySelector(".shortcutName").value,
             url: entry.querySelector(".URL").value,
@@ -1010,16 +1056,18 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     function rebuildShortcutEditor(order) {
+        const draft = draftEntry();
         dom.shortcutSettingsContainer.innerHTML = "";
         dom.shortcutsContainer.innerHTML = "";
-        const deleteInactive = order.length <= 1;
 
         order.forEach((item, index) => {
             dom.shortcutSettingsContainer.appendChild(
-                createShortcutEntry(item.name, item.url, item.icon || "", deleteInactive, index)
+                createShortcutEntry(item.name, item.url, item.icon || "", index)
             );
             renderShortcut(item.name, item.url, item.icon || "", index);
         });
+        // The unsaved draft survives edits to the saved rows, unless the list just became full.
+        if (draft && order.length < MAX_SHORTCUTS) dom.shortcutSettingsContainer.appendChild(draft);
 
         dom.newShortcutButton.classList.toggle("inactive", order.length >= MAX_SHORTCUTS);
         updateShortcutIndices();
@@ -1107,30 +1155,25 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
     }
 
-    // Adds a new shortcut
+    // Adds an unsaved draft row: nothing is stored or shown on the page until it has a valid URL.
     function addNewShortcut() {
         if (!checkShortcutFreshness() || shortcutsCache.length >= MAX_SHORTCUTS) return false;
-        const previousStorage = snapshotShortcutStorage();
-        const next = [...shortcutsCache, { name: PLACEHOLDER.name, url: PLACEHOLDER.url, icon: "" }];
-        try {
-            writeShortcutStorage(next);
-        } catch (error) {
-            try { restoreShortcutStorage(previousStorage); }
-            catch (rollbackError) { console.error("Shortcut add rollback failed:", rollbackError); }
-            if (!isQuotaExceededError(error)) throw error;
-            alertPrompt(translations[currentLanguage]?.iconStorageQuotaMessage || translations.en.iconStorageQuotaMessage);
-            return false;
-        }
-        shortcutsCache = next;
-        rebuildShortcutEditor(next);
+        // An unfinished draft is reused instead of stacking empty rows.
+        if (draftEntry()) return true;
+        const entry = createShortcutEntry(PLACEHOLDER.name, "", "", shortcutsCache.length);
+        entry.classList.add("draft");
+        dom.shortcutSettingsContainer.appendChild(entry);
+        updateShortcutIndices();
         return true;
     }
 
     // Deletes a shortcut atomically and records it for recovery
     function deleteShortcut(entry) {
+        if (entry.classList.contains("draft")) {
+            entry.remove();
+            return;
+        }
         if (!checkShortcutFreshness()) return;
-        const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
-        if (currentAmount <= 1) return;
 
         const index = entry._index;
         const order = readShortcutOrder();
@@ -1212,10 +1255,19 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const url = entry.querySelector(".URL").value;
         const iconInput = entry.querySelector(".iconURL");
         const icon = iconInput.value || "";
+        // A row past the saved list is the unsaved draft.
+        const isDraft = index >= shortcutsCache.length;
+        if (isDraft && !myntNormalizeShortcutUrl(url)) {
+            entry.querySelector(".quicklinkChooseIcon")?.refreshIcon();
+            return false;
+        }
 
         const previousStorage = snapshotShortcutStorage();
-        const previous = shortcutsCache[index];
-        const next = shortcutsCache.map((item, i) => i === index ? { name, url, icon } : item);
+        // A draft that does not fit keeps its text and drops the icon, the only large part.
+        const previous = isDraft ? { name, url, icon: "" } : shortcutsCache[index];
+        const next = isDraft
+            ? [...shortcutsCache, { name, url, icon }]
+            : shortcutsCache.map((item, i) => i === index ? { name, url, icon } : item);
         try {
             writeShortcutStorage(next);
         } catch (iconError) {
@@ -1237,6 +1289,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         entry.querySelector(".quicklinkChooseIcon")?.refreshIcon();
         shortcutsCache[index] = { name, url, icon: iconInput.value || "" };
         rememberShortcutStorage();
+        if (isDraft) {
+            entry.classList.remove("draft");
+            dom.newShortcutButton.classList.toggle("inactive", shortcutsCache.length >= MAX_SHORTCUTS);
+            updateShortcutIndices();
+        }
         return true;
     }
 

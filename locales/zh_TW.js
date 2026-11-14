@@ -458,6 +458,7 @@ const zh_TW = {
     "iconFileTooLargeMessage": "圖示檔案為 {size} KB，大小上限為 {max} KB。",
     "iconStorageQuotaMessage": "瀏覽器儲存空間不足，無法儲存此圖示。",
     "shortcutInvalidUrlMessage": "網址無效，已還原為上次儲存的網址。",
+    "invalidShortcutUrlMessage": "請輸入有效的網址，例如 example.com。",
     "shortcutDuplicateUrlMessage": "這個網址已經在其他捷徑中。",
     "recentlyAddedBookmarks": "最近新增",
 
@@ -820,6 +821,9 @@ const zh_TW = {
     "wallpaperAdded": "已新增",
     "wallpaperImportFailed": "有 {count} 個檔案無法新增，請重試。",
     "pomodoroAmbientFailed": "無法播放環境音，請按耳機按鈕重試。",
+    "pomodoroAmbientToggle": "環境音",
+    "pomodoroAmbientType": "環境音類型",
+    "pomodoroAmbientVolume": "環境音音量",
     "pomodoroAmbientPlaying": "環境音播放中",
     "wallpaperUnsupported": "不支援的檔案類型",
     "wallpaperInvalidUrl": "請輸入 http(s) 網址",

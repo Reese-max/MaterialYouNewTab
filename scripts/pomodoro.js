@@ -796,6 +796,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         }
+        // Ambient controls take their accessible names from the UI language; the English markup is the fallback.
+        if (pomodoroAmbientToggleBtn) {
+            const ambientLabel = getPomodoroText("pomodoroAmbientToggle", pomodoroAmbientToggleBtn.title);
+            pomodoroAmbientToggleBtn.title = ambientLabel;
+            pomodoroAmbientToggleBtn.setAttribute("aria-label", ambientLabel);
+        }
+        if (pomodoroAmbientSelect) pomodoroAmbientSelect.setAttribute("aria-label", getPomodoroText("pomodoroAmbientType", "Ambient sound type"));
+        if (pomodoroAmbientVol) pomodoroAmbientVol.setAttribute("aria-label", getPomodoroText("pomodoroAmbientVolume", "Ambient sound volume"));
         if (pomodoroAmbientToggleBtn) {
             pomodoroAmbientToggleBtn.addEventListener("click", function () {
                 if (globalThis.myntAmbientAudio) {
