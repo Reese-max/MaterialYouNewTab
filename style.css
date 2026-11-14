@@ -1336,7 +1336,11 @@ body #bookmarkButton.bookmark-button.rotate {
 
 /* Modal Styling */
 #editBookmarkModal {
-	display: none;
+	/* <dialog>: closed state is hidden by the browser; an author display here would hide it when open too. */
+	box-sizing: border-box;
+	margin: 0;
+	border: 0;
+	max-width: calc(100vw - 32px);
 	position: fixed;
 	z-index: 5;
 	left: 50%;

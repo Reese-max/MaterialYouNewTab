@@ -31,5 +31,10 @@ const selectors = sheets.map(file => read(file).replace(/\/\*[\s\S]*?\*\//gu, ''
     .flatMap(css => [...css.matchAll(/([^{}]+)\{/gu)].map(([, selector]) => selector)).join('\n');
 const styled = new Set([...selectors.matchAll(/\.([\w-]+)/gu)].map(([, name]) => name));
 for (const name of classes) if (!styled.has(name)) errors.push(`Missing linked CSS selector: .${name}`);
+// The editor is a <dialog> opened with showModal(); an author display on its rule hides it while open and leaves the page inert.
+const editorRule = (/#editBookmarkModal\s*\{([^}]*)\}/u.exec(read('style.css'))?.[1] || '').replace(/\/\*[\s\S]*?\*\//gu, '');
+if (/(^|[;\s])display\s*:/u.test(editorRule)) errors.push('#editBookmarkModal must not set display; it would hide the open dialog');
+if (!source.includes('!editBookmarkModal.open && !bookmarkMutationPending')) errors.push('Escape must not close the sidebar while a delete confirmation is pending');
+if (!source.includes('details:not([open]) > :not(summary)')) errors.push('Focus trap must ignore buttons inside collapsed action menus');
 assert.deepEqual(errors, [], errors.join('\n'));
 console.log(`BOOKMARKS_STYLE_CHECK_OK (${classes.size} rendered classes, ${sheets.length} linked stylesheets)`);
