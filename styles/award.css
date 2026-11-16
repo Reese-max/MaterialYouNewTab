@@ -2952,11 +2952,7 @@ html.myntReducedMotion #pomodoroPanel button:is(:hover, :active) { transform: no
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 18px 48px rgba(0, 0, 0, 0.24);
 }
 
-/* 只降低首頁主欄的視覺權重；今日小工具、浮動入口與 pointer-events 均沿用原設定。
-   不加入淡入淡出，減少動畫模式也不會產生新的動態效果。 */
-body:has(#pomodoroPanel:not([style*="display: none"])) :is(.ttteexxtt, #rightDiv, #aiToolsCont) {
-    opacity: 0.35;
-}
+/* 番茄鐘開啟時主欄維持原樣：淡化會讓仍可操作的搜尋框看起來像停用。 */
 
 @media (max-height: 800px) {
     /* 曲名與主要播放控制並排；使用原有音樂庫 details 展開其餘控制。
