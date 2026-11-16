@@ -124,7 +124,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     const stepInput = $("dailyFocusStepInput");
     const pasteBox = $("dailyFocusPaste");
     const pasteWrap = $("dailyFocusPasteWrap");
-    const daidaiBtn = $("dailyFocusDaidaiBtn");
     const note = $("dailyFocusNote");
     let lastHistoryWrite = "";
 
@@ -214,7 +213,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         localize();
         renderSubjects(focus);
         renderSteps(focus);
-        daidaiBtn.hidden = !window.myntDaidai?.paired?.();
         if (log !== false) writeLog(focus);
     }
 
@@ -256,7 +254,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     function setPanel(open) {
         panel.hidden = !open;
-        daidaiBtn.hidden = !window.myntDaidai?.paired?.();
         more.setAttribute("aria-expanded", String(open));
     }
 
@@ -295,20 +292,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const count = addSteps(parsed);
         flash(count ? t("dailyFocusPasteAdded", "Added {count} steps.").replace("{count}", count) : t("dailyFocusStepsFull", "Up to 3 steps"));
         if (count) { pasteBox.value = ""; pasteWrap.hidden = true; }
-    });
-    daidaiBtn.addEventListener("click", () => {
-        const focus = api.get();
-        if (!focus.text) return flash(t("dailyFocusNeedText", "Write today’s focus first."));
-        flash(t("dailyFocusDaidaiSending", "Asking DaiDai… confirm the steps in the dialog."));
-        document.dispatchEvent(new CustomEvent("mynt:daidai-prompt", { detail: { kind: "focus-breakdown", text: prompt() } }));
-    });
-
-    document.addEventListener("mynt:focus-steps-add", event => {
-        const titles = Array.isArray(event.detail?.titles) ? event.detail.titles : [];
-        addSteps(titles);
-    });
-    document.addEventListener("mynt:focus-breakdown-status", event => {
-        if (!event.detail?.ok) flash(t("dailyFocusDaidaiFailed", "DaiDai is unavailable. Use ChatGPT and paste the answer."));
     });
     document.addEventListener("mynt:pomodoro-complete", event => {
         const focus = api.get();

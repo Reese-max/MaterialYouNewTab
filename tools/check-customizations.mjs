@@ -20,18 +20,17 @@ for (const file of javascriptFiles) {
 const chromeManifest = JSON.parse(read("manifest.json"));
 const firefoxManifest = JSON.parse(read("manifest(firefox).json"));
 assert.ok(!chromeManifest.permissions?.includes("search"), "Chrome manifest still requests the unused search permission");
-assert.deepEqual(chromeManifest.permissions, ["storage"]);
+assert.deepEqual(chromeManifest.permissions, []);
 assert.deepEqual(chromeManifest.optional_permissions.sort(), ["bookmarks", "favicon", "nativeMessaging"].sort());
-assert.deepEqual(chromeManifest.optional_host_permissions, ["http://127.0.0.1/*"]);
-assert.deepEqual(firefoxManifest.permissions, ["storage"]);
-assert.deepEqual(firefoxManifest.optional_permissions.sort(), ["bookmarks", "nativeMessaging", "http://127.0.0.1/*"].sort());
+assert.equal(chromeManifest.optional_host_permissions, undefined);
+assert.deepEqual(firefoxManifest.permissions, []);
+assert.deepEqual(firefoxManifest.optional_permissions.sort(), ["bookmarks", "nativeMessaging"].sort());
 
 const html = read("index.html");
 const searchCode = read("scripts/search.js");
 const dashboardCode = read("scripts/dashboard-tools.js");
 const clockCode = read("scripts/clock.js");
 const backupCode = read("scripts/backup-restore.js");
-const daidaiCode = read("scripts/daidai-integration.js");
 const customTextCode = read("scripts/custom-text.js");
 const weatherCode = read("scripts/weather.js");
 const shortcutsCode = read("scripts/shortcuts.js");
@@ -61,7 +60,7 @@ for (const ref of new Set(localRefs)) {
     assert.ok(existsSync(resolve(root, ref.replace(/^\.\//, ""))), `Missing local asset: ${ref}`);
 }
 
-for (const script of ["scripts/pomodoro.js", "scripts/dashboard-tools.js", "scripts/scratchpad.js", "scripts/ambient-sound.js", "scripts/daidai-integration.js"]) {
+for (const script of ["scripts/pomodoro.js", "scripts/dashboard-tools.js", "scripts/scratchpad.js", "scripts/ambient-sound.js"]) {
     assert.ok(html.includes(`src="${script}"`) || read("scripts/lazy-loader.js").includes(`"${script}"`), `Custom script is not loaded: ${script}`);
 }
 
@@ -70,9 +69,6 @@ for (const id of [
     "workspacePresetGrid", "workspaceEditorForm",
     "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow",
     "shortcutsHelpDialog", "scratchpadDownloadBtn", "bookmarksSubtitle", "bookmarkShortcutStatus",
-    "scratchpadAskDaidaiBtn", "scratchpadOrganizeDaidaiBtn", "daidaiIntegrationSection", "daidaiConnectBtn",
-    "daidaiActionDialog", "daidaiActionConfirmBtn", "daidaiActionRejectBtn",
-    "daidaiActionToast", "daidaiActionUndoBtn",
     "dailyFocusActions", "dailyFocusStatus", "dailyFocusToggle", "settingsGroupTabs",
     "settingsGroupPersonal", "settingsGroupWork", "settingsGroupAdvanced", "settingsHintText"
 ]) {
@@ -98,38 +94,17 @@ assert.match(todoCode, /mynt:todo-updated/);
 assert.match(todoCode, /mynt:todo-create/);
 assert.match(todoCode, /mynt:todo-action/);
 assert.doesNotMatch(todoCode, /mynt:todo-complete/);
-assert.match(read("scripts/scratchpad.js"), /mynt:scratchpad-action/);
-assert.match(read("scripts/scratchpad.js"), /event\.detail\.undo/);
 assert.match(todoCode, /event\.detail\.undo/);
-assert.match(daidaiCode, /http:\/\/127\.0\.0\.1:17373/);
-assert.match(daidaiCode, /expectedSessionId/);
-assert.match(daidaiCode, /showActionFeedback/);
-assert.doesNotMatch(daidaiCode, /localStorage\.(?:setItem|getItem)\([^\n]*myntDaidaiScopedToken/);
 assert.match(html, /data-workspace-background=["']video["']/);
 assert.match(read("privacy-policy.html"), /服務狀態只會在 localStorage 記錄/);
-assert.match(read("privacy-policy.html"), /呆呆提出的新增、修改、完成待辦或便籤操作只會排入本機預覽/);
 
-const daidaiContext = { module: { exports: {} } };
-vm.runInNewContext(daidaiCode, daidaiContext);
-const { myntPlanDaidaiAction } = daidaiContext.module.exports;
-const daidaiState = {
-    sessionId: "session-1", revision: 4,
-    todos: [{ id: "t1", title: "舊待辦", status: "pending" }],
-    scratchpad: "唯一舊文字"
-};
-assert.equal(myntPlanDaidaiAction({
-    type: "todo.update", todoId: "t1", title: "新待辦", expectedSessionId: "session-1", expectedRevision: 4
-}, daidaiState).after, "新待辦");
-assert.equal(myntPlanDaidaiAction({
-    type: "todo.complete", todoId: "t1", completed: true, expectedSessionId: "session-1", expectedRevision: 3
-}, daidaiState).reason, "stale");
-assert.equal(myntPlanDaidaiAction({
-    type: "scratchpad.replace", before: "找不到", text: "新文字", expectedSessionId: "session-1", expectedRevision: 4
-}, daidaiState).valid, false);
 
 const dashboardContext = { module: { exports: {} } };
 vm.runInNewContext(dashboardCode, dashboardContext);
 const dashboard = dashboardContext.module.exports;
+// DaiDai integration was removed (owner decision 2026-11-17).
+assert.ok(!existsSync(resolve(root, "scripts/daidai-integration.js")) && !existsSync(resolve(root, "patches")));
+assert.doesNotMatch(html + read("style.css") + read("scripts/lazy-loader.js") + todoCode + read("scripts/focus-card.js"), /daidai/i);
 // Bongo Cat was removed (owner decision 2026-11-17).
 assert.ok(!existsSync(resolve(root, "scripts/bongocat.js")) && !existsSync(resolve(root, "images/bongocat")));
 assert.doesNotMatch(html + read("style.css") + dashboardCode, /bongo/i);
@@ -291,7 +266,7 @@ assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([25
 assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([0, 0, 0, 255])) < 0.01);
 assert.match(read("scripts/quotes.js"), /getItem\("motivationalQuotesVisible"\) === "true"/);
 assert.match(read("styles/quote-contrast.css"), /\.studyQuote\.has-wallpaper\.is-on-bright/);
-for (const file of ["custom-text.js", "daidai-integration.js", "dashboard-tools.js", "layout-editor.js", "scratchpad.js", "wallpaper-gallery.js"]) {
+for (const file of ["custom-text.js", "dashboard-tools.js", "layout-editor.js", "scratchpad.js", "wallpaper-gallery.js"]) {
     const code = read(`scripts/${file}`);
     const bare = code.replace(/window\.myntDialog[^\n]*/g, "");
     assert.doesNotMatch(bare, /(^|[^\w.])(alert|confirm|prompt)\(/m, `${file} still calls a native dialog without the in-app fallback`);
@@ -328,11 +303,10 @@ assert.ok(read("index.html").indexOf("scripts/mynt-dialog.js") < read("index.htm
     assert.equal(stale.id, ids[3], "ids no longer in the filtered pool are skipped");
 }
 const lazyCode = read("scripts/lazy-loader.js");
-for (const lazy of ["scripts/daidai-integration.js", "scripts/bookmarks.js"]) {
+for (const lazy of ["scripts/bookmarks.js"]) {
     assert.ok(!html.includes(`src="${lazy}"`), `${lazy} should be lazy-loaded, not eager`);
     assert.ok(lazyCode.includes(`"${lazy}"`));
 }
-assert.match(read("scripts/daidai-integration.js"), /document\.readyState === "loading"/);
 console.log(`CUSTOM_CHECK_OK js=${javascriptFiles.length} refs=${new Set(localRefs).size} localeKeys=${Object.keys(en).length} videos=${videos.length}`);
 
 // Settings cleanup: keep every setting while removing non-setting project links.

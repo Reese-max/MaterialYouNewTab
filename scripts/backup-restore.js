@@ -29,8 +29,8 @@ const BACKUP_WORDS = {
     backupScopeLabel: ["Export scope", "匯出範圍"],
     backupScopeFull: ["Settings + media", "設定＋媒體"],
     backupScopeSettings: ["Settings only", "僅設定"],
-    backupScopeText: ["Settings + media: settings, layouts, tasks, notes, saved wallpaper, gallery, timer image and music. Limit: 32 MiB including encoded media; nothing is silently omitted. If it is too large, choose Settings only and keep original media separately. WeatherAPI keys, browser bookmarks/permissions and DaiDai pairing are excluded. URL-only wallpapers remain links, not offline copies. Retained task/shortcut/habit deletions and custom shortcut icons are included.", "設定＋媒體：設定、版面、待辦、便籤、已儲存桌布、圖庫、番茄鐘圖片及音樂。含編碼媒體上限 32 MiB，不會默默省略檔案。超過時可選「僅設定」，並另行保留原始媒體。排除 WeatherAPI 金鑰、瀏覽器書籤／權限及呆呆配對。網址型桌布僅保存連結，非離線副本。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。"],
-    backupScopeSettingsText: ["Settings only: general settings, layouts, tasks, notes and timer state (restored paused). Excludes all wallpaper/gallery, timer-image and music files, plus wallpaper preferences, timer appearance, music preferences and saved focus scenarios that can reference those files. Those media and preferences stay unchanged on restore. WeatherAPI keys, browser bookmarks/permissions and DaiDai pairing are excluded. Retained task/shortcut/habit deletions and custom shortcut icons are included. Limit: 32 MiB.", "僅設定：一般設定、版面、待辦、便籤及還原後暫停的計時狀態。不含桌布／圖庫、番茄鐘圖片及音樂檔，也不含可能引用媒體的桌布偏好、計時器外觀、音樂偏好及已儲存專注情境。還原時會保留目的端的這些媒體與偏好。排除 WeatherAPI 金鑰、瀏覽器書籤／權限及呆呆配對。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。上限 32 MiB。"],
+    backupScopeText: ["Settings + media: settings, layouts, tasks, notes, saved wallpaper, gallery, timer image and music. Limit: 32 MiB including encoded media; nothing is silently omitted. If it is too large, choose Settings only and keep original media separately. WeatherAPI keys and browser bookmarks/permissions are excluded. URL-only wallpapers remain links, not offline copies. Retained task/shortcut/habit deletions and custom shortcut icons are included.", "設定＋媒體：設定、版面、待辦、便籤、已儲存桌布、圖庫、番茄鐘圖片及音樂。含編碼媒體上限 32 MiB，不會默默省略檔案。超過時可選「僅設定」，並另行保留原始媒體。排除 WeatherAPI 金鑰及瀏覽器書籤／權限。網址型桌布僅保存連結，非離線副本。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。"],
+    backupScopeSettingsText: ["Settings only: general settings, layouts, tasks, notes and timer state (restored paused). Excludes all wallpaper/gallery, timer-image and music files, plus wallpaper preferences, timer appearance, music preferences and saved focus scenarios that can reference those files. Those media and preferences stay unchanged on restore. WeatherAPI keys and browser bookmarks/permissions are excluded. Retained task/shortcut/habit deletions and custom shortcut icons are included. Limit: 32 MiB.", "僅設定：一般設定、版面、待辦、便籤及還原後暫停的計時狀態。不含桌布／圖庫、番茄鐘圖片及音樂檔，也不含可能引用媒體的桌布偏好、計時器外觀、音樂偏好及已儲存專注情境。還原時會保留目的端的這些媒體與偏好。排除 WeatherAPI 金鑰及瀏覽器書籤／權限。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。上限 32 MiB。"],
     backupWorking: ["Preparing the complete local backup…", "正在準備完整本機備份…"],
     backupReady: ["Complete backup prepared; download requested. Check that the file was saved.", "完整備份已準備好並要求下載，請確認檔案已儲存。"],
     backupSettingsWorking: ["Preparing a settings-only backup without reading media…", "正在準備僅設定備份，不會讀取媒體檔…"],
@@ -556,7 +556,6 @@ resetButton.addEventListener("click", async () => {
     if (backupOperationBusy || !(await confirmPrompt(getTranslatedText("confirmRestore") + "\n\n" + getTranslatedText("resetKeepsPomodoroMedia")))) return;
     setBackupBusy(true);
     try {
-        await globalThis.myntDaidaiDisconnect?.({ removePermission: true });
         await replaceIndexedDB([]);
         localStorage.clear();
         location.reload();

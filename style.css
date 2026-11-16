@@ -2069,32 +2069,6 @@ body #bookmarkButton.bookmark-button.rotate {
 	opacity: 1;
 }
 
-.todolistitem .todoDaidaiBtn {
-	position: absolute;
-	inset-inline-end: 84px;
-	top: 50%;
-	width: 25px;
-	height: 25px;
-	transform: translateY(-50%);
-	border: 1px solid color-mix(in srgb, var(--whitishColor-blue) 38%, transparent);
-	border-radius: 999px;
-	background: color-mix(in srgb, var(--whitishColor-blue) 18%, transparent);
-	color: inherit;
-	font: inherit;
-	font-size: 10px;
-	font-weight: 700;
-	line-height: 1;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.todolistitem .todoDaidaiBtn:hover,
-.todolistitem .todoDaidaiBtn:focus-visible {
-	background: color-mix(in srgb, var(--whitishColor-blue) 32%, transparent);
-	outline: 2px solid color-mix(in srgb, var(--whitishColor-blue) 58%, transparent);
-	outline-offset: 1px;
-}
-
 .todolistitem.pinned .todopinbtn {
 	background-image: url("./svgs/todo-pin-fill.svg");
 }
@@ -7789,137 +7763,6 @@ html.myntHighContrast button {
 	}
 }
 
-.daidaiConnectionStatus {
-	flex: 0 0 auto;
-	padding: 5px 10px;
-	border-radius: 999px;
-	background: color-mix(in srgb, var(--textColorDark-blue) 8%, transparent);
-	font-size: 0.72rem;
-	font-weight: 700;
-}
-
-.daidaiConnectionStatus[data-state="connected"] {
-	background: color-mix(in srgb, #2e7d32 14%, transparent);
-	color: #176328;
-}
-
-.daidaiConnectionStatus[data-state="error"] {
-	background: color-mix(in srgb, #b3261e 12%, transparent);
-	color: #9b1c17;
-}
-
-.daidaiConnectRow {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
-}
-
-.daidaiConnectRow > span {
-	min-width: 0;
-}
-
-.daidaiConnectRow small {
-	display: block;
-	margin-top: 4px;
-	font-size: 0.78rem;
-	line-height: 1.4;
-	opacity: 0.75;
-}
-
-.daidaiDisclosureList {
-	padding-inline-end: 6px;
-}
-
-.daidaiActionDialog {
-	width: min(620px, calc(100vw - 32px));
-}
-
-.daidaiActionContent {
-	padding: 24px 26px 18px;
-}
-
-.daidaiActionContent h3 {
-	margin: 0 0 16px;
-	font-size: 1.05rem;
-}
-
-.daidaiActionDiff {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 12px;
-}
-
-.daidaiActionDiff > div {
-	min-width: 0;
-	padding: 14px;
-	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 14%, transparent);
-	border-radius: 16px;
-	background: color-mix(in srgb, var(--whitishColor-blue) 70%, transparent);
-}
-
-.daidaiActionDiff span {
-	display: block;
-	margin-bottom: 8px;
-	font-size: 0.72rem;
-	font-weight: 700;
-	opacity: 0.7;
-}
-
-.daidaiActionDiff pre {
-	max-height: 180px;
-	margin: 0;
-	overflow: auto;
-	white-space: pre-wrap;
-	word-break: break-word;
-	font: inherit;
-	font-size: 0.88rem;
-	user-select: text;
-}
-
-#daidaiActionWarning,
-.daidaiActionStale {
-	margin: 16px 0 0;
-	font-size: 0.8rem;
-	line-height: 1.5;
-	opacity: 0.76;
-}
-
-.daidaiActionStale {
-	color: #9b1c17;
-	font-weight: 600;
-	opacity: 1;
-}
-
-.daidaiActionFooter {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-	padding: 16px 26px 22px;
-	border-top: 1px solid color-mix(in srgb, var(--textColorDark-blue) 10%, transparent);
-}
-
-.daidaiActionFooter button {
-	min-height: 40px;
-	padding: 8px 16px;
-	border: 0;
-	border-radius: 999px;
-	font: inherit;
-	font-weight: 650;
-	cursor: pointer;
-}
-
-.daidaiActionFooter button:not(.settingsActionBtn) {
-	background: color-mix(in srgb, var(--textColorDark-blue) 9%, transparent);
-	color: inherit;
-}
-
-.daidaiActionFooter button:disabled,
-#daidaiConnectBtn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
 @media screen and (max-width: 620px) {
 	#serviceStatusPill {
 		inset-inline: 16px auto;
@@ -7972,15 +7815,6 @@ html.myntHighContrast button {
 	.permissionControls {
 		width: 100%;
 		justify-content: space-between;
-	}
-
-	.daidaiConnectRow {
-		align-items: stretch;
-		flex-direction: column;
-	}
-
-	.daidaiActionDiff {
-		grid-template-columns: 1fr;
 	}
 }
 
@@ -8178,8 +8012,7 @@ html.myntHighContrast button {
 
 #dailyFocusToggle:focus-visible,
 .settingsGroupTabs button:focus-visible,
-#aiToolsMoreButton:focus-visible,
-.daidaiActionToast button:focus-visible {
+#aiToolsMoreButton:focus-visible {
 	outline: 2px solid var(--darkColor-blue);
 	outline-offset: 2px;
 }
@@ -8330,38 +8163,6 @@ html:has(body[data-workspace-background="video"]) {
 	fill: currentColor;
 }
 
-.daidaiActionToast {
-	position: fixed;
-	inset-inline-end: 22px;
-	bottom: 82px;
-	z-index: 1100;
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	max-width: min(420px, calc(100vw - 32px));
-	padding: 12px 14px 12px 18px;
-	border-radius: 16px;
-	background: var(--textColorDark-blue);
-	color: var(--whitishColor-blue);
-	box-shadow: 0 12px 30px rgba(13, 39, 71, 0.24);
-}
-
-.daidaiActionToast[hidden] {
-	display: none;
-}
-
-.daidaiActionToast button {
-	min-height: 34px;
-	padding: 5px 12px;
-	border: 0;
-	border-radius: 999px;
-	background: var(--accentLightTint-blue);
-	color: var(--textColorDark-blue);
-	font: inherit;
-	font-weight: 700;
-	cursor: pointer;
-}
-
 @media screen and (max-width: 500px) {
 	body[data-workspace-background="video"] .aiToolsCont {
 		overflow: visible;
@@ -8397,12 +8198,6 @@ html:has(body[data-workspace-background="video"]) {
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-size: 0.7rem;
-	}
-
-	.daidaiActionToast {
-		inset-inline: 16px;
-		bottom: 16px;
-		max-width: none;
 	}
 }
 

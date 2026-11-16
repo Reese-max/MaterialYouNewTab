@@ -105,24 +105,6 @@ for (const finding of ['2-palette', '4', '6']) test('search-nav#' + finding, asy
     const result = await links; assert.equal(result.length, 1); result[0].run(); assert.equal(c.window.location?.href, 'https://safe.test/');
 });
 
-for (const finding of ['7', '8']) test('notes-ai#' + finding, async () => {
-    let release, applied = 0, successes = 0, failures = 0;
-    const c = context({ pendingAction: { id: 'p1', type: 'todo.create', title: 'Task' }, pendingPlan: {}, finishingAction: false,
-        decisions: new Map(), confirmButton: node(), rejectButton: node(), actionDialog: node(), focusBreakdownUntil: 0,
-        myntPlanDaidaiAction: () => ({ valid: true }), localState: () => ({}), acknowledge: async () => {},
-        showActionFeedback: () => successes++, notify: () => failures++, t: (k, f) => f, pollActions() {} });
-    c.document.addEventListener('mynt:todo-action', e => { applied++; e.detail.applied = true; });
-    c.storageCall = () => new Promise(resolve => { release = resolve; }); c.DECISIONS_KEY = 'decisions';
-    run(c, between('scripts/daidai-integration.js', '    async function rememberDecision(', '    async function acknowledge('));
-    run(c, between('scripts/daidai-integration.js', '    async function finishAction(', '    rejectButton.addEventListener('));
-    const a = c.finishAction('confirmed', true), b = finding === '8' ? c.finishAction('confirmed', true) : Promise.resolve();
-    assert.equal(applied, 1); if (finding === '8') assert.equal(c.confirmButton.disabled, true); release(); await Promise.all([a, b]);
-    assert.equal(successes, 1); assert.equal(failures, 0);
-    c.pendingAction = { id: 'p1', type: 'todo.create' }; await c.finishAction('confirmed', true); assert.equal(applied, 1);
-    c.pendingAction = { id: 'p2', type: 'scratchpad.replace' }; c.myntPlanDaidaiAction = () => ({ valid: false });
-    const invalid = c.finishAction('confirmed', true); release(); await invalid; assert.equal(failures, 1);
-});
-
 test('look-layout#3', async () => {
     let status, applies = 0;
     const c = context({ addBlob: async file => { if (file.fail) throw Error('quota'); return file.skip ? null : file; }, renderGallery: async () => {}, applyItem: async () => applies++, setStatus: s => status = s, t: (k, f) => f });

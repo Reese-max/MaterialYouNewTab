@@ -22,7 +22,7 @@ This is a staged implementation, not an installed or fully verified desktop inte
 | Bookmarks | Already-granted permission only: bounded tree/node read, create, update, move, recoverable trash and restore with revision checks and readback; credential-bearing URLs redacted | Permission grant and permanent removal. Move, recoverable trash and restore preserve IDs/subtrees in an explicitly chosen MYNT MCP Trash folder; real API mutation remains unverified |
 | Backup | Format/scope/32 MiB limit and exclusion information | Export, file validation, restore/reset confirmation and application |
 | Search, voice, AI tools, Google Apps | Fixed-default Google/bang metadata, search-control visibility and built-in AI ordering/visibility | Searches, external navigation and permission-dependent input. Alternative default engines are not an existing product feature. |
-| Weather, DaiDai | Explicit browser-only boundary | Location/API credentials, pairing, network configuration |
+| Weather | Explicit browser-only boundary | Location/API credentials, network configuration |
 | Study quotes and ambient sounds | Read/advance bundled study quotes; generated ambient sound play/stop/volume with autoplay/revocation gates | Other quote sources and network configuration |
 | Accessibility and adaptive background | Reduced motion, high contrast, font scale; palette/contrast/opacity toggles | Other detailed appearance controls. Automatic repositioning remains absent. |
 | Clock, daily exam, command palette | Clock settings and available visibility controls; remaining interactive capability inventory | Clock initialized hidden on a wide page requires enabling once in the ordinary UI before remote clock writes. Exam browsing and command palette remain interactive UI. |
@@ -74,7 +74,7 @@ All existing product families are inventoried, but not every UI action is remote
 
 - Native host/client registration, nativeMessaging activation and OS permissions are not installed by this source. They require separately approved setup.
 - File imports, clipboard/download/export and image/music selection remain browser file/gesture workflows; no arbitrary filesystem path tool exists. Backup restore/reset and permanent deletion remain explicit browser confirmation workflows.
-- Searches, external AI/Google links, weather location/keys, DaiDai pairing and voice permissions are not silently invoked. The bridge has no general navigation or credential tool.
+- Searches, external AI/Google links, weather location/keys and voice permissions are not silently invoked. The bridge has no general navigation or credential tool.
 - Clock/appearance/search-controls/AI ordering and custom-habit recovery now have explicit remote tools. Language changes return ACTION_REQUIRED because the existing implementation reloads and may refetch quotes. Default search is fixed to Google; bang aliases are documented, not executed remotely. No generic setting write or arbitrary DOM action is offered.
 - Bundled wallpaper hiding/restoration and music-library recoverable removal/restoration are implemented. Permanent deletion, arbitrary custom AI providers and cross-device sync are not offered. System-generated habits cannot be removed. Recovery and permission limitations are explicit in tool results.
 

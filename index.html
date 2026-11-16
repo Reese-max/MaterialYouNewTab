@@ -152,8 +152,6 @@
         <div class="scratchpadHeader">
             <h2 id="scratchpadHeading">Scratchpad</h2>
             <div class="scratchpadHeaderActions">
-                <button id="scratchpadAskDaidaiBtn" class="scratchpadActionBtn" type="button">Ask DaiDai</button>
-                <button id="scratchpadOrganizeDaidaiBtn" class="scratchpadActionBtn" type="button">DaiDai → Tasks</button>
                 <button id="scratchpadToTaskBtn" class="scratchpadActionBtn" type="button" title="Convert to Task">➔ Task</button>
                 <button id="scratchpadCopyBtn" class="scratchpadActionBtn" type="button" title="Copy all">Copy</button>
                 <button id="scratchpadDownloadBtn" class="scratchpadActionBtn" type="button" title="Download .md">↓ .md</button>
@@ -807,7 +805,6 @@
                     <input id="dailyFocusStepInput" type="text" maxlength="80" autocomplete="off">
                     <div class="dailyFocusRow">
                         <button id="dailyFocusPasteToggle" type="button" data-focus-i18n="dailyFocusPasteToggle|Paste GPT answer">Paste GPT answer</button>
-                        <button id="dailyFocusDaidaiBtn" type="button" hidden data-focus-i18n="dailyFocusDaidai|Break down with DaiDai">Break down with DaiDai</button>
                     </div>
                     <div id="dailyFocusPasteWrap" hidden>
                         <textarea id="dailyFocusPaste" data-focus-i18n="dailyFocusPastePlaceholder|Paste a numbered list (1. 2. 3.)" data-focus-attr="placeholder"></textarea>
@@ -2169,28 +2166,6 @@
                 <ul id="habitList" class="habitList"></ul>
             </section>
 
-            <section class="controlSection" id="daidaiIntegrationSection" aria-labelledby="daidaiIntegrationTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="daidaiIntegrationTitle">DaiDai integration</h3>
-                        <p id="daidaiIntegrationInfo">Let DaiDai read today's summary and propose changes for your approval.</p>
-                    </div>
-                    <span id="daidaiConnectionStatus" class="daidaiConnectionStatus" aria-live="polite">Disconnected</span>
-                </div>
-                <div class="daidaiConnectRow">
-                    <span>
-                        <strong id="daidaiConnectionTitle">Local connection</strong>
-                        <small id="daidaiConnectionInfo">Connects only to DaiDai on this computer.</small>
-                    </span>
-                    <button id="daidaiConnectBtn" class="settingsActionBtn" type="button">Connect DaiDai</button>
-                </div>
-                <ul class="privacyDisclosureList daidaiDisclosureList">
-                    <li id="daidaiDisclosureSummary">Shares today's task titles and status, focus minutes, and habits.</li>
-                    <li id="daidaiDisclosurePrivate">Scratchpad text is sent only when you press a DaiDai button; bookmarks and searches are never shared.</li>
-                    <li id="daidaiDisclosureApproval">Every proposed task or scratchpad change requires a preview and explicit confirmation.</li>
-                </ul>
-            </section>
-
             <section class="controlSection" id="accessibilitySection" aria-labelledby="accessibilityTitle">
                 <div class="controlSectionHeading">
                     <div>
@@ -2268,33 +2243,6 @@
         <a id="focusExamLink" class="focusExamLink" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener" data-focus-i18n="focusExamLink|One past exam question today ↗">One past exam question today ↗</a>
         <button id="focusHistoryClose" type="button" data-focus-i18n="focusHistoryClose|Close">Close</button>
     </dialog>
-    <dialog id="daidaiActionDialog" class="myntDialog daidaiActionDialog" aria-labelledby="daidaiActionTitle" aria-describedby="daidaiActionWarning">
-        <header class="controlCenterHeader">
-            <div>
-                <span class="controlCenterEyebrow" id="daidaiActionEyebrow">DaiDai proposal</span>
-                <h2 id="daidaiActionTitle">Preview change</h2>
-            </div>
-        </header>
-        <div class="daidaiActionContent">
-            <h3 id="daidaiActionSummary"></h3>
-            <div class="daidaiActionDiff">
-                <div><span id="daidaiActionBeforeLabel">Current</span><pre id="daidaiActionBefore"></pre></div>
-                <div><span id="daidaiActionAfterLabel">After confirmation</span><pre id="daidaiActionAfter"></pre></div>
-            </div>
-            <p id="daidaiActionStale" class="daidaiActionStale" hidden></p>
-            <p id="daidaiActionWarning">Nothing changes until you confirm.</p>
-        </div>
-        <footer class="daidaiActionFooter">
-            <button id="daidaiActionRejectBtn" type="button">Reject</button>
-            <button id="daidaiActionConfirmBtn" class="settingsActionBtn" type="button">Confirm change</button>
-        </footer>
-    </dialog>
-
-    <div id="daidaiActionToast" class="daidaiActionToast" role="status" aria-live="polite" hidden>
-        <span id="daidaiActionToastText">Change applied.</span>
-        <button id="daidaiActionUndoBtn" type="button">Undo</button>
-    </div>
-
     <div id="examDaily" class="examDaily" hidden>
         <button id="examDailyChip" class="examDailyChip" type="button" aria-expanded="false" aria-controls="examDailyPanel"><span aria-hidden="true">📝</span><span id="examDailyChipText">今日考古題</span></button>
         <section id="examDailyPanel" class="examDailyPanel" hidden aria-labelledby="examDailyChipText">

@@ -35,27 +35,23 @@ function element(tag = 'div') {
 }
 async function runTodoProbe() {
   const source = read('scripts/todo-list.js');
-  // This executes the exact production saveEdit body, including a potential fix
-  // that resolves the DaiDai button from the row rather than an out-of-scope name.
+  // This executes the exact production saveEdit body.
   const saveEdit = between(source, '            function saveEdit()', '            // Cancel function');
   const button = element('button'), input = element('input'); input.value = 'Renamed task';
   const row = element('li'); row.children = [input, button];
-  row.querySelector = selector => selector === '.todoDaidaiBtn' ? button : null;
   row.insertBefore = (node, before) => row.children.splice(row.children.indexOf(before), 0, node);
   row.removeChild = node => row.children.splice(row.children.indexOf(node), 1);
   row.classList.add('edit');
   const todo = { title: 'Original task' };
-  let saved = 0, labelled = 0;
+  let saved = 0;
   const context = {
     input, li: row, todo, previousTitle: todo.title,
     document: { createTextNode: text => ({ nodeType: 3, textContent: text }) },
-    setTodoDaidaiLabel(node, title) { assert.equal(node, button); assert.equal(title, 'Renamed task'); labelled++; },
     SaveToDoData() { saved++; }, suppressTimeout: null, suppressNextClick: true,
     setTimeout(fn) { fn(); return 1; }, clearTimeout() {}
   };
   vm.createContext(context); vm.runInContext(saveEdit + '\nsaveEdit();', context);
   assert.equal(saved, 1, 'Rename must persist exactly once');
-  assert.equal(labelled, 1, 'DaiDai label must update on the edited row');
   assert.equal(todo.title, 'Renamed task');
   assert.equal(row.children.includes(input), false, 'Editor must be removed');
   assert.equal(row.classList.contains('edit'), false, 'Editing state must clear');

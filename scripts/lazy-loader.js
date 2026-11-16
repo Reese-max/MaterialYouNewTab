@@ -3,7 +3,6 @@
  * Critical startup scripts (wallpaper, layout, focus card, Pomodoro, shortcuts) stay eager.
  */
 const MYNT_LAZY_SCRIPTS = {
-    daidai: "scripts/daidai-integration.js",
     bookmarks: "scripts/bookmarks.js"
 };
 
@@ -46,18 +45,9 @@ const MYNT_LAZY_SCRIPTS = {
     }
 
     gate("#bookmarkButton", "bookmarks");
-    gate("#daidaiConnectBtn", "daidai");
-    // Focus card / todo prompts fired before the bridge is loaded are replayed after loading.
-    document.addEventListener("mynt:daidai-prompt", e => {
-        if (loaded("daidai") && !e.detail?.__queued) return;
-        if (e.detail?.__queued) return;
-        e.stopImmediatePropagation();
-        const detail = { ...e.detail, __queued: true };
-        load("daidai").then(() => setTimeout(() => document.dispatchEvent(new CustomEvent("mynt:daidai-prompt", { detail })), 0));
-    }, true);
 
     const idle = window.requestIdleCallback || (cb => setTimeout(cb, 700));
-    const start = () => idle(() => { void load("bookmarks"); void load("daidai"); }, { timeout: 2000 });
+    const start = () => idle(() => { void load("bookmarks"); }, { timeout: 2000 });
     if (document.readyState === "complete") start();
     else addEventListener("load", start, { once: true });
 
