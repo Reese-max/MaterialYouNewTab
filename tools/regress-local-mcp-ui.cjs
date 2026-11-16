@@ -21,7 +21,7 @@ const source=fs.readFileSync(path.join(__dirname,'../scripts/local-mcp-ui.js'),'
  // Exercise the production workspace hook without a real browser or user data.
  const dashboard=fs.readFileSync(path.join(__dirname,'../scripts/dashboard-tools.js'),'utf8');
  const hook=dashboard.slice(dashboard.indexOf('        function remoteWorkspaceState()'),dashboard.indexOf('        window.myntDashboard ='));
- const ids=['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox','motivationalQuotesCheckbox','bongoCatCheckbox','scratchpadCheckbox'];
+ const ids=['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox','motivationalQuotesCheckbox','scratchpadCheckbox'];
  const store=new Map(),boxes=Object.fromEntries(ids.map(id=>[id,{checked:false,click(){this.checked=!this.checked;store.set(id+'State',this.checked?'checked':'unchecked');}}]));
  let duration={workMinutes:25,shortBreakMinutes:5,longBreakMinutes:15,roundsBeforeLong:4},paused=0,timerCalls=0;
  const preset={id:'study',name:'Study',urls:['https://private.invalid/?secret=private'],background:'color',focusMinutes:50,widgets:Object.fromEntries(ids.map(id=>[id,id==='todoListCheckbox']))};

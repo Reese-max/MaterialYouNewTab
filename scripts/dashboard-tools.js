@@ -76,7 +76,7 @@ function myntSevenDayStats(history, now = new Date()) {
 
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
-    "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox", "scratchpadCheckbox"
+    "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "scratchpadCheckbox"
 ];
 
 function myntNormalizeWorkspaces(raw, defaults = []) {
@@ -150,7 +150,7 @@ if (typeof document !== "undefined") {
                 "workspaceNameLabel", "workspaceWidgetsLegend", "workspaceWidgetShortcuts",
                 "workspaceWidgetBookmarks", "workspaceWidgetTodo", "workspaceWidgetPomodoro",
                 "workspaceWidgetAi", "workspaceWidgetGoogle", "workspaceWidgetQuotes",
-                "workspaceWidgetBongo", "workspaceBackgroundLabel", "workspaceBackgroundVideo",
+                "workspaceBackgroundLabel", "workspaceBackgroundVideo",
                 "workspaceBackgroundWallpaper", "workspaceBackgroundColor", "workspaceFocusMinutesLabel",
                 "workspaceDeleteBtn", "workspaceCancelBtn", "workspaceSaveBtn", "habitsTitle",
                 "habitsInfo", "habitInputLabel", "habitAddBtn", "accessibilityTitle",
@@ -718,7 +718,7 @@ if (typeof document !== "undefined") {
                 id: "work", name: t("workspaceWork", "Work"), background: "video", focusMinutes: 25, urls: ["https://github.com", "https://mail.google.com"],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: true,
-                    pomodoroCheckbox: true, motivationalQuotesCheckbox: false, bongoCatCheckbox: false,
+                    pomodoroCheckbox: true, motivationalQuotesCheckbox: false,
                     aiToolsCheckbox: false, googleAppsCheckbox: false
                 }
             },
@@ -726,7 +726,7 @@ if (typeof document !== "undefined") {
                 id: "study", name: t("workspaceStudy", "Study"), background: "wallpaper", focusMinutes: 45, urls: ["https://scholar.google.com"],
                 widgets: {
                     shortcutsCheckbox: false, bookmarksCheckbox: false, todoListCheckbox: true,
-                    pomodoroCheckbox: true, motivationalQuotesCheckbox: true, bongoCatCheckbox: false,
+                    pomodoroCheckbox: true, motivationalQuotesCheckbox: true,
                     aiToolsCheckbox: true, googleAppsCheckbox: false
                 }
             },
@@ -734,7 +734,7 @@ if (typeof document !== "undefined") {
                 id: "relax", name: t("workspaceRelax", "Relax"), background: "color", focusMinutes: 15, urls: [],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: false,
-                    pomodoroCheckbox: false, motivationalQuotesCheckbox: true, bongoCatCheckbox: true,
+                    pomodoroCheckbox: false, motivationalQuotesCheckbox: true,
                     aiToolsCheckbox: false, googleAppsCheckbox: true
                 }
             }
@@ -1106,10 +1106,6 @@ if (typeof document !== "undefined") {
             { id: "todo", label: "commandTodo", info: "commandTodoInfo", run: () => ensureWidget("todoListCheckbox", "todoListCont", "#todoContainer") },
             { id: "pomodoro", label: "commandPomodoro", info: "commandPomodoroInfo", run: () => ensureWidget("pomodoroCheckbox", "pomodoroCont", "#pomodoroPanel") },
             { id: "bookmarks", label: "commandBookmarks", info: "commandBookmarksInfo", run: () => document.getElementById("bookmarkButton").click() },
-            { id: "bongoCat", label: "commandBongoCat", info: "commandBongoCatInfo", run: () => {
-                const cb = document.getElementById("bongoCatCheckbox");
-                if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event("change")); }
-            } },
             { id: "aiTools", label: "commandAiTools", info: "commandAiToolsInfo", run: () => ensureWidget("aiToolsCheckbox", "aiToolsIcon", "#toolsCont") },
             { id: "scratchpad", label: "commandScratchpad", info: "commandScratchpadInfo", run: () => ensureWidget("scratchpadCheckbox", "scratchpadCont", "#scratchpadContainer") },
                         { id: "ambientAudio", label: "commandAmbientAudio", info: "commandAmbientAudioInfo", run: () => globalThis.myntAmbientAudio?.toggle() },

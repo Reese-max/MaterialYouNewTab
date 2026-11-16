@@ -54,9 +54,6 @@
                 "motivationalQuotesCheckbox": {
                   "type": "boolean"
                 },
-                "bongoCatCheckbox": {
-                  "type": "boolean"
-                },
                 "scratchpadCheckbox": {
                   "type": "boolean"
                 }

@@ -38,9 +38,6 @@
             display: 'flex', caches: [cache('pomodoroDisplayStatus')], panelSelectors: ['#pomodoroPanel']
         }),
         entry('homeWidgets', '首頁今日小工具', 'Homepage Today widgets', 'myntHomeWidgetsVisible', 'boolean', true, null, ['#myntHomeWidgets'], { newPreference: true }),
-        entry('bongo', '鍵盤貓', 'Bongo cat', 'bongoCatCheckboxState', 'checked', false, 'bongoCatCheckbox', ['#bongoCatWidget'], {
-            display: 'block', caches: [cache('bongoCatDisplayStatus', 'block')]
-        }),
         entry('scratchpad', '隨手筆記', 'Scratchpad', 'scratchpadCheckboxState', 'checked', true, 'scratchpadCheckbox', ['#scratchpadCont'], {
             display: 'inline-flex', panelSelectors: ['#scratchpadContainer']
         }),

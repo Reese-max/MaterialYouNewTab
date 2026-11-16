@@ -48,7 +48,6 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - Sidebar bookmarks and Google Apps launcher
 - Command Palette, keyboard shortcuts, Daily Quote mode, and an in-extension What's New page
 - Accessibility controls including reduced motion, contrast, and text scaling
-- Bongo Cat widget
 - Backup, restore, and local reset controls
 
 ## Version

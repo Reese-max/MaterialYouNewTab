@@ -18,7 +18,7 @@ function apply(store, plan) { plan.writes.forEach(({ key, value }) => store.data
 function item(store, id) { return core.read(store).find(value => value.id === id); }
 function throwsCode(fn, code) { assert.throws(fn, error => error.code === code); }
 
-const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'bongo', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
+const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
 assert.deepEqual(core.definitions.map(value => value.id), ids);
 assert.equal(new Set(core.definitions.map(value => value.key)).size, ids.length);
 assert.deepEqual(core.definitions.find(value => value.id === 'clock').selectors, ['#analogClock', '#digitalClock', '#date']);
@@ -64,7 +64,6 @@ assert.deepEqual(core.plan(storage(), 'shortcuts', true).writes, [
     { key: 'shortcutEditField', value: 'active' },
     { key: 'adaptiveIconField', value: 'active' }
 ]);
-assert.equal(core.plan(storage(), 'bongo', true).writes.find(value => value.key === 'bongoCatDisplayStatus').value, 'block');
 assert.deepEqual(core.plan(storage(), 'studyQuote', false).writes, [{ key: 'myntStudyQuoteEnabled', value: '0' }]);
 const mismatch = storage({ aiToolsCheckboxState: 'checked', aiToolsDisplayStatus: 'none' });
 assert.equal(item(mismatch, 'aiTools').visible, true, 'Canonical preference owns visibility.');

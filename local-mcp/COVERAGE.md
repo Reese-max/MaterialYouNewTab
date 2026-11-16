@@ -25,7 +25,7 @@ This is a staged implementation, not an installed or fully verified desktop inte
 | Weather, DaiDai | Explicit browser-only boundary | Location/API credentials, pairing, network configuration |
 | Study quotes and ambient sounds | Read/advance bundled study quotes; generated ambient sound play/stop/volume with autoplay/revocation gates | Other quote sources and network configuration |
 | Accessibility and adaptive background | Reduced motion, high contrast, font scale; palette/contrast/opacity toggles | Other detailed appearance controls. Automatic repositioning remains absent. |
-| Clock, daily exam, Bongo Cat, command palette | Clock settings and available visibility controls; remaining interactive capability inventory | Clock initialized hidden on a wide page requires enabling once in the ordinary UI before remote clock writes. Exam browsing and command palette remain interactive UI. |
+| Clock, daily exam, command palette | Clock settings and available visibility controls; remaining interactive capability inventory | Clock initialized hidden on a wide page requires enabling once in the ordinary UI before remote clock writes. Exam browsing and command palette remain interactive UI. |
 
 An inventory entry is not an implementation of its operations. `ACTION_REQUIRED` is not success. There is no arbitrary JavaScript, filesystem tool, whole-storage export, raw-media export, DRM download, cloud sync or telemetry.
 

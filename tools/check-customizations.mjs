@@ -36,7 +36,7 @@ const customTextCode = read("scripts/custom-text.js");
 const weatherCode = read("scripts/weather.js");
 const shortcutsCode = read("scripts/shortcuts.js");
 const bookmarksCode = read("scripts/bookmarks.js");
-const sources = [html, read("privacy-policy.html"), read("style.css"), read("scripts/bongocat.js"), dashboardCode];
+const sources = [html, read("privacy-policy.html"), read("style.css"), dashboardCode];
 const htmlIds = Array.from(html.matchAll(/\bid=["']([^"']+)["']/g), match => match[1]);
 const duplicateIds = htmlIds.filter((id, index) => htmlIds.indexOf(id) !== index);
 assert.deepEqual([...new Set(duplicateIds)], [], "Duplicate HTML ids found");
@@ -61,7 +61,7 @@ for (const ref of new Set(localRefs)) {
     assert.ok(existsSync(resolve(root, ref.replace(/^\.\//, ""))), `Missing local asset: ${ref}`);
 }
 
-for (const script of ["scripts/pomodoro.js", "scripts/bongocat.js", "scripts/dashboard-tools.js", "scripts/scratchpad.js", "scripts/ambient-sound.js", "scripts/daidai-integration.js"]) {
+for (const script of ["scripts/pomodoro.js", "scripts/dashboard-tools.js", "scripts/scratchpad.js", "scripts/ambient-sound.js", "scripts/daidai-integration.js"]) {
     assert.ok(html.includes(`src="${script}"`) || read("scripts/lazy-loader.js").includes(`"${script}"`), `Custom script is not loaded: ${script}`);
 }
 
@@ -130,6 +130,9 @@ assert.equal(myntPlanDaidaiAction({
 const dashboardContext = { module: { exports: {} } };
 vm.runInNewContext(dashboardCode, dashboardContext);
 const dashboard = dashboardContext.module.exports;
+// Bongo Cat was removed (owner decision 2026-11-17).
+assert.ok(!existsSync(resolve(root, "scripts/bongocat.js")) && !existsSync(resolve(root, "images/bongocat")));
+assert.doesNotMatch(html + read("style.css") + dashboardCode, /bongo/i);
 // Greeting and greeting name were removed (owner decision 2026-11-17).
 assert.equal(dashboard.myntNormalizeGreetingName, undefined);
 assert.doesNotMatch(clockCode + html, /greetingEnabled|myntGreetingName|greetingcheckbox|greetingNameInput/);
