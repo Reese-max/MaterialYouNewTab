@@ -214,10 +214,13 @@ async function testTreeAndNavigation(kind) {
     assert.equal(app.run('bookmarkLocale()'), 'zh-TW');
     app.context.currentLanguage = 'invalid_locale_!'; assert.equal(app.run('bookmarkLocale()'), 'en'); app.context.renderBookmarks(); app.context.currentLanguage = 'zh_TW';
     assert.equal(app.id('bookmarkList').children.length, 3);
+    const rootFolders = app.id('bookmarkList').all().filter(node => node.className === 'bookmark-folder' && ['1', '2'].includes(node.dataset.id));
+    assert.deepEqual(rootFolders.map(node => node.dataset.id), ['1'], 'Browser root order is kept and the empty root folder is hidden');
+    assert.equal(rootFolders[0].children[1].hidden, false, 'The bookmarks bar starts expanded until the user toggles a folder');
     const folder = app.id('bookmarkList').all().find(node => node.className === 'bookmark-folder' && node.dataset.id === '10');
     const disclosure = folder.children[0].children[0]; const children = folder.children[1];
     assert.equal(children.hidden, true); disclosure.click(); assert.equal(children.hidden, false); assert.equal(disclosure.getAttribute('aria-expanded'), 'true');
-    assert.deepEqual(JSON.parse(app.storage.get('myntBookmarkExpandedFolders')), ['10']);
+    assert.deepEqual(JSON.parse(app.storage.get('myntBookmarkExpandedFolders')), ['1', '10']); // the bookmarks bar starts open, so it is kept when another folder is toggled
     app.context.renderBookmarks(); assert.equal(app.id('bookmarkList').all().find(node => node.className === 'bookmark-folder' && node.dataset.id === '10').children[1].hidden, false);
     app.context.toggleBookmarkFavorite('12'); app.context.moveBookmarkFavorite('12', -1); assert.deepEqual(clone(app.run('getFavoriteIds()')), ['12', '11']);
     app.context.toggleBookmarkFavorite('11'); assert.deepEqual(clone(app.run('getFavoriteIds()')), ['12']);
@@ -226,6 +229,7 @@ async function testTreeAndNavigation(kind) {
     app.id('bookmarkSearch').value = '繁體'; app.id('bookmarkSearch').emit('input'); await app.tick(120);
     assert.equal(app.state(), 'content'); assert.equal(app.id('bookmarkList').children.length, 1);
     const found = app.id('bookmarkList').all().filter(node => node.className === 'bookmark-item'); assert.equal(found.length, 1); assert.equal(found[0].dataset.id, '12');
+    assert.equal(found[0].children[0].children[1].children[1].textContent, 'beta.example · 工作', 'Search results name the folder');
     assert.equal(found[0].children[0].href, 'https://beta.example/', 'Open uses the verified anchor URL; no actual navigation in this mock');
     app.id('bookmarkSearch').value = 'ALPHA.EXAMPLE'; app.context.renderBookmarks(); assert.equal(app.id('bookmarkList').all().filter(node => node.className === 'bookmark-item')[0].dataset.id, '11');
     app.id('bookmarkSearch').value = 'no-fixture-matches'; app.context.renderBookmarks(); assert.equal(app.state(), 'search-empty'); assert.equal(app.id('bookmarkAddButton').disabled, false);

@@ -634,7 +634,7 @@ const en = {
     "bookmarkStateErrorDescription": "Check bookmark access and try again. Reloading does not change your bookmarks.",
     "bookmarkRetryAction": "Retry",
     "bookmarkSectionFavorites": "Favorites",
-    "bookmarkSectionFavoritesEmpty": "Use an item's More menu to keep it here for two-second access.",
+    "bookmarkSectionFavoritesEmpty": "Add favorites from the ⋯ menu.",
     "bookmarkSectionRecent": "Recent",
     "bookmarkSectionRecentEmpty": "Recently added bookmarks will appear here.",
     "bookmarkSectionFolders": "Folders",

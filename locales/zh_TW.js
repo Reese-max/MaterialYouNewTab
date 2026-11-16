@@ -634,7 +634,7 @@ const zh_TW = {
     "bookmarkStateErrorDescription": "請檢查書籤權限後再試一次；重新載入不會變更你的書籤。",
     "bookmarkRetryAction": "重試",
     "bookmarkSectionFavorites": "常用",
-    "bookmarkSectionFavoritesEmpty": "從項目的「更多」選單加入常用，就能在兩秒內開啟。",
+    "bookmarkSectionFavoritesEmpty": "用「⋯」選單加入常用。",
     "bookmarkSectionRecent": "最近",
     "bookmarkSectionRecentEmpty": "最近新增的書籤會顯示在這裡。",
     "bookmarkSectionFolders": "資料夾",
