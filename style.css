@@ -4789,7 +4789,8 @@ input:checked + .toggle:before {
 	transition: 0.3s all;
 }
 .shortcutMoveUp:not(:disabled):hover, .shortcutMoveDown:not(:disabled):hover { color: white; background: var(--darkColor-blue); }
-.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { opacity: 0.38; cursor: default; }
+/* Disabled keeps its container so the slot stays visible (also on the dark theme); only the glyph fades. */
+.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { color: color-mix(in srgb, var(--textColorDark-blue) 45%, transparent); cursor: default; }
 .shortcutActions button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .shortcutDelete button,
