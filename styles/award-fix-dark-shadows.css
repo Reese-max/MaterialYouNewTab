@@ -6,7 +6,7 @@
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
     /* 卡片、搜尋列、名言列及展開面板：保留輕微層次，移除彩色光暈。 */
-    & :is(.ttteexxtt, .searchbar, .studyQuote, #dailyFocusPanel,
+    & :is(.searchbar, .studyQuote,
         #todoContainer, #scratchpadContainer, #pomodoroPanel,
         .myntProfilesContent, #myntAdaptivePanel .adaptiveContent,
         .icon-container, .dropdown-content) {

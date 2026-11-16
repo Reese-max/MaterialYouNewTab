@@ -209,8 +209,6 @@ function applyLanguage(lang) {
         "digitalclockinfo",
         "timeformattitle",
         "timeformatinfo",
-        "userTextTitle",
-        "userTextInfo",
         "UserLocText",
         "UserLocSubtext",
         "useGPS",
@@ -373,17 +371,6 @@ function applyLanguage(lang) {
 
     if (typeof renderBookmarks === "function" && bookmarkNodeMap?.size) renderBookmarks();
 
-    // For userText
-    const userTextDiv = document.getElementById("userText");
-    if (translations[lang]) {
-        const placeholder = translations[lang]?.userText || translations["en"].userText;
-        userTextDiv.dataset.placeholder = placeholder; // Update the placeholder in data attribute
-        // Only set the text content if there's nothing in localStorage
-        if (!localStorage.getItem("userText")) {
-            userTextDiv.innerText = placeholder;
-        }
-    }
-    userTextDiv.setAttribute("aria-label", translations[lang]?.userTextTitle || translations["en"].userTextTitle);
 
     // Update placeholders on already-rendered shortcut inputs
     document.querySelectorAll(".shortcutSettingsEntry .shortcutName")

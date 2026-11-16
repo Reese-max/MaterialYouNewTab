@@ -58,7 +58,7 @@ function createEngine({storage,adapters,refresh=()=>{},canWrite=async()=>false,i
 }
 function createRecovery({storage,adapter,commit,lock,beforeCommit=()=>true}) {
  return async domain=>{
-  if(!['todos','shortcuts','habits'].includes(domain))return failure('INVALID_ARGUMENT','Unsupported recovery domain.');
+  if(!['todos','shortcuts'].includes(domain))return failure('INVALID_ARGUMENT','Unsupported recovery domain.');
   if(!lock||!adapter)return failure('UNAVAILABLE','Recovery is unavailable.');
   return lock(async()=>{
    const context={storage,commit:plan=>{if(!beforeCommit())return failure('EDITOR_BUSY','Finish the active text edit before restoring.');return commit(plan);}};
@@ -78,7 +78,7 @@ const init=()=>{
  const tell=(key,fallback)=>{status.textContent=getText(key,fallback);};
  const busy=()=>Boolean(root.myntLayout?.isEditing()||document.querySelector('dialog[open]')||document.activeElement?.matches('input:not([type=checkbox]),textarea,[contenteditable=true]')||[...document.querySelectorAll('#shortcutEditPage,#workspaceEditorForm,#prompt-modal-container,#aiToolsEditPage,#aiToolsSettingsModal')].some(node=>!node.hidden&&node.getClientRects().length>0));
  const engine=createEngine({storage:localStorage,isBusy:busy,canRefresh:domain=>{
-   const checks={components:root.myntComponents?.refresh,events:root.myntCountdowns?.render,todos:typeof ShowToDoList==='function'?ShowToDoList:null,focus:root.myntFocus?.reload,scratchpad:root.myntScratchpad?.reload,layouts:root.myntLayout?.reloadProfiles,habits:root.myntDashboard?.reloadHabits,workspaces:root.myntDashboard?.reloadWorkspaces,accessibility:root.myntDashboard?.reloadAccessibility,prefs_clock:root.myntClockPreferences?.reload,prefs_search:root.myntSearchPreferences?.reload,prefs_ai:root.myntAiPreferences?.reload,prefs_theme:root.myntThemePreferences?.reload,shortcuts:root.myntShortcuts?.reload,settings:()=>{}};
+   const checks={components:root.myntComponents?.refresh,events:root.myntCountdowns?.render,todos:typeof ShowToDoList==='function'?ShowToDoList:null,scratchpad:root.myntScratchpad?.reload,layouts:root.myntLayout?.reloadProfiles,workspaces:root.myntDashboard?.reloadWorkspaces,accessibility:root.myntDashboard?.reloadAccessibility,prefs_clock:root.myntClockPreferences?.reload,prefs_search:root.myntSearchPreferences?.reload,prefs_ai:root.myntAiPreferences?.reload,prefs_theme:root.myntThemePreferences?.reload,shortcuts:root.myntShortcuts?.reload,settings:()=>{}};
    return typeof checks[domain]==='function';
  },adapters:[root.MyntMcpData,root.MyntMcpMedia,root.MyntMcpUi,root.MyntMcpStudio,root.MyntMcpPreferences,root.MyntMcpComponents].filter(Boolean),lock:fn=>navigator.locks?navigator.locks.request('mynt-local-mcp-write',fn):Promise.resolve(failure('UNSUPPORTED','Web Locks are unavailable.')),canWrite:async()=>{
    if(!api?.runtime?.getContexts||busy())return false;
@@ -88,13 +88,11 @@ const init=()=>{
  },refresh:(domain,writes)=>{
    if(domain==='components'){if(!root.myntComponents?.refresh)throw Error('Refresh unavailable');root.myntComponents.refresh();}
    if(domain==='events'){if(!root.myntCountdowns?.render)throw Error('Refresh unavailable');root.myntCountdowns.render();}
-   if(domain==='todos'&&typeof ShowToDoList==='function'){ShowToDoList();root.myntDashboard?.reloadHabits();}
+   if(domain==='todos'&&typeof ShowToDoList==='function')ShowToDoList();
    if(domain==='scratchpad'){if(!root.myntScratchpad?.reload)throw Error('Refresh unavailable');root.myntScratchpad.reload();}
-   if(domain==='focus'){if(!root.myntFocus?.reload)throw Error('Refresh unavailable');root.myntFocus.reload();root.myntFocusCard?.refresh?.();}
    if(domain==='layouts'){if(!root.myntLayout?.reloadProfiles)throw Error('Refresh unavailable');root.myntLayout.reloadProfiles();}
    if(domain==='workspaces'){if(!root.myntDashboard?.reloadWorkspaces)throw Error('Refresh unavailable');root.myntDashboard.reloadWorkspaces();}
    if(domain==='accessibility'){if(!root.myntDashboard?.reloadAccessibility)throw Error('Refresh unavailable');root.myntDashboard.reloadAccessibility();}
-   if(domain==='habits'){if(!root.myntDashboard?.reloadHabits)throw Error('Refresh unavailable');root.myntDashboard.reloadHabits();}
    if(domain==='shortcuts'){if(!root.myntShortcuts?.reload)throw Error('Refresh unavailable');root.myntShortcuts.reload();}
    const preferenceHooks={prefs_clock:root.myntClockPreferences,prefs_search:root.myntSearchPreferences,prefs_ai:root.myntAiPreferences,prefs_theme:root.myntThemePreferences};
    if(preferenceHooks[domain])preferenceHooks[domain].reload();

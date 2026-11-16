@@ -32,7 +32,6 @@
           "enum": [
             "clock",
             "weather",
-            "focus",
             "search",
             "shortcuts",
             "aiTools",

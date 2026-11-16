@@ -281,12 +281,14 @@ function fileEvent(env, expression = 'settingsFixture') {
     const dataAdapter = require('../scripts/local-mcp-data.js');
     const { webcrypto } = require('node:crypto');
     assert.equal(layoutProfiles.KEY,'myntLayoutProfiles');
-    const manualLayout = {version:2,locked:true,snap:false,blocks:{clock:{x:.15,y:.2,s:.8},focus:{x:.3,y:.1,s:1}}};
+    const manualLayout = {version:2,locked:true,snap:false,blocks:{clock:{x:.15,y:.2,s:.8},search:{x:.3,y:.1,s:1}}};
     const profileState = layoutProfiles.migrate(manualLayout,normalizeLayout);
     profileState.profiles[0].name='隔離手動配置';
-    profileState.profiles[0].layouts.narrow.blocks.focus={x:.05,y:.35,s:.9};
+    profileState.profiles[0].layouts.narrow.blocks.search={x:.05,y:.35,s:.9};
     profileState.profiles[0].previous.wide=clone(manualLayout);
     assert.deepEqual(layoutProfiles.validate(profileState,normalizeLayout),profileState,'Production profile validator accepts the real wide/narrow/previous schema.');
+    { const legacy=clone(profileState); legacy.profiles[0].layouts.wide.blocks.focus={x:.3,y:.1,s:1};
+      assert.deepEqual(layoutProfiles.validate(legacy,normalizeLayout),profileState,'A saved block of the removed focus card is dropped, not rejected.'); }
     const todoState = {tfixture:{title:'隔離待辦',status:'pending',pinned:false}};
     const retained = {
         myntLayout: JSON.stringify(manualLayout),
@@ -303,7 +305,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.deepEqual(todoBefore.data,todoState);
     const desired = new Map(componentCore.definitions.map((item,index)=>[item.id,index%2===1]));
     for(const item of componentCore.definitions) origin.change(item.id,desired.get(item.id));
-    const canonicalKeys = ['hideClockVisible', 'hideWeatherVisible', 'userTextVisible', 'myntSearchVisible',
+    const canonicalKeys = ['hideClockVisible', 'hideWeatherVisible', 'myntSearchVisible',
         'shortcutsCheckboxState', 'aiToolsCheckboxState', 'googleAppsCheckboxState', 'bookmarksCheckboxState',
         'todoListCheckboxState', 'pomodoroCheckboxState', 'myntHomeWidgetsVisible',
         'scratchpadCheckboxState', 'myntStudyQuoteEnabled', 'myntExamDailyVisible',
@@ -322,7 +324,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert(exportEnv.run('isValidBackupFile(JSON.parse(serializedRoundtrip))'),'Production validator accepts the actual serialized settings export.');
     assert.equal(exportEnv.reads.length,0,'Settings export never opens a media database.');
     assert(!Object.hasOwn(packed.backup.localStorage,'myntWallpaperCurrent'));
-    assert.equal(packed.backup.localStorage.myntHomeWidgetsVisible,'false','Settings export includes the local homepage widget visibility preference.');
+    assert.equal(packed.backup.localStorage.myntHomeWidgetsVisible,String(desired.get('homeWidgets')),'Settings export includes the local homepage widget visibility preference.');
 
     const importEnv = environment();
     for(const script of ['event-countdown-core.js','component-visibility-core.js']) importEnv.run(fs.readFileSync(path.join(root,'scripts',script),'utf8'));
@@ -337,7 +339,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.equal(importEnv.reads.length,0);assert.equal(importEnv.writes.length,0,'Settings restore neither reads nor writes media databases.');
     assert.deepEqual(await storeSnapshot(importEnv),destinationStores);
     for(const [key,value] of Object.entries(destinationMedia)) assert.equal(importEnv.storage.getItem(key),value,'Destination media reference remains unchanged: '+key);
-    for(const [key,value] of sourceCanonical) assert.equal(importEnv.storage.getItem(key),value,'All 18 canonical keys survive serialized production restore: '+key);
+    for(const [key,value] of sourceCanonical) assert.equal(importEnv.storage.getItem(key),value,'All 17 canonical keys survive serialized production restore: '+key);
     assert.deepEqual(componentCore.snapshot(importEnv.storage),sourceVisibility,'Visibility cache and legacy values also roundtrip exactly.');
     assert.deepEqual(layoutProfiles.validate(JSON.parse(importEnv.storage.getItem(layoutProfiles.KEY)),normalizeLayout),profileState,'Restored real profile key still passes production validation.');
     const todoRestored=await dataAdapter.execute('mynt_todos_get',{}, {storage:importEnv.storage,crypto:webcrypto});
@@ -375,7 +377,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.deepEqual(layoutProfiles.validate(JSON.parse(cold.values.get(layoutProfiles.KEY)),normalizeLayout),profileState);
     for(const [key,value] of Object.entries(destinationMedia)) assert.equal(cold.values.get(key),value);
     assert.deepEqual(JSON.parse(cold.values.get('myntEventCountdownsV1')).events,eventState.events);
-    console.log('COMPONENT_BACKUP_ROUNDTRIP_OK: all 18 canonical visibility keys and caches survive real settings export/serialization/validation/restore/cold-start; real late clock initialization and cross-tab mode/hour/search sync; exact layout/note/todo/event preservation; distinct destination media references and blobs untouched; zero real browser/profile/permission/confirmation operations.');
+    console.log('COMPONENT_BACKUP_ROUNDTRIP_OK: all 17 canonical visibility keys and caches survive real settings export/serialization/validation/restore/cold-start; real late clock initialization and cross-tab mode/hour/search sync; exact layout/note/todo/event preservation; distinct destination media references and blobs untouched; zero real browser/profile/permission/confirmation operations.');
 
     console.log('BACKUP_SCOPE_OK: explicit full/settings scope; oversized and blocked media escape route; pre-encoding total and boundary estimates; Unicode/base64 accounting; omitted media/preferences preserved; v1/v2/v3 compatibility; malformed scopes fail before writes; file scope wins over export UI; imported active timer states stay paused; confirmation/cancellation; local read/write rollback and recovery errors. Isolated fixtures only.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

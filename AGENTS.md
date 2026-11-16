@@ -28,7 +28,7 @@
 ### Reese-max 能力
 
 - `zh_TW` 為首次使用的預設語言，英文為缺漏字串回退
-- 習慣與專注統計
+- 習慣、專注統計與今日焦點（2026-11-17 擁有者決定移除）
 - Work、Study、Relax 與自訂 Workspace
 - Scratchpad、智慧清單、轉待辦、複製與 Markdown 匯出
 - Search Bangs、Command Palette 與快捷鍵指南

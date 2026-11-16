@@ -17,7 +17,6 @@
     const definitions = [
         entry('clock', '時鐘', 'Clock', 'hideClockVisible', 'inverse', true, 'hideClock', ['#analogClock', '#digitalClock', '#date']),
         entry('weather', '天氣', 'Weather', 'hideWeatherVisible', 'inverse', true, 'hideWeatherCheckbox', ['#hideWeather']),
-        entry('focus', '今日焦點', 'Today\u2019s focus', 'userTextVisible', 'boolean', true, 'userTextCheckbox', ['#userText', '#dailyFocusActions'], { panelSelectors: ['#dailyFocusPanel'] }),
         entry('search', '搜尋列', 'Search bar', 'myntSearchVisible', 'boolean', true, null, ['#searchbar', '#search-with-container'], { newPreference: true }),
         entry('shortcuts', '網站捷徑', 'Site shortcuts', 'shortcutsCheckboxState', 'checked', false, 'shortcutsCheckbox', ['#shortcuts-section'], {
             display: 'flex', caches: [cache('shortcutsDisplayStatus'), cache('shortcutEditField', 'active', 'inactive'), cache('adaptiveIconField', 'active', 'inactive')]

@@ -31,7 +31,6 @@ const searchCode = read("scripts/search.js");
 const dashboardCode = read("scripts/dashboard-tools.js");
 const clockCode = read("scripts/clock.js");
 const backupCode = read("scripts/backup-restore.js");
-const customTextCode = read("scripts/custom-text.js");
 const weatherCode = read("scripts/weather.js");
 const shortcutsCode = read("scripts/shortcuts.js");
 const bookmarksCode = read("scripts/bookmarks.js");
@@ -65,11 +64,11 @@ for (const script of ["scripts/pomodoro.js", "scripts/dashboard-tools.js", "scri
 }
 
 for (const id of [
-    "commandPaletteDialog", "controlCenterDialog", "habitList", "serviceStatusList", "focusWeekChart",
+    "commandPaletteDialog", "controlCenterDialog", "serviceStatusList",
     "workspacePresetGrid", "workspaceEditorForm",
     "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow",
     "shortcutsHelpDialog", "scratchpadDownloadBtn", "bookmarksSubtitle", "bookmarkShortcutStatus",
-    "dailyFocusActions", "dailyFocusStatus", "dailyFocusToggle", "settingsGroupTabs",
+    "settingsGroupTabs",
     "settingsGroupPersonal", "settingsGroupWork", "settingsGroupAdvanced", "settingsHintText"
 ]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `Missing custom UI: ${id}`);
@@ -104,38 +103,17 @@ vm.runInNewContext(dashboardCode, dashboardContext);
 const dashboard = dashboardContext.module.exports;
 // DaiDai integration was removed (owner decision 2026-11-17).
 assert.ok(!existsSync(resolve(root, "scripts/daidai-integration.js")) && !existsSync(resolve(root, "patches")));
-assert.doesNotMatch(html + read("style.css") + read("scripts/lazy-loader.js") + todoCode + read("scripts/focus-card.js"), /daidai/i);
+assert.doesNotMatch(html + read("style.css") + read("scripts/lazy-loader.js") + todoCode, /daidai/i);
 // Bongo Cat was removed (owner decision 2026-11-17).
 assert.ok(!existsSync(resolve(root, "scripts/bongocat.js")) && !existsSync(resolve(root, "images/bongocat")));
 assert.doesNotMatch(html + read("style.css") + dashboardCode, /bongo/i);
+// Habits, focus statistics and the daily focus card were removed (owner decision 2026-11-17).
+for (const file of ["scripts/custom-text.js", "scripts/focus-card.js", "styles/focus-card.css"]) assert.ok(!existsSync(resolve(root, file)), file);
+assert.equal(dashboard.myntValidateHabits, undefined);
+assert.doesNotMatch(html + dashboardCode + read("style.css"), /habitList|focusStatsSection|dailyFocus|userTextCheckbox|myntFocusHistory|pomodoroStatsBtn/);
 // Greeting and greeting name were removed (owner decision 2026-11-17).
 assert.equal(dashboard.myntNormalizeGreetingName, undefined);
 assert.doesNotMatch(clockCode + html, /greetingEnabled|myntGreetingName|greetingcheckbox|greetingNameInput/);
-assert.match(read("privacy-policy.html"), /每日焦點文字／完成狀態／延續日期/);
-const dailyFocusContext = { module: { exports: {} } };
-vm.runInNewContext(customTextCode, dailyFocusContext);
-const { myntReconcileDailyFocus } = dailyFocusContext.module.exports;
-assert.equal(myntReconcileDailyFocus({
-    date: "2026-08-30", text: "延續工作", completed: false
-}, "", "2026-08-31").carriedFrom, "2026-08-30");
-assert.equal(myntReconcileDailyFocus({
-    date: "2026-08-30", text: "已完成", completed: true
-}, "", "2026-08-31").text, "");
-assert.equal(myntReconcileDailyFocus(null, "舊版焦點", "2026-08-31").text, "舊版焦點");
-const now = new Date(2026, 6, 28, 12);
-const yesterday = new Date(2026, 6, 27, 12);
-const twoDaysAgo = new Date(2026, 6, 26, 12);
-const focusFixture = {
-    [dashboard.myntDateKey(now)]: { sessions: 2, minutes: 50 },
-    [dashboard.myntDateKey(yesterday)]: { sessions: 1, minutes: 25 },
-    [dashboard.myntDateKey(twoDaysAgo)]: { sessions: 3, minutes: 75 }
-};
-assert.equal(dashboard.myntFocusStreak(focusFixture, now), 3);
-delete focusFixture[dashboard.myntDateKey(now)];
-assert.equal(dashboard.myntFocusStreak(focusFixture, now), 2, "Streak should continue from yesterday before today's first session");
-const sevenDays = dashboard.myntSevenDayStats(focusFixture, now);
-assert.equal(sevenDays.length, 7);
-assert.equal(sevenDays.at(-1).key, dashboard.myntDateKey(now));
 
 const workspaces = dashboard.myntNormalizeWorkspaces([{
     id: "research", name: "Research", background: "wallpaper", focusMinutes: 999,
@@ -154,7 +132,6 @@ assert.doesNotMatch(searchCode + html + dashboardCode, /complete\/search|searchs
 assert.match(html, /id="userAPI"[^>]*type="password"/);
 assert.match(read("privacy-policy.html"), /src="scripts\/privacy-policy\.js"/);
 assert.match(backupCode, /BACKUP_FORMAT\s*=\s*["']material-you-newtab["']/);
-assert.match(customTextCode, /myntDailyFocus/);
 assert.match(read("scripts/ai-tools.js"), /mobileAIToolsQuery/);
 assert.match(read("scripts/ai-tools.js"), /aiToolsMoreButton/);
 assert.match(dashboardCode, /source\[data-src\]/);
@@ -225,26 +202,12 @@ assert.match(read("scripts/languages.js"), /const DEFAULT_LANGUAGE = "zh_TW";/);
     for (const q of studyQuotes) assert.ok(q.zh && q.author && q.work, "Study quote missing text/author/work: " + q.zh);
     assert.match(read("scripts/study-companion.js"), /shuffled\(/);
 }
-const focusCardCode = read("scripts/focus-card.js");
-const focusCardContext = { module: { exports: {} } };
-vm.runInNewContext(focusCardCode, focusCardContext);
-const focusCard = focusCardContext.module.exports;
-assert.equal(JSON.stringify(focusCard.myntParseFocusSteps("好\n1. **讀第三章**（25 分鐘）\n2、做 10 題\n- 複習錯題\n4. 多的")), JSON.stringify(["讀第三章（25 分鐘）", "做 10 題", "複習錯題"]));
-assert.ok(focusCard.myntChatGptUrl(focusCard.myntBuildFocusPrompt({ text: "測".repeat(160), subject: "資料庫", days: 3 })).startsWith("https://chatgpt.com/?q="));
-assert.ok(focusCard.myntChatGptUrl("x".repeat(5000)).length < 1600);
-assert.equal(Object.keys(focusCard.myntRecordFocusLog(Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`2026-01-${String(i + 1).padStart(2, "0")}`, { t: "a", c: 0 }])), { date: "2026-02-01", text: "b" })).length, 14);
-assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed: false, steps: [{ text: "s", done: true }], rounds: 3, linked: true }, "", "2026-08-31").rounds, undefined);
-assert.equal(myntReconcileDailyFocus({ date: "2026-08-30", text: "x", completed: false, steps: [{ text: "s", done: true }] }, "", "2026-08-31").steps.length, 1);
-assert.match(read("index.html"), /scripts\/focus-card\.js/);
 {
-    const day = new Date(2026, 9, 21);
-    const weekly = focusCard.myntWeeklySubjectMinutes({ "2026-10-21": { t: "a", s: "db", r: 2 }, "2026-10-19": { t: "b", s: "sec", r: 1 }, "2026-10-18": { t: "c", s: "db", r: 1 }, "2026-10-10": { t: "old", s: "law", r: 9 }, "2026-10-20": { t: "d", r: 1 } }, 25, day);
-    assert.equal(JSON.stringify(weekly), JSON.stringify([["db", 75], ["sec", 25], ["other", 25]]));
-    assert.equal(focusCard.myntExamArchiveUrl(""), "https://reese-max.github.io/police-exam-archive/");
-    assert.equal(focusCard.myntExamArchiveUrl("javascript:alert(1)"), "https://reese-max.github.io/police-exam-archive/");
-    assert.match(read("index.html"), /<details id="focusStatsDetails"/);
+    const exam = vm.runInNewContext(read("scripts/exam-daily.js") + "\n;({ myntExamArchiveUrl })", {});
+    assert.equal(exam.myntExamArchiveUrl(""), "https://reese-max.github.io/police-exam-archive/");
+    assert.equal(exam.myntExamArchiveUrl("javascript:alert(1)"), "https://reese-max.github.io/police-exam-archive/");
+    assert.match(dashboardCode, /id: "exam-today"/);
 }
-assert.doesNotMatch(focusCardCode, /api[_-]?key|fetch\(/i);
 const layoutCode = read("scripts/layout-editor.js");
 const layoutContext = { module: { exports: {} } };
 vm.runInNewContext(layoutCode, layoutContext);
@@ -259,7 +222,6 @@ assert.match(read("index.html"), /id="layoutEditCheckbox"/);
 assert.match(read("index.html"), /scripts\/layout-editor\.js/);
 assert.match(layoutCode, /e\.code === "KeyL"/);
 assert.match(read("scripts/pomodoro.js"), /window\.myntPomodoro = \{[\s\S]*if \(!panelOpen\) openPanel\(\)/);
-assert.match(read("scripts/focus-card.js"), /dailyFocusPlayBtn"\)\.addEventListener\("click", event => \{[\s\S]{0,160}event\.stopPropagation\(\)/);
 const contrastContext = { module: { exports: {} } };
 vm.runInNewContext(read("scripts/quote-contrast.js"), contrastContext);
 assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([255, 255, 255, 255])) > 0.99);
@@ -267,13 +229,13 @@ assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([0,
 assert.ok(!existsSync(resolve(root, "scripts/quotes.js")));
 assert.doesNotMatch(html + read("style.css") + dashboardCode, /motivationalQuotes|quotesOptions|newQuoteOnRefresh|multilingual-quotes/);
 assert.match(read("styles/quote-contrast.css"), /\.studyQuote\.has-wallpaper\.is-on-bright/);
-for (const file of ["custom-text.js", "dashboard-tools.js", "layout-editor.js", "scratchpad.js", "wallpaper-gallery.js"]) {
+for (const file of ["dashboard-tools.js", "layout-editor.js", "scratchpad.js", "wallpaper-gallery.js"]) {
     const code = read(`scripts/${file}`);
     const bare = code.replace(/window\.myntDialog[^\n]*/g, "");
     assert.doesNotMatch(bare, /(^|[^\w.])(alert|confirm|prompt)\(/m, `${file} still calls a native dialog without the in-app fallback`);
 }
 assert.match(read("scripts/mynt-dialog.js"), /showModal\(\)/);
-assert.ok(read("index.html").indexOf("scripts/mynt-dialog.js") < read("index.html").indexOf("scripts/custom-text.js"));
+assert.ok(read("index.html").indexOf("scripts/mynt-dialog.js") < read("index.html").indexOf("scripts/dashboard-tools.js"));
 {
     const examCode = read("scripts/exam-daily.js");
     const examContext = { module: { exports: {} } };

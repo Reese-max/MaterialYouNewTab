@@ -79,43 +79,6 @@ test('notes-ai#2', () => {
     b.run('SaveToDoData()'); todos = Object.values(JSON.parse(storage.getItem('todoList')));
     assert(todos.some(todo => todo.title === 'local title') && todos.some(todo => todo.title === 'remote title'));
 });
-// notes-ai#4 and focus-study#2: stale UI/API changes cannot replace current focus.
-test('notes-ai#4', () => {
-    const storage = fixture.createStorage();
-    const ids = ['userText', 'userTextCheckbox', 'dailyFocusActions', 'dailyFocusStatus', 'dailyFocusToggle', 'dailyFocusCounter'];
-    const a = tab(storage, ids), b = tab(storage, ids);
-    for (const h of [a, b]) { h.run(read('scripts/custom-text.js')); h.document.emit('DOMContentLoaded'); }
-    b.c.myntFocus.update({ text: 'new focus', subject: 'db', steps: [{ text: 'new step', done: false }], linked: true });
-    a.el('userText').textContent = 'old tab draft'; a.el('userText').emit('input');
-    let focus = JSON.parse(storage.getItem('myntDailyFocus'));
-    assert.equal(focus.text, 'new focus'); assert.equal(focus.subject, 'db');
-    assert(storage.getItem('myntScratchpadContent').includes('old tab draft'));
-    a.storage('myntDailyFocus'); assert.equal(a.el('userText').textContent, 'new focus');
-    a.document.activeElement = a.el('userText');
-    b.c.myntFocus.update({ text: 'newer focus', steps: [{ text: 'newer step', done: true }] });
-    assert.equal(a.c.myntFocus.update({ rounds: 1 }), false);
-    focus = JSON.parse(storage.getItem('myntDailyFocus'));
-    assert.equal(focus.text, 'newer focus'); assert.equal(focus.steps[0].text, 'newer step');
-    a.document.activeElement = a.document.body;
-    assert.equal(a.c.myntFocus.get().text, 'newer focus');
-    a.c.myntFocus.update({ rounds: 1 });
-    assert.equal(JSON.parse(storage.getItem('myntDailyFocus')).subject, 'db');
-    b.c.myntFocus.get(); b.c.myntFocus.update({ text: 'final focus', completed: false });
-    a.el('dailyFocusToggle').emit('click');
-    assert.equal(JSON.parse(storage.getItem('myntDailyFocus')).text, 'final focus');
-    assert.equal(JSON.parse(storage.getItem('myntDailyFocus')).completed, false);
-});
-test('focus-study#2', () => {
-    const storage = fixture.createStorage();
-    const ids = ['userText', 'userTextCheckbox', 'dailyFocusActions', 'dailyFocusStatus', 'dailyFocusToggle', 'dailyFocusCounter'];
-    const a = tab(storage, ids), b = tab(storage, ids);
-    for (const h of [a, b]) { h.run(read('scripts/custom-text.js')); h.document.emit('DOMContentLoaded'); }
-    b.c.myntFocus.update({ text: 'Remote focus', subject: 'db', steps: [{ text: 'Remote step', done: true }], linked: true });
-    a.c.myntFocus.update({ rounds: 1 });
-    const focus = JSON.parse(storage.getItem('myntDailyFocus'));
-    assert.equal(focus.text, 'Remote focus'); assert.equal(focus.subject, 'db');
-    assert.equal(focus.steps[0].text, 'Remote step'); assert.equal(focus.steps[0].done, true);
-});
 // search-nav#1: A removes row 0; B's row 1 blur must not overwrite old row 2.
 test('search-nav#1', () => {
     const h = fixture.harness({ storage: fixture.seed(3) });
@@ -135,38 +98,6 @@ test('search-nav#1', () => {
 });
 // Dashboard excerpts execute unchanged production handlers, not algorithm copies.
 const dashboard = require('../scripts/dashboard-tools.js');
-// focus-study#1: timer completion handlers read persistent totals, even without events.
-test('focus-study#1', () => {
-    const storage = fixture.createStorage();
-    const a = tab(storage), b = tab(storage);
-    for (const h of [a, b]) {
-        Object.assign(h.c, { KEYS: { focusHistory: 'myntFocusHistory' }, myntDateKey: () => '2026-11-05',
-            normalizeFocusHistory: x => x, readJSON: (key, fallback) => JSON.parse(storage.getItem(key) || 'null') || fallback,
-            markSystemHabit() {}, renderFocusStats() { h.c.displayed = h.run('focusHistory["2026-11-05"]?.minutes || 0'); },
-            myntDashboard: { reloadHabits() {}, reloadWorkspaces() {} } });
-        h.run('let focusHistory = {};');
-        h.run(between('scripts/dashboard-tools.js', '        function saveFocusHistory()', '        function renderFocusStats()'));
-        h.run(between('scripts/dashboard-tools.js', '        document.addEventListener("mynt:pomodoro-complete"', '        let previousTodoStatuses'));
-    }
-    for (const h of [a, b]) h.document.emit('mynt:pomodoro-complete', { detail: { minutes: 25 } });
-    assert.deepEqual(JSON.parse(storage.getItem('myntFocusHistory'))['2026-11-05'], { sessions: 2, minutes: 50 });
-    a.run(between('scripts/dashboard-tools.js', '        window.MyntStorageSync?.watch([KEYS.habits', '        localizeStaticUI();'));
-    a.storage('myntFocusHistory'); assert.equal(a.c.displayed, 50);
-});
-// Append-like habit dates and newly added habits also share the three-way merge.
-test('habit merge', () => {
-    const initial = [{ id: 'read', name: 'Read', source: null, doneDates: [] }];
-    const storage = fixture.createStorage({ myntHabits: JSON.stringify(initial) });
-    const a = tab(storage), b = tab(storage);
-    for (const h of [a, b]) {
-        Object.assign(h.c, { KEYS: { habits: 'myntHabits' }, myntValidateHabits: dashboard.myntValidateHabits, normalizeHabits: x => x });
-        h.run(between('scripts/dashboard-tools.js', '        let habitsStorageInvalid', '        function markSystemHabit'));
-    }
-    a.run('habits[0].doneDates.push("2026-11-04"); saveHabits()');
-    b.run('habits[0].doneDates.push("2026-11-05"); habits.push({id:"run",name:"Run",source:null,doneDates:[]}); saveHabits()');
-    const result = JSON.parse(storage.getItem('myntHabits'));
-    assert.deepEqual(result[0].doneDates, ['2026-11-04', '2026-11-05']); assert.equal(result.length, 2);
-});
 // notes-ai#5: list and form baselines reject stale saves while retaining drafts.
 test('notes-ai#5', () => {
     const base = [{ id: 'work', name: 'Work', widgets: {}, background: 'video', focusMinutes: 25, urls: [] }];

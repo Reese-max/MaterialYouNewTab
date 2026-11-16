@@ -20,7 +20,6 @@ const fixtureContext = vm.createContext({ require: name => name === 'node:fs' ? 
 vm.runInContext(fixtureSource + '\nglobalThis.fixture = { harness, seed, createDocument, createStorage, Element, loadTranslations };', fixtureContext);
 const { harness, seed, createDocument, createStorage, Element, loadTranslations } = fixtureContext.fixture;
 const adapter = require('../scripts/local-mcp-data.js');
-const { myntValidateHabits } = require('../scripts/dashboard-tools.js');
 const tests = [];
 const test = (id, fn) => tests.push([id, fn]);
 const event = class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } };
@@ -92,36 +91,6 @@ test('notes-ai#10', () => {
     assert.equal(JSON.parse(h.localStorage.getItem('todoList')).t1.title, '法規複習');
 });
 
-function habitFixture() {
-    const document = createDocument();
-    for (const id of ['habitList', 'habitInput', 'habitAddBtn']) { const el = document.createElement('div'); el.id = id; document.body.appendChild(el); }
-    const items = [{ id: 'system-todo', name: '', source: 'todo', doneDates: [] }, { id: 'read', name: 'Reading', source: null, doneDates: ['2026-11-04', '2026-11-05'] }, { id: 'run', name: 'Run', source: null, doneDates: [] }];
-    const localStorage = createStorage({ myntHabits: JSON.stringify(items) });
-    let refreshes = 0;
-    const c = vm.createContext({ document, localStorage, console: { ...console, error() {} }, CustomEvent: event, myntValidateHabits,
-        window: { MyntMcpData: adapter, myntDialog: { confirm: async () => true } }, KEYS: { habits: 'myntHabits' }, normalizeHabits: x => x,
-        myntDateKey: () => '2026-11-05', t: (key, fallback) => fallback, format: (key, fallback, values) => fallback.replace('{name}', values.name) });
-    vm.runInContext(between('scripts/dashboard-tools.js', '        let habitsStorageInvalid', '        function markSystemHabit') +
-        between('scripts/dashboard-tools.js', '        function markSystemHabit', '        document.getElementById("habitForm")') +
-        '\nhabitRecoveryControl = { refresh() { onRefresh(); } }; renderHabits();', Object.assign(c, { onRefresh: () => refreshes++ }));
-    return { c, document, localStorage, items, refreshes: () => refreshes };
-}
-test('focus-study#4', async () => {
-    const h = habitFixture(), remove = h.document.querySelector('.habitDeleteBtn');
-    // Execute the actual async UI confirmation listener.
-    await remove.listeners.get('click')[0]();
-    assert.deepEqual(adapter.validateHabitRecovery(h.localStorage.getItem('myntHabitRecoveryV1')), { version: 1, index: 1, item: h.items[1] });
-    assert.equal(JSON.parse(h.localStorage.getItem('myntHabits')).length, 2);
-    assert(h.refreshes() >= 2); assert.equal(h.document.activeElement.id, 'habitInput');
-    assert.equal(vm.runInContext('deleteHabit("system-todo")', h.c), false);
-    for (const skip of [0, 1]) {
-        const failed = habitFixture(), before = [...failed.localStorage.data];
-        failed.localStorage.failNext(Error('quota'), 1, skip);
-        await failed.document.querySelector('.habitDeleteBtn').listeners.get('click')[0]();
-        assert.deepEqual([...failed.localStorage.data], before);
-    }
-});
-
 test('search-nav#7', () => {
     const html = read('index.html');
     assert(/<dialog\b[^>]*id="aiToolsSettingsModal"[^>]*aria-labelledby="aiSettingsHeader"/.test(html), 'AI settings uses a labelled native dialog');
@@ -174,34 +143,6 @@ test('search-nav#9', () => {
         assert.deepEqual([...failed.storage.data], before); assert.equal(failed.entries()[1].querySelector('.shortcutName').value, 'Beta');
         assert.equal(failed.document.activeElement, failed.entries()[1].querySelector('.shortcutMoveUp'));
     }
-});
-
-test('focus-study#5', () => {
-    const c = vm.createContext({ module: { exports: {} } }); vm.runInContext(read('scripts/focus-card.js'), c);
-    const { myntRecordFocusLog: record, myntWeeklySubjectMinutes: stats } = c.module.exports;
-    const date = '2026-11-05', today = new Date(2026, 10, 5), focus = { date, text: 'Read', subject: 'db', linked: true };
-    let log = record({}, focus, 14, { minutes: 25 });
-    log = record(log, { ...focus, subject: 'sec', rounds: 1 }, 14, { minutes: 50 });
-    log = record(log, { ...focus, subject: 'law', rounds: 2 });
-    assert.deepEqual(json(stats(log, 120, today)), [['sec', 50], ['db', 25]]);
-    assert.deepEqual(json(stats(log, 10, today)), json(stats(log, 120, today)), 'Changing duration never rewrites history');
-    const legacy = { [date]: { t: 'Old', c: 0, s: 'db', r: 2 } };
-    const migrated = record(legacy, { ...focus, subject: 'sec', rounds: 2 }, 14, { minutes: 50 });
-    assert.deepEqual(json(stats(migrated, 120, today)), [['sec', 50], ['db', 50]]);
-    assert.equal(migrated[date].v, 2); assert.equal(migrated[date].sessions[0].subject, 'sec');
-    assert.deepEqual(json(stats(legacy, 50, today)), [['db', 50]], 'Unmigrated legacy data uses a stable estimate too');
-    // Execute the real completion listener, not just the aggregation helper.
-    const document = createDocument(); let saved, patch;
-    vm.runInNewContext(between('scripts/focus-card.js', '    document.addEventListener("mynt:pomodoro-complete"', '    document.addEventListener("mynt:focus-completed"'),
-        { document, api: { get: () => focus, update: x => { patch = x; } }, writeLog: (f, r) => { saved = record({}, f, 14, r); } });
-    document.emit('mynt:pomodoro-complete', { detail: { minutes: 50 } });
-    assert.equal(saved[date].sessions[0].minutes, 50); assert.equal(patch.rounds, 1);
-    // The strict MCP reader must accept/preserve v2, and reject malformed minutes.
-    const validate = vm.createContext({ parse: (raw, fallback) => raw === null ? fallback : JSON.parse(raw), plain: x => x && typeof x === 'object' && !Array.isArray(x),
-        core: () => ({ parseDate() {} }), fail: (_code, message) => { throw Error(message); } });
-    vm.runInContext(between('scripts/local-mcp-data.js', 'function focusLog(', 'function workspaceState('), validate);
-    validate.raw = JSON.stringify(migrated); assert.deepEqual(json(vm.runInContext('focusLog(raw)', validate)), json(migrated));
-    migrated[date].sessions[0].minutes = -1; validate.raw = JSON.stringify(migrated); assert.throws(() => vm.runInContext('focusLog(raw)', validate), /Invalid focus sessions/);
 });
 
 (async () => {

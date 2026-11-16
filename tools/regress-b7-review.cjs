@@ -64,16 +64,6 @@ function tab(storage, ids = []) {
     vm.runInContext(read('scripts/storage-sync.js'), c);
     return { c, document, run: code => vm.runInContext(code, c), el: id => document.getElementById(id) };
 }
-function habitsTab(initial) {
-    const storage = fixture.createStorage({ myntHabits: JSON.stringify(initial) });
-    const h = tab(storage, ['habitInput']);
-    Object.assign(h.c, { KEYS: { habits: 'myntHabits' }, myntValidateHabits: production('scripts/dashboard-tools.js').myntValidateHabits,
-        normalizeHabits: x => x, renderHabits() {} });
-    h.run(between('scripts/dashboard-tools.js', '        let habitsStorageInvalid', '        function markSystemHabit'));
-    h.run(between('scripts/dashboard-tools.js', '        function deleteHabit', '        function renderHabits'));
-    return { ...h, storage };
-}
-const habit = (id, name = id) => ({ id, name, source: null, doneDates: [] });
 function todosTab() {
     const storage = fixture.createStorage({ todoLastUpdateDate: new Date().toLocaleDateString(),
         todoList: JSON.stringify({ t1: { title: 'Original', status: 'pending', pinned: false } }) });
@@ -162,26 +152,6 @@ test('P1-2 reset removes orphan keys without shortcutAmount', async () => {
     assert.equal(h.storage.getItem('shortcutName0'), null);
     assert.equal(h.entries()[0].querySelector('.shortcutName').value, 'YouTube');
 });
-test('P2-3 overflowing habit merge preserves valid remote state and stays usable', () => {
-    const initial = Array.from({ length: 11 }, (_, i) => habit('h' + i));
-    const h = habitsTab(initial), remote = [...initial, habit('remote')];
-    h.storage.setItem('myntHabits', JSON.stringify(remote));
-    h.run('habits.push({id:"local",name:"Local",source:null,doneDates:[]})');
-    assert.equal(h.run('saveHabits()'), false);
-    assert.equal(h.run('habitsStorageInvalid'), false);
-    assert.equal(h.storage.getItem('myntHabits'), JSON.stringify(remote));
-    assert.equal(h.run('JSON.stringify(habits)'), JSON.stringify(remote));
-    h.run('habits[0].doneDates.push("2026-11-05")');
-    assert.equal(h.run('saveHabits()'), true);
-});
-test('P2-3 delete refreshes baseline after a remote habit update', () => {
-    const h = habitsTab([habit('keep'), habit('remove')]);
-    h.storage.setItem('myntHabits', JSON.stringify([{ ...habit('keep'), doneDates: ['2026-11-05'] }, habit('remove')]));
-    assert.equal(h.run('deleteHabit("remove")'), true);
-    assert.equal(h.run('JSON.stringify(habitsBaseline)'), h.storage.getItem('myntHabits'));
-    h.run('habits[0].doneDates=[]'); assert.equal(h.run('saveHabits()'), true);
-    assert.deepEqual(JSON.parse(h.storage.getItem('myntHabits'))[0].doneDates, []);
-});
 test('P2-4 stale delete refreshes and succeeds on retry', () => {
     const h = todosTab();
     h.storage.setItem('todoList', JSON.stringify({ t1: { title: 'Remote', status: 'completed', pinned: false } }));
@@ -198,26 +168,6 @@ test('P2-4 Escape refreshes storage changed during inline edit', () => {
     input.emit('keydown', { key: 'Escape' });
     assert.equal(h.run('todoList.t1.title'), 'Remote');
     assert.equal(h.run('deleteTodo("t1")'), true);
-});
-test('P3-5 actual completion order does not double count fresh or legacy rounds', () => {
-    const h = tab(fixture.createStorage());
-    const focus = { date: '2026-11-05', text: 'Database', subject: 'db', rounds: 0, linked: true, completed: false };
-    const api = production('scripts/focus-card.js');
-    let log = {};
-    Object.assign(h.c, { api: { get: () => focus, update: patch => Object.assign(focus, patch) },
-        writeLog: (f, round) => { log = api.myntRecordFocusLog(log, f, 14, round); } });
-    h.run(between('scripts/focus-card.js', '    document.addEventListener("mynt:pomodoro-complete"', '    document.addEventListener("mynt:focus-completed"'));
-    h.document.emit('mynt:pomodoro-complete', { detail: { minutes: 25 } });
-    assert.equal(focus.rounds, 1);
-    assert.equal(api.myntWeeklySubjectMinutes(log, 25, new Date(2026, 10, 5))[0][1], 25);
-    h.document.emit('mynt:pomodoro-complete', { detail: { minutes: 40 } });
-    assert.equal(api.myntWeeklySubjectMinutes(log, 25, new Date(2026, 10, 5))[0][1], 65);
-    log = {}; focus.rounds = 1; // One older round plus the newly completed round.
-    h.document.emit('mynt:pomodoro-complete', { detail: { minutes: 25 } });
-    assert.equal(api.myntWeeklySubjectMinutes(log, 25, new Date(2026, 10, 5))[0][1], 50);
-    log = { '2026-11-05': { t: 'Database', s: 'db', r: 1, c: 0 } }; focus.rounds = 1;
-    h.document.emit('mynt:pomodoro-complete', { detail: { minutes: 25 } });
-    assert.equal(api.myntWeeklySubjectMinutes(log, 25, new Date(2026, 10, 5))[0][1], 50);
 });
 (async () => {
     for (const [name, fn] of tests) {

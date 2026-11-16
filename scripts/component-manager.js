@@ -25,14 +25,13 @@
             for (const id of settingsRows) document.getElementById(id)?.classList.toggle('inactive', !item.visible);
             for (const selector of item.selectors) for (const node of document.querySelectorAll(selector)) {
                 const isRemoved = removed.has(item.id);
-                node.toggleAttribute('data-mynt-component-hidden', item.id === 'focus' ? !item.visible : isRemoved || !item.visible);
-                const display = isRemoved && item.id !== 'focus' ? 'none' : item.display;
+                node.toggleAttribute('data-mynt-component-hidden', isRemoved || !item.visible);
+                const display = isRemoved ? 'none' : item.display;
                 if (display) { node.setAttribute('data-mynt-component-display', display); node.style.setProperty('--mynt-component-display', display); }
-                if (item.id === 'focus') node.inert = isRemoved;
             }
             for (const selector of item.panelSelectors) for (const node of document.querySelectorAll(selector)) node.toggleAttribute('data-mynt-component-hidden', !item.visible);
             if (item.id === 'clock') {
-                // Hide only the clock, not the sibling focus card; never rewrite layout coordinates.
+                // Hide only the clock; never rewrite layout coordinates.
                 document.getElementById('leftDiv')?.classList.remove('clock-hidden-left');
                 const digital = localStorage.getItem('clocktype') === 'digital';
                 for (const [id, show] of [['analogClock', !digital], ['digitalClock', digital]]) {
@@ -43,11 +42,6 @@
             if (item.id === 'weather') {
                 const node = document.getElementById('hideWeather');
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
-            }
-            if (item.id === 'focus' && item.visible) {
-                const heading = document.getElementById('userText'), actions = document.getElementById('dailyFocusActions');
-                if (heading) heading.style.display = 'block';
-                if (actions) actions.style.display = 'flex';
             }
             if (item.id === 'exam') { const node = document.getElementById('examDaily'); if (node) node.hidden = !item.visible; }
         }

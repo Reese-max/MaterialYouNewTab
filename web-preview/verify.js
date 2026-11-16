@@ -5,7 +5,7 @@
         ["web-language", "首次開啟時介面與標題是繁體中文。"],
         ["web-shortcuts", "捷徑區正常顯示，名稱、網址與圖示沒有空白或錯位。"],
         ["web-search", "搜尋框可輸入，Google 搜尋與 Search Bang（例如 !yt）可觸發。"],
-        ["web-control", "控制中心可以開啟，工作模式、習慣、隱私與無障礙區塊可見。"],
+        ["web-control", "控制中心可以開啟，工作模式、隱私與無障礙區塊可見。"],
         ["web-todo", "待辦清單可新增、完成及刪除任務。"],
         ["web-scratchpad", "Scratchpad 可輸入、複製、轉任務並匯出 Markdown。"],
         ["web-workspace", "Work／Study／Relax 工作模式可以切換，顯示的小工具符合預期。"],

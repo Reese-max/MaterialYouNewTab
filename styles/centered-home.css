@@ -1,7 +1,6 @@
 /* Minimal centered home layout. Existing feature scripts and storage remain in place. */
 html.mynt-removed-features body #myntHomeWidgets { display: none !important; }
 body #myntComponentManager label:has(#myntComponent-homeWidgets) { display: none !important; }
-html.mynt-removed-features body .ttteexxtt { display: none !important; }
 body #analogClock .mynt-clock-date { display: none !important; }
 body #digitalClock #digidate { display: none !important; }
 
@@ -147,7 +146,7 @@ html.mynt-removed-features body #quickLinksRow #toolsCont a .tIcon { flex: 0 0 2
 /* Pomodoro: the panel drops straight below its corner button (a dragged panel keeps its inline position),
    the footer stats sit centered, and the corner button shows an elapsed-time ring while a session is active. */
 html.mynt-removed-features body #pomodoroPanel { top: 72px; left: 20px; max-height: min(calc(100dvh - 88px), var(--pomo-viewport-height, 100dvh)); }
-html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { justify-content: center; gap: 6px; }
+html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday) { justify-content: center; gap: 6px; }
 html.mynt-removed-features body #pomodoroCont#pomodoroCont.pomodoro-active::before {
     content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
     background: conic-gradient(#234c78 calc(var(--pomo-elapsed, 0) * 1turn), #234c7826 0);
@@ -269,7 +268,7 @@ html.mynt-removed-features body #pomodoroPanel .pomoStudioStats {
   display: flex !important; flex-wrap: wrap; align-items: center; justify-content: center; column-gap: 10px; row-gap: 2px;
   margin-top: 4px; padding: 10px 0 0 !important; border-top: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 10%, transparent) !important; background: transparent !important;
 }
-html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { margin: 0 !important; padding: 0 !important; border: 0 !important; width: auto !important; font-size: 12px !important; gap: 4px !important; }
+html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday) { margin: 0 !important; padding: 0 !important; border: 0 !important; width: auto !important; font-size: 12px !important; gap: 4px !important; }
 /* Pomodoro background settings: one surface while scrolling, list of background choices, quiet controls. */
 /* Pomodoro main panel: one clean solid surface; the blurred picture under a scrim read as muddy (2026-11-16). The chosen background still paints the floating timer. */
 html.mynt-removed-features body #pomodoroPanel::after { content: none !important; }
@@ -322,13 +321,9 @@ html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open
   html.mynt-removed-features body #pomodoroPanel #myntPomoExtras .pomoStudioCard { border-radius: 10px !important; }
   html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup { align-self: stretch !important; justify-content: center !important; width: 100% !important; text-decoration: none !important; }
   html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup + .mynt-pomo-note { order: 1 !important; margin: -4px 0 4px !important; }
-  html.mynt-removed-features body #pomodoroPanel .pomodoroFocusSummary { flex: 0 1 auto !important; }
 }
 /* Reserve the scrollbar column so opening full settings never narrows or shifts the timer; the column replaces part of the end padding. */
 html.mynt-removed-features body #pomodoroPanel { scrollbar-gutter: stable; padding-inline-end: 8px !important; }
-/* Statistics reads as one line and the stats action looks actionable. */
-html.mynt-removed-features body #pomodoroPanel .pomodoroFocusSummary::before { content: "\00b7"; margin-inline-end: 2px; }
-html.mynt-removed-features body #pomodoroPanel #pomodoroStatsBtn { margin-inline-start: 6px !important; color: var(--pomo-accent, #234c78) !important; font-weight: 600 !important; }
 /* An empty music library is one short row (artwork, title, hint); the player appears once a track exists. */
 html.mynt-removed-features body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:not(:has(.mynt-music-library[open])):has(.mynt-music-current[title=""]) :is(.mynt-music-progress, .mynt-music-controls) { display: none !important; }
 /* A loaded local image needs no placeholder glyph on its thumbnail. */

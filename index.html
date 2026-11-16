@@ -17,7 +17,6 @@
     <script src="scripts/restore-guard.js"></script>
     <script src="scripts/removed-features.js"></script>
     <link href="style.css" rel="stylesheet">
-    <link href="styles/focus-card.css" rel="stylesheet">
     <link href="styles/layout-editor.css" rel="stylesheet">
     <link href="styles/quote-contrast.css" rel="stylesheet">
     <link href="styles/exam-daily.css" rel="stylesheet">
@@ -47,8 +46,6 @@
     <script defer src="scripts/widgets-transparency.js"></script>
     <script defer src="scripts/clock.js"></script>
     <script defer src="scripts/weather.js"></script>
-    <script defer src="scripts/custom-text.js"></script>
-    <script defer src="scripts/focus-card.js"></script>
     <script defer src="scripts/exam-daily.js"></script>
     <script defer src="scripts/layout-profiles.js"></script>
     <script defer src="scripts/centered-layout.js"></script>
@@ -232,12 +229,6 @@
         <div id="myntPomoExtras" hidden><div id="myntPomoMusicMount"></div></div>
         <div class="pomodoroSessionsToday">
             <span id="pomodoroSessionsLabel">Today</span>: <span id="pomodoroSessionsCount">0</span>
-        </div>
-        <div class="pomodoroFocusSummary">
-            <span id="pomodoroFocusMinutes">0 min</span>
-            <span aria-hidden="true">·</span>
-            <span id="pomodoroFocusStreak">0 day streak</span>
-            <button id="pomodoroStatsBtn" type="button">Stats</button>
         </div>
     </div>
 
@@ -784,34 +775,6 @@
 
             <!-- ____________end of clock______________ -->
 
-            <div class="ttteexxtt">
-                <div id="userText" contenteditable="true" spellcheck="false" role="textbox"
-                    aria-label="Editable home heading">What matters most today?</div>
-                <div id="dailyFocusActions" class="dailyFocusActions">
-                    <span id="dailyFocusStatus" role="status" aria-live="polite">Today’s focus</span>
-                    <span id="dailyFocusSubjectBadge" hidden></span>
-                    <span id="dailyFocusCounter" hidden>0/160</span>
-                    <button id="dailyFocusToggle" type="button" aria-pressed="false">Done</button>
-                    <span id="dailyFocusTools">
-                        <button id="dailyFocusPlayBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusPlay|Start a Pomodoro for this focus" data-focus-attr="title">▶</button>
-                        <button id="dailyFocusGptBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusGpt|Break down with ChatGPT" data-focus-attr="title">✦</button>
-                        <button id="dailyFocusMoreBtn" class="dailyFocusIcon" type="button" aria-expanded="false" aria-controls="dailyFocusPanel" data-focus-title data-focus-i18n="dailyFocusMore|Steps and subject" data-focus-attr="title">⋯</button>
-                    </span>
-                </div>
-                <div id="dailyFocusPanel" hidden>
-                    <div id="dailyFocusSubjects" role="group"></div>
-                    <ul id="dailyFocusSteps"></ul>
-                    <input id="dailyFocusStepInput" type="text" maxlength="80" autocomplete="off">
-                    <div class="dailyFocusRow">
-                        <button id="dailyFocusPasteToggle" type="button" data-focus-i18n="dailyFocusPasteToggle|Paste GPT answer">Paste GPT answer</button>
-                    </div>
-                    <div id="dailyFocusPasteWrap" hidden>
-                        <textarea id="dailyFocusPaste" data-focus-i18n="dailyFocusPastePlaceholder|Paste a numbered list (1. 2. 3.)" data-focus-attr="placeholder"></textarea>
-                        <div class="dailyFocusRow"><button id="dailyFocusPasteApply" type="button" data-focus-i18n="dailyFocusPasteApply|Turn into steps">Turn into steps</button></div>
-                    </div>
-                    <p id="dailyFocusNote" role="status" aria-live="polite" hidden></p>
-                </div>
-            </div>
         </div>
         <div id="date"></div>
         <!-- ---------end of leftDiv--------------- -->
@@ -1481,18 +1444,6 @@
 
                                         <div class="ttcont">
                                             <div class="texts">
-                                                <div class="bigText" id="userTextTitle">Customizable Text</div>
-                                                <div class="infoText" id="userTextInfo">Show custom text below the clock
-                                                </div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="userTextCheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
-
-                                        <div class="ttcont">
-                                            <div class="texts">
                                                 <div class="bigText" id="layoutEditTitle">Edit layout</div>
                                                 <div class="infoText" id="layoutEditInfo">Move and resize blocks (Alt+L)</div>
                                             </div>
@@ -1845,7 +1796,7 @@
                                 <div class="ttcont controlCenterLaunch">
                                     <div class="texts">
                                         <div class="bigText" id="controlCenterText">Control Center</div>
-                                        <div class="infoText" id="controlCenterInfo">Focus, habits, privacy, accessibility, and service status</div>
+                                        <div class="infoText" id="controlCenterInfo">Workspaces, privacy, accessibility, and service status</div>
                                     </div>
                                     <button class="settingsActionBtn" id="openControlCenterBtn" type="button">Open</button>
                                 </div>
@@ -2035,21 +1986,6 @@
         </header>
 
         <div class="controlCenterContent">
-            <section class="controlSection" id="focusStatsSection" aria-labelledby="focusStatsTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="focusStatsTitle">Focus statistics</h3>
-                        <p id="focusStatsInfo">Your completed Pomodoro work sessions from the last seven days.</p>
-                    </div>
-                </div>
-                <div class="focusStatGrid">
-                    <div class="focusStatCard"><strong id="focusMinutesValue">0</strong><span id="focusMinutesLabel">Minutes today</span></div>
-                    <div class="focusStatCard"><strong id="focusSessionsValue">0</strong><span id="focusSessionsValueLabel">Sessions today</span></div>
-                    <div class="focusStatCard"><strong id="focusStreakValue">0</strong><span id="focusStreakLabel">Day streak</span></div>
-                </div>
-                <div id="focusWeekChart" class="focusWeekChart" aria-label="Seven-day focus chart"></div>
-            </section>
-
             <section class="controlSection" id="workspaceSection" aria-labelledby="workspaceTitle">
                 <div class="controlSectionHeading">
                     <div>
@@ -2106,21 +2042,6 @@
                 </form>
             </section>
 
-            <section class="controlSection" id="habitsSection" aria-labelledby="habitsTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="habitsTitle">Daily habits</h3>
-                        <p id="habitsInfo">Pomodoro and completed tasks update automatically. Add up to 12 custom habits.</p>
-                    </div>
-                </div>
-                <form id="habitForm" class="habitForm">
-                    <label class="srOnly" for="habitInput" id="habitInputLabel">New habit</label>
-                    <input id="habitInput" maxlength="60" required autocomplete="off" placeholder="Add a daily habit...">
-                    <button type="submit" id="habitAddBtn">Add</button>
-                </form>
-                <ul id="habitList" class="habitList"></ul>
-            </section>
-
             <section class="controlSection" id="accessibilitySection" aria-labelledby="accessibilityTitle">
                 <div class="controlSectionHeading">
                     <div>
@@ -2172,7 +2093,7 @@
                 <ul class="privacyDisclosureList">
                     <li id="privacyDisclosureWeather">WeatherAPI receives your configured location and API key in HTTPS query parameters.</li>
                     <li id="privacyDisclosureIp">IPinfo receives your IP address when weather is on without manual location or GPS.</li>
-                    <li id="privacyDisclosureLocal">Focus history, habits, accessibility, and workspace preferences stay in this browser.</li>
+                    <li id="privacyDisclosureLocal">Accessibility and workspace preferences stay in this browser.</li>
                 </ul>
             </section>
 
@@ -2188,16 +2109,6 @@
         </div>
     </dialog>
 
-    <dialog id="focusHistoryDialog" class="myntDialog focusHistoryDialog" aria-labelledby="focusHistoryTitle">
-        <h2 id="focusHistoryTitle" data-focus-i18n="focusHistoryTitle|Focus history">Focus history</h2>
-        <ol id="focusHistoryList"></ol>
-        <details id="focusStatsDetails" class="focusStats">
-            <summary data-focus-i18n="focusSubjectHoursTitle|Weekly hours by subject">Weekly hours by subject</summary>
-            <ul id="focusStatsList"></ul>
-        </details>
-        <a id="focusExamLink" class="focusExamLink" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener" data-focus-i18n="focusExamLink|One past exam question today ↗">One past exam question today ↗</a>
-        <button id="focusHistoryClose" type="button" data-focus-i18n="focusHistoryClose|Close">Close</button>
-    </dialog>
     <div id="examDaily" class="examDaily" hidden>
         <button id="examDailyChip" class="examDailyChip" type="button" aria-expanded="false" aria-controls="examDailyPanel"><span aria-hidden="true">📝</span><span id="examDailyChipText">今日考古題</span></button>
         <section id="examDailyPanel" class="examDailyPanel" hidden aria-labelledby="examDailyChipText">

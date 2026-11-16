@@ -285,15 +285,11 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 	text-shadow: none;
 }
 
-#pomodoroPanel .pomodoroFocusSummary,
-.pomodoro-panel .pomodoroFocusSummary,
 #pomodoroPanel .mynt-pomo-note,
 .pomodoro-panel .mynt-pomo-note {
 	color: var(--pomo-muted);
 }
 
-#pomodoroPanel #pomodoroStatsBtn,
-.pomodoro-panel #pomodoroStatsBtn,
 #pomodoroPanel .mynt-pomo-settings summary,
 .pomodoro-panel .mynt-pomo-settings summary {
 	color: var(--pomo-fg);
@@ -439,14 +435,12 @@ html.black-theme .pomodoro-panel {
 
 html.black-theme #pomodoroPanel .pomodoroPhaseLabel,
 html.black-theme #pomodoroPanel .pomodoroTimeDisplay,
-html.black-theme #pomodoroPanel #pomodoroStatsBtn,
 html.black-theme #pomodoroPanel .mynt-pomo-settings summary {
 	color: var(--award-surface-dark-text);
 }
 
 html.black-theme #pomodoroPanel .pomodoroRoundDisplay,
 html.black-theme #pomodoroPanel .pomodoroSessionsToday,
-html.black-theme #pomodoroPanel .pomodoroFocusSummary,
 html.black-theme #pomodoroPanel .mynt-pomo-note {
 	color: var(--award-surface-dark-muted);
 }
@@ -552,8 +546,7 @@ html.black-theme #scratchpadContainer button:hover {
 		--award-filter-border: rgba(54, 68, 86, 0.18);
 
 		/* 半透明底色保留桌布層次；不依賴模糊或新增動效。 */
-		& :is(.ttteexxtt, #searchbar, .aiToolsCont .toolsCont a,
-			#dailyFocusPanel, #myntHomeWidgets .home-widget-card) {
+		& :is(#searchbar, .aiToolsCont .toolsCont a, #myntHomeWidgets .home-widget-card) {
 			background: var(--award-filter-surface);
 			color: var(--award-filter-text);
 			border: 1px solid var(--award-filter-border);
@@ -570,24 +563,21 @@ html.black-theme #scratchpadContainer button:hover {
 
 		/* 搜尋列維持既有外尺寸；輸入文字與小工具標頭同步離開純黑底。 */
 		& #searchbar { box-sizing: border-box; }
-		& #userText { background: transparent; color: var(--award-filter-text); }
 		& #searchQ { color: var(--award-filter-text); }
 		& #myntHomeWidgets h2 {
 			background: var(--award-filter-surface);
 			color: var(--award-filter-text);
 		}
-		& :is(#dailyFocusStepInput, #dailyFocusPaste,
-			#myntHomeWidgets button, #myntHomeWidgets .home-widget-add input) {
+		& :is(#myntHomeWidgets button, #myntHomeWidgets .home-widget-add input) {
 			background: var(--award-filter-elevated);
 			color: var(--award-filter-text);
 			border-color: var(--award-filter-border);
 		}
 		& #myntHomeWidgets button:hover { background: var(--award-filter-surface); }
-		& :is(#searchQ, #dailyFocusStepInput, #dailyFocusPaste)::placeholder {
+		& :is(#searchQ)::placeholder {
 			color: var(--award-filter-muted);
 			opacity: 1;
 		}
-		& .ttteexxtt .dailyFocusStepRemove { opacity: 0.72; }
 		& #myntHomeWidgets :disabled { opacity: 1; }
 
 		/* 只覆寫既存強制變數，故需 !important；壓過本檔舊值及 paint()

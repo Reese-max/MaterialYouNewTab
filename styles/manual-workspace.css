@@ -20,21 +20,6 @@ body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) .lef
 }
 
 
-body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) .ttteexxtt {
-	top: auto;
-	display: flex;
-	flex-direction: column-reverse;
-	align-items: flex-start;
-	gap: 3px;
-	width: fit-content;
-	max-width: 100%;
-	padding: 10px 14px;
-	border-radius: 16px;
-	background: color-mix(in srgb, var(--accentLightTint-blue) 90%, transparent);
-	box-shadow: 0 10px 30px rgba(13, 39, 71, 0.12);
-}
-
-body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) #userText,
 body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) #date {
 	max-width: 100%;
 	min-height: 0;
@@ -45,20 +30,10 @@ body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) #dat
 	overflow: visible;
 }
 
-body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) #userText {
-	font-size: clamp(1.15rem, 2vw, 1.35rem);
-	font-weight: 650;
-}
-
 body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) #date {
 	font-size: 0.9rem;
 	font-weight: 600;
 	opacity: 0.78;
-}
-
-#userText:focus-visible {
-	outline: 2px solid var(--darkColor-blue);
-	outline-offset: 3px;
 }
 
 body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) .rightDiv {
@@ -124,10 +99,6 @@ body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) .rig
 body:is([data-workspace-background="video"],.mynt-manual-workspace) { --workspace-left: clamp(24px, 6vw, 96px); --workspace-width: min(560px, 52vw); }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .centerDiv { left: var(--workspace-left); right: auto; top: 53%; width: var(--workspace-width); margin: 0; transform: translateY(-50%); display: block; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .leftDiv { position: absolute; inset: auto 0 calc(100% + 24px); width: 100%; margin: 0; transform: none; }
-body:is([data-workspace-background="video"],.mynt-manual-workspace) .ttteexxtt { position: static; inset: auto; transform: none; margin: 0; padding: 20px 24px; box-sizing: border-box; width: 100%; max-width: 100%; gap: 10px; border-radius: 24px; background: rgba(236,244,255,.90); border: 1px solid rgba(255,255,255,.7); backdrop-filter: blur(16px); color: #20334c; }
-body:is([data-workspace-background="video"],.mynt-manual-workspace) #userText { font-size: clamp(20px, 2vw, 26px); line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
-body:is([data-workspace-background="video"],.mynt-manual-workspace) .dailyFocusActions { gap: 8px; width: 100%; flex-wrap: wrap; margin-top: 2px; }
-body:is([data-workspace-background="video"],.mynt-manual-workspace) #dailyFocusStatus { flex: 1 1 180px; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) #date { color: #405976; letter-spacing: .06em; font-size: 13px; opacity: 1; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .rightDiv { width: 100%; max-width: none; margin: 0; transform: none; }
 body:is([data-workspace-background="video"],.mynt-manual-workspace) .searchbar { height: 64px; width: 100%; margin: 0; background: rgba(238,245,255,.96); box-sizing: border-box; box-shadow: 0 8px 26px rgba(31,58,87,.10); }
@@ -151,7 +122,6 @@ body:is([data-workspace-background="video"],.mynt-manual-workspace) .examDailyCh
  body:is([data-workspace-background="video"],.mynt-manual-workspace) .aiToolsCont { position: relative; inset: auto; width: var(--workspace-width); margin: 18px auto 0; overflow: visible; }
  body:is([data-workspace-background="video"],.mynt-manual-workspace) .studyQuote { bottom: 80px; max-width: calc(100vw - 48px); box-sizing: border-box; }
  body:is([data-workspace-background="video"],.mynt-manual-workspace) .studyQuoteSource { display: none; }
- body:is([data-workspace-background="video"],.mynt-manual-workspace) .ttteexxtt { padding: 18px 20px; }
 }
 @media (max-width: 480px) {
  body:is([data-workspace-background="video"],.mynt-manual-workspace) { padding-inline: 16px; }
@@ -175,14 +145,7 @@ body:is([data-workspace-background="video"],.mynt-manual-workspace) #studyQuote 
 .myntLayoutOverlay:focus-visible, #myntLayoutSaveDock button:focus-visible { outline: 3px solid #1b5dba; outline-offset: 3px; }
 @media (max-width: 900px) { #myntLayoutSaveDock { top: 16px; width: max-content; } body:is([data-workspace-background="video"],.mynt-manual-workspace) { padding-top: 170px; } #myntLayoutToolbar { top: 104px; width: max-content; font-size: 11px; gap: 5px; } }
 @media (max-width: 480px) { #myntLayoutSaveDock { top: 84px; } #myntLayoutToolbar { top: 170px; } body:is([data-workspace-background="video"],.mynt-manual-workspace) { padding-top: 238px; } }
-/* A wallpaper switch must not add extra spacing to the saved focus block. */
-body:where(.mynt-manual-workspace:not([data-workspace-background="video"])) #dailyFocusActions {margin-bottom:0;}
-
-/* Match the original manual video composition when only the wallpaper changes. */
-body.mynt-manual-workspace .ttteexxtt{flex-direction:column;}
 body.mynt-manual-workspace #date{order:-2;}
-body.mynt-manual-workspace #userText{order:-1;}
-body.mynt-manual-workspace .dailyFocusActions{margin:2px 0 0;}
 @media(max-width:900px){body.mynt-manual-workspace{display:block;height:auto;min-height:100dvh;overflow:auto;}html:has(body.mynt-manual-workspace){overflow:auto;}}
 @media(max-width:500px){body.mynt-manual-workspace .aiToolsCont{overflow:visible;}body.mynt-manual-workspace #toolsCont.mobileToolsLayout{display:grid!important;grid-template-columns:repeat(var(--mobile-tool-columns,3),minmax(0,1fr));gap:8px!important;width:100%;}body.mynt-manual-workspace #toolsCont.mobileToolsLayout a,body.mynt-manual-workspace #aiToolsMoreButton{flex-direction:column;height:64px;min-width:0;padding:6px;border-radius:16px;}body.mynt-manual-workspace #toolsCont.mobileToolsLayout .tIcon{width:27px;height:27px;margin:0 0 2px;}body.mynt-manual-workspace #toolsCont.mobileToolsLayout .tLabel,body.mynt-manual-workspace #aiToolsMoreButton span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.7rem;}}
-body.mynt-manual-workspace #userText,body.mynt-manual-workspace #date {background:transparent;}
+body.mynt-manual-workspace #date {background:transparent;}

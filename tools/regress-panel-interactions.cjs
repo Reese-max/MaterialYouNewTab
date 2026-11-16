@@ -103,14 +103,6 @@ async function runBookmarkFocusProbe() {
  const event={key:'Escape',preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
  sidebar.listeners.keydown.forEach(fn=>fn(event));assert.ok(closed&&event.prevented&&event.stopped,'Sidebar Escape must not reach layout draft cancellation');
 }
-function runFocusEscapeProbe() {
- const source=read('scripts/focus-card.js'), panel={hidden:false}, more={focused:false,focus(){this.focused=true;}};
- const context={panel,more,setPanel(open){panel.hidden=!open;}}; vm.createContext(context);
- vm.runInContext(between(source,'    const dismissPanel = event => {','    panel.addEventListener("keydown", dismissPanel);')+'\nthis.dismiss=dismissPanel;',context);
- const event={key:'Escape',preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
- context.dismiss({...event,isComposing:true}); assert.equal(panel.hidden,false);
- context.dismiss(event); assert.equal(panel.hidden,true); assert.ok(more.focused&&event.prevented&&event.stopped);
-}
 function runGalleryModeProbe() {
   const source = read('scripts/wallpaper-gallery.js');
   const controls = {wallpaperModeSelect:element('select'), wallpaperMinutesSelect:element('select'), wallpaperIntervalGroup:element()};
@@ -138,7 +130,7 @@ function runGalleryModeProbe() {
 }
 (async () => {
   let failed = 0;
-  for (const [name, test] of [['GALLERY_MODE_CONTROLS', runGalleryModeProbe], ['BOOKMARK_FOCUS_AND_ESCAPE', runBookmarkFocusProbe], ['FOCUS_PANEL_ESCAPE', runFocusEscapeProbe], ['TASK_RENAME', runTodoProbe], ['GALLERY_RENDER_RACE', runGalleryProbe]]) {
+  for (const [name, test] of [['GALLERY_MODE_CONTROLS', runGalleryModeProbe], ['BOOKMARK_FOCUS_AND_ESCAPE', runBookmarkFocusProbe], ['TASK_RENAME', runTodoProbe], ['GALLERY_RENDER_RACE', runGalleryProbe]]) {
     try { await test(); console.log(`PASS ${name}`); }
     catch (error) { failed++; console.error(`FAIL ${name}: ${error.name}: ${error.message}`); }
   }

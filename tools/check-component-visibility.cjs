@@ -18,7 +18,7 @@ function apply(store, plan) { plan.writes.forEach(({ key, value }) => store.data
 function item(store, id) { return core.read(store).find(value => value.id === id); }
 function throwsCode(fn, code) { assert.throws(fn, error => error.code === code); }
 
-const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
+const ids = ['clock', 'weather', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
 assert.deepEqual(core.definitions.map(value => value.id), ids);
 assert.equal(new Set(core.definitions.map(value => value.key)).size, ids.length);
 assert.deepEqual(core.definitions.find(value => value.id === 'clock').selectors, ['#analogClock', '#digitalClock', '#date']);
@@ -30,7 +30,7 @@ assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value
 assert.ok(core.definitions.filter(value => value.newPreference).every(value => !value.key.startsWith('myntWallpaper')),
     'New entry preferences must survive settings-only backup media filtering.');
 const empty = storage();
-const defaultsOn = new Set(['clock', 'weather', 'focus', 'search', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
+const defaultsOn = new Set(['clock', 'weather', 'search', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
 for (const value of core.read(empty)) {
     assert.equal(value.valid, true, value.id);
     assert.equal(value.visible, defaultsOn.has(value.id), value.id);
@@ -83,8 +83,8 @@ for (const definition of core.definitions) {
 const badCache = storage({ pomodoroCheckboxState: 'checked', pomodoroDisplayStatus: 'grid' });
 throwsCode(() => core.plan(badCache, 'pomodoro', false), 'INVALID_STORAGE');
 assert.equal(item(badCache, 'pomodoro').visible, null);
-assert.equal(item(badCache, 'focus').valid, true, 'Unrelated invalid preferences do not disable healthy UI controls.');
-assert.ok(core.plan(badCache, 'focus', false).writes.every(value => value.key === 'userTextVisible'));
+assert.equal(item(badCache, 'search').valid, true, 'Unrelated invalid preferences do not disable healthy UI controls.');
+assert.ok(core.plan(badCache, 'search', false).writes.every(value => value.key === 'myntSearchVisible'));
 
 const event = { id: 'e-test', name: '  Keep original text  ', date: '2027-01-01', category: 'custom', emoji: '📅', color: 'blue', annual: false };
 const eventData = { version: 1, revision: 5, enabled: true, events: [event], deleted: { index: 0, event: { ...event, id: 'e-retained' } } };
@@ -110,7 +110,7 @@ assert.equal(legacy.data.size, 1, 'Legacy migration is planned, not written.');
 throwsCode(() => core.plan(storage({ myntExamDate: 'not-a-date' }), 'countdowns', false), 'INVALID_STORAGE');
 throwsCode(() => core.plan(storage({ myntEventCountdownsV1: JSON.stringify({ ...eventData, revision: Number.MAX_SAFE_INTEGER }) }), 'countdowns', false), 'INVALID_STORAGE');
 
-for (const value of [undefined, 'false', 0, null, {}, []]) throwsCode(() => core.plan(storage(), 'focus', value), 'INVALID_ARGUMENT');
+for (const value of [undefined, 'false', 0, null, {}, []]) throwsCode(() => core.plan(storage(), 'search', value), 'INVALID_ARGUMENT');
 for (const value of ['__proto__', 'constructor', 'unknown', null, {}]) throwsCode(() => core.plan(storage(), value, true), 'INVALID_ARGUMENT');
 throwsCode(() => core.read(null), 'UNAVAILABLE');
 throwsCode(() => core.read({ getItem() { throw Error('denied'); } }), 'STORAGE_FAILURE');
@@ -180,6 +180,6 @@ const unloadedBrowser = {};
 vm.runInNewContext(source, unloadedBrowser);
 const unloaded = unloadedBrowser.MYNTComponentVisibilityCore.read(storage());
 assert.equal(unloaded.find(value => value.id === 'countdowns').error.code, 'UNAVAILABLE');
-assert.equal(unloaded.find(value => value.id === 'focus').valid, true);
+assert.equal(unloaded.find(value => value.id === 'search').valid, true);
 assert.ok(!/\b(?:document|fetch|XMLHttpRequest|location)\s*\./.test(source), 'Core must remain independent of DOM and network.');
-console.log('Component visibility core checks passed: 20 entries, legacy keys, cache plans, safe defaults, absent-only migration, malformed preservation, countdown revisions and browser UMD.');
+console.log(`Component visibility core checks passed: ${ids.length} entries, legacy keys, cache plans, safe defaults, absent-only migration, malformed preservation, countdown revisions and browser UMD.`);

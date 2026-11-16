@@ -201,7 +201,7 @@
         };
         const place = anchor => {
             const anchored = anchor && ['top', 'left', 'bottom'].every(key => Number.isFinite(anchor[key]));
-            const blocks = anchored ? [] : ['.ttteexxtt', '#rightDiv', '#aiToolsCont'].map(visibleRect).filter(Boolean);
+            const blocks = anchored ? [] : ['#rightDiv', '#aiToolsCont'].map(visibleRect).filter(Boolean);
             const widgets = anchored ? null : visibleRect('#myntHomeWidgets');
             if (!anchored && !avoidingPanelPosition(panel.getBoundingClientRect(), blocks, widgets, viewport)) return;
             // 錨點、避讓與尺寸限制只供本次顯示；拖曳存檔仍由原模組處理。
@@ -713,11 +713,7 @@
             progress.style.strokeDashoffset = String(progressOffset(state.timeRemaining, state.totalTime));
             const rounds = state.durations?.roundsBeforeLong;
             const count = window.myntPomodoro.getContext?.().sessionsToday ?? 0;
-            const subject = window.myntFocus?.get().subject;
-            const entry = typeof MYNT_FOCUS_SUBJECTS !== 'undefined' && MYNT_FOCUS_SUBJECTS.find(item => item[0] === subject);
-            const lang = language();
-            const subjectName = entry ? entry[/^zh/.test(lang) ? 1 : 2] : '';
-            round.textContent = `${t('round')} ${state.currentRound}${rounds ? ` / ${rounds}` : ''} · ${t('today')} ${count}${subjectName ? ` · ${subjectName}` : ''}`; round.title = round.textContent;
+            round.textContent = `${t('round')} ${state.currentRound}${rounds ? ` / ${rounds}` : ''} · ${t('today')} ${count}`; round.title = round.textContent;
             for (const [key, { input }] of Object.entries(durationFields)) if (doc.activeElement !== input && input.getAttribute('aria-invalid') !== 'true') input.value = state.durations?.[key] ?? '';
             if (doc.activeElement !== task) task.value = state.task || '';
             taskPreview.textContent = state.task || ''; taskPreview.hidden = !state.task; taskPreview.title = state.task || '';
@@ -747,7 +743,7 @@
         refresh();
         cleanups.push(window.myntPomodoro.subscribe(render));
         if (music?.subscribe) cleanups.push(music.subscribe(renderAudio));
-        for (const event of ['mynt:ambient-state', 'mynt:focus-changed', 'mynt:pomodoro-complete']) listen(document, event, refresh);
+        for (const event of ['mynt:ambient-state', 'mynt:pomodoro-complete']) listen(document, event, refresh);
         listen(document, 'mynt:language-changed', relabel);
         const languageObserver = new MutationObserver(relabel); languageObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir'] });
         cleanups.push(() => languageObserver.disconnect());

@@ -93,7 +93,7 @@ for (const finding of ['2-palette', '4', '6']) test('search-nav#' + finding, asy
     c.window.location = {};
     run(c, between('scripts/bookmarks.js', 'function safeBookmarkLink(', 'function safeHostname('));
     run(c, between('scripts/dashboard-tools.js', '        let filteredCommands = []', '        function remoteWorkspaceState()'));
-    c.window.myntFocusCommands = () => [{ id: 'old', labelText: 'OLD', run: () => executed++ }];
+    c.commandDefinitions.push({ id: 'old', labelText: 'OLD', run: () => executed++ });
     const first = c.renderCommands('old'); resolveSearch([]); await first;
     const input = c.document.getElementById('commandPaletteInput');
     if (finding === '2-palette') for (const flag of [{ isComposing: true }, { keyCode: 229 }]) for (const key of ['Enter', 'ArrowDown', 'ArrowUp']) assert.ok(!input.emit('keydown', { key, ...flag }).prevented);
@@ -120,17 +120,6 @@ test('look-layout#8', () => {
         between('scripts/weather.js', '                updateTemperatureDisplay();', '                // Setting weather Icon').split('\n').slice(1).join('\n'));
     const checkbox = c.document.getElementById('fahrenheitCheckbox'); checkbox.checked = true; checkbox.onchange?.(); checkbox.emit('change');
     assert.equal(c.document.getElementById('temp').textContent, '68'); assert.match(c.document.getElementById('feelsLike').textContent, /°F/);
-});
-
-test('focus-study#7', () => {
-    let marks = 0;
-    const c = context({ markSystemHabit: () => marks++, habitRecoveryControl: null, myntValidateHabits() {} });
-    c.localStorage = store({ todoList: JSON.stringify({ old: { status: 'completed' }, fresh: { status: 'pending' } }) });
-    const source = read('scripts/dashboard-tools.js'), start = source.includes('        let previousTodoStatuses') ? '        let previousTodoStatuses' : '        document.addEventListener("mynt:todo-updated"';
-    run(c, between('scripts/dashboard-tools.js', start, '        // Accessibility settings'));
-    c.document.emit('DOMContentLoaded'); assert.equal(marks, 0, 'old completion must not check today');
-    c.document.emit('mynt:todo-updated', { detail: { completed: 1, items: [{ id: 'old', status: 'completed' }, { id: 'fresh', status: 'pending' }] } }); assert.equal(marks, 0);
-    c.document.emit('mynt:todo-updated', { detail: { completed: 2, items: [{ id: 'old', status: 'completed' }, { id: 'fresh', status: 'completed' }] } }); assert.equal(marks, 1);
 });
 
 test('focus-study#6', async () => {
@@ -182,18 +171,6 @@ test('focus-study#3', async () => {
     c.document.emit('mynt:ambient-state', { detail: { isPlaying: false, error: true } });
     assert.equal(c.pomodoroAmbientToggleBtn.getAttribute('aria-pressed'), 'false'); assert.match(c.document.getElementById('pomodoroAmbientStatus').textContent, /retry/);
     c.document.emit('mynt:ambient-state', { detail: { isPlaying: true } }); assert.equal(c.pomodoroAmbientToggleBtn.getAttribute('aria-pressed'), 'true');
-});
-
-test('focus-study#9', () => {
-    const c = context({ api: { get: () => ({ text: 'Read', subject: '' }) }, MYNT_FOCUS_SUBJECTS: [], myntBuildFocusPrompt: x => x, myntDaysUntil: () => 999 });
-    run(c, read('scripts/event-countdown-core.js')); c.window.MYNTCountdownCore = c.MYNTCountdownCore;
-    run(c, between('scripts/focus-card.js', '    function prompt()', '    function openGpt()'));
-    run(c, `const model = MYNTCountdownCore.defaultState(); model.events = [
-      {id:'e-old',name:'Past',date:'2000-01-01',category:'exam',emoji:'',color:'blue',annual:false},
-      {id:'e-future',name:'Exam',date:'2090-01-01',category:'exam',emoji:'',color:'blue',annual:false}];
-      localStorage.setItem(MYNTCountdownCore.KEY, JSON.stringify(model)); localStorage.setItem('myntExamDate','2000-01-01');`);
-    assert.ok(c.prompt().days > 0 && c.prompt().days !== 999);
-    run(c, "model.events=[]; localStorage.setItem(MYNTCountdownCore.KEY,JSON.stringify(model));"); assert.equal(c.prompt().days, null);
 });
 
 test('data-platform#5', () => {

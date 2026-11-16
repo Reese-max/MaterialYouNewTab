@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Reese-max customized edition</strong><br>
-  A Traditional Chinese-first, Material You-inspired browser dashboard for search, focus, tasks, notes, bookmarks, weather, and workspaces.
+  A Traditional Chinese-first, Material You-inspired browser dashboard for search, tasks, notes, bookmarks, weather, and workspaces.
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
 - **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
 - **Keyboard help** — press `?` outside text fields to open the shortcut guide; use `Alt+1`–`Alt+9` to launch the first nine shortcuts.
-- **Local-first state** — tasks, settings, habits, focus history, workspaces, and scratchpad content are stored in browser storage.
+- **Local-first state** — tasks, settings, workspaces, and scratchpad content are stored in browser storage.
 
 ## Core features
 
@@ -41,8 +41,8 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - Clock and live weather
 - Quick shortcuts with uploaded/URL/SVG custom icons and `Alt+1`–`Alt+9` launching
 - Configurable AI tool launchers with right-click settings access
-- To-Do List and daily habits
-- Pomodoro timer, seven-day focus stats, and streaks
+- To-Do List
+- Pomodoro timer
 - Scratchpad and Markdown export
 - Workspace presets and multi-tab launchers
 - Sidebar bookmarks and Google Apps launcher
@@ -169,9 +169,8 @@ The check validates, among other things:
 - local asset references
 - required custom scripts and UI IDs
 - duplicate HTML IDs and CSP-sensitive patterns
-- focus / workspace data helpers
+- workspace data helpers
 - backup rollback behavior
-- Google-only autocomplete configuration
 - locale key parity
 - Traditional Chinese default language and 32-locale fallback wiring
 - upstream/custom fused feature invariants
