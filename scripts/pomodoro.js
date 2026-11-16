@@ -488,7 +488,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function openPanel() {
         pomodoroPanel.style.display = "block";
         pomodoroCont.setAttribute("aria-expanded", "true");
-        if (!document.documentElement.classList.contains("myntReducedMotion")) {
+        // Hidden backdrop (solid panel theme): skip decoding a video nobody sees.
+        if (!document.documentElement.classList.contains("myntReducedMotion") && pomodoroBgVideo.offsetParent !== null) {
             pomodoroBgVideo.play().catch(function () {});
         }
         const hasPosition = restorePanelPosition();
