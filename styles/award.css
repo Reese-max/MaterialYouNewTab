@@ -2069,6 +2069,24 @@ body.mynt-layout-editing #myntLayoutToolbar .myntLayoutHelp > span:first-child {
     color: #536174;
     cursor: default;
 }
+
+/* 寬／高把手：沿用縮放把手外觀，放在右緣中點與下緣中點；靠近視窗邊緣時往內收。
+   選擇器要比 7.7 容器查詢的 [data-block] > .myntLayoutResize 更具體，否則會被推回右下角。 */
+body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize.myntLayoutResize-w {
+    top: 50%;
+    bottom: auto;
+    right: calc(var(--mynt-resize-right, -20px) * 0.4);
+    translate: 0 -50%;
+    cursor: ew-resize;
+}
+
+body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize.myntLayoutResize-h {
+    left: 50%;
+    right: auto;
+    bottom: calc(var(--mynt-resize-bottom, -20px) * 0.4);
+    translate: -50% 0;
+    cursor: ns-resize;
+}
 /* ==== award-fix-todo-actions.css ==== */
 /* 第 3 輪：待辦項目操作圖示、文字斷行與已完成狀態 */
 
