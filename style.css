@@ -4624,6 +4624,33 @@ input:checked + .toggle:before {
 	border-radius: 2px;
 }
 
+/* The icon picker is a quiet tonal chip in the row actions' surface, not an outlined button. */
+.shortcutSettingsEntry .quicklinkChooseIcon {
+	border-color: transparent;
+	border-radius: 12px;
+	padding: 8px 12px 8px 10px;
+	background: rgba(255, 255, 255, 0.4);
+	transition: 0.3s background;
+}
+
+.shortcutSettingsEntry .quicklinkChooseIcon:hover {
+	background: rgba(255, 255, 255, 0.7);
+}
+
+/* A draft without a URL has no icon yet: show an empty slot instead of a gap. */
+.shortcutSettingsEntry .quicklinkChoosePreview:empty {
+	box-sizing: border-box;
+	border: 1.5px dashed currentColor;
+	border-radius: 50%;
+	opacity: 0.5;
+}
+
+@media (forced-colors: active) {
+	.shortcutSettingsEntry .quicklinkChooseIcon {
+		border-color: ButtonText;
+	}
+}
+
 /* Drag and drop styles */
 .shortcutSettingsEntry.dragging {
 	opacity: 0.5;
@@ -6240,6 +6267,14 @@ body[data-bg="wallpaper"] .dropdown-content {
 
 .black-theme .shortcutSettingsEntry {
 	background-color: var(--bg-color-dark);
+}
+
+.black-theme .shortcutSettingsEntry .quicklinkChooseIcon {
+	background: #232221;
+}
+
+.black-theme .shortcutSettingsEntry .quicklinkChooseIcon:hover {
+	background: #404040;
 }
 
 .black-theme #resetButton,
