@@ -6465,17 +6465,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	outline: 2px solid black;
 }
 
-.black-theme .tips {
-	background-color: var(--darkColor-dark);
-}
-
-.black-theme #dontShowTips {
-	background-color: var(--bg-color-dark);
-}
-
-.black-theme #dontShowTips:hover {
-	background-color: var(--accentLightTint-dark);
-}
 /* ---------------- End of Dark(Black) theme ---------------- */
 
 /* Alert & Confirm Modal */
@@ -6573,86 +6562,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	outline-offset: 3px;
 }
 /* ---------------- End of Alert & Confirm Modal ---------------- */
-
-.tips {
-	margin-top: 30px;
-	display: grid;
-	gap: 12px;
-	max-height: 900px;
-	overflow: hidden;
-	background-color: var(--bg-color-blue);
-	background-color: color-mix(
-		in srgb,
-		var(--accentLightTint-blue) 40%,
-		var(--bg-color-blue)
-	);
-	padding: 18px 20px;
-	border-radius: 20px;
-	opacity: 1;
-	transition:
-		max-height 0.35s var(--md-motion-decelerate),
-		padding 0.35s ease,
-		margin 0.35s ease,
-		opacity 0.25s ease;
-}
-
-.tips.tips-hidden {
-	margin-top: 0;
-	max-height: 0;
-	padding-top: 0;
-	padding-bottom: 0;
-	opacity: 0;
-	pointer-events: none;
-}
-
-#dontShowTips {
-	position: relative;
-	overflow: hidden;
-	border: none;
-	display: block;
-	padding: 6px 10px;
-	background-color: var(--darkColor-blue);
-	color: white;
-	border-radius: 16px;
-	margin-top: 5px;
-}
-
-#dontShowTips::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.25),
-		transparent
-	);
-	transform: translateX(-100%);
-	animation: dontShowTipsShine 3s infinite;
-	pointer-events: none;
-}
-
-.tips.tips-hidden #dontShowTips::before {
-	animation: none;
-}
-
-#dontShowTips:hover {
-	background-color: var(--darkerColor-blue);
-}
-
-@keyframes dontShowTipsShine {
-	100% {
-		transform: translateX(100%);
-	}
-}
-
-.tips .ttcont .texts .bigText {
-	font-size: 1rem;
-}
-
-.tips .ttcont .texts .infoText {
-	font-size: 0.8rem;
-}
 
 /* ----------------- Toast ----------------- */
 #chromeFooterToast {
@@ -9376,13 +9285,9 @@ body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayo
 #menuCont #menuCloseButton { position:static; width:44px; height:44px; min-width:44px; max-width:44px; flex:0 0 44px; margin:0; padding:0; border:0; justify-content:center; }
 #menuCont #menuCloseButton::after { display:none; }
 #menuCont #menuCloseButton .icon { position:static; transform:none; }
-#menuCont #menuCloseButton:focus-visible, #settingsHelp > summary:focus-visible { outline:2px solid var(--darkColor-blue); outline-offset:3px; }
-#settingsHelp { margin-top:20px; border-top:1px solid color-mix(in srgb,var(--textColorDark-blue) 15%,transparent); color:var(--textColorDark-blue); }
-#settingsHelp > summary { min-height:44px; box-sizing:border-box; padding:12px 4px; font-size:.875rem; line-height:1.4; cursor:pointer; }
-#settingsHelp .tips { margin-top:12px; }
+#menuCont #menuCloseButton:focus-visible { outline:2px solid var(--darkColor-blue); outline-offset:3px; }
 @media (prefers-reduced-motion: reduce) { #menuBar, #menuCont, #optCont { transition:none; } }
 
-#settingsHelp:has(.tips-hidden) { display:none; }
 
 #menuBar #menuCont { max-width:100%; }
 @media (max-width:500px) { #menuBar { --gap:16px; } #menuCont > .topDiv { padding-inline:16px; } }
