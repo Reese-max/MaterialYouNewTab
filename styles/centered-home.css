@@ -273,12 +273,30 @@ html.mynt-removed-features body #pomodoroPanel .pomoStudioStats {
 }
 html.mynt-removed-features body #pomodoroPanel :is(.pomodoroSessionsToday, .pomodoroFocusSummary) { margin: 0 !important; padding: 0 !important; border: 0 !important; width: auto !important; font-size: 12px !important; gap: 4px !important; }
 /* Pomodoro background settings: one surface while scrolling, list of background choices, quiet controls. */
-/* Pomodoro main panel: one clean solid surface; the blurred picture under a scrim read as muddy (2026-11-16). The chosen background still paints the floating timer. */
+/* Pomodoro main panel: "Original background" is one clean solid surface; a chosen background (image, colour, gradient, homepage) shows sharp, never blurred (2026-11-17). */
 html.mynt-removed-features body #pomodoroPanel::after { content: none !important; }
 html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static { background-image: none !important; }
 html.mynt-removed-features body #pomodoroPanel { background-color: #f7f7f7 !important; }
-html.mynt-removed-features body #pomodoroPanel > .pomoStudioBackdrop { display: none !important; }
+html.mynt-removed-features body #pomodoroPanel:not(.mynt-pomo-static) > .pomoStudioBackdrop { display: none !important; }
 html.mynt-removed-features body #pomodoroPanel .pomodoroRingFg { filter: none !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop { display: block !important; border-start-end-radius: 0 !important; border-end-end-radius: 0 !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop > :is(.pomodoro-bg-video, .pomodoro-bg-overlay) { display: none !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::before {
+  content: ""; position: absolute; inset: 0; z-index: -3; pointer-events: none;
+  background-color: var(--pomo-color, transparent); background-image: var(--pomo-background, none);
+  background-size: var(--pomo-fit, cover); background-position: var(--pomo-position, 50% 50%); background-repeat: no-repeat;
+}
+/* The picture stays sharp, so text sits on its own surfaces instead of a scrim: a disc behind the time, chips for the labels, solid cards below. */
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static .pomodoroRingBg { fill: var(--pomo-surface, #ffffff) !important; }
+/* The panel is a wrapping row; the ring takes its own line so the shrunk label chip stays above it. */
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static .pomodoroCircleWrap { margin-inline: calc((100% - var(--pomo-diameter, 160px)) / 2) !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static :is(.pomodoroPhaseLabel, .pomodoroRoundDisplay) { width: fit-content !important; align-self: center !important; margin-inline: auto !important; padding: 3px 12px !important; border-radius: 999px; background: color-mix(in srgb, var(--pomo-surface, #ffffff) 92%, transparent); }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static :is(.pomoStudioStats, #myntPomoExtras) { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 94%, transparent) !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static :is(#myntPomoFloatMount > .mynt-pomo-open-float, #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask)) { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 94%, transparent) !important; }
+html.mynt-removed-features body #pomodoroPanel.mynt-pomo-static .pomoStudioStats { padding: 8px 10px !important; border-radius: 14px; border-top: 0 !important; }
+/* MYNT dark mode inverts the page; undo it on the picture only, so photos never show as negatives. */
+html.mynt-removed-features:is(:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]), :has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"])):not(:has(#darkTheme:checked)) body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::before,
+html.mynt-removed-features body:is([data-bg="wallpaper"]:has(.menuBar .themeSegment[data-active="dark"]), [data-bg="wallpaper"][sysTheme="systemDark"]:has(.menuBar .themeSegment[data-active="system"])):not(:has(#darkTheme:checked)) #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::before { filter: invert(1) hue-rotate(180deg); }
 @media (forced-colors: none) {
 html.mynt-removed-features body #pomodoroPanel #myntPomoExtras {
   background: color-mix(in srgb, var(--pomo-surface, #ffffff) 60%, transparent) !important;
