@@ -50,9 +50,6 @@
                 },
                 "googleAppsCheckbox": {
                   "type": "boolean"
-                },
-                "scratchpadCheckbox": {
-                  "type": "boolean"
                 }
               },
               "required": [],
@@ -447,65 +444,6 @@
     }
   },
   {
-    "name": "mynt_scratchpad_get",
-    "description": "Read bounded scratchpad text.",
-    "readOnly": true,
-    "annotations": {
-      "readOnlyHint": true,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_scratchpad_update",
-    "description": "Append text or replace one exact occurrence, with conflict checks.",
-    "readOnly": false,
-    "annotations": {
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "operation": {
-          "type": "string",
-          "enum": [
-            "append",
-            "replace"
-          ]
-        },
-        "text": {
-          "type": "string",
-          "maxLength": 2000
-        },
-        "before": {
-          "type": "string",
-          "maxLength": 2000
-        },
-        "expectedRevision": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$",
-          "maxLength": 64
-        },
-        "requestId": {
-          "type": "string",
-          "maxLength": 100
-        }
-      },
-      "required": [
-        "expectedRevision"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
     "name": "mynt_layouts_get",
     "description": "Read validated wide/narrow named manual layouts.",
     "readOnly": true,
@@ -865,42 +803,6 @@
                   "additionalProperties": false
                 },
                 "pomodoro": {
-                  "type": "object",
-                  "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": -1,
-                      "maximum": 1
-                    },
-                    "y": {
-                      "type": "number",
-                      "minimum": -1,
-                      "maximum": 1
-                    },
-                    "s": {
-                      "type": "number",
-                      "minimum": 0.5,
-                      "maximum": 2
-                    },
-                    "w": {
-                      "type": "number",
-                      "minimum": 0.01,
-                      "maximum": 1
-                    },
-                    "h": {
-                      "type": "number",
-                      "minimum": 0.01,
-                      "maximum": 1
-                    }
-                  },
-                  "required": [
-                    "x",
-                    "y",
-                    "s"
-                  ],
-                  "additionalProperties": false
-                },
-                "scratchpad": {
                   "type": "object",
                   "properties": {
                     "x": {

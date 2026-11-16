@@ -18,7 +18,7 @@ function apply(store, plan) { plan.writes.forEach(({ key, value }) => store.data
 function item(store, id) { return core.read(store).find(value => value.id === id); }
 function throwsCode(fn, code) { assert.throws(fn, error => error.code === code); }
 
-const ids = ['clock', 'weather', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
+const ids = ['clock', 'weather', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
 assert.deepEqual(core.definitions.map(value => value.id), ids);
 assert.equal(new Set(core.definitions.map(value => value.key)).size, ids.length);
 assert.deepEqual(core.definitions.find(value => value.id === 'clock').selectors, ['#analogClock', '#digitalClock', '#date']);
@@ -30,7 +30,7 @@ assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value
 assert.ok(core.definitions.filter(value => value.newPreference).every(value => !value.key.startsWith('myntWallpaper')),
     'New entry preferences must survive settings-only backup media filtering.');
 const empty = storage();
-const defaultsOn = new Set(['clock', 'weather', 'search', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
+const defaultsOn = new Set(['clock', 'weather', 'search', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
 for (const value of core.read(empty)) {
     assert.equal(value.valid, true, value.id);
     assert.equal(value.visible, defaultsOn.has(value.id), value.id);

@@ -1,7 +1,7 @@
 /* 第 5 輪：首頁工具列圖示、浮動鈕分組、焦點卡排版細節 */
 
-/* ===== 左上三顆工具鈕：統一外形 =====
-   待辦 .todoListCont、便籤 .scratchpadCont、番茄鐘 .pomodoroCont
+/* ===== 左上工具鈕：統一外形 =====
+   待辦 .todoListCont、番茄鐘 .pomodoroCont
    原本同為 52×52 但造型不一：便籤是圓形半透明浮鈕，
    另兩顆是無底圖示（待辦圖示甚至沒設 fill，顯示成純黑）。
    統一為 44×44px 圓角方塊浮鈕，沿用便籤的半透明底板配方
@@ -10,7 +10,7 @@
    定位（top／inset-inline-start／margin）不動；
    三鈕頂緣原本就對齊在 40px（--gap 30 + 10），
    44px 高度下底緣仍同線（84px）。 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+:is(.todoListCont, .pomodoroCont) {
     width: 44px;
     height: 44px;
     border-radius: 14px;
@@ -22,7 +22,7 @@
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
-:is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+:is(.todoListCont, .pomodoroCont) .dot-icon {
     width: 24px;
     height: 24px;
     fill: var(--darkColor-blue);
@@ -31,31 +31,31 @@
 
 /* hover／active：三鈕一致的按壓回饋；
    順便壓掉番茄鐘原本的內層圖示放大，避免它獨自膨脹一圈。 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover {
+:is(.todoListCont, .pomodoroCont):hover {
     transform: scale(1.06);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+:is(.todoListCont, .pomodoroCont):hover .dot-icon {
     transform: none;
 }
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):active {
+:is(.todoListCont, .pomodoroCont):active {
     transform: scale(0.96);
 }
 
 /* 鍵盤焦點框 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):focus-visible {
+:is(.todoListCont, .pomodoroCont):focus-visible {
     outline: 2px solid var(--darkColor-blue);
     outline-offset: 2px;
 }
 
 /* 黑色主題（html.black-theme）：沿用便籤原本的深色浮鈕配色，
    把待辦與番茄鐘一併補齊，鐘面刻度描邊同步成淺藍。 */
-html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+html.black-theme :is(.todoListCont, .pomodoroCont) {
     background: rgba(30, 31, 35, 0.75);
     border-color: rgba(255, 255, 255, 0.1);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
-html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+html.black-theme :is(.todoListCont, .pomodoroCont) .dot-icon {
     fill: #a8c7fa;
 }
 html.black-theme .pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
@@ -64,18 +64,18 @@ html.black-theme .pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
 
 /* 尊重減少動態：保留顏色／陰影回饋，去掉縮放位移 */
 @media (prefers-reduced-motion: reduce) {
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+    :is(.todoListCont, .pomodoroCont) {
         transition: none;
     }
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active),
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+    :is(.todoListCont, .pomodoroCont):is(:hover, :active),
+    :is(.todoListCont, .pomodoroCont):hover .dot-icon {
         transform: none;
     }
 }
-html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+html.myntReducedMotion :is(.todoListCont, .pomodoroCont) {
     transition: none;
 }
-html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active) {
+html.myntReducedMotion :is(.todoListCont, .pomodoroCont):is(:hover, :active) {
     transform: none;
 }
 

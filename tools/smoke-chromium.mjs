@@ -497,7 +497,6 @@ async function main() {
         settingsEntryCount: document.querySelectorAll("#shortcutList .shortcutSettingsEntry").length,
         hasControlCenter: Boolean(document.querySelector("#controlCenterDialog")),
         hasTodo: Boolean(document.querySelector("#todoListCont")),
-        hasScratchpad: Boolean(document.querySelector("#scratchpadContainer")),
     }))()`);
 
     assert.equal(initial.extensionId, extensionId, "New Tab loaded a different extension document");
@@ -508,7 +507,6 @@ async function main() {
     assert.equal(initial.shortcutCount, initial.settingsEntryCount, "Shortcut view and settings entry counts diverged");
     assert.equal(initial.hasControlCenter, true, "Control Center is missing");
     assert.equal(initial.hasTodo, true, "To-do widget trigger is missing");
-    assert.equal(initial.hasScratchpad, true, "Scratchpad trigger is missing");
 
     await evaluate(`(() => {
         localStorage.setItem("shortcutAmount", "1");

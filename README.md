@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Reese-max customized edition</strong><br>
-  A Traditional Chinese-first, Material You-inspired browser dashboard for search, tasks, notes, bookmarks, weather, and workspaces.
+  A Traditional Chinese-first, Material You-inspired browser dashboard for search, tasks, bookmarks, weather, and workspaces.
 </p>
 
 <p align="center">
@@ -27,12 +27,11 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 
 - **Traditional Chinese first** — `zh-TW` remains the default while all 32 upstream locales are restored; missing custom strings fall back to English.
 - **Google search + search bangs** — use shortcuts such as `!yt`, `!gh`, and `!gpt` to jump directly to common services.
-- **Scratchpad** — quick notes, smart list continuation, Markdown task toggling, copy, convert-to-task, and `.md` export.
 - **Workspaces** — create Study, Work, Coding, Relax, or custom modes with preferred widgets, focus duration, background, and launch URLs.
 - **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
 - **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
 - **Keyboard help** — press `?` outside text fields to open the shortcut guide; use `Alt+1`–`Alt+9` to launch the first nine shortcuts.
-- **Local-first state** — tasks, settings, workspaces, and scratchpad content are stored in browser storage.
+- **Local-first state** — tasks, settings, and workspaces are stored in browser storage.
 
 ## Core features
 
@@ -43,7 +42,6 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - Configurable AI tool launchers with right-click settings access
 - To-Do List
 - Pomodoro timer
-- Scratchpad and Markdown export
 - Workspace presets and multi-tab launchers
 - Sidebar bookmarks and Google Apps launcher
 - Command Palette, keyboard shortcuts, and an in-extension What's New page
@@ -137,7 +135,7 @@ If you prefer the upstream stable release instead of this customized fork, use t
 - [Upstream Mozilla Add-ons build](https://addons.mozilla.org/en-US/firefox/addon/mynt/)
 - [Upstream GitHub releases](https://github.com/prem-k-r/MaterialYouNewTab/releases/latest)
 
-> These upstream packages may not contain the Scratchpad, workspace launcher, ambient audio, shortcut guide, or other Reese-max customizations present in this repository.
+> These upstream packages may not contain the workspace launcher, ambient audio, shortcut guide, or other Reese-max customizations present in this repository.
 
 ## Permissions and privacy
 

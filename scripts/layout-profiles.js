@@ -6,7 +6,7 @@
     const KEY='myntLayoutProfiles', MAX=20, LIMIT=150000;
     const clone=v=>JSON.parse(JSON.stringify(v));
     // Blocks of features removed on 2026-11-17; old profiles and backups keep loading without them.
-    const RETIRED_BLOCKS=new Set(['focus']);
+    const RETIRED_BLOCKS=new Set(['focus','scratchpad']);
     const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
     function validateLayout(v, normalize) {
         if(!plain(v)||v.version!==2||typeof v.snap!=='boolean'||typeof v.locked!=='boolean'||!plain(v.blocks))throw Error('invalid');

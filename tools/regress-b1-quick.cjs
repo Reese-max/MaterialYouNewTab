@@ -54,24 +54,6 @@ test('search-enter#2', () => {
     assert.ok(input.emit('keydown', { key: 'Enter' }).prevented); assert.deepEqual(searched, ['!yt cats']);
 });
 
-for (const finding of ['6', '9']) test('notes-ai#' + finding, () => {
-    const c = context({ updateCounts() {}, STORAGE_KEY: 'note' }); c.scratchpadInput = node();
-    c.savedContent = '';
-    run(c, read('scripts/storage-sync.js'));
-    run(c, between('scripts/scratchpad.js', '    function saveContent()', '    window.myntScratchpad'));
-    run(c, between('scripts/scratchpad.js', '    // Smart list continuation', '    // Global shortcut'));
-    const n = c.scratchpadInput;
-    if (finding === '6') for (const flag of [{ isComposing: true }, { keyCode: 229 }]) {
-        n.value = '- [ ] 注音'; n.selectionStart = n.value.length;
-        assert.ok(!n.emit('keydown', { key: 'Enter', ...flag }).prevented); assert.equal(n.value, '- [ ] 注音');
-    }
-    for (const marker of ['x', 'X']) {
-        n.value = `- [${marker}] Task`; n.selectionStart = 7;
-        n.emit('keydown', { key: 'Enter', ctrlKey: true }); assert.equal(n.value, '- [ ] Task');
-        n.emit('keydown', { key: 'Enter', ctrlKey: true }); assert.equal(n.value, '- [x] Task');
-    }
-});
-
 test('search-nav#3', () => {
     const c = context({ MAX_SHORTCUTS: 3, isQuotaExceededError: e => e.name === 'QuotaExceededError', alertPrompt() {}, translations: { en: { iconStorageQuotaMessage: 'quota' } }, currentLanguage: 'en', shortcutsCache: [{ name: 'Old', url: 'https://old.test', icon: 'oldicon' }] });
     c.localStorage = store({ shortcutAmount: '1', shortcutName0: 'Old', shortcutURL0: 'https://old.test', shortcutIcon0: 'oldicon' });

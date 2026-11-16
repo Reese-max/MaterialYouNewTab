@@ -7,14 +7,14 @@ html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegmen
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
     /* 卡片、搜尋列、名言列及展開面板：保留輕微層次，移除彩色光暈。 */
     & :is(.searchbar, .studyQuote,
-        #todoContainer, #scratchpadContainer, #pomodoroPanel,
+        #todoContainer, #pomodoroPanel,
         .myntProfilesContent, #myntAdaptivePanel .adaptiveContent,
         .icon-container, .dropdown-content) {
         box-shadow: 0 6px 18px rgba(255, 255, 255, 0.12);
     }
 
     /* 浮動工具、背景配色膠囊與版面編輯入口；同時覆蓋 hover 的較重陰影。 */
-    & :is(.todoListCont, .scratchpadCont, .pomodoroCont,
+    & :is(.todoListCont, .pomodoroCont,
         .wallpaperQuickBtn, #myntAdaptivePanel summary,
         #myntLayoutSaveDock, #serviceStatusPill) {
         box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1);
@@ -37,7 +37,6 @@ html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"
     /* 捷徑鍵徽章、工具提示與便籤內按鈕不需要浮起陰影。
        搜尋服務的 inset 選取框、輸入框的 focus 陰影與既有 outline 均保留。 */
     & .shortcuts a[data-shortcut]::after,
-    & .scratchpadCont .tooltip-text,
     & .workspaceLaunchBtn:hover {
         box-shadow: none;
     }

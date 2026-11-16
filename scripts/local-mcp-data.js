@@ -14,12 +14,12 @@ const LOCAL_SHORTCUT_ICON='data:image/svg+xml;charset=utf-8,'+encodeURIComponent
 const id = {type:'string',pattern:'^[A-Za-z][A-Za-z0-9_-]{0,79}$',maxLength:80};
 const revision = {type:'string',pattern:'^[a-f0-9]{64}$',maxLength:64};
 const settings = Object.freeze({preferredTheme:enumeration(['light','dark','system']),myntExamDailyVisible:bool,myntStudyQuoteEnabled:enumeration(['0','1'])});
-const readSettings = Object.freeze({...settings,...Object.fromEntries(['aiToolsCheckboxState','bookmarkGridCheckboxState','bookmarksCheckboxState','digitalCheckboxState','enableDarkModeCheckboxState','fahrenheitCheckboxState','googleAppsCheckboxState','pomodoroCheckboxState','scratchpadCheckboxState','shortcutsCheckboxState','todoListCheckboxState'].map(key=>[key,enumeration(['checked','unchecked'])]))});
+const readSettings = Object.freeze({...settings,...Object.fromEntries(['aiToolsCheckboxState','bookmarkGridCheckboxState','bookmarksCheckboxState','digitalCheckboxState','enableDarkModeCheckboxState','fahrenheitCheckboxState','googleAppsCheckboxState','pomodoroCheckboxState','shortcutsCheckboxState','todoListCheckboxState'].map(key=>[key,enumeration(['checked','unchecked'])]))});
 const event = object({id,name:str(80),date:{type:'string',pattern:'^\\d{4}-\\d{2}-\\d{2}$'},category:enumeration(['exam','anniversary','custom']),emoji:str(16),color:enumeration(['lavender','blue','green','peach','rose']),annual:bool},['id','name','date','category','emoji','color','annual']);
 const block = object({x:{type:'number',minimum:-1,maximum:1},y:{type:'number',minimum:-1,maximum:1},s:{type:'number',minimum:.5,maximum:2},w:{type:'number',minimum:.01,maximum:1},h:{type:'number',minimum:.01,maximum:1}},['x','y','s']);
-const blocks = Object.fromEntries(['clock','search','searchWith','aiTools','shortcuts','quote','countdowns','exam','pomodoro','scratchpad','homeWidgets','bookmarks','wallpaper','menu'].map(k=>[k,block]));
+const blocks = Object.fromEntries(['clock','search','searchWith','aiTools','shortcuts','quote','countdowns','exam','pomodoro','homeWidgets','bookmarks','wallpaper','menu'].map(k=>[k,block]));
 const layout = object({version:{const:2},snap:bool,locked:bool,blocks:object(blocks)},['version','snap','locked','blocks']);
-const workspaceWidgets=object(Object.fromEntries(['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox','scratchpadCheckbox'].map(key=>[key,bool])));
+const workspaceWidgets=object(Object.fromEntries(['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox'].map(key=>[key,bool])));
 const workspacePatch=object({name:str(30),widgets:workspaceWidgets,background:enumeration(['video','wallpaper','color']),focusMinutes:{type:'number',minimum:1,maximum:120},urls:{type:'array',maxItems:10,items:str(2048)}});
 const accessibilityPatch=object({reduceMotion:bool,highContrast:bool,fontScale:{type:'number',enum:[0.9,1,1.1,1.2],minimum:.9,maximum:1.2}});
 const definitions = [
@@ -34,8 +34,6 @@ const definitions = [
  ['mynt_events_mutate','Create/update countdown, toggle visibility, trash once or restore retained event.',{operation:enumeration(['upsert','trash','undo','visibility']),event,id,enabled:bool}],
  ['mynt_todos_get','Read bounded tasks with stable IDs. Malformed storage fails closed.',null],
  ['mynt_todos_mutate','Create, update, recoverably trash or restore a task.',{operation:enumeration(['create','update','trash','undo']),id,title:str(120),completed:bool,pinned:bool}],
- ['mynt_scratchpad_get','Read bounded scratchpad text.',null],
- ['mynt_scratchpad_update','Append text or replace one exact occurrence, with conflict checks.',{operation:enumeration(['append','replace']),text:str(2000),before:str(2000)}],
  ['mynt_layouts_get','Read validated wide/narrow named manual layouts.',null],
  ['mynt_layouts_mutate','Create, rename, activate, save, reorder, trash or recover a named layout.',{operation:enumeration(['create','rename','activate','save','move','trash','undo']),id,name:str(40),size:enumeration(['wide','narrow']),layout,direction:enumeration(['up','down'])}],
  ['mynt_settings_get','Read only explicitly safe preference whitelist.',null],
@@ -65,7 +63,7 @@ async function token(expected,context) {
  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(expected)));
  return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
 }
-const keys = {accessibility:['myntAccessibility'],events:['myntEventCountdownsV1','myntExamDate'],todos:['todoList','myntTodoRecoveryV1'],scratchpad:['myntScratchpadContent'],layouts:['myntLayoutProfiles','myntLayout'],settings:Object.keys(readSettings),workspaces:['myntWorkspacePresets','myntWorkspacePreset']};
+const keys = {accessibility:['myntAccessibility'],events:['myntEventCountdownsV1','myntExamDate'],todos:['todoList','myntTodoRecoveryV1'],layouts:['myntLayoutProfiles','myntLayout'],settings:Object.keys(readSettings),workspaces:['myntWorkspacePresets','myntWorkspacePreset']};
 function todoState(raw) {
  const data=parse(raw,{});if(!plain(data)||Object.keys(data).length>500)fail('invalid_storage','Invalid or excessive tasks preserved');
  const out={};for(const [key,value] of Object.entries(data)) {
@@ -82,7 +80,6 @@ function today(context) {const date=context.now?new Date(context.now):new Date()
 function state(domain,values,context) {
  if(domain==='events')return values[0]===null?core().migrateLegacy(values[1]):core().validate(parse(values[0]));
  if(domain==='todos'){todoRecovery(values[1]);return todoState(values[0]);}
- if(domain==='scratchpad') {const text=values[0]||'';if(text.length>100000)fail('data_too_large','Scratchpad exceeds safe read limit');return {text};}
  if(domain==='layouts')return values[0]===null?profiles().migrate(parse(values[1],null),normalizeLayout):profiles().validate(parse(values[0]),normalizeLayout);
  if(domain==='settings')return Object.fromEntries(keys.settings.map((key,i)=>{
   const raw=values[i];if(raw===null)return [key,null];
@@ -111,7 +108,7 @@ function workspaceState(raw,context,required) {
  for(const item of value) {
   if(!plain(item)||Object.keys(item).some(k=>!['id','name','widgets','background','focusMinutes','urls'].includes(k))||typeof item.id!=='string'||!/^[-A-Za-z0-9_]{1,64}$/.test(item.id))fail('invalid_storage','Invalid workspace fields preserved');
   // Presets saved before these widgets were removed still carry their flags; ignore them.
-  const widgets=plain(item.widgets)?Object.fromEntries(Object.entries(item.widgets).filter(([k])=>!['bongoCatCheckbox','motivationalQuotesCheckbox'].includes(k))):item.widgets;
+  const widgets=plain(item.widgets)?Object.fromEntries(Object.entries(item.widgets).filter(([k])=>!['bongoCatCheckbox','motivationalQuotesCheckbox','scratchpadCheckbox'].includes(k))):item.widgets;
   try{validate({name:item.name,widgets,background:item.background,focusMinutes:item.focusMinutes,urls:item.urls},workspacePatch);}catch{fail('invalid_storage','Invalid workspace fields preserved');}
   if(!item.name.trim()||item.name!==item.name.trim()||!Number.isInteger(item.focusMinutes)||item.urls.some(url=>!/^https?:\/\//i.test(url)))fail('invalid_storage','Invalid workspace values preserved');
  }
@@ -119,7 +116,7 @@ function workspaceState(raw,context,required) {
  const clean=normalize(value);if(clean.length!==value.length)fail('invalid_storage','Invalid workspace IDs preserved');return clean;
 }
 const familyMatrix = Object.freeze([
- ['events','read-write','upsert, visibility, recoverable trash/undo'],['todos','read-write','create, edit, complete, pin, recoverable trash and undo'],['scratchpad','read-write','append, unique exact replacement; clipboard/download browser-only'],['manual-layouts','read-write','wide/narrow profiles, revisions, recoverable trash/undo'],['settings','limited-write','explicit safe whitelist only'],['workspaces','read-write','create/update presets; bounded apply through UI adapter; never launch URLs'],['backup','metadata-only','export, file preview, restore and reset require browser UI'],['pomodoro','separate-adapter','timer and studio'],['music','separate-adapter','metadata/playback/settings and durable recoverable remove/restore; file picker and autoplay browser constraints'],['wallpapers','separate-adapter','gallery metadata/select/rename/cancel/recoverable remove; bundled hide/restore; file picker browser constraints'],['ambient-sound','separate-adapter','ambient playback and bounded volume through UI adapter'],['bookmarks','permission-gated-read-write','read, create, update, move and recoverable trash/restore through browser adapter'],['shortcuts','read-write','create/update and recoverable trash/undo; at least one active shortcut required by existing browser UI; opaque IDs change after edits; icons private'],['search','limited-write','search row and AI-mode visibility through preferences adapter; fixed Google default and bang metadata; navigation and voice permissions browser-only'],['ai-tools','limited-write','three built-in tools visibility/order through preferences adapter; external navigation browser-only'],['weather','browser-only','location and credentials never exposed'],['quotes','separate-adapter','study quote controls through UI adapter'],['daily-exam','browser-only','exam card'],['accessibility','read-write','reduced motion, contrast and text scale; no remote autoplay'],['google-apps','browser-only','launcher'],['clock','read-write','mode, 12-hour format and visibility through preferences adapter; hidden-at-start closure may require browser initialization'],['adaptive-background','separate-adapter','palette, contrast and opacity through UI adapter; no automatic positioning'],['language','action-required','supported locales read; change explicitly requires browser reload and may refetch quotes'],['permissions','browser-only','no remote grants'],['command-palette','browser-only','interactive command palette']
+ ['events','read-write','upsert, visibility, recoverable trash/undo'],['todos','read-write','create, edit, complete, pin, recoverable trash and undo'],['manual-layouts','read-write','wide/narrow profiles, revisions, recoverable trash/undo'],['settings','limited-write','explicit safe whitelist only'],['workspaces','read-write','create/update presets; bounded apply through UI adapter; never launch URLs'],['backup','metadata-only','export, file preview, restore and reset require browser UI'],['pomodoro','separate-adapter','timer and studio'],['music','separate-adapter','metadata/playback/settings and durable recoverable remove/restore; file picker and autoplay browser constraints'],['wallpapers','separate-adapter','gallery metadata/select/rename/cancel/recoverable remove; bundled hide/restore; file picker browser constraints'],['ambient-sound','separate-adapter','ambient playback and bounded volume through UI adapter'],['bookmarks','permission-gated-read-write','read, create, update, move and recoverable trash/restore through browser adapter'],['shortcuts','read-write','create/update and recoverable trash/undo; at least one active shortcut required by existing browser UI; opaque IDs change after edits; icons private'],['search','limited-write','search row and AI-mode visibility through preferences adapter; fixed Google default and bang metadata; navigation and voice permissions browser-only'],['ai-tools','limited-write','three built-in tools visibility/order through preferences adapter; external navigation browser-only'],['weather','browser-only','location and credentials never exposed'],['quotes','separate-adapter','study quote controls through UI adapter'],['daily-exam','browser-only','exam card'],['accessibility','read-write','reduced motion, contrast and text scale; no remote autoplay'],['google-apps','browser-only','launcher'],['clock','read-write','mode, 12-hour format and visibility through preferences adapter; hidden-at-start closure may require browser initialization'],['adaptive-background','separate-adapter','palette, contrast and opacity through UI adapter; no automatic positioning'],['language','action-required','supported locales read; change explicitly requires browser reload and may refetch quotes'],['permissions','browser-only','no remote grants'],['command-palette','browser-only','interactive command palette']
 ].map(([family,support,detail])=>Object.freeze({family,support,detail})));
 function shortcutItem(value) {
  if(!plain(value)||Object.keys(value).some(k=>!['name','url','icon'].includes(k))||typeof value.name!=='string'||value.name.length>200||typeof value.url!=='string'||!value.url||value.url.length>2048||typeof value.icon!=='string'||value.icon.length>150000)fail('invalid_storage','Invalid shortcut preserved');
@@ -248,12 +245,6 @@ async function execute(name,args={},context={}) {
     if(args.completed!==undefined)next[args.id].status=args.completed?'completed':'pending';if(args.pinned!==undefined)next[args.id].pinned=args.pinned;
    }
    next=todoState(JSON.stringify(next));writes.unshift({key:keys.todos[0],value:JSON.stringify(next)});
-  } else if(domain==='scratchpad') {
-   if(typeof args.text!=='string')fail('invalid_arguments','text required');
-   if(args.operation==='append') {if(!args.text.trim())fail('invalid_arguments','text cannot be empty');next.text+=(next.text&&!next.text.endsWith('\n')?'\n':'')+args.text;}
-   else if(args.operation==='replace') {if(!args.before||next.text.split(args.before).length!==2)fail('conflict','before must match exactly once');next.text=next.text.replace(args.before,()=>args.text);}
-   else fail('invalid_arguments','operation required');
-   if(next.text.length>100000)fail('data_too_large','Scratchpad limit reached');writes=[{key:keys.scratchpad[0],value:next.text}];
   } else if(domain==='layouts') {
    if(context.isLayoutEditing?.())fail('conflict','Finish the active layout draft first');
    let index=next.profiles.findIndex(p=>p.id===args.id),p=next.profiles[index];

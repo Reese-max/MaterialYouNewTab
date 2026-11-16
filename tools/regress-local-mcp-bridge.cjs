@@ -6,12 +6,12 @@ const {createEngine,createRecovery,HOST}=require('../scripts/local-mcp-bridge.js
  const storage={getItem:k=>map.get(k)??null,setItem(k,v){if(fail&&v==='new')throw Error('quota');map.set(k,v);},removeItem:k=>map.delete(k)};
  let chain=Promise.resolve(),release;
  const lock=fn=>{const result=chain.then(fn);chain=result.catch(()=>{});return result;};
- const adapter={tools:[{name:'read',readOnly:true},{name:'mynt_scratchpad_get',readOnly:true},{name:'write'}],async execute(name,args,context){if(name!=='write')return{ok:true,data:storage.getItem('test')};if(args.wait)await new Promise(r=>release=r);commits++;return context.commit({domain:'test',expected:[{key:'test',value:args.before}],writes:[{key:'test',value:'new'}],result:{ok:true,data:'new'}});}};
+ const adapter={tools:[{name:'read',readOnly:true},{name:'mynt_bookmarks_get',readOnly:true},{name:'write'}],async execute(name,args,context){if(name!=='write')return{ok:true,data:storage.getItem('test')};if(args.wait)await new Promise(r=>release=r);commits++;return context.commit({domain:'test',expected:[{key:'test',value:args.before}],writes:[{key:'test',value:'new'}],result:{ok:true,data:'new'}});}};
  const engine=createEngine({storage,adapters:[adapter],refresh:()=>refreshes++,canWrite:async()=>true,isBusy:()=>busy,lock});
  assert.equal((await engine.execute({tool:'read'})).error.code,'BRIDGE_DISABLED');
  engine.setAccess({enabled:true});
  assert.equal((await engine.execute({tool:'write',args:{before:'old'},requestId:'one'})).error.code,'WRITE_DISABLED');
- assert.equal((await engine.execute({tool:'mynt_scratchpad_get'})).error.code,'ACCESS_DISABLED');
+ assert.equal((await engine.execute({tool:'mynt_bookmarks_get'})).error.code,'ACCESS_DISABLED');
  engine.setAccess({enabled:true,writes:true});
  assert.equal((await engine.execute({tool:'write',args:{before:'old'}})).error.code,'REQUEST_ID_REQUIRED');
  let r=await engine.execute({tool:'write',args:{before:'old'},requestId:'one'});assert.equal(r.ok,true);assert.equal(refreshes,1);
@@ -40,10 +40,10 @@ const {createEngine,createRecovery,HOST}=require('../scripts/local-mcp-bridge.js
  // after the read scope/write scope/session has been revoked.
  let replayChain=Promise.resolve(),replayCalls=0,replayRelease;
  const replayLock=fn=>{const result=replayChain.then(fn);replayChain=result.catch(()=>{});return result;};
- const replayAdapter={tools:[{name:'mynt_scratchpad_update'},{name:'other_write'}],async execute(){replayCalls++;await new Promise(resolve=>replayRelease=resolve);return{ok:true,data:'synthetic private result'};}};
+ const replayAdapter={tools:[{name:'mynt_bookmarks_update'},{name:'other_write'}],async execute(){replayCalls++;await new Promise(resolve=>replayRelease=resolve);return{ok:true,data:'synthetic private result'};}};
  const replay=createEngine({storage,adapters:[replayAdapter],canWrite:async()=>true,lock:replayLock});
  replay.setAccess({enabled:true,writes:true,privateReads:true});
- const replayRequest={tool:'mynt_scratchpad_update',args:{text:'same'},requestId:'parallel-retry'};
+ const replayRequest={tool:'mynt_bookmarks_update',args:{text:'same'},requestId:'parallel-retry'};
  const original=replay.execute(replayRequest),retry=replay.execute({...replayRequest,args:{text:'same'}}),collision=replay.execute({...replayRequest,args:{text:'different'}}),otherTool=replay.execute({...replayRequest,tool:'other_write'});
  while(!replayRelease)await new Promise(resolve=>setImmediate(resolve));replayRelease();
  assert.equal((await original).ok,true);assert.equal((await retry).ok,true);assert.equal((await collision).error.code,'REQUEST_ID_CONFLICT');assert.equal((await otherTool).error.code,'REQUEST_ID_CONFLICT');assert.equal(replayCalls,1);

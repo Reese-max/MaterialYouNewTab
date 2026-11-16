@@ -32,7 +32,7 @@ test('real official SDK stdio initialize, tools/list and explicit offline call',
   try { await client.connect(transport); const listed = await client.listTools(); assert.equal(listed.tools.length, tools.length);
     assert.ok(listed.tools.filter(t => !t.annotations.readOnlyHint).every(t => t.inputSchema.required.includes('requestId')));
     const result = await client.callTool({ name: readTool(), arguments: {} }); assert.equal(result.isError, true); assert.equal(JSON.parse(result.content[0].text).error.code, 'BROKER_OFFLINE');
-    const missingId = await client.callTool({ name: 'mynt_scratchpad_update', arguments: { operation: 'append', text: 'test', expectedRevision: '0'.repeat(64) } }); assert.equal(JSON.parse(missingId.content[0].text).error.code, 'INVALID_ARGUMENTS');
+    const missingId = await client.callTool({ name: 'mynt_bookmarks_create', arguments: { parentId: '1', title: 'test', url: 'https://example.com/', expectedRevision: '0'.repeat(64) } }); assert.equal(JSON.parse(missingId.content[0].text).error.code, 'INVALID_ARGUMENTS');
     const invalid = await client.callTool({ name: 'arbitrary_js', arguments: {} }); assert.equal(JSON.parse(invalid.content[0].text).error.code, 'INVALID_ARGUMENTS');
   } finally { await client.close(); }
 });
@@ -73,22 +73,22 @@ test('private broker: offline, multiple clients, idempotency, timeout, native ho
     const pair = await Promise.all([raw('stable-key-1'), raw('stable-key-1')]); assert.ok(pair.every(r => r.ok)); assert.equal(requests, priorRequests + 1);
     assert.equal((await raw('stable-key-1')).ok, true); assert.equal(requests, priorRequests + 2);
     // Completed requests revisit browser scope rather than replay broker data.
-    const privateArgs = { expectedRevision: '0'.repeat(64), operation: 'append', text: 'private text', requestId: 'private-mutation-1' };
-    assert.equal((await raw('private-mutation-1', privateArgs, privateArgs.expectedRevision, 'mynt_scratchpad_update')).ok, true);
+    const privateArgs = { expectedRevision: '0'.repeat(64), parentId: '1', title: 'private text', url: 'https://example.com/', requestId: 'private-mutation-1' };
+    assert.equal((await raw('private-mutation-1', privateArgs, privateArgs.expectedRevision, 'mynt_bookmarks_create')).ok, true);
     mode = 'revoked';
-    assert.equal((await raw('private-mutation-1', privateArgs, privateArgs.expectedRevision, 'mynt_scratchpad_update')).error.code, 'ACCESS_DISABLED');
+    assert.equal((await raw('private-mutation-1', privateArgs, privateArgs.expectedRevision, 'mynt_bookmarks_create')).error.code, 'ACCESS_DISABLED');
     mode = 'reply';
     mode = 'ignore'; assert.equal((await callBrowser(readTool(), {})).error.code, 'TIMEOUT');
     const uncertainArgs = { ...privateArgs, requestId: 'uncertain-write-1' };
-    assert.equal((await raw('uncertain-write-1', uncertainArgs, uncertainArgs.expectedRevision, 'mynt_scratchpad_update')).error.code, 'TIMEOUT');
+    assert.equal((await raw('uncertain-write-1', uncertainArgs, uncertainArgs.expectedRevision, 'mynt_bookmarks_create')).error.code, 'TIMEOUT');
     const afterUncertain = requests;
     mode = 'reply';
-    assert.equal((await raw('uncertain-write-1', uncertainArgs, uncertainArgs.expectedRevision, 'mynt_scratchpad_update')).error.code, 'TIMEOUT');
+    assert.equal((await raw('uncertain-write-1', uncertainArgs, uncertainArgs.expectedRevision, 'mynt_bookmarks_create')).error.code, 'TIMEOUT');
     assert.equal(requests, afterUncertain);
-    assert.equal((await raw('uncertain-write-1', { ...uncertainArgs, text: 'different' }, uncertainArgs.expectedRevision, 'mynt_scratchpad_update')).error.code, 'REQUEST_ID_REUSED');
+    assert.equal((await raw('uncertain-write-1', { ...uncertainArgs, title: 'different' }, uncertainArgs.expectedRevision, 'mynt_bookmarks_create')).error.code, 'REQUEST_ID_REUSED');
     mode = 'reply'; assert.equal((await callBrowser(readTool(), {})).ok, true);
     native.kill(); await new Promise(resolve => native.once('exit', resolve));
-    assert.equal((await raw('private-mutation-1', privateArgs, privateArgs.expectedRevision, 'mynt_scratchpad_update')).error.code, 'BRIDGE_OFFLINE');
+    assert.equal((await raw('private-mutation-1', privateArgs, privateArgs.expectedRevision, 'mynt_bookmarks_create')).error.code, 'BRIDGE_OFFLINE');
   } finally { native?.kill(); await broker.close(); }
 });
 

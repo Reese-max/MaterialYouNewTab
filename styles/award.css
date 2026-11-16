@@ -503,68 +503,13 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 }
 
 /* ==========================================================================
-   3. 便籤面板 (#scratchpadContainer)
-   ========================================================================== */
-
-/* 淺色模式：不透明度至少 0.94，防止底下首頁文字透出 */
-#scratchpadContainer,
-.scratchpadContainer {
-	background: var(--award-surface-light-opaque);
-	color: var(--award-surface-light-text);
-	border: 1px solid var(--award-surface-light-border);
-	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15);
-	backdrop-filter: blur(16px);
-}
-
-#scratchpadContainer textarea,
-#scratchpadContainer input,
-#scratchpadContainer select {
-	background: rgba(255, 255, 255, 0.92);
-	color: inherit;
-	border: 1px solid rgba(0, 0, 0, 0.15);
-}
-
-/* 黑色主題：深色表面、淺色文字、不透出底下內容 */
-html.black-theme #scratchpadContainer,
-html.black-theme .scratchpadContainer {
-	background: var(--award-surface-dark-opaque);
-	color: var(--award-surface-dark-text);
-	border: 1px solid var(--award-surface-dark-border);
-	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
-	backdrop-filter: blur(16px);
-}
-
-/* 黑色主題便籤編輯區與輸入元件 */
-html.black-theme #scratchpadContainer textarea,
-html.black-theme #scratchpadContainer input,
-html.black-theme #scratchpadContainer select,
-html.black-theme #scratchpadContainer [contenteditable="true"] {
-	background-color: rgba(0, 0, 0, 0.35);
-	color: var(--award-surface-dark-text);
-	border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-/* 黑色主題便籤操作按鈕 */
-html.black-theme #scratchpadContainer button {
-	background-color: rgba(255, 255, 255, 0.12);
-	color: var(--award-surface-dark-text);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-html.black-theme #scratchpadContainer button:hover {
-	background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* ==========================================================================
    4. 動畫偏好設定（prefers-reduced-motion）
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
 	dialog.myntAppDialog,
 	dialog.myntDialog,
 	#pomodoroPanel,
-	.pomodoro-panel,
-	#scratchpadContainer,
-	.scratchpadContainer {
+	.pomodoro-panel {
 		transition: none;
 		animation: none;
 	}
@@ -1015,7 +960,6 @@ body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
    大型焦點卡、搜尋區與捷徑列不套用此規則。 */
 body.mynt-layout-editing .myntLayoutOverlay:is(
     [data-block="pomodoro"],
-    [data-block="scratchpad"],
     [data-block="bookmarks"],
     [data-block="wallpaper"],
     [data-block="menu"]
@@ -1666,7 +1610,6 @@ body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
    把手再離標籤 6px（間距 ≥4px），區塊下方不再伸出任何控制項。 */
 body.mynt-layout-editing .myntLayoutOverlay:is(
     [data-block="pomodoro"],
-    [data-block="scratchpad"],
     [data-block="bookmarks"]
 ) > .myntLayoutResize {
     top: auto;
@@ -3538,7 +3481,6 @@ html.myntReducedMotion body :is(#examDaily #examDailyChip, #studyQuote, #aiTools
    pointer-events:none，佔位保留（皆為 position:fixed，不影響版面），
    面板關閉後自動恢復；已展開的 details[open] 不命中，照常顯示。 */
 body:not(.mynt-layout-editing):has(#todoContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
-body:not(.mynt-layout-editing):has(#scratchpadContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
 body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]) {
     visibility: hidden;
     pointer-events: none;
@@ -3562,7 +3504,7 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
 
     /* 三種面板以行內 display 切換；預留左側 20px、面板 372px 與間距 24px。
        保留原本的置中位置，空間不足才縮欄，最小寬度為 480px。 */
-    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])):has(:is(#todoContainer, #scratchpadContainer, #pomodoroPanel):not([style*="display: none"])) {
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])):has(:is(#todoContainer, #pomodoroPanel):not([style*="display: none"])) {
         --workspace-left: max(416px, calc((100vw - min(720px, 60vw)) / 2));
         --workspace-width: max(480px, min(720px, 60vw, calc(100vw - var(--workspace-left) - 24px)));
     }
@@ -3643,8 +3585,8 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
 /* ==== award-fix-home-polish.css ==== */
 /* 第 5 輪：首頁工具列圖示、浮動鈕分組、焦點卡排版細節 */
 
-/* ===== 左上三顆工具鈕：統一外形 =====
-   待辦 .todoListCont、便籤 .scratchpadCont、番茄鐘 .pomodoroCont
+/* ===== 左上工具鈕：統一外形 =====
+   待辦 .todoListCont、番茄鐘 .pomodoroCont
    原本同為 52×52 但造型不一：便籤是圓形半透明浮鈕，
    另兩顆是無底圖示（待辦圖示甚至沒設 fill，顯示成純黑）。
    統一為 44×44px 圓角方塊浮鈕，沿用便籤的半透明底板配方
@@ -3653,7 +3595,7 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
    定位（top／inset-inline-start／margin）不動；
    三鈕頂緣原本就對齊在 40px（--gap 30 + 10），
    44px 高度下底緣仍同線（84px）。 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+:is(.todoListCont, .pomodoroCont) {
     width: 44px;
     height: 44px;
     border-radius: 14px;
@@ -3665,7 +3607,7 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
-:is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+:is(.todoListCont, .pomodoroCont) .dot-icon {
     width: 24px;
     height: 24px;
     fill: var(--darkColor-blue);
@@ -3674,31 +3616,31 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
 
 /* hover／active：三鈕一致的按壓回饋；
    順便壓掉番茄鐘原本的內層圖示放大，避免它獨自膨脹一圈。 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover {
+:is(.todoListCont, .pomodoroCont):hover {
     transform: scale(1.06);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+:is(.todoListCont, .pomodoroCont):hover .dot-icon {
     transform: none;
 }
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):active {
+:is(.todoListCont, .pomodoroCont):active {
     transform: scale(0.96);
 }
 
 /* 鍵盤焦點框 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):focus-visible {
+:is(.todoListCont, .pomodoroCont):focus-visible {
     outline: 2px solid var(--darkColor-blue);
     outline-offset: 2px;
 }
 
 /* 黑色主題（html.black-theme）：沿用便籤原本的深色浮鈕配色，
    把待辦與番茄鐘一併補齊，鐘面刻度描邊同步成淺藍。 */
-html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+html.black-theme :is(.todoListCont, .pomodoroCont) {
     background: rgba(30, 31, 35, 0.75);
     border-color: rgba(255, 255, 255, 0.1);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
-html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+html.black-theme :is(.todoListCont, .pomodoroCont) .dot-icon {
     fill: #a8c7fa;
 }
 html.black-theme .pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
@@ -3707,18 +3649,18 @@ html.black-theme .pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
 
 /* 尊重減少動態：保留顏色／陰影回饋，去掉縮放位移 */
 @media (prefers-reduced-motion: reduce) {
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+    :is(.todoListCont, .pomodoroCont) {
         transition: none;
     }
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active),
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+    :is(.todoListCont, .pomodoroCont):is(:hover, :active),
+    :is(.todoListCont, .pomodoroCont):hover .dot-icon {
         transform: none;
     }
 }
-html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+html.myntReducedMotion :is(.todoListCont, .pomodoroCont) {
     transition: none;
 }
-html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active) {
+html.myntReducedMotion :is(.todoListCont, .pomodoroCont):is(:hover, :active) {
     transform: none;
 }
 
@@ -3775,19 +3717,6 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
 	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
 ) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visible {
 	outline-color: #f28b82;
-}
-
-/* ==========================================================================
-   3. 便籤標題不換行
-   評審：窄面板時「便籤」被擠成直排「便／籤」。
-   標題設 nowrap + flex-shrink:0，縮放空間全讓給右側
-   .scratchpadHeaderActions（本身 flex-wrap:wrap，會自動折行）；
-   父層的 space-between + align-items:center 不變，維持與工具列對齊。
-   ========================================================================== */
-.scratchpadHeader h2,
-#scratchpadHeading {
-	white-space: nowrap;
-	flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -4345,7 +4274,7 @@ html.black-theme #menuCont .themeSegment {
 /* 第 13 輪：首頁浮動工具共用表面；座標與縮放仍交給既有版面。
    使用不透明主題淺底與主題文字色，避免桌布透色及深色反相後的低對比。
    :root 提高具體性，覆蓋黑色主題原本的粗框，保留高對比模式的系統色。 */
-:root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+:root body :is(#pomodoroCont, #bookmarkButton,
     #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
     #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
     --mynt-fab-ink: var(--textColorDark-blue);
@@ -4452,20 +4381,20 @@ html.black-theme #menuCont .themeSegment {
    後載入的 award-fix-dark-shadows.css，避免設定粗環與不一致陰影回來。 */
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
-    & body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    & body :is(#pomodoroCont, #bookmarkButton,
         #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
         #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
         &, &:hover { box-shadow: 0 2px 6px rgb(255 255 255 / 0.1); }
     }
 }
 
-html.myntReducedMotion body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+html.myntReducedMotion body :is(#pomodoroCont, #bookmarkButton,
     #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
     #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
     transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-    :root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    :root body :is(#pomodoroCont, #bookmarkButton,
         #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
         #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
         transition: none;
@@ -4481,14 +4410,14 @@ html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegmen
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
     /* 卡片、搜尋列、名言列及展開面板：保留輕微層次，移除彩色光暈。 */
     & :is(.searchbar, .studyQuote,
-        #todoContainer, #scratchpadContainer, #pomodoroPanel,
+        #todoContainer, #pomodoroPanel,
         .myntProfilesContent, #myntAdaptivePanel .adaptiveContent,
         .icon-container, .dropdown-content) {
         box-shadow: 0 6px 18px rgba(255, 255, 255, 0.12);
     }
 
     /* 浮動工具、背景配色膠囊與版面編輯入口；同時覆蓋 hover 的較重陰影。 */
-    & :is(.todoListCont, .scratchpadCont, .pomodoroCont,
+    & :is(.todoListCont, .pomodoroCont,
         .wallpaperQuickBtn, #myntAdaptivePanel summary,
         #myntLayoutSaveDock, #serviceStatusPill) {
         box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1);
@@ -4511,7 +4440,6 @@ html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"
     /* 捷徑鍵徽章、工具提示與便籤內按鈕不需要浮起陰影。
        搜尋服務的 inset 選取框、輸入框的 focus 陰影與既有 outline 均保留。 */
     & .shortcuts a[data-shortcut]::after,
-    & .scratchpadCont .tooltip-text,
     & .workspaceLaunchBtn:hover {
         box-shadow: none;
     }

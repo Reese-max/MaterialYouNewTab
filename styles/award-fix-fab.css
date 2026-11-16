@@ -111,7 +111,7 @@
 /* 第 13 輪：首頁浮動工具共用表面；座標與縮放仍交給既有版面。
    使用不透明主題淺底與主題文字色，避免桌布透色及深色反相後的低對比。
    :root 提高具體性，覆蓋黑色主題原本的粗框，保留高對比模式的系統色。 */
-:root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+:root body :is(#pomodoroCont, #bookmarkButton,
     #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
     #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
     --mynt-fab-ink: var(--textColorDark-blue);
@@ -218,20 +218,20 @@
    後載入的 award-fix-dark-shadows.css，避免設定粗環與不一致陰影回來。 */
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
-    & body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    & body :is(#pomodoroCont, #bookmarkButton,
         #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
         #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
         &, &:hover { box-shadow: 0 2px 6px rgb(255 255 255 / 0.1); }
     }
 }
 
-html.myntReducedMotion body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+html.myntReducedMotion body :is(#pomodoroCont, #bookmarkButton,
     #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
     #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
     transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-    :root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    :root body :is(#pomodoroCont, #bookmarkButton,
         #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
         #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
         transition: none;

@@ -7,7 +7,6 @@
         ["web-search", "搜尋框可輸入，Google 搜尋與 Search Bang（例如 !yt）可觸發。"],
         ["web-control", "控制中心可以開啟，工作模式、隱私與無障礙區塊可見。"],
         ["web-todo", "待辦清單可新增、完成及刪除任務。"],
-        ["web-scratchpad", "Scratchpad 可輸入、複製、轉任務並匯出 Markdown。"],
         ["web-workspace", "Work／Study／Relax 工作模式可以切換，顯示的小工具符合預期。"],
         ["web-pomodoro", "番茄鐘可以啟動、暫停與重設；環境音按鈕可操作。"],
         ["web-keyboard", "Ctrl/⌘+K、? 與 Alt+1～9 等快捷鍵沒有互相衝突。"],
@@ -113,7 +112,6 @@
         );
         addAutoCheck(list, "控制中心存在", Boolean(snapshot?.hasControlCenter), pending);
         addAutoCheck(list, "待辦小工具存在", Boolean(snapshot?.hasTodo), pending);
-        addAutoCheck(list, "Scratchpad 存在", Boolean(snapshot?.hasScratchpad), pending);
         addAutoCheck(
             list,
             "沒有致命 JavaScript 錯誤",

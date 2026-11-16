@@ -37,9 +37,6 @@
             display: 'flex', caches: [cache('pomodoroDisplayStatus')], panelSelectors: ['#pomodoroPanel']
         }),
         entry('homeWidgets', '首頁今日小工具', 'Homepage Today widgets', 'myntHomeWidgetsVisible', 'boolean', true, null, ['#myntHomeWidgets'], { newPreference: true }),
-        entry('scratchpad', '隨手筆記', 'Scratchpad', 'scratchpadCheckboxState', 'checked', true, 'scratchpadCheckbox', ['#scratchpadCont'], {
-            display: 'inline-flex', panelSelectors: ['#scratchpadContainer']
-        }),
         entry('studyQuote', '讀書鼓勵', 'Study encouragement', 'myntStudyQuoteEnabled', 'string01', true, 'studyQuoteCheckbox', ['#studyQuote'], {
             panelSelectors: ['#studyQuoteToast']
         }),

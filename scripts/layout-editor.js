@@ -13,14 +13,13 @@ const MYNT_LAYOUT_BLOCKS = [
     ["countdowns", "#eventCountdownCard", "layoutBlockCountdowns", "Countdowns"],
     ["exam", "#examDaily", "layoutBlockExam", "Daily exam"],
     ["pomodoro", "#pomodoroCont", "layoutBlockPomodoro", "Pomodoro"],
-    ["scratchpad", "#scratchpadCont", "layoutBlockScratchpad", "Scratchpad"],
     ["homeWidgets", "#myntHomeWidgets", "layoutBlockHomeWidgets", "Today widgets"],
     ["bookmarks", "#bookmarkButton", "layoutBlockBookmarks", "Bookmarks"],
     ["wallpaper", "#wallpaperQuickActions", "layoutBlockWallpaper", "Wallpaper"],
     ["menu", "#menuButton", "layoutBlockMenu", "Settings"]
 ];
 const MYNT_REMOVED_LAYOUT_IDS = new Set(globalThis.MYNT_REMOVED_COMPONENT_IDS || []);
-const MYNT_ICON_LAYOUT_IDS = new Set(["pomodoro", "scratchpad", "bookmarks", "wallpaper", "menu"]);
+const MYNT_ICON_LAYOUT_IDS = new Set(["pomodoro", "bookmarks", "wallpaper", "menu"]);
 const MYNT_LAYOUT_LIMITS = { minScale: 0.5, maxScale: 2, grid: 16, snapDistance: 8 };
 
 function myntNormalizeLayout(raw) {
@@ -555,7 +554,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             delete layout.blocks[selected]; applyBlock(selected); placeOverlays(); recordChange();
         });
         const reset = button("myntLayoutReset", t("layoutResetAll", "Reset all"), async () => {
-            const message = t("layoutResetDraftConfirm", "Reset all block positions? You can undo or cancel before saving. Notes and tasks will not be deleted.");
+            const message = t("layoutResetDraftConfirm", "Reset all block positions? You can undo or cancel before saving. Tasks will not be deleted.");
             if (!(window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message))) return;
             if (!editing) return;
             layout.blocks = {}; applyAll(); recordChange();

@@ -25,14 +25,15 @@ const between = (file, start, end) => {
 function tab(localStorage, ids = []) {
     const document = fixture.createDocument(), listeners = new Map();
     for (const id of ids) {
-        const node = document.createElement(id === 'scratchpadInput' ? 'textarea' : 'div');
+        const node = document.createElement('div');
         node.id = id; document.body.appendChild(node);
     }
     const c = vm.createContext({ document, localStorage, console, translations: fixture.loadTranslations(),
         addEventListener(type, fn) { (listeners.get(type) || listeners.set(type, []).get(type)).push(fn); },
         CustomEvent: class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } },
         Event: class { constructor(type) { this.type = type; } }, Node: { TEXT_NODE: 3 },
-        setTimeout: () => 1, clearTimeout() {}, applyLanguage() {},
+        setTimeout: () => 1, clearTimeout() {}, applyLanguage() {}, drafts: [],
+        myntDialog: { prompt(message, value) { c.drafts.push(String(value)); return Promise.resolve(null); } },
         loadCheckboxState() {}, saveCheckboxState() {}, loadDisplayStatus() {}, saveDisplayStatus() {} });
     c.window = c;
     vm.runInContext(read('scripts/storage-sync.js'), c);
@@ -40,28 +41,6 @@ function tab(localStorage, ids = []) {
         run: code => vm.runInContext(code, c),
         storage(key) { for (const fn of listeners.get('storage') || []) fn({ key, storageArea: localStorage }); } };
 }
-function scratch(localStorage) {
-    const h = tab(localStorage, ['scratchpadInput', 'scratchpadCharCount']);
-    h.run(read('scripts/scratchpad.js')); h.document.emit('DOMContentLoaded');
-    return h;
-}
-// notes-ai#1: delayed events, normal refresh, active drafts, keyboard writes, clear.
-test('notes-ai#1', () => {
-    const storage = fixture.createStorage({ myntScratchpadContent: 'base' });
-    const a = scratch(storage), b = scratch(storage);
-    a.el('scratchpadInput').value = 'base\nA'; a.el('scratchpadInput').emit('input');
-    b.el('scratchpadInput').value = 'base\nB'; b.el('scratchpadInput').emit('input');
-    const text = storage.getItem('myntScratchpadContent');
-    assert(text.includes('base\nA') && text.includes('base\nB') && text.includes('衝突副本'));
-    a.storage('myntScratchpadContent'); assert.equal(a.el('scratchpadInput').value, text);
-    a.el('scratchpadInput').value = 'unsaved draft'; a.storage('myntScratchpadContent');
-    assert.equal(a.el('scratchpadInput').value, 'unsaved draft');
-    storage.setItem('myntScratchpadContent', 'remote keyboard');
-    a.el('scratchpadInput').selectionStart = 0; a.el('scratchpadInput').selectionEnd = 0;
-    a.el('scratchpadInput').emit('keydown', { key: 'Tab' });
-    assert(storage.getItem('myntScratchpadContent').includes('remote keyboard'));
-    assert(storage.getItem('myntScratchpadContent').includes('unsaved draft'));
-});
 // notes-ai#2: no homepage-widget subscription; delayed events must merge writes.
 test('notes-ai#2', () => {
     const storage = fixture.createStorage({ todoLastUpdateDate: new Date().toLocaleDateString(),
@@ -91,7 +70,7 @@ test('search-nav#1', () => {
     }
     field.value = 'https://draft.example/'; field.emit('blur');
     assert.equal(h.storage.getItem('shortcutURL1'), 'https://gamma.example/');
-    assert(h.storage.getItem('myntScratchpadContent').includes('https://draft.example/'));
+    assert(h.drafts.some(draft => draft.includes('https://draft.example/')), 'The rejected draft is offered for copying');
     assert.equal(h.entries().length, 2); assert.equal(h.alerts.length, 1);
     field.value = 'https://detached.example/'; field.emit('blur');
     assert.equal(h.storage.getItem('shortcutURL1'), 'https://gamma.example/');
@@ -119,7 +98,6 @@ test('notes-ai#5', () => {
     assert.equal(JSON.parse(storage.getItem('myntWorkspacePresets')).length, 2);
     assert(JSON.parse(storage.getItem('myntWorkspacePresets')).some(item => item.id === 'other'));
     assert.equal(h.el('workspaceNameInput').value, 'My draft'); assert.equal(h.el('workspaceEditorForm').hidden, false);
-    assert(storage.getItem('myntScratchpadContent').includes('My draft'));
-    assert(h.el('workspaceNameInput').validationMessage);
+    assert(h.c.drafts.some(draft => draft.includes('My draft')), 'The rejected draft is offered for copying');
 });
 if (!process.exitCode) console.log('B3_CROSS_TAB_OK');

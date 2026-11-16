@@ -9,7 +9,6 @@ This is a staged implementation, not an installed or fully verified desktop inte
 | Dashboard | Task and event counts, without note/task text | Interactive views |
 | Important dates | Read, create/update stable-ID events, annual dates, visibility, recoverable trash/undo | Interactive form workflow |
 | Tasks | Read, create, title/status/pin changes, recoverable single-item trash/undo with revision checks | Ordinary task UI |
-| Scratchpad | Separately enabled read, append and unique exact replacement | Clipboard, Markdown download, clear |
 | Manual layouts | Read wide/narrow profiles; create, rename, activate, save, reorder, recoverable trash/undo | Dragging, snap guides, file import/export and editor drafts |
 | Workspaces | Read, create/update presets; guarded application of visibility, future timer settings and background mode, without URLs or video autoplay | Opening preset URLs remains browser-only |
 | Settings | Read explicit safe toggles; theme mode, exam/study-quote visibility, local palette/custom hex color, clock format/visibility, search-control visibility, three built-in AI tools order/visibility | Language changes require browser reload/refetch; arbitrary setting keys, credentials, permissions and external navigation are excluded |
@@ -29,7 +28,7 @@ An inventory entry is not an implementation of its operations. `ACTION_REQUIRED`
 
 ## Safety and concurrency
 
-- Access is off by default, session-only, with separate write and scratchpad/bookmark opt-ins. Closing the page or disconnecting revokes it. Backups do not grant access.
+- Access is off by default, session-only, with separate write and bookmark opt-ins. Closing the page or disconnecting revokes it. Backups do not grant access.
 - Several CLI clients may share the broker. Their browser operations are serialized through Web Locks; stable request IDs and current revision tokens are required for mutations.
 - **MCP writes require exactly one open MYNT new-tab document**, no open dialog/editor or focused text input. Multiple ordinary MYNT tabs remain usable, but MCP writes are refused. This is not a claim of concurrent cross-tab atomic editing.
 - Browser document enumeration requires the supported runtime.getContexts API. If unavailable, writes fail closed. The count is an admission check, not a cross-process transaction over newly opened browser documents.
@@ -78,7 +77,7 @@ All existing product families are inventoried, but not every UI action is remote
 
 ## Final extension of the checkpoint
 
-The 55-tool checkpoint was extended by ten exact preference tools and two music-library tools, for 67 descriptors at that checkpoint. Two component-management tools brought the catalog to 69; removing the habit and daily-focus tools (2026-11-17) leaves 65. Existing event/task/gallery methods gained additional reversible actions without inflating the tool count. New isolated tests cover malformed hidden-wallpaper preferences, playback-read lock cleanup, tombstones surviving reload/full backup, quota accounting and duplicate-ID protection, and preference/UI defaults. This is functional source coverage, not a claim that all controls have passed a live client/extension test.
+The 55-tool checkpoint was extended by ten exact preference tools and two music-library tools, for 67 descriptors at that checkpoint. Two component-management tools brought the catalog to 69; removing the habit, daily-focus and scratchpad tools (2026-11-17) leaves 63. Existing event/task/gallery methods gained additional reversible actions without inflating the tool count. New isolated tests cover malformed hidden-wallpaper preferences, playback-read lock cleanup, tombstones surviving reload/full backup, quota accounting and duplicate-ID protection, and preference/UI defaults. This is functional source coverage, not a claim that all controls have passed a live client/extension test.
 
 ## Unified home component visibility
 

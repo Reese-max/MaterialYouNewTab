@@ -311,7 +311,7 @@ test('Narrow editor entry keeps a 44px second-row control and yields to open uti
     const css = fs.readFileSync(path.join(root, 'styles/manual-editor-controls.css'), 'utf8');
     assert.match(css, /@media \(max-width: 480px\)\s*\{\s*#myntLayoutSaveDock\s*\{[^}]*top: 84px;[^}]*left: 16px;[^}]*transform: none;/);
     assert.match(css, /#myntLayoutSaveDock #myntLayoutSaveStatus\s*\{[^}]*clip-path: inset\(50%\)/);
-    assert.match(css, /body:has\(#pomodoroCont\[aria-expanded="true"\], #scratchpadCont\[aria-expanded="true"\]\) #myntLayoutSaveDock\s*\{ visibility: hidden; pointer-events: none;/);
+    assert.match(css, /body:has\(#pomodoroCont\[aria-expanded="true"\]\) #myntLayoutSaveDock\s*\{ visibility: hidden; pointer-events: none;/);
     assert.match(css, /#myntLayoutSaveDock:has\(#myntDraftRecovery\)\s*\{[^}]*background: rgba\(246,249,255,.98\);[^}]*overflow-y: auto/);
     assert.match(css, /#myntLayoutSaveDock #myntLayoutEdit\s*\{\s*min-height: 44px/);
 });

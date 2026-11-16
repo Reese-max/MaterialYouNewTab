@@ -70,7 +70,6 @@
     <script defer src="scripts/google-apps.js"></script>
     <script defer src="scripts/voice-search.js"></script>
     <script defer src="scripts/backup-restore.js"></script>
-    <script defer src="scripts/scratchpad.js"></script>
     <script defer src="scripts/ambient-sound.js"></script>
     <script defer src="scripts/component-visibility-core.js"></script>
     <script defer src="scripts/component-manager.js"></script>
@@ -135,30 +134,6 @@
         </ul>
     </div>
 
-
-    <!-- Scratchpad Widget -->
-    <button class="scratchpadCont" id="scratchpadCont" type="button" aria-controls="scratchpadContainer" aria-expanded="false" style="display: none;">
-        <svg id="scratchpadIcon" xmlns="http://www.w3.org/2000/svg" class="dot-icon" width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-        </svg>
-        <span class="tooltip-text" id="scratchpadHover">Scratchpad</span>
-    </button>
-
-    <div id="scratchpadContainer" class="scratchpad-container" style="display: none;">
-        <div class="scratchpadHeader">
-            <h2 id="scratchpadHeading">Scratchpad</h2>
-            <div class="scratchpadHeaderActions">
-                <button id="scratchpadToTaskBtn" class="scratchpadActionBtn" type="button" title="Convert to Task">➔ Task</button>
-                <button id="scratchpadCopyBtn" class="scratchpadActionBtn" type="button" title="Copy all">Copy</button>
-                <button id="scratchpadDownloadBtn" class="scratchpadActionBtn" type="button" title="Download .md">↓ .md</button>
-                <button id="scratchpadClearBtn" class="scratchpadActionBtn scratchpadClearBtn" type="button" title="Clear">×</button>
-            </div>
-        </div>
-        <textarea id="scratchpadInput" placeholder="Quick notes, ideas, drafts..." rows="8"></textarea>
-        <div class="scratchpadFooter">
-            <span id="scratchpadCharCount">0 w · 0 c</span>
-        </div>
-    </div>
 
     <!-- Pomodoro Timer Widget -->
     <button class="pomodoroCont" id="pomodoroCont" type="button" aria-controls="pomodoroPanel" aria-expanded="false" style="display: none;">
@@ -1380,16 +1355,6 @@
                                         <button id="eventCountdownManage" class="settingsActionBtn" type="button">管理倒數</button>
                                     </div>
 
-                                                                        <div class="ttcont">
-                                        <div class="texts">
-                                            <div class="bigText" id="scratchpadText">Scratchpad</div>
-                                            <div class="infoText" id="scratchpadInfo">Quick notes and task drafting</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="scratchpadCheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
 
 
                                 </div>
@@ -1968,7 +1933,6 @@
         <div class="shortcutsHelpGrid">
             <div class="shortcutItem"><kbd>/</kbd><span id="shortcutSearchHelp">Focus search bar</span></div>
             <div class="shortcutItem"><kbd>Ctrl</kbd> + <kbd>K</kbd><span id="shortcutCmdHelp">Command Palette</span></div>
-            <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>S</kbd><span id="shortcutScratchpadHelp">Toggle Scratchpad</span></div>
             <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>P</kbd><span id="shortcutPomodoroHelp">Open Pomodoro timer</span></div>
             <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>W</kbd><span id="shortcutWallpaperHelp">Next wallpaper</span></div>
             <div class="shortcutItem"><kbd>?</kbd><span id="shortcutHelpHelp">Shortcuts Guide</span></div>
@@ -2013,7 +1977,6 @@
                         <label><input type="checkbox" data-workspace-widget="pomodoroCheckbox"><span id="workspaceWidgetPomodoro">Pomodoro</span></label>
                         <label><input type="checkbox" data-workspace-widget="aiToolsCheckbox"><span id="workspaceWidgetAi">AI tools</span></label>
                         <label><input type="checkbox" data-workspace-widget="googleAppsCheckbox"><span id="workspaceWidgetGoogle">Google Apps</span></label>
-                        <label><input type="checkbox" data-workspace-widget="scratchpadCheckbox"><span id="workspaceWidgetScratchpad">Scratchpad</span></label>
                     </fieldset>
                     <div class="workspaceEditorFields">
                         <label class="workspaceEditorField" for="workspaceBackgroundSelect">

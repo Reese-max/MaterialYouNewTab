@@ -6,7 +6,7 @@
 
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
-    "aiToolsCheckbox", "googleAppsCheckbox", "scratchpadCheckbox"
+    "aiToolsCheckbox", "googleAppsCheckbox"
 ];
 
 function myntNormalizeWorkspaces(raw, defaults = []) {
@@ -520,8 +520,7 @@ if (typeof document !== "undefined") {
             if (localStorage.getItem(KEYS.workspaces) !== workspaceEditorBaseline) {
                 window.MyntStorageSync.preserve(JSON.stringify(draft, null, 2));
                 window.myntDashboard.reloadWorkspaces();
-                nameInput.setCustomValidity(t("storageConflictSaved", "Another tab changed this data. Your draft was kept in Scratchpad; the latest data has been loaded."));
-                return nameInput.reportValidity();
+                return;
             }
             const index = workspaces.findIndex(item => item.id === oldId);
             if (index === -1) workspaces.push(preset);
@@ -695,7 +694,7 @@ if (typeof document !== "undefined") {
         });
 
         // Commands that would reopen or write into features removed from the homepage (scripts/removed-features.js).
-        const REMOVED_COMMANDS = { todo: ["todo", "quick-create-task"], scratchpad: ["scratchpad", "scratchpadCopy"], exam: ["exam-today"] };
+        const REMOVED_COMMANDS = { todo: ["todo", "quick-create-task"], exam: ["exam-today"] };
         const hiddenCommandIds = new Set((window.MYNT_REMOVED_COMPONENT_IDS || []).flatMap(id => REMOVED_COMMANDS[id] || []));
 
         function ensureWidget(checkboxId, triggerId, visibleSelector) {
@@ -725,7 +724,6 @@ if (typeof document !== "undefined") {
             { id: "pomodoro", label: "commandPomodoro", info: "commandPomodoroInfo", run: () => ensureWidget("pomodoroCheckbox", "pomodoroCont", "#pomodoroPanel") },
             { id: "bookmarks", label: "commandBookmarks", info: "commandBookmarksInfo", run: () => document.getElementById("bookmarkButton").click() },
             { id: "aiTools", label: "commandAiTools", info: "commandAiToolsInfo", run: () => ensureWidget("aiToolsCheckbox", "aiToolsIcon", "#toolsCont") },
-            { id: "scratchpad", label: "commandScratchpad", info: "commandScratchpadInfo", run: () => ensureWidget("scratchpadCheckbox", "scratchpadCont", "#scratchpadContainer") },
                         { id: "ambientAudio", label: "commandAmbientAudio", info: "commandAmbientAudioInfo", run: () => globalThis.myntAmbientAudio?.toggle() },
             { id: "ambientRain", label: "commandAmbientRain", info: "commandAmbientRainInfo", run: () => globalThis.myntAmbientAudio?.play("rain") },
             { id: "ambientOcean", label: "commandAmbientOcean", info: "commandAmbientOceanInfo", run: () => globalThis.myntAmbientAudio?.play("ocean") },
@@ -738,7 +736,6 @@ if (typeof document !== "undefined") {
             { id: "ambientNight", label: "commandAmbientNight", info: "commandAmbientNightInfo", run: () => globalThis.myntAmbientAudio?.play("night") },
             { id: "ambientPink", label: "commandAmbientPink", info: "commandAmbientPinkInfo", run: () => globalThis.myntAmbientAudio?.play("pink") },
             { id: "ambientBrown", label: "commandAmbientBrown", info: "commandAmbientBrownInfo", run: () => globalThis.myntAmbientAudio?.play("brown") },
-            { id: "scratchpadCopy", label: "commandScratchpadCopy", info: "commandScratchpadCopyInfo", run: () => document.getElementById("scratchpadCopyBtn")?.click() },
             { id: "toggleTheme", label: "commandToggleTheme", info: "commandToggleThemeInfo", run: () => {
                 const darkRadio = document.getElementById("darkTheme");
                 const defaultRadio = document.getElementById("dfChecked");

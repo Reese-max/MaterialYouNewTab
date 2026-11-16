@@ -364,8 +364,8 @@ async function enterState(state) {
         todo: "document.querySelector('#todoListCont').click()",
         pomodoro: "window.myntPomodoro.open()",
         layout: "document.querySelector('#myntLayoutEdit').click()",
-        // 清空便籤會開啟既有非同步確認框；不等待那個 Promise，也不按確認。
-        dialog: "document.querySelector('#scratchpadCont').click(); document.querySelector('#scratchpadClearBtn').click()",
+        // 開啟既有非同步確認框；不等待那個 Promise，也不按確認。
+        dialog: "window.myntDialog.confirm('Preview')",
     };
     await evaluate(actions[state]);
     const selector = JSON.stringify(stateSelectors[state]);

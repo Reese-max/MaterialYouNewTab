@@ -31,8 +31,6 @@ function fixture(initial={}){
  result=await f.call('mynt_events_mutate',{operation:'trash',id:'etest',expectedRevision:result.revision});assert(result.ok);assert.equal(result.data.deleted.event.id,'etest');
  result=await f.call('mynt_events_mutate',{operation:'undo',expectedRevision:result.revision});assert(result.ok);assert.equal(result.data.events.length,1);
  assert.equal((await f.call('mynt_events_mutate',{operation:'upsert',event:{...event,date:'2027-02-30'},expectedRevision:result.revision})).ok,false);
- get=await f.call('mynt_scratchpad_get',{});result=await f.call('mynt_scratchpad_update',{operation:'append',text:'hello',expectedRevision:get.revision});assert(result.ok);
- result=await f.call('mynt_scratchpad_update',{operation:'replace',before:'hello',text:'$& literal',expectedRevision:result.revision});assert.equal(result.data.text,'$& literal');
  get=await f.call('mynt_layouts_get',{});assert(get.ok);result=await f.call('mynt_layouts_mutate',{operation:'create',id:'ptest',name:'Study',expectedRevision:get.revision});assert(result.ok);assert.equal(result.data.active,'ptest');
  result=await f.call('mynt_layouts_mutate',{operation:'save',id:'ptest',size:'wide',layout:{version:2,snap:true,locked:true,blocks:{clock:{x:.1,y:.2,s:1.2}}},expectedRevision:result.revision});assert(result.ok);assert.equal(result.data.profiles[1].layouts.wide.blocks.clock.x,.1);
  result=await f.call('mynt_layouts_mutate',{operation:'save',id:'ptest',size:'wide',layout:{version:2,snap:true,locked:true,blocks:{clock:{x:.1,y:.2,s:1.2},homeWidgets:{x:-.1,y:.15,s:.8}}},expectedRevision:result.revision});assert(result.ok);assert.deepEqual(result.data.profiles[1].layouts.wide.blocks.homeWidgets,{x:-.1,y:.15,s:.8});
@@ -56,12 +54,12 @@ function fixture(initial={}){
  const defaultMode={id:'work',name:'Work',widgets:{todoListCheckbox:true},background:'color',focusMinutes:25,urls:['https://example.com/?private=old']};
  work.context.getWorkspacePresets=()=>[defaultMode];modes=await work.call('mynt_workspaces_get',{});assert.equal(modes.data.presets[0].id,'work');assert(!JSON.stringify(modes).includes('private=old'));
  modes=await work.call('mynt_workspaces_mutate',{operation:'create',id:'study2',patch:{name:'Study 2',focusMinutes:45,urls:['https://example.org/docs']},expectedRevision:modes.revision});assert(modes.ok);assert.equal(modes.data.applied,false);assert.equal(modes.data.presets.length,2);assert.equal(work.storage.getItem('myntWorkspacePreset'),null);assert(work.storage.getItem('myntWorkspacePresets').includes('private=old'));
- modes=await work.call('mynt_workspaces_mutate',{operation:'update',id:'study2',patch:{widgets:{scratchpadCheckbox:true}},expectedRevision:modes.revision});assert(modes.ok);assert.equal(modes.data.presets[1].widgets.scratchpadCheckbox,true);
+ modes=await work.call('mynt_workspaces_mutate',{operation:'update',id:'study2',patch:{widgets:{todoListCheckbox:true}},expectedRevision:modes.revision});assert(modes.ok);assert.equal(modes.data.presets[1].widgets.todoListCheckbox,true);
  assert.equal((await work.call('mynt_workspaces_mutate',{operation:'update',id:'study2',patch:{urls:['https://user:secret@example.org']},expectedRevision:modes.revision})).error.code,'INVALID_ARGUMENTS');
  assert.equal((await work.call('mynt_workspaces_mutate',{operation:'update',id:'study2',patch:{focusMinutes:2.5},expectedRevision:modes.revision})).error.code,'INVALID_ARGUMENTS');
  assert.equal((await work.call('mynt_workspaces_mutate',{operation:'update',id:'study2',patch:{widgets:{motivationalQuotesCheckbox:true}},expectedRevision:modes.revision})).error.code,'INVALID_ARGUMENTS','Removed quotes widget is not accepted');
  assert.equal((await work.call('mynt_workspaces_mutate',{operation:'update',id:'study2',patch:{widgets:{bongoCatCheckbox:true}},expectedRevision:modes.revision})).error.code,'INVALID_ARGUMENTS','Removed Bongo Cat widget is not accepted');
- const legacyWork=fixture({myntWorkspacePresets:JSON.stringify([{id:'relax',name:'Relax',widgets:{bongoCatCheckbox:true,motivationalQuotesCheckbox:true,todoListCheckbox:false},background:'color',focusMinutes:15,urls:[]}])});let legacy=await legacyWork.call('mynt_workspaces_get',{});assert(legacy.ok,'Presets saved with the removed Bongo Cat flag still load');assert.equal('bongoCatCheckbox' in legacy.data.presets[0].widgets,false);assert.equal('motivationalQuotesCheckbox' in legacy.data.presets[0].widgets,false);
+ const legacyWork=fixture({myntWorkspacePresets:JSON.stringify([{id:'relax',name:'Relax',widgets:{bongoCatCheckbox:true,motivationalQuotesCheckbox:true,scratchpadCheckbox:true,todoListCheckbox:false},background:'color',focusMinutes:15,urls:[]}])});let legacy=await legacyWork.call('mynt_workspaces_get',{});assert(legacy.ok,'Presets saved with the removed Bongo Cat flag still load');assert.equal('bongoCatCheckbox' in legacy.data.presets[0].widgets,false);assert.equal('motivationalQuotesCheckbox' in legacy.data.presets[0].widgets,false);assert.equal('scratchpadCheckbox' in legacy.data.presets[0].widgets,false);
  legacy=await legacyWork.call('mynt_workspaces_mutate',{operation:'update',id:'relax',patch:{name:'Calm'},expectedRevision:legacy.revision});assert(legacy.ok);assert(!legacyWork.storage.getItem('myntWorkspacePresets').includes('bongo'));
  let access=await work.call('mynt_accessibility_get',{});assert(access.ok);access=await work.call('mynt_accessibility_update',{patch:{reduceMotion:true,highContrast:true,fontScale:1.2},expectedRevision:access.revision});assert(access.ok);assert.equal(access.data.highContrast,true);
  assert.equal((await work.call('mynt_accessibility_update',{patch:{fontScale:1.15},expectedRevision:access.revision})).error.code,'INVALID_ARGUMENTS');
@@ -69,7 +67,7 @@ function fixture(initial={}){
  const parity=fixture({todoList:JSON.stringify({tparity:{title:'Parity',status:'pending',pinned:false}})});
  let pt=await parity.call('mynt_todos_get',{});let done=await parity.call('mynt_todos_mutate',{operation:'update',id:'tparity',completed:true,expectedRevision:pt.revision});assert(done.ok);assert.equal(parity.storage.getItem('myntHabits'),null,'Completing a task no longer writes habit data');
  parity.storage.setItem('myntHabits','broken');pt=await parity.call('mynt_todos_get',{});assert((await parity.call('mynt_todos_mutate',{operation:'update',id:'tparity',pinned:true,expectedRevision:pt.revision})).ok,'Leftover habit data never blocks tasks');
- for(const tool of ['mynt_focus_get','mynt_habits_get'])assert.equal((await parity.call(tool,{})).error.code,'UNKNOWN_TOOL');
+ for(const tool of ['mynt_focus_get','mynt_habits_get','mynt_scratchpad_get'])assert.equal((await parity.call(tool,{})).error.code,'UNKNOWN_TOOL');
  const recover=fixture({todoList:JSON.stringify({ta:{title:'A',status:'pending',pinned:false},tb:{title:'B',status:'pending',pinned:true}})});
  let rt=await recover.call('mynt_todos_get',{});rt=await recover.call('mynt_todos_mutate',{operation:'trash',id:'ta',expectedRevision:rt.revision});assert(rt.ok);assert.equal(rt.recovery.item.id,'ta');assert.equal(Object.keys(rt.data).length,1);
  assert.equal((await recover.call('mynt_todos_mutate',{operation:'trash',id:'tb',expectedRevision:rt.revision})).error.code,'RECOVERY_PENDING');
@@ -91,17 +89,17 @@ function fixture(initial={}){
  // pending. Access/editor failures must not be mislabeled as corrupt storage.
  const {createEngine}=require('../scripts/local-mcp-bridge.js');
  for(const failure of ['ACCESS_REVOKED','EDITOR_BUSY']){
-  const guarded=fixture({myntScratchpadContent:'Synthetic original'}),initial=await guarded.call('mynt_scratchpad_get',{});let digestCalls=0,release,busy=false,refreshes=0;
+  const originalTasks=JSON.stringify({toriginal:{title:'Synthetic original',status:'pending',pinned:false}});const guarded=fixture({todoList:originalTasks}),initial=await guarded.call('mynt_todos_get',{});let digestCalls=0,release,busy=false,refreshes=0;
   const delayedCrypto={subtle:{async digest(...args){if(++digestCalls===2)await new Promise(resolve=>release=resolve);return webcrypto.subtle.digest(...args);}}};
   const engine=createEngine({storage:guarded.storage,adapters:[{tools:adapter.tools,execute:(name,args,context)=>adapter.execute(name,args,{...context,crypto:delayedCrypto})}],canWrite:async()=>true,isBusy:()=>busy,refresh:()=>refreshes++});
   engine.setAccess({enabled:true,writes:true,privateReads:true});
-  const pending=engine.execute({tool:'mynt_scratchpad_update',args:{operation:'append',text:' must not persist',expectedRevision:initial.revision},requestId:'data-'+failure});
+  const pending=engine.execute({tool:'mynt_todos_mutate',args:{operation:'create',id:'tnew',title:'must not persist',expectedRevision:initial.revision},requestId:'data-'+failure});
   while(!release)await new Promise(resolve=>setImmediate(resolve));
   if(failure==='ACCESS_REVOKED')engine.setAccess({enabled:false});else busy=true;
-  release();const denied=await pending;assert.equal(denied.ok,false);assert.equal(denied.error.code,failure);assert.equal(guarded.storage.getItem('myntScratchpadContent'),'Synthetic original');assert.equal(refreshes,0);
+  release();const denied=await pending;assert.equal(denied.ok,false);assert.equal(denied.error.code,failure);assert.equal(guarded.storage.getItem('todoList'),originalTasks);assert.equal(refreshes,0);
  }
- const noRefresh=fixture(),noRefreshState=await noRefresh.call('mynt_scratchpad_get',{});noRefresh.context.commit=()=>{throw Error('UNAVAILABLE');};
- assert.equal((await noRefresh.call('mynt_scratchpad_update',{operation:'append',text:'not saved',expectedRevision:noRefreshState.revision})).error.code,'UNAVAILABLE');assert.equal(noRefresh.values.size,0);
+ const noRefresh=fixture(),noRefreshState=await noRefresh.call('mynt_todos_get',{});noRefresh.context.commit=()=>{throw Error('UNAVAILABLE');};
+ assert.equal((await noRefresh.call('mynt_todos_mutate',{operation:'create',id:'tunsaved',title:'not saved',expectedRevision:noRefreshState.revision})).error.code,'UNAVAILABLE');assert.equal(noRefresh.values.size,0);
  for(const tool of adapter.tools){assert.equal(tool.inputSchema.additionalProperties,false);assert.equal(tool.readOnly,tool.annotations.readOnlyHint);}
  console.log('Local MCP data regressions passed: revisions, validators, recovery, rollback, privacy, races, late access/editor revocation, bounded schemas.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

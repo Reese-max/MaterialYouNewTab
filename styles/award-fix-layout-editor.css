@@ -41,7 +41,6 @@ body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
    大型焦點卡、搜尋區與捷徑列不套用此規則。 */
 body.mynt-layout-editing .myntLayoutOverlay:is(
     [data-block="pomodoro"],
-    [data-block="scratchpad"],
     [data-block="bookmarks"],
     [data-block="wallpaper"],
     [data-block="menu"]
@@ -692,7 +691,6 @@ body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
    把手再離標籤 6px（間距 ≥4px），區塊下方不再伸出任何控制項。 */
 body.mynt-layout-editing .myntLayoutOverlay:is(
     [data-block="pomodoro"],
-    [data-block="scratchpad"],
     [data-block="bookmarks"]
 ) > .myntLayoutResize {
     top: auto;

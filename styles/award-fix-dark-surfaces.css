@@ -465,68 +465,13 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 }
 
 /* ==========================================================================
-   3. 便籤面板 (#scratchpadContainer)
-   ========================================================================== */
-
-/* 淺色模式：不透明度至少 0.94，防止底下首頁文字透出 */
-#scratchpadContainer,
-.scratchpadContainer {
-	background: var(--award-surface-light-opaque);
-	color: var(--award-surface-light-text);
-	border: 1px solid var(--award-surface-light-border);
-	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15);
-	backdrop-filter: blur(16px);
-}
-
-#scratchpadContainer textarea,
-#scratchpadContainer input,
-#scratchpadContainer select {
-	background: rgba(255, 255, 255, 0.92);
-	color: inherit;
-	border: 1px solid rgba(0, 0, 0, 0.15);
-}
-
-/* 黑色主題：深色表面、淺色文字、不透出底下內容 */
-html.black-theme #scratchpadContainer,
-html.black-theme .scratchpadContainer {
-	background: var(--award-surface-dark-opaque);
-	color: var(--award-surface-dark-text);
-	border: 1px solid var(--award-surface-dark-border);
-	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
-	backdrop-filter: blur(16px);
-}
-
-/* 黑色主題便籤編輯區與輸入元件 */
-html.black-theme #scratchpadContainer textarea,
-html.black-theme #scratchpadContainer input,
-html.black-theme #scratchpadContainer select,
-html.black-theme #scratchpadContainer [contenteditable="true"] {
-	background-color: rgba(0, 0, 0, 0.35);
-	color: var(--award-surface-dark-text);
-	border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-/* 黑色主題便籤操作按鈕 */
-html.black-theme #scratchpadContainer button {
-	background-color: rgba(255, 255, 255, 0.12);
-	color: var(--award-surface-dark-text);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-html.black-theme #scratchpadContainer button:hover {
-	background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* ==========================================================================
    4. 動畫偏好設定（prefers-reduced-motion）
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
 	dialog.myntAppDialog,
 	dialog.myntDialog,
 	#pomodoroPanel,
-	.pomodoro-panel,
-	#scratchpadContainer,
-	.scratchpadContainer {
+	.pomodoro-panel {
 		transition: none;
 		animation: none;
 	}

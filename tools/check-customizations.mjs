@@ -59,15 +59,15 @@ for (const ref of new Set(localRefs)) {
     assert.ok(existsSync(resolve(root, ref.replace(/^\.\//, ""))), `Missing local asset: ${ref}`);
 }
 
-for (const script of ["scripts/pomodoro.js", "scripts/dashboard-tools.js", "scripts/scratchpad.js", "scripts/ambient-sound.js"]) {
+for (const script of ["scripts/pomodoro.js", "scripts/dashboard-tools.js", "scripts/ambient-sound.js"]) {
     assert.ok(html.includes(`src="${script}"`) || read("scripts/lazy-loader.js").includes(`"${script}"`), `Custom script is not loaded: ${script}`);
 }
 
 for (const id of [
     "commandPaletteDialog", "controlCenterDialog", "serviceStatusList",
     "workspacePresetGrid", "workspaceEditorForm",
-    "scratchpadCont", "scratchpadContainer", "scratchpadInput", "pomodoroAmbientRow",
-    "shortcutsHelpDialog", "scratchpadDownloadBtn", "bookmarksSubtitle", "bookmarkShortcutStatus",
+    "pomodoroAmbientRow",
+    "shortcutsHelpDialog", "bookmarksSubtitle", "bookmarkShortcutStatus",
     "settingsGroupTabs",
     "settingsGroupPersonal", "settingsGroupWork", "settingsGroupAdvanced", "settingsHintText"
 ]) {
@@ -107,6 +107,9 @@ assert.doesNotMatch(html + read("style.css") + read("scripts/lazy-loader.js") + 
 // Bongo Cat was removed (owner decision 2026-11-17).
 assert.ok(!existsSync(resolve(root, "scripts/bongocat.js")) && !existsSync(resolve(root, "images/bongocat")));
 assert.doesNotMatch(html + read("style.css") + dashboardCode, /bongo/i);
+// Scratchpad was removed (owner decision 2026-11-17); conflicting drafts are offered for copying instead.
+assert.ok(!existsSync(resolve(root, "scripts/scratchpad.js")));
+assert.doesNotMatch(html + dashboardCode + read("style.css") + read("scripts/storage-sync.js"), /scratchpad/i);
 // Habits, focus statistics and the daily focus card were removed (owner decision 2026-11-17).
 for (const file of ["scripts/custom-text.js", "scripts/focus-card.js", "styles/focus-card.css"]) assert.ok(!existsSync(resolve(root, file)), file);
 assert.equal(dashboard.myntValidateHabits, undefined);
@@ -229,7 +232,7 @@ assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([0,
 assert.ok(!existsSync(resolve(root, "scripts/quotes.js")));
 assert.doesNotMatch(html + read("style.css") + dashboardCode, /motivationalQuotes|quotesOptions|newQuoteOnRefresh|multilingual-quotes/);
 assert.match(read("styles/quote-contrast.css"), /\.studyQuote\.has-wallpaper\.is-on-bright/);
-for (const file of ["dashboard-tools.js", "layout-editor.js", "scratchpad.js", "wallpaper-gallery.js"]) {
+for (const file of ["dashboard-tools.js", "layout-editor.js", "wallpaper-gallery.js"]) {
     const code = read(`scripts/${file}`);
     const bare = code.replace(/window\.myntDialog[^\n]*/g, "");
     assert.doesNotMatch(bare, /(^|[^\w.])(alert|confirm|prompt)\(/m, `${file} still calls a native dialog without the in-app fallback`);
