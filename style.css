@@ -4645,8 +4645,37 @@ input:checked + .toggle:before {
 	opacity: 0.5;
 }
 
+/* Undo sits apart from the list in the rows' tonal language, with body-text contrast. */
+#shortcutEditPage .myntRecoveryControl {
+	margin-block: 8px 16px;
+}
+
+#shortcutEditPage .myntRecoveryUndo {
+	min-height: 40px;
+	padding: 8px 14px;
+	border-color: transparent;
+	border-radius: 12px;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	transition: 0.3s background, 0.3s color;
+}
+
+#shortcutEditPage .myntRecoveryUndo:not(:disabled):hover {
+	background: var(--darkColor-blue);
+	color: white;
+}
+
+.black-theme #shortcutEditPage .myntRecoveryUndo {
+	background: #232221;
+}
+
+.black-theme #shortcutEditPage .myntRecoveryUndo:not(:disabled):hover {
+	background: #404040;
+}
+
 @media (forced-colors: active) {
-	.shortcutSettingsEntry .quicklinkChooseIcon {
+	.shortcutSettingsEntry .quicklinkChooseIcon,
+	#shortcutEditPage .myntRecoveryUndo {
 		border-color: ButtonText;
 	}
 }
