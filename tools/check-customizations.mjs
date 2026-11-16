@@ -339,10 +339,9 @@ const menuSource = read('scripts/menu-shortcut-page.js');
 assert.doesNotMatch(html.slice(html.indexOf('id="menuBar"'), html.indexOf('<!-- ------end of Menu-bar')), /id="(?:github|feedback)"/);
 assert.match(html, /<button id="menuCloseButton" type="button" aria-label=/);
 assert.ok(html.indexOf('id="menuCloseButton"') < html.indexOf('id="optCont"'));
-assert.match(html, /<details id="settingsHelp"/);
-assert.match(html, /id="tips"/); assert.match(html, /id="dontShowTips"/);
+assert.doesNotMatch(html, /id="settingsHelp"/); // quick help removed 2026-11-17 at the owner's request
+assert.doesNotMatch(html, /id="(?:tips|dontShowTips)"/);
 assert.match(menuSource, /closedDetails\.querySelector\('summary'\) === el/);
-assert.match(read('style.css'), /#settingsHelp:has\(\.tips-hidden\)/);
 {
  const nodes = new Map(), timers = [], document = { activeElement: null, querySelector: () => null };
  const get = id => { if (!nodes.has(id)) nodes.set(id, { id, style:{}, attributes:{}, listeners:{}, tabIndex:0,
@@ -373,7 +372,7 @@ assert.match(read('style.css'), /#settingsHelp:has\(\.tips-hidden\)/);
  assert.equal(get('overviewPage').style.display,'block');assert.equal(get('shortcutEditPage').style.display,'none','immediate Escape cancels outgoing shortcut transition');assert.equal(document.activeElement.id,'shortcutEditButton');
 
 }
-console.log('SETTINGS_PANEL_OK: links removed, help retained, header close, rapid reopen, dialog-aware Escape/back and keyboard focus wrapping');
+console.log('SETTINGS_PANEL_OK: links and quick help removed, header close, rapid reopen, dialog-aware Escape/back and keyboard focus wrapping');
 assert.doesNotMatch(read('scripts/languages.js'), /scale:\s*\$\{widthh\}/, 'Settings text must reflow rather than shrink at narrow widths');
 assert.match(read('style.css'), /#menuBar #menuCont \{ max-width:100%; \}/);
 
