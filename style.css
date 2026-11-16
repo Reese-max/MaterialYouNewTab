@@ -4660,6 +4660,11 @@ input:checked + .toggle:before {
 	opacity: 0.5;
 }
 
+/* A hairline under the sticky top bar so scrolled rows read as passing beneath it, not cut in half. */
+#shortcutEditPage .topBar {
+	box-shadow: 0 1px 0 color-mix(in srgb, var(--textColorDark-blue) 12%, transparent);
+}
+
 /* The italic hint's last glyph overhangs its box; keep the ink inside so the sticky top bar covers it when scrolled. */
 #editShortcutsListInfo {
 	padding-inline-end: 4px;
