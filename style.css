@@ -4660,6 +4660,11 @@ input:checked + .toggle:before {
 	opacity: 0.5;
 }
 
+/* The italic hint's last glyph overhangs its box; keep the ink inside so the sticky top bar covers it when scrolled. */
+#editShortcutsListInfo {
+	padding-inline-end: 4px;
+}
+
 /* Undo sits apart from the list in the rows' tonal language, with body-text contrast. */
 #shortcutEditPage .myntRecoveryControl {
 	margin-block: 8px 16px;
