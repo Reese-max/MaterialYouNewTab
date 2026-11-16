@@ -122,7 +122,6 @@ function applyLanguage(lang) {
 
     // Mapping of text elements and their translation keys
     const translationMap = [
-        "mcpTitle", "mcpInfo", "mcpPrivacy", "mcpWriteLabel", "mcpPrivateLabel", "mcpConnect", "mcpDisconnect",
         "menuTitle",
         "eventCountdownSettingTitle",
         "eventCountdownSettingInfo",

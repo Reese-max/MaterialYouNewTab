@@ -557,7 +557,7 @@ const zh_TW = {
     "hideSearchWith": "隱藏搜尋服務列",
     "hideSearchWithInfo": "隱藏搜尋列下方的 Google 服務列",
     "motivationalQuotesText": "勵志語錄",
-    "motivationalQuotesInfo": "在搜尋列下方顯示語錄",
+    "motivationalQuotesInfo": "在搜尋列下方顯示；需先開啟上一項",
     "newQuoteOnRefreshText": "每日語錄",
     "newQuoteOnRefreshInfo": "每天顯示一則語錄，而非每次重新整理時更換",
     "search_suggestions_button": "搜尋建議",
