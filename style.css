@@ -5044,8 +5044,31 @@ option:checked {
 /* Upload/Clear Buttons */
 .uploadClearContainer {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 10px;
+}
+
+/* Labels stay on one line: the row wraps instead of squeezing "Stop using background" into a column. */
+.uploadClearContainer .uploadButton {
+	flex: 1 1 auto;
+	width: auto;
+	min-width: 0;
+	white-space: nowrap;
+}
+
+/* Upload is the primary action; clearing the background is secondary, in the random button's white style. */
+.uploadClearContainer .clearButton {
+	flex: 1 0 auto;
+	white-space: nowrap;
+	color: var(--darkColor-blue);
+	background-color: var(--whitishColor-blue);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.uploadClearContainer .clearButton:hover {
+	color: var(--whitishColor-blue);
+	background-color: var(--darkColor-blue);
 }
 
 .uploadButton {
@@ -6044,6 +6067,10 @@ body[data-bg="wallpaper"] .dropdown-content {
 
 .black-theme .clearButton {
 	color: var(--textColorDark-dark);
+}
+
+.black-theme .uploadClearContainer .clearButton {
+	background-color: var(--darkColor-blue);
 }
 
 .black-theme .clearButton:hover {
