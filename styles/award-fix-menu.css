@@ -452,9 +452,9 @@ html.black-theme #menuCont .themeSegment {
 
 /* 桌布按鈕列：主題藍字在白底約 3.6:1、白字在主題藍底約 3.3:1，未達 AA；改用較深的
    --darkerColor-blue。「取消套用背景」不在按鈕內斷行（原本被擠成三行）；放不下時整顆換到下一列。 */
-body:not(.black-theme) .uploadButton:not(:hover, :active),
-body:not(.black-theme) .randomButton:not(:hover, :active) { color: var(--darkerColor-blue); }
-body:not(.black-theme) .clearButton:not(:hover, :active) { background-color: var(--darkerColor-blue); color: #ffffff; }
+html:not(.black-theme) .uploadButton:not(:hover, :active),
+html:not(.black-theme) .randomButton:not(:hover, :active) { color: var(--darkerColor-blue); }
+html:not(.black-theme) .clearButton:not(:hover, :active) { background-color: var(--darkerColor-blue); color: #ffffff; }
 .uploadClearContainer { flex-wrap: wrap; }
 .uploadClearContainer .uploadButton { flex: 1 1 8rem; }
 .clearButton { flex: 1 0 auto; white-space: nowrap; padding-inline: 16px; }

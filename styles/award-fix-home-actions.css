@@ -133,9 +133,10 @@
    .tooltip-text 的 rgba(255,255,255,0.9) 白字在 --darkColor-blue(#4382ec) 底上
    只有約 3.3:1；改用較深的 --darkerColor-blue 實心底（ID 優先權同時蓋過
    桌布模式的半透明底色規則）配純白字，對比約 5.5:1（AA ≥ 4.5）。
-   新手期常駐的「書籤」提示（#bookmarksHover）是同一種膠囊，套用同一組顏色。 */
-#settingsHintText,
-#bookmarksHover {
+   新手期常駐的「書籤」提示（#bookmarksHover）是同一種膠囊，套用同一組顏色。
+   只限淺色主題（black-theme 在 <html> 上）：深色主題的 --darkerColor-blue 是淺色，
+   白字會降到約 1.2:1；深色主題沿用 .black-theme 的深灰底白字（約 13:1）。 */
+html:not(.black-theme) :is(#settingsHintText, #bookmarksHover) {
     background-color: var(--darkerColor-blue);
     color: #ffffff;
 }
