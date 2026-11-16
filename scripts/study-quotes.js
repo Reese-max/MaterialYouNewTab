@@ -721,5 +721,329 @@ const MYNT_STUDY_QUOTES = [
         "en": "Lost time is never found again.",
         "authorEn": "Benjamin Franklin",
         "workEn": "Poor Richard's Almanack"
+    },
+    {
+        "zh": "敏而好學，不恥下問。",
+        "author": "孔子",
+        "work": "論語·公冶長",
+        "en": "Quick and eager to learn, unashamed to ask those below.",
+        "authorEn": "Confucius",
+        "workEn": "Analects"
+    },
+    {
+        "zh": "君子欲訥於言而敏於行。",
+        "author": "孔子",
+        "work": "論語·里仁",
+        "en": "Be slow to speak and quick to act.",
+        "authorEn": "Confucius",
+        "workEn": "Analects"
+    },
+    {
+        "zh": "過而不改，是謂過矣。",
+        "author": "孔子",
+        "work": "論語·衛靈公",
+        "en": "To err and not change is the real error.",
+        "authorEn": "Confucius",
+        "workEn": "Analects"
+    },
+    {
+        "zh": "知恥近乎勇。",
+        "author": "孔子",
+        "work": "中庸",
+        "en": "Knowing shame is close to courage.",
+        "authorEn": "Confucius",
+        "workEn": "Doctrine of the Mean"
+    },
+    {
+        "zh": "上善若水。",
+        "author": "老子",
+        "work": "道德經·第八章",
+        "en": "The highest good is like water.",
+        "authorEn": "Laozi",
+        "workEn": "Tao Te Ching"
+    },
+    {
+        "zh": "大器晚成。",
+        "author": "老子",
+        "work": "道德經·第四十一章",
+        "en": "Great vessels are slow to finish.",
+        "authorEn": "Laozi",
+        "workEn": "Tao Te Ching"
+    },
+    {
+        "zh": "知足者富，強行者有志。",
+        "author": "老子",
+        "work": "道德經·第三十三章",
+        "en": "Who knows contentment is rich; who perseveres has resolve.",
+        "authorEn": "Laozi",
+        "workEn": "Tao Te Ching"
+    },
+    {
+        "zh": "積土成山，風雨興焉。",
+        "author": "荀子",
+        "work": "荀子·勸學",
+        "en": "Heap earth into a mountain and storms arise.",
+        "authorEn": "Xunzi",
+        "workEn": "Encouraging Learning"
+    },
+    {
+        "zh": "不登高山，不知天之高也。",
+        "author": "荀子",
+        "work": "荀子·勸學",
+        "en": "Climb a mountain to know how high the sky is.",
+        "authorEn": "Xunzi",
+        "workEn": "Encouraging Learning"
+    },
+    {
+        "zh": "窮則變，變則通，通則久。",
+        "author": "佚名",
+        "work": "周易·繫辭下",
+        "en": "At the limit, change; change finds a way; the way endures.",
+        "authorEn": "Anonymous",
+        "workEn": "Book of Changes, Great Treatise"
+    },
+    {
+        "zh": "地勢坤，君子以厚德載物。",
+        "author": "佚名",
+        "work": "周易·坤·象傳",
+        "en": "Like the earth, carry all with generous virtue.",
+        "authorEn": "Anonymous",
+        "workEn": "Book of Changes, Kun"
+    },
+    {
+        "zh": "行百里者半於九十。",
+        "author": "劉向 編",
+        "work": "戰國策·秦策五",
+        "en": "Ninety li of a hundred is only halfway.",
+        "authorEn": "Liu Xiang (ed.)",
+        "workEn": "Strategies of the Warring States"
+    },
+    {
+        "zh": "不飛則已，一飛沖天。",
+        "author": "齊威王",
+        "work": "史記·滑稽列傳",
+        "en": "Once it flies, it soars to the sky.",
+        "authorEn": "King Wei of Qi",
+        "workEn": "Records of the Grand Historian"
+    },
+    {
+        "zh": "有志者事竟成。",
+        "author": "劉秀",
+        "work": "後漢書·耿弇傳",
+        "en": "Where there is a will, the thing is done.",
+        "authorEn": "Emperor Guangwu of Han",
+        "workEn": "Book of the Later Han"
+    },
+    {
+        "zh": "臨淵羨魚，不如退而結網。",
+        "author": "佚名",
+        "work": "漢書·董仲舒傳",
+        "en": "Rather than long for fish at the water, go weave a net.",
+        "authorEn": "Anonymous",
+        "workEn": "Book of Han"
+    },
+    {
+        "zh": "尺有所短，寸有所長。",
+        "author": "屈原",
+        "work": "楚辭·卜居",
+        "en": "A foot can fall short; an inch can be long enough.",
+        "authorEn": "Qu Yuan",
+        "workEn": "Divination, Songs of Chu"
+    },
+    {
+        "zh": "讀書百遍，而義自見。",
+        "author": "董遇",
+        "work": "三國志·王肅傳注引魏略",
+        "en": "Read it a hundred times; the meaning appears.",
+        "authorEn": "Dong Yu",
+        "workEn": "Weilüe, cited in Records of the Three Kingdoms"
+    },
+    {
+        "zh": "夫君子之行，靜以修身，儉以養德。",
+        "author": "諸葛亮",
+        "work": "誡子書",
+        "en": "Grow in calm; build virtue in thrift.",
+        "authorEn": "Zhuge Liang",
+        "workEn": "Admonition to His Son"
+    },
+    {
+        "zh": "志當存高遠。",
+        "author": "諸葛亮",
+        "work": "誡外甥書",
+        "en": "Let your aims be high and far.",
+        "authorEn": "Zhuge Liang",
+        "workEn": "Admonition to His Nephew"
+    },
+    {
+        "zh": "一寸光陰一寸金。",
+        "author": "王貞白",
+        "work": "白鹿洞二首·其一",
+        "en": "An inch of time is an inch of gold.",
+        "authorEn": "Wang Zhenbai",
+        "workEn": "Two Poems at White Deer Grotto"
+    },
+    {
+        "zh": "繩鋸木斷，水滴石穿。",
+        "author": "張詠",
+        "work": "鶴林玉露",
+        "en": "A rope saws wood; drops bore stone.",
+        "authorEn": "Zhang Yong",
+        "workEn": "Jade Dew from the Crane Forest"
+    },
+    {
+        "zh": "千磨萬擊還堅勁，任爾東西南北風。",
+        "author": "鄭燮",
+        "work": "竹石",
+        "en": "Ground and struck, still firm in every wind.",
+        "authorEn": "Zheng Xie",
+        "workEn": "Bamboo and Rock"
+    },
+    {
+        "zh": "咬定青山不放鬆。",
+        "author": "鄭燮",
+        "work": "竹石",
+        "en": "Bite into the green mountain and never let go.",
+        "authorEn": "Zheng Xie",
+        "workEn": "Bamboo and Rock"
+    },
+    {
+        "zh": "人生苦短，學藝路長。",
+        "author": "希波克拉底",
+        "work": "格言集",
+        "orig": "Ὁ βίος βραχύς, ἡ δὲ τέχνη μακρή.",
+        "en": "Life is short, the art long.",
+        "authorEn": "Hippocrates",
+        "workEn": "Aphorisms"
+    },
+    {
+        "zh": "人在教導時也在學習。",
+        "author": "塞內卡",
+        "work": "道德書簡",
+        "orig": "Homines dum docent discunt.",
+        "en": "While we teach, we learn.",
+        "authorEn": "Seneca",
+        "workEn": "Letters to Lucilius"
+    },
+    {
+        "zh": "一燕不成夏。",
+        "author": "亞里斯多德",
+        "work": "尼各馬可倫理學",
+        "en": "One swallow does not make a summer.",
+        "authorEn": "Aristotle",
+        "workEn": "Nicomachean Ethics"
+    },
+    {
+        "zh": "滴水穿石。",
+        "author": "奧維德",
+        "work": "黑海書簡",
+        "orig": "Gutta cavat lapidem.",
+        "en": "Dripping water hollows out stone.",
+        "authorEn": "Ovid",
+        "workEn": "Letters from Pontus"
+    },
+    {
+        "zh": "他們能，因為他們相信自己能。",
+        "author": "維吉爾",
+        "work": "埃涅阿斯紀",
+        "orig": "Possunt, quia posse videntur.",
+        "en": "They can because they think they can.",
+        "authorEn": "Virgil",
+        "workEn": "Aeneid"
+    },
+    {
+        "zh": "把握今天。",
+        "author": "賀拉斯",
+        "work": "頌歌集",
+        "orig": "Carpe diem.",
+        "en": "Seize the day.",
+        "authorEn": "Horace",
+        "workEn": "Odes"
+    },
+    {
+        "zh": "敢於求知。",
+        "author": "賀拉斯",
+        "work": "書信集",
+        "orig": "Sapere aude.",
+        "en": "Dare to know.",
+        "authorEn": "Horace",
+        "workEn": "Epistles"
+    },
+    {
+        "zh": "只要一息尚存，就有希望。",
+        "author": "西塞羅",
+        "work": "致阿提庫斯書信",
+        "orig": "Dum anima est, spes esse dicitur.",
+        "en": "While there is life, there is hope.",
+        "authorEn": "Cicero",
+        "workEn": "Letters to Atticus"
+    },
+    {
+        "zh": "未經省察的人生不值得活。",
+        "author": "蘇格拉底",
+        "work": "柏拉圖《申辯篇》",
+        "en": "The unexamined life is not worth living.",
+        "authorEn": "Socrates",
+        "workEn": "Plato, Apology"
+    },
+    {
+        "zh": "開頭是一件工作最重要的部分。",
+        "author": "柏拉圖",
+        "work": "理想國",
+        "en": "The beginning is the most important part of the work.",
+        "authorEn": "Plato",
+        "workEn": "Republic"
+    },
+    {
+        "zh": "做得好勝過說得好。",
+        "author": "富蘭克林",
+        "work": "窮理查年鑑",
+        "orig": "Well done is better than well said.",
+        "en": "Well done is better than well said.",
+        "authorEn": "Benjamin Franklin",
+        "workEn": "Poor Richard's Almanack"
+    },
+    {
+        "zh": "勤奮是好運之母。",
+        "author": "富蘭克林",
+        "work": "窮理查年鑑",
+        "orig": "Diligence is the mother of good luck.",
+        "en": "Diligence is the mother of good luck.",
+        "authorEn": "Benjamin Franklin",
+        "workEn": "Poor Richard's Almanack"
+    },
+    {
+        "zh": "相信你自己。",
+        "author": "愛默生",
+        "work": "論自立",
+        "orig": "Trust thyself.",
+        "en": "Trust thyself.",
+        "authorEn": "Ralph Waldo Emerson",
+        "workEn": "Self-Reliance"
+    },
+    {
+        "zh": "簡化，再簡化。",
+        "author": "梭羅",
+        "work": "湖濱散記",
+        "orig": "Simplify, simplify.",
+        "en": "Simplify, simplify.",
+        "authorEn": "Henry David Thoreau",
+        "workEn": "Walden"
+    },
+    {
+        "zh": "最重要的是，忠於你自己。",
+        "author": "莎士比亞",
+        "work": "哈姆雷特",
+        "orig": "This above all: to thine own self be true.",
+        "en": "This above all: to thine own self be true.",
+        "authorEn": "William Shakespeare",
+        "workEn": "Hamlet"
+    },
+    {
+        "zh": "靈魂會染上思想的顏色。",
+        "author": "馬可·奧理略",
+        "work": "沉思錄",
+        "en": "The soul becomes dyed with the colour of its thoughts.",
+        "authorEn": "Marcus Aurelius",
+        "workEn": "Meditations"
     }
 ];
