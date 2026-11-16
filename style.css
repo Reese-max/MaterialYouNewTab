@@ -4637,6 +4637,8 @@ input:checked + .toggle:before {
 
 /* The icon picker is a quiet tonal chip in the row actions' surface, not an outlined button. */
 .shortcutSettingsEntry .quicklinkChooseIcon {
+	/* Name and URL are one group; the icon picker starts the next, clear of the URL focus ring. */
+	margin-top: 8px;
 	border-color: transparent;
 	border-radius: 12px;
 	padding: 8px 12px 8px 10px;
