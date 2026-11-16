@@ -2294,8 +2294,7 @@ html[lang="ta"] .digiclock {
 }
 
 .clockOptions,
-.weatherOptions,
-.quotesOptions {
+.weatherOptions {
 	overflow: hidden;
 	max-height: 800px;
 	opacity: 1;
@@ -2308,10 +2307,6 @@ html[lang="ta"] .digiclock {
 	max-height: 0;
 	opacity: 0;
 	pointer-events: none;
-}
-
-.quotesOptions:not(:last-child) .ttcont:last-child {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .clock-hidden-left {
@@ -3027,104 +3022,6 @@ body[data-bg="wallpaper"] .searchWithCont .hint:hover {
 	transition:
 		background-color 0.2s ease,
 		border 0.2s ease;
-}
-
-/* ----------- Quotes ------------ */
-.quotesCont {
-	margin-top: var(--gap);
-	position: relative;
-	display: flex;
-	font-size: 1rem;
-	direction: ltr; /* Remove when multilingual quote is supported */
-	unicode-bidi: isolate;
-}
-
-.quotesContainer {
-	position: relative;
-	background-color: var(--accentLightTint-blue);
-	height: 100px;
-	width: 100%;
-	border-radius: 20px;
-	padding: 20px;
-	line-height: 28px;
-}
-
-.authorWrapper {
-	position: absolute;
-	bottom: 0;
-	inset-inline-end: 0;
-	display: flex;
-	align-items: flex-end;
-	background: var(--bg-color-blue);
-	border-start-start-radius: 20px;
-	border-end-end-radius: 20px;
-}
-
-.authorName {
-	position: relative;
-	padding: 6px 16px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 40px;
-	width: 40px;
-	border-start-start-radius: 20px;
-	border-end-end-radius: 20px;
-	white-space: nowrap;
-	overflow: hidden;
-	transition: width 0.4s var(--md-motion-ease);
-	box-sizing: border-box;
-}
-
-.authorName span {
-	display: inline-block;
-	padding: 0;
-}
-
-.qtRounder {
-	position: absolute;
-	width: 20px;
-	height: 20px;
-	inset-inline-start: -20px;
-	transform: rotate(90deg);
-}
-
-.qtRounder2 {
-	position: absolute;
-	width: 20px;
-	height: 20px;
-	inset-inline-end: 0;
-	top: -20px;
-	transform: rotate(90deg);
-}
-
-body[data-bg="wallpaper"] .quotesContainer {
-	background-color: color-mix(
-		in srgb,
-		var(--accentLightTint-blue) var(--transparency),
-		transparent
-	);
-	text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
-}
-
-.black-theme body[data-bg="wallpaper"] .quotesContainer {
-	text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
-}
-
-body[data-bg="wallpaper"] .authorWrapper {
-	background-color: color-mix(
-		in srgb,
-		var(--bg-color-blue) calc(var(--transparency) * 1.5),
-		transparent
-	);
-}
-
-html[lang="ur"] .qtRounder {
-	left: -18.5px;
-}
-
-html[lang="ur"] .qtRounder2 {
-	right: -1.5px;
 }
 
 /* ----------Shortcuts----------------- */
@@ -4302,10 +4199,6 @@ input:checked + .toggle:before {
 }
 
 .black-theme .sectionInner .ttcont:not(:last-child) {
-	border-bottom: 1px solid #ffffff1a;
-}
-
-.black-theme .sectionInner .quotesOptions:not(:last-child) .ttcont:last-child {
 	border-bottom: 1px solid #ffffff1a;
 }
 
@@ -5857,17 +5750,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 		display: none;
 	}
 	.toggleTextsCont .ttcont:has(#shortcut_switchcheckbox) {
-		display: none;
-	}
-	.toggleTextsCont .ttcont:has(#motivationalQuotesCheckbox) {
-		display: none;
-	}
-	.quotesOptions,
-	.toggleTextsCont .ttcont:has(#newQuoteOnRefreshCheckbox) {
-		display: none;
-	}
-	.quotesContainer,
-	.authorWrapper {
 		display: none;
 	}
 	.searchbar .searchIcon:nth-of-type(1) {

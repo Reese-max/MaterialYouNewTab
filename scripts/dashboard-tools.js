@@ -76,7 +76,7 @@ function myntSevenDayStats(history, now = new Date()) {
 
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
-    "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "scratchpadCheckbox"
+    "aiToolsCheckbox", "googleAppsCheckbox", "scratchpadCheckbox"
 ];
 
 function myntNormalizeWorkspaces(raw, defaults = []) {
@@ -149,7 +149,7 @@ if (typeof document !== "undefined") {
                 "focusSessionsValueLabel", "focusStreakLabel", "workspaceTitle", "workspaceInfo", "workspaceAddBtn",
                 "workspaceNameLabel", "workspaceWidgetsLegend", "workspaceWidgetShortcuts",
                 "workspaceWidgetBookmarks", "workspaceWidgetTodo", "workspaceWidgetPomodoro",
-                "workspaceWidgetAi", "workspaceWidgetGoogle", "workspaceWidgetQuotes",
+                "workspaceWidgetAi", "workspaceWidgetGoogle",
                 "workspaceBackgroundLabel", "workspaceBackgroundVideo",
                 "workspaceBackgroundWallpaper", "workspaceBackgroundColor", "workspaceFocusMinutesLabel",
                 "workspaceDeleteBtn", "workspaceCancelBtn", "workspaceSaveBtn", "habitsTitle",
@@ -182,8 +182,7 @@ if (typeof document !== "undefined") {
             ["network", "serviceNetwork"],
             ["weather", "serviceWeather"],
             ["location", "serviceLocation"],
-            ["wallpaper", "serviceWallpaper"],
-            ["quotes", "serviceQuotes"]
+            ["wallpaper", "serviceWallpaper"]
         ];
         let serviceState = readJSON(KEYS.serviceStatus, {});
 
@@ -194,7 +193,6 @@ if (typeof document !== "undefined") {
                 if (url.hostname === "api.weatherapi.com") return "weather";
                 if (url.hostname === "ipinfo.io") return "location";
                 if (url.hostname === "picsum.photos") return "wallpaper";
-                if (url.hostname === "prem-k-r.github.io" && url.pathname.includes("multilingual-quotes-api")) return "quotes";
             } catch {
                 return null;
             }
@@ -718,7 +716,7 @@ if (typeof document !== "undefined") {
                 id: "work", name: t("workspaceWork", "Work"), background: "video", focusMinutes: 25, urls: ["https://github.com", "https://mail.google.com"],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: true,
-                    pomodoroCheckbox: true, motivationalQuotesCheckbox: false,
+                    pomodoroCheckbox: true,
                     aiToolsCheckbox: false, googleAppsCheckbox: false
                 }
             },
@@ -726,7 +724,7 @@ if (typeof document !== "undefined") {
                 id: "study", name: t("workspaceStudy", "Study"), background: "wallpaper", focusMinutes: 45, urls: ["https://scholar.google.com"],
                 widgets: {
                     shortcutsCheckbox: false, bookmarksCheckbox: false, todoListCheckbox: true,
-                    pomodoroCheckbox: true, motivationalQuotesCheckbox: true,
+                    pomodoroCheckbox: true,
                     aiToolsCheckbox: true, googleAppsCheckbox: false
                 }
             },
@@ -734,7 +732,7 @@ if (typeof document !== "undefined") {
                 id: "relax", name: t("workspaceRelax", "Relax"), background: "color", focusMinutes: 15, urls: [],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: false,
-                    pomodoroCheckbox: false, motivationalQuotesCheckbox: true,
+                    pomodoroCheckbox: false,
                     aiToolsCheckbox: false, googleAppsCheckbox: true
                 }
             }
@@ -1372,9 +1370,6 @@ if (typeof document !== "undefined") {
         async function applyWorkspaceRemote(id, gate, assertAccess) {
             const preset=workspaces.find(item=>item.id===id);
             if(!preset || typeof gate!=='function' || typeof assertAccess!=='function')throw Error('INVALID_ARGUMENT');
-            // Quote visibility's existing handler fetches and clears cached content.
-            // Do not silently invoke that unrelated network/data side effect.
-            if(document.getElementById('motivationalQuotesCheckbox')?.checked!==preset.widgets.motivationalQuotesCheckbox)throw Error('ACTION_REQUIRED');
             if(MYNT_WORKSPACE_WIDGETS.some(key=>!document.getElementById(key)))throw Error('UNAVAILABLE');
             const timer=window.myntPomodoro;
             if(!timer?.runRemote)throw Error('UNAVAILABLE');

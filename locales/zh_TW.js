@@ -255,9 +255,9 @@ const zh_TW = {
     "workspaceWork": "工作",
     "workspaceWorkInfo": "待辦事項與番茄鐘",
     "workspaceStudy": "研究",
-    "workspaceStudyInfo": "專注、待辦、語錄與 AI",
+    "workspaceStudyInfo": "專注、待辦與 AI",
     "workspaceRelax": "休息",
-    "workspaceRelaxInfo": "捷徑與語錄",
+    "workspaceRelaxInfo": "捷徑與 Google Apps",
     "workspaceActive": "已套用{name}模式",
     "workspaceAddBtn": "新增模式",
     "workspaceNameLabel": "模式名稱",
@@ -268,7 +268,6 @@ const zh_TW = {
     "workspaceWidgetPomodoro": "番茄鐘",
     "workspaceWidgetAi": "AI 工具",
     "workspaceWidgetGoogle": "Google Apps",
-    "workspaceWidgetQuotes": "語錄",
     "workspaceBackgroundLabel": "背景",
     "workspaceBackgroundVideo": "動態影片",
     "workspaceBackgroundWallpaper": "桌布",
@@ -327,7 +326,6 @@ const zh_TW = {
     "serviceWeather": "WeatherAPI",
     "serviceLocation": "IP 位置",
     "serviceWallpaper": "隨機桌布",
-    "serviceQuotes": "語錄",
     "serviceOffline": "離線時無法使用",
     "serviceNotChecked": "尚未檢查",
     "serviceChecking": "檢查中...",
@@ -486,10 +484,6 @@ const zh_TW = {
     "aiModeIconInfo": "隱藏搜尋列上的 Google AI 模式按鈕",
     "hideSearchWith": "隱藏搜尋服務列",
     "hideSearchWithInfo": "隱藏搜尋列下方的 Google 服務列",
-    "motivationalQuotesText": "勵志語錄",
-    "motivationalQuotesInfo": "在搜尋列下方顯示；需先開啟上一項",
-    "newQuoteOnRefreshText": "每日語錄",
-    "newQuoteOnRefreshInfo": "每天顯示一則語錄，而非每次重新整理時更換",
 
     // Proxy
 

@@ -19,7 +19,7 @@ const definitions=[
  ['mynt_language_update','Preview language change requirements; cannot reload or refetch quotes through MCP.','language',{language:en(LOCALES)}]
 ];
 const tools=definitions.map(([name,description,domain,patch])=>({name,description,readOnly:!patch,annotations:{readOnlyHint:!patch,destructiveHint:false,openWorldHint:false},inputSchema:obj(patch?{...patch,expectedRevision:{type:'string',pattern:'^[a-f0-9]{64}$',maxLength:64},requestId:str(100)}:{},patch?['expectedRevision']:[])}));
-const KEY={clock:['clocktype','hourformat','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField'],search:['showShortcutSwitch','aiModeIconVisible','motivationalQuotesVisible'],ai:['aiToolsSettings','aiToolsCustom','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
+const KEY={clock:['clocktype','hourformat','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField'],search:['showShortcutSwitch','aiModeIconVisible'],ai:['aiToolsSettings','aiToolsCustom','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v)&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
 function fail(code,message){const error=Error(message);error.code=code;throw error;}
 function validate(v,s,path='args'){
@@ -40,7 +40,7 @@ function get(domain,raw){
   value(raw.digitalCheckboxState,['checked','unchecked'],null);value(raw.hourcheckboxState,['checked','unchecked'],null);value(raw.timeformatField,['active','inactive'],null);
   return{mode:value(raw.clocktype,['analog','digital'],'analog'),hour12:boolean(raw.hourformat),hidden:boolean(raw.hideClockVisible)};
  }
- if(domain==='search')return{engine:'google',supportedDefaultEngines:['google'],bangAliases:['!yt','!youtube','!gh','!github','!gpt','!chat','!claude','!maps','!npm','!b','!trans','!mail','!drive'],directUrlNavigationAvailableInBrowser:true,providerRowHidden:boolean(raw.showShortcutSwitch),aiModeVisible:boolean(raw.aiModeIconVisible,true),cachedQuotesPreserved:true};
+ if(domain==='search')return{engine:'google',supportedDefaultEngines:['google'],bangAliases:['!yt','!youtube','!gh','!github','!gpt','!chat','!claude','!maps','!npm','!b','!trans','!mail','!drive'],directUrlNavigationAvailableInBrowser:true,providerRowHidden:boolean(raw.showShortcutSwitch),aiModeVisible:boolean(raw.aiModeIconVisible,true)};
  if(domain==='ai'){value(raw.aiToolsDisplayStatus,['flex','none'],null);return{tools:aiSettings(raw.aiToolsSettings),visible:value(raw.aiToolsCheckboxState,['checked','unchecked'],'unchecked')==='checked'};}
  if(domain==='theme'){
   const palette=value(raw.selectedTheme,PALETTES,'blue'),customColor=raw.customThemeColor;
@@ -78,7 +78,7 @@ async function execute(name,args={},context={}){
    else{next.customThemeColor=args.customColor;next.selectedTheme=null;}
   }
   const writes=expected.filter(v=>next[v.key]!==v.value).map(v=>({key:v.key,value:next[v.key]})),after=expected.map(v=>({key:v.key,value:next[v.key]}));
-  const result={ok:true,revision:await revision(after,context),data:get(domain,next),...(domain==='theme'?{derivedCacheRefreshDeferred:true}:{}),...(domain==='search'?{quoteFetchDeferred:true}:{})};
+  const result={ok:true,revision:await revision(after,context),data:get(domain,next),...(domain==='theme'?{derivedCacheRefreshDeferred:true}:{})};
   if(!writes.length)return{...result,unchanged:true};
   if(domain==='clock' && root.document && !root.myntClockPreferences?.reload)fail('ACTION_REQUIRED','The clock was not initialized because it was hidden at page startup. Enable it once in the ordinary browser clock settings before remote changes. No preferences were changed.');
   if(typeof context.commit!=='function')fail('UNAVAILABLE','Coordinated preference commit unavailable');context.assertAccess?.();

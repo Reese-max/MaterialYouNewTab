@@ -55,7 +55,6 @@
     <script defer src="scripts/layout-draft.js"></script>
     <script defer src="scripts/layout-editor.js"></script>
     <script defer src="scripts/search.js"></script>
-    <script defer src="scripts/quotes.js"></script>
     <script defer src="scripts/local-recovery-controls.js"></script>
     <script defer src="scripts/quicklink-icons.js"></script>
     <link href="styles/quicklink-icons.css" rel="stylesheet">
@@ -944,23 +943,6 @@
                 </div>
             </div>
             <!-- ----------end of search with------------- -->
-            <div class="quotesCont" id="motivationalQuotesCont">
-                <div class="quotesContainer">
-                </div>
-                <div class="authorWrapper">
-                    <div class="authorName"><span></span></div>
-                    <div class="qtRounder">
-                        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-                            <path class="lessDark targeted" d="M30 0L0 0C16.5685 0 30 13.4315 30 30L30 0Z" />
-                        </svg>
-                    </div>
-                    <div class="qtRounder2">
-                        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-                            <path class="lessDark targeted" d="M30 0L0 0C16.5685 0 30 13.4315 30 30L30 0Z" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
 
         </div>
         <!-- --------end of rightDiv---------------------- -->
@@ -1566,32 +1548,6 @@
                                             <span class="toggle"></span>
                                         </label>
                                     </div>
-
-                                    <div class="ttcont" id="quotesToggle">
-                                        <div class="texts">
-                                            <div class="bigText" id="motivationalQuotesText">Motivational Quotes</div>
-                                            <div class="infoText" id="motivationalQuotesInfo">Show quotes below the
-                                                searchbar</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="motivationalQuotesCheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="quotesOptions">
-                                        <div class="ttcont" id="newQuoteOnRefreshToggle">
-                                            <div class="texts">
-                                                <div class="bigText" id="newQuoteOnRefreshText">Daily Quote</div>
-                                                <div class="infoText" id="newQuoteOnRefreshInfo">Show one quote per day
-                                                    instead of refreshing each time</div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="newQuoteOnRefreshCheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2121,7 +2077,6 @@
                         <label><input type="checkbox" data-workspace-widget="pomodoroCheckbox"><span id="workspaceWidgetPomodoro">Pomodoro</span></label>
                         <label><input type="checkbox" data-workspace-widget="aiToolsCheckbox"><span id="workspaceWidgetAi">AI tools</span></label>
                         <label><input type="checkbox" data-workspace-widget="googleAppsCheckbox"><span id="workspaceWidgetGoogle">Google Apps</span></label>
-                        <label><input type="checkbox" data-workspace-widget="motivationalQuotesCheckbox"><span id="workspaceWidgetQuotes">Quotes</span></label>
                         <label><input type="checkbox" data-workspace-widget="scratchpadCheckbox"><span id="workspaceWidgetScratchpad">Scratchpad</span></label>
                     </fieldset>
                     <div class="workspaceEditorFields">

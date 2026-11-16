@@ -18,7 +18,7 @@ function apply(store, plan) { plan.writes.forEach(({ key, value }) => store.data
 function item(store, id) { return core.read(store).find(value => value.id === id); }
 function throwsCode(fn, code) { assert.throws(fn, error => error.code === code); }
 
-const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
+const ids = ['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'scratchpad', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
 assert.deepEqual(core.definitions.map(value => value.id), ids);
 assert.equal(new Set(core.definitions.map(value => value.key)).size, ids.length);
 assert.deepEqual(core.definitions.find(value => value.id === 'clock').selectors, ['#analogClock', '#digitalClock', '#date']);

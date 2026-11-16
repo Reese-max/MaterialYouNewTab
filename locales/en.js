@@ -255,9 +255,9 @@ const en = {
     "workspaceWork": "Work",
     "workspaceWorkInfo": "Tasks and Pomodoro",
     "workspaceStudy": "Research",
-    "workspaceStudyInfo": "Focus, tasks, quotes, and AI",
+    "workspaceStudyInfo": "Focus, tasks, and AI",
     "workspaceRelax": "Rest",
-    "workspaceRelaxInfo": "Shortcuts and quotes",
+    "workspaceRelaxInfo": "Shortcuts and Google Apps",
     "workspaceActive": "{name} active",
     "workspaceAddBtn": "New mode",
     "workspaceNameLabel": "Mode name",
@@ -268,7 +268,6 @@ const en = {
     "workspaceWidgetPomodoro": "Pomodoro",
     "workspaceWidgetAi": "AI tools",
     "workspaceWidgetGoogle": "Google Apps",
-    "workspaceWidgetQuotes": "Quotes",
     "workspaceBackgroundLabel": "Background",
     "workspaceBackgroundVideo": "Motion video",
     "workspaceBackgroundWallpaper": "Wallpaper",
@@ -327,7 +326,6 @@ const en = {
     "serviceWeather": "WeatherAPI",
     "serviceLocation": "IP location",
     "serviceWallpaper": "Random wallpaper",
-    "serviceQuotes": "Quotes",
     "serviceOffline": "Unavailable offline",
     "serviceNotChecked": "Not checked",
     "serviceChecking": "Checking...",
@@ -486,10 +484,6 @@ const en = {
     "aiModeIconInfo": "Hide Google AI Mode search button",
     "hideSearchWith": "Hide Search Provider Row",
     "hideSearchWithInfo": "Hide the Google provider row below the search bar",
-    "motivationalQuotesText": "Motivational Quotes",
-    "motivationalQuotesInfo": "Shows below the searchbar; turn on the option above first",
-    "newQuoteOnRefreshText": "Daily Quote",
-    "newQuoteOnRefreshInfo": "Show one quote per day instead of refreshing each time",
 
     // Proxy
 

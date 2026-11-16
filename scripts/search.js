@@ -179,14 +179,7 @@ document.addEventListener("keydown", function (event) {
 window.myntSearchPreferences = { reload() {
     hideSearchWith.checked = localStorage.getItem('showShortcutSwitch') === 'true';
     applySearchProviderVisibility(hideSearchWith.checked, false);
-    // Mirror quote-related visibility without clearing cached quotes or fetching new ones.
-    const quotesEnabled = localStorage.getItem('motivationalQuotesVisible') === 'true';
-    const showQuotes = hideSearchWith.checked && quotesEnabled;
-    document.getElementById('quotesToggle')?.classList.toggle('inactive', !hideSearchWith.checked);
-    document.querySelector('.quotesOptions')?.classList.toggle('not-applicable', !showQuotes);
-    const quoteContainer = document.getElementById('motivationalQuotesCont');
-    if (quoteContainer) quoteContainer.style.display = showQuotes ? 'flex' : 'none';
-    searchProviderRow.style.display = showQuotes ? 'none' : 'flex';
+    searchProviderRow.style.display = 'flex';
     if (aiModeIconCheckbox) aiModeIconCheckbox.checked = localStorage.getItem('aiModeIconVisible') === 'false';
     updateAiModeIconVisibility();
 } };

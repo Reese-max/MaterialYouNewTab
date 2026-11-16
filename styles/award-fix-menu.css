@@ -367,7 +367,7 @@ html.black-theme #menuCont {
 
 /* 窄螢幕保留文字空間；其他尺寸用縮排與連續細線表示數位時鐘子選項。 */
 @media (min-width: 360px) {
-	#menuCont :is(#timeformatField, #quotesToggle, .quotesOptions > .ttcont) {
+	#menuCont #timeformatField {
 		margin-inline-start: 16px;
 		border-inline-start: 2px solid var(--menu-row-divider);
 		padding-inline-start: 12px;

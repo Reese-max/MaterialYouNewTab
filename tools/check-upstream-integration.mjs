@@ -12,7 +12,6 @@ const html = read("index.html");
 const languages = read("scripts/languages.js");
 // SVG validation is shared with the AI editor; inspect the same assertions across both files.
 const shortcuts = read("scripts/shortcuts.js") + "\n" + read("scripts/quicklink-icons.js");
-const quotes = read("scripts/quotes.js");
 const aiTools = read("scripts/ai-tools.js");
 const background = read("scripts/background.js");
 const whatsNew = read("docs/whats-new.html");
@@ -84,9 +83,8 @@ for (const key of ["invalidIconMessage", "invalidSvgMessage", "invalidFileTypeMe
     assert.match(read("locales/en.js"), new RegExp(key));
     assert.match(read("locales/zh_TW.js"), new RegExp(key));
 }
-for (const pattern of [/dailyQuoteEnabled/, /getDailyQuote/, /clearOldDailyQuotes/]) {
-    assert.match(quotes, pattern);
-}
+// Upstream daily/motivational quotes were removed by the owner on 2026-11-17.
+assert.ok(!existsSync(resolve(root, "scripts/quotes.js")), "Removed motivational quotes must stay removed");
 assert.match(aiTools, /contextmenu/);
 assert.match(aiTools, /showAIToolsSettings/);
 

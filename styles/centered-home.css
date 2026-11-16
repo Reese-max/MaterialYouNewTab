@@ -73,7 +73,6 @@ body #quickLinksRow #shortcutsContainer .shortcutLogoContainer { width: 20px; he
 body #quickLinksRow #shortcutsContainer .shortcutLogoContainer img,
 body #quickLinksRow #shortcutsContainer .shortcutLogoContainer svg { width: 20px; height: 20px; }
 body #addQuickLinkButton { flex: 0 0 42px; width: 42px; min-width: 42px; padding: 0 !important; cursor: pointer; font-size: 24px; }
-body #motivationalQuotesCont { position: fixed !important; inset: auto auto 20px 50% !important; width: min(640px, calc(100vw - 32px)); transform: translateX(-50%) !important; text-align: center; z-index: 1; }
 body #studyQuote { position: fixed !important; inset: auto auto 20px 50% !important; width: min(640px, calc(100vw - 32px)); transform: translateX(-50%) !important; text-align: center; z-index: 1; }
 
 body #homeToolbar {
@@ -106,7 +105,6 @@ body #bookmarkList .bookmark-item-copy small { opacity: .72; font-size: .78rem; 
     body #searchbar #enterBtn { display: block !important; min-width: 54px; padding-inline: 10px; }
     body #quickLinksRow { inset-block-start: 56vh !important; gap: 6px; }
     body #quickLinksRow #toolsCont a, body #quickLinksRow #shortcutsContainer > * > a { padding-inline: 10px !important; }
-    body #motivationalQuotesCont { bottom: 80px !important; width: calc(100vw - 32px); max-width: calc(100vw - 32px); box-sizing: border-box; overflow-wrap: anywhere; }
     body #studyQuote { inset: auto 16px 76px 16px !important; width: auto !important; max-width: none !important; transform: none !important; translate: none !important; box-sizing: border-box; }
     body #homeToolbar { top: 10px; right: 10px; gap: 4px; }
     body #homeToolbar :is(#googleAppsCont, #bookmarkButton) { width: 42px !important; height: 42px !important; }

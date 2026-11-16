@@ -10,7 +10,6 @@
         ["web-scratchpad", "Scratchpad 可輸入、複製、轉任務並匯出 Markdown。"],
         ["web-workspace", "Work／Study／Relax 工作模式可以切換，顯示的小工具符合預期。"],
         ["web-pomodoro", "番茄鐘可以啟動、暫停與重設；環境音按鈕可操作。"],
-        ["web-quote", "每日語錄選項可切換，重新整理後行為符合設定。"],
         ["web-keyboard", "Ctrl/⌘+K、? 與 Alt+1～9 等快捷鍵沒有互相衝突。"],
     ];
 

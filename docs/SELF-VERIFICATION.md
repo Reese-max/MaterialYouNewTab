@@ -34,7 +34,7 @@ GitHub Pages 第一次使用需要由 Repository 管理者做一次設定：
 - 捷徑數量大於 0，且顯示數量與設定項目數一致
 - 控制中心、待辦清單與 Scratchpad 元件存在
 - Console 沒有 `ReferenceError`、`TypeError`、`SyntaxError` 或 `Uncaught`
-- 搜尋、Search Bang、工作模式、待辦、Scratchpad、番茄鐘與每日語錄可操作
+- 搜尋、Search Bang、工作模式、待辦、Scratchpad、番茄鐘可操作
 - `Ctrl/Command + K`、`?`、`Alt + 1`～`9` 沒有衝突
 
 ### 網頁預覽的已知限制

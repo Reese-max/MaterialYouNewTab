@@ -264,7 +264,8 @@ const contrastContext = { module: { exports: {} } };
 vm.runInNewContext(read("scripts/quote-contrast.js"), contrastContext);
 assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([255, 255, 255, 255])) > 0.99);
 assert.ok(contrastContext.module.exports.myntLuminance(new Uint8ClampedArray([0, 0, 0, 255])) < 0.01);
-assert.match(read("scripts/quotes.js"), /getItem\("motivationalQuotesVisible"\) === "true"/);
+assert.ok(!existsSync(resolve(root, "scripts/quotes.js")));
+assert.doesNotMatch(html + read("style.css") + dashboardCode, /motivationalQuotes|quotesOptions|newQuoteOnRefresh|multilingual-quotes/);
 assert.match(read("styles/quote-contrast.css"), /\.studyQuote\.has-wallpaper\.is-on-bright/);
 for (const file of ["custom-text.js", "dashboard-tools.js", "layout-editor.js", "scratchpad.js", "wallpaper-gallery.js"]) {
     const code = read(`scripts/${file}`);

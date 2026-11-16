@@ -44,7 +44,6 @@
         entry('studyQuote', '讀書鼓勵', 'Study encouragement', 'myntStudyQuoteEnabled', 'string01', true, 'studyQuoteCheckbox', ['#studyQuote'], {
             panelSelectors: ['#studyQuoteToast']
         }),
-        entry('motivationalQuotes', '每日語錄', 'Daily quotes', 'motivationalQuotesVisible', 'boolean', false, 'motivationalQuotesCheckbox', ['#motivationalQuotesCont'], { display: 'flex' }),
         entry('exam', '今日考古題', 'Daily exam question', 'myntExamDailyVisible', 'boolean', true, 'examDailyCheckbox', ['#examDaily'], { panelSelectors: ['#examDailyPanel'] }),
         entry('countdowns', '重要日期倒數', 'Event countdowns', 'myntEventCountdownsV1', 'event-enabled', true, 'eventCountdownEnabled', ['#eventCountdownCard'], {
             legacyKeys: ['myntExamDate']

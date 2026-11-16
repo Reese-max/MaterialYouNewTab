@@ -163,7 +163,7 @@
 <p>背景圖片與影片像素只在本機 Canvas 進行低解析度色彩、亮度與紋理分析，不傳送到模型或伺服器。localStorage 的 myntAdaptiveBackground（版本 1）保存配色、對比、透明度開關，舊自動排版設定固定轉為關閉；myntLayout（版本 2）保存手動相對位置、縮放、格線與鎖定。背景功能不會移動元件，也不覆寫手動位置。這些設定不跨裝置同步，清除網站資料會刪除設定。無新增權限、網路服務或遙測。</p>
 <p>Adaptive background processing stays on-device. Versioned local preferences are stored in myntAdaptiveBackground and myntLayout. No pixels are uploaded and no new remote service is used.</p>
 <h2>資料收集與權限</h2>
-        <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用天氣、語音辨識、隨機桌布、語錄或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
+        <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用天氣、語音辨識、隨機桌布或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
 
         <h3>權限</h3>
         <p>我們僅要求提供豐富、動態瀏覽體驗所需的最低權限。以下是所使用權限的說明：</p>
@@ -204,13 +204,6 @@
                 </ul>
             </li>
 
-            <li><strong>語錄（<a href="https://github.com/prem-k-r/multilingual-quotes-api"
-                        target="_blank" rel="noopener noreferrer">多語言語錄 API</a>）：</strong>
-                <ul>
-                    <li><code>https://prem-k-r.github.io/multilingual-quotes-api/</code> — 語錄功能啟用時下載語系中繼資料與語錄內容。</li>
-                </ul>
-            </li>
-
             <li><strong>網站圖示擷取（Google Favicon API）：</strong>
                 <ul>
                     <li><code>https://s2.googleusercontent.com/s2/favicons*</code></li>
@@ -228,7 +221,7 @@
         <p>Version 2 entries in myntFocusLog retain each completed round’s actual minutes and subject. Later timer or subject changes do not rewrite earlier rounds. Legacy rounds lack duration data and use a fixed 25-minute estimate with their original subject. Records remain local and use the existing backup scope.</p>
         <p>一般待辦與習慣介面的刪除也會在既有 myntTodoRecoveryV1／myntHabitRecoveryV1 保留最後一筆項目及原位置；習慣包含完整打卡日期。寫入失敗會嘗試回滾；再次刪除會取代同類型的上一筆復原紀錄。復原不需要連接 MCP。</p>
         <p>Task and habit deletions in the ordinary UI retain the last item and its original position in myntTodoRecoveryV1 / myntHabitRecoveryV1, including habit check-in dates. Failed writes attempt rollback. Another UI deletion replaces the preceding recovery item in that list. Undo needs no MCP connection.</p>
-        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、每日焦點文字／完成狀態／延續日期、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。每日焦點會包含在您主動匯出的 MYNT 備份檔。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
+        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、每日焦點文字／完成狀態／延續日期、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。每日焦點會包含在您主動匯出的 MYNT 備份檔。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
         <p>控制中心的服務狀態只會在 localStorage 記錄服務識別名稱、成功或失敗結果、HTTP 狀態碼及時間；不會記錄完整網址、搜尋文字、位置、API 金鑰，也不會傳送至專案營運者。</p>
 
 

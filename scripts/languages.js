@@ -203,10 +203,6 @@ function applyLanguage(lang) {
         "hideSearchWith",
         "hideSearchWithInfo",
         "searchWithHint",
-        "motivationalQuotesText",
-        "motivationalQuotesInfo",
-        "newQuoteOnRefreshText",
-        "newQuoteOnRefreshInfo",
         "hideClockBox",
         "hideClockBoxInfo",
         "digitalclocktitle",
@@ -420,7 +416,7 @@ function applyLanguage(lang) {
 
     // Apply the direction attribute to specific selectors for RTL languages
     const isRTL = rtlLanguages.includes(lang);
-    const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont", ".quotesCont",
+    const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont",
         ".leftDiv", ".shortcutsContainer", ".page", "#prompt-modal-box", ".todo-container",
         ".bookmark-sidebar", ".bookmark-search-container", ".bookmark-controls-container", ".bookmark-state",
         ".bookmark-section", ".bookmark-action-popover", "#editBookmarkModal", ".liquidGlass-toast"];
@@ -437,10 +433,6 @@ function applyLanguage(lang) {
     feelsLikeElement.style.paddingRight = isRTL ? "43px" : "";
     feelsLikeElement.style.width = isRTL ? "calc(100% - 12px)" : "";
     feelsLikeElement.style.textAlign = isRTL ? "right" : "left";
-
-    const quotesText = document.querySelector(".quotesContainer");
-    // quotesText.style.textAlign = isRTL ? "right" : "left";
-    quotesText.style.fontFamily = commonFontStack;
 
     // Save the selected language in localStorage
     document.documentElement.lang = lang === "zh_TW" ? "zh-TW" : lang.replace("_", "-");

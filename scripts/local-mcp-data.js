@@ -21,7 +21,7 @@ const step = object({text:str(80),done:bool},['text','done']);
 const block = object({x:{type:'number',minimum:-1,maximum:1},y:{type:'number',minimum:-1,maximum:1},s:{type:'number',minimum:.5,maximum:2},w:{type:'number',minimum:.01,maximum:1},h:{type:'number',minimum:.01,maximum:1}},['x','y','s']);
 const blocks = Object.fromEntries(['clock','focus','search','searchWith','aiTools','shortcuts','quote','countdowns','exam','pomodoro','scratchpad','homeWidgets','bookmarks','wallpaper','menu'].map(k=>[k,block]));
 const layout = object({version:{const:2},snap:bool,locked:bool,blocks:object(blocks)},['version','snap','locked','blocks']);
-const workspaceWidgets=object(Object.fromEntries(['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox','motivationalQuotesCheckbox','scratchpadCheckbox'].map(key=>[key,bool])));
+const workspaceWidgets=object(Object.fromEntries(['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox','scratchpadCheckbox'].map(key=>[key,bool])));
 const workspacePatch=object({name:str(30),widgets:workspaceWidgets,background:enumeration(['video','wallpaper','color']),focusMinutes:{type:'number',minimum:1,maximum:120},urls:{type:'array',maxItems:10,items:str(2048)}});
 const accessibilityPatch=object({reduceMotion:bool,highContrast:bool,fontScale:{type:'number',enum:[0.9,1,1.1,1.2],minimum:.9,maximum:1.2}});
 const definitions = [
@@ -152,8 +152,8 @@ function workspaceState(raw,context,required) {
  if(!Array.isArray(value)||value.length>8)fail('invalid_storage','Invalid workspaces preserved');
  for(const item of value) {
   if(!plain(item)||Object.keys(item).some(k=>!['id','name','widgets','background','focusMinutes','urls'].includes(k))||typeof item.id!=='string'||!/^[-A-Za-z0-9_]{1,64}$/.test(item.id))fail('invalid_storage','Invalid workspace fields preserved');
-  // Presets saved before Bongo Cat was removed still carry its flag; ignore it.
-  const widgets=plain(item.widgets)?Object.fromEntries(Object.entries(item.widgets).filter(([k])=>k!=='bongoCatCheckbox')):item.widgets;
+  // Presets saved before these widgets were removed still carry their flags; ignore them.
+  const widgets=plain(item.widgets)?Object.fromEntries(Object.entries(item.widgets).filter(([k])=>!['bongoCatCheckbox','motivationalQuotesCheckbox'].includes(k))):item.widgets;
   try{validate({name:item.name,widgets,background:item.background,focusMinutes:item.focusMinutes,urls:item.urls},workspacePatch);}catch{fail('invalid_storage','Invalid workspace fields preserved');}
   if(!item.name.trim()||item.name!==item.name.trim()||!Number.isInteger(item.focusMinutes)||item.urls.some(url=>!/^https?:\/\//i.test(url)))fail('invalid_storage','Invalid workspace values preserved');
  }

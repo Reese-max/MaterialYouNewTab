@@ -21,13 +21,6 @@
 	z-index: 2;
 }
 
-/* 名言列維持於捷徑列下方，並確保圖層順序正常 */
-.quotesCont,
-#motivationalQuotesCont {
-	position: relative;
-	z-index: 1;
-}
-
 /* 確保捷徑名稱標籤在深色模式與有桌布時可正確點擊與顯示 */
 .shortcuts .shortcut-name {
 	pointer-events: auto;
@@ -4496,7 +4489,7 @@ html.black-theme #menuCont {
 
 /* 窄螢幕保留文字空間；其他尺寸用縮排與連續細線表示數位時鐘子選項。 */
 @media (min-width: 360px) {
-	#menuCont :is(#timeformatField, #quotesToggle, .quotesOptions > .ttcont) {
+	#menuCont #timeformatField {
 		margin-inline-start: 16px;
 		border-inline-start: 2px solid var(--menu-row-divider);
 		padding-inline-start: 12px;
@@ -4863,7 +4856,7 @@ body:is([data-bg="wallpaper"], [data-workspace-background="video"]) .shortcutsCo
 }
 
 /* 影片名言已有高不透明度底板；一般圖片桌布補上同等保護。 */
-body[data-bg="wallpaper"]:not([data-workspace-background="video"]) :is(#studyQuote, .quotesContainer) {
+body[data-bg="wallpaper"]:not([data-workspace-background="video"]) #studyQuote {
 	background-color: rgba(255, 255, 255, 0.96);
 	color: #202020;
 	text-shadow: none;

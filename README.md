@@ -46,7 +46,7 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 - Scratchpad and Markdown export
 - Workspace presets and multi-tab launchers
 - Sidebar bookmarks and Google Apps launcher
-- Command Palette, keyboard shortcuts, Daily Quote mode, and an in-extension What's New page
+- Command Palette, keyboard shortcuts, and an in-extension What's New page
 - Accessibility controls including reduced motion, contrast, and text scaling
 - Backup, restore, and local reset controls
 
@@ -219,7 +219,6 @@ This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through c
 
 This project is derived from [prem-k-r/MaterialYouNewTab](https://github.com/prem-k-r/MaterialYouNewTab), which itself includes work from earlier MYNT contributors. Upstream author and contributor attribution in source files and project history is intentionally retained.
 
-The multilingual quotes service used by the project is maintained separately at [prem-k-r/multilingual-quotes-api](https://github.com/prem-k-r/multilingual-quotes-api).
 
 ## License
 

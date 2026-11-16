@@ -44,10 +44,6 @@
                 const node = document.getElementById('hideWeather');
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
             }
-            if (item.id === 'motivationalQuotes') {
-                const node = document.getElementById('motivationalQuotesCont');
-                if (node) node.toggleAttribute('data-mynt-component-hidden', !item.visible || localStorage.getItem('showShortcutSwitch') !== 'true');
-            }
             if (item.id === 'focus' && item.visible) {
                 const heading = document.getElementById('userText'), actions = document.getElementById('dailyFocusActions');
                 if (heading) heading.style.display = 'block';
@@ -102,7 +98,7 @@
         if (id === 'studyQuote') root.myntStudy?.render();
         if (id === 'clock') refreshClock();
         refresh();
-        const hint = visible && ['weather', 'motivationalQuotes'].includes(id)
+        const hint = visible && id === 'weather'
             ? text('已顯示；如尚無內容，請到該功能設定完成啟用。', 'Shown. If empty, finish setup in that feature’s settings.')
             : text('已儲存。隱藏不會刪除資料或改變已儲存位置。', 'Saved. Hiding preserves data and saved positions.');
         status.textContent = hint;

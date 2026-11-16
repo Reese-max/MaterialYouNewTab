@@ -51,9 +51,6 @@
                 "googleAppsCheckbox": {
                   "type": "boolean"
                 },
-                "motivationalQuotesCheckbox": {
-                  "type": "boolean"
-                },
                 "scratchpadCheckbox": {
                   "type": "boolean"
                 }
