@@ -5057,18 +5057,38 @@ option:checked {
 	white-space: nowrap;
 }
 
+/* Upload is the one filled action. --darkerColor-blue keeps white text >=4.5:1 (#4382ec gave 3.7:1). */
+.uploadClearContainer .uploadButton {
+	color: var(--whitishColor-blue);
+	background-color: var(--darkerColor-blue);
+}
+
+.uploadClearContainer .uploadButton:hover {
+	color: var(--whitishColor-blue);
+	background-color: color-mix(in srgb, var(--darkerColor-blue) 82%, black);
+}
+
+.uploadClearContainer .randomButton {
+	color: var(--darkerColor-blue);
+}
+
 /* Upload is the primary action; clearing the background is secondary, in the random button's white style. */
 .uploadClearContainer .clearButton {
 	flex: 1 0 auto;
 	white-space: nowrap;
-	color: var(--darkColor-blue);
+	color: var(--darkerColor-blue);
 	background-color: var(--whitishColor-blue);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .uploadClearContainer .clearButton:hover {
 	color: var(--whitishColor-blue);
-	background-color: var(--darkColor-blue);
+	background-color: var(--darkerColor-blue);
+}
+
+/* The percentage sits on the slider fill: the darker blue keeps it readable. */
+:root:not(.black-theme) #opacitySlider {
+	background-color: var(--darkerColor-blue);
 }
 
 .uploadButton {
