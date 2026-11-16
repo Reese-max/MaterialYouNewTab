@@ -86,6 +86,7 @@
 /* An empty section is one quiet line: title and hint side by side, no "0" badge. */
 #bookmarkSidebar #bookmarkList .bookmark-section:has(> .bookmark-section-empty) {
     display: flex;
+    flex-direction: row; /* the legacy grid rule in style.css stacks li items */
     flex-wrap: wrap;
     align-items: baseline;
     column-gap: 4px;
@@ -374,6 +375,10 @@
     text-align: center;
 }
 #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item .bookmark-item-copy small { display: none; }
+/* Search results keep "domain · folder" in the grid too; it is how same-named results differ. */
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section[data-section="bookmarkSectionSearch"] .bookmark-item-copy small {
+    display: block; overflow-wrap: anywhere; text-align: center; font-size: .6875rem;
+}
 #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary {
     position: absolute;
     inset-block-start: 4px;

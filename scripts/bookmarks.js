@@ -431,6 +431,7 @@ function renderBookmarks() {
 function createBookmarkSection(titleKey, nodes, emptyKey, keepOrder = false) {
     const section = document.createElement("li");
     section.className = "bookmark-section";
+    section.dataset.section = titleKey;
     const header = document.createElement("div");
     header.className = "bookmark-section-header";
     const heading = document.createElement("h3");
@@ -564,7 +565,8 @@ function createBookmarkItem(node) {
     title.textContent = node.title || safeHostname(node.url);
     const url = document.createElement("small");
     // Search results also name the folder, so same-named bookmarks can be told apart.
-    const folder = bookmarkSearch.value.trim() ? bookmarkNodeMap.get(String(node.parentId))?.title : "";
+    const parent = bookmarkSearch.value.trim() ? bookmarkNodeMap.get(String(node.parentId)) : null;
+    const folder = parent && !bookmarkTree.some(root => String(root.id) === String(parent.id)) ? parent.title || bookmarkText("bookmarkUntitledFolder") : "";
     url.textContent = folder ? `${safeHostname(node.url)} · ${folder}` : safeHostname(node.url);
     copy.append(title, url);
     link.append(favicon, copy);
@@ -880,9 +882,11 @@ bookmarkSearch.addEventListener("input", () => {
     bookmarkSearchTimer = setTimeout(renderBookmarks, 120);
 });
 bookmarkViewGrid.addEventListener("click", () => {
+    try { localStorage.setItem("myntBookmarkView", "grid"); } catch { /* the view still switches for this page */ }
     if (!bookmarkGridCheckbox.checked) bookmarkGridCheckbox.click();
 });
 bookmarkViewList.addEventListener("click", () => {
+    try { localStorage.setItem("myntBookmarkView", "list"); } catch { /* the view still switches for this page */ }
     if (bookmarkGridCheckbox.checked) bookmarkGridCheckbox.click();
 });
 sortAlphabetical.addEventListener("click", () => {
@@ -980,12 +984,10 @@ document.addEventListener("keydown", event => {
     loadCheckboxState("bookmarksCheckboxState", bookmarksCheckbox);
     loadDisplayStatus("bookmarksDisplayStatus", bookmarkButton);
     loadCheckboxState("bookmarkGridCheckboxState", bookmarkGridCheckbox);
-    // One-time move to the list view: the grid used to be switched on automatically and saved as if chosen.
+    // The grid used to be switched on automatically and saved as if chosen; only a grid picked in
+    // display options (myntBookmarkView) is kept. Re-checked on every load, so restores and failed writes settle.
     try {
-        if (localStorage.getItem("myntBookmarkListDefault") === null) {
-            localStorage.setItem("myntBookmarkListDefault", "1");
-            if (bookmarkGridCheckbox.checked) bookmarkGridCheckbox.click();
-        }
+        if (bookmarkGridCheckbox.checked && localStorage.getItem("myntBookmarkView") !== "grid") bookmarkGridCheckbox.click();
     } catch { /* Storage blocked: keep the current view. */ }
     if (bookmarksCheckbox.checked) bookmarkButton.style.display = "flex";
     updateSortButtons();
