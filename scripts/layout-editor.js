@@ -151,6 +151,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     let guideLayer = null, resizeObserver = null, frame = null;
     let preciseFields = null, warnings = null;
     const overlays = new Map();
+    // In-memory only: the toolbar keeps its place and size for this tab without writing storage.
+    const toolbarUi = { x: null, y: null, collapsed: false };
+    let minimizeButton = null, moreBox = null;
     let draft=null,editScope=null;
     try { if(typeof MyntLayoutDraft!=='undefined')draft=MyntLayoutDraft.create(sessionStorage,myntNormalizeLayout); } catch {}
     function checkpoint(){
@@ -538,17 +541,19 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function buildToolbar() {
         toolbar = document.createElement("section"); toolbar.id = "myntLayoutToolbar";
         toolbar.setAttribute("aria-label", t("layoutToolbarLabel", "Layout editing tools"));
-        toolbar.dataset.dock = "bottom";
+        toolbar.dataset.dock = toolbarUi.x === null ? "corner" : "free";
         const top = document.createElement("div"); top.className = "myntLayoutToolbarRow";
         const title = document.createElement("strong"); title.textContent = t("layoutEditSetting", "Edit layout");
-        const dockToggle = button("myntLayoutDockToggle", t("layoutDockTop", "Dock at top"), () => {
-            const atTop = toolbar.dataset.dock !== "top";
-            toolbar.dataset.dock = atTop ? "top" : "bottom";
-            dockToggle.textContent = atTop ? t("layoutDockBottom", "Dock at bottom") : t("layoutDockTop", "Dock at top");
-            dockToggle.setAttribute("aria-pressed", String(atTop));
+        // Laptop screens leave no free margin beside centred blocks, so the toolbar stays small, collapsible and movable.
+        const grip = button("myntLayoutToolbarGrip", "⠿");
+        grip.setAttribute("aria-label", t("layoutToolbarMove", "Move toolbar; arrow keys move it, Shift moves faster"));
+        grip.title = t("layoutToolbarMoveHint", "Drag to move the toolbar; blocks stay in place");
+        grip.addEventListener("pointerdown", startToolbarDrag);
+        grip.addEventListener("keydown", e => {
+            const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (!d) return;
+            e.preventDefault(); e.stopPropagation(); const step = e.shiftKey ? 40 : 10; moveToolbar(d[0] * step, d[1] * step);
         });
-        dockToggle.setAttribute("aria-pressed", "false");
-        dockToggle.title = t("layoutDockHint", "Move the toolbar to reveal covered handles; workspace blocks stay in place.");
+        minimizeButton = button("myntLayoutMinimize", "", () => setToolbarCollapsed(!toolbarUi.collapsed));
         undoButton = button("myntLayoutUndo", t("layoutUndo", "↶ Undo"), () => changeHistory("undo"));
         redoButton = button("myntLayoutRedo", t("layoutRedo", "↷ Redo"), () => changeHistory("redo"));
         undoButton.setAttribute("aria-keyshortcuts", "Control+z Meta+z"); redoButton.setAttribute("aria-keyshortcuts", "Control+Shift+z Meta+Shift+z Control+y");
@@ -558,7 +563,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         snapLabel.append(snapBox, document.createTextNode(t("layoutSnapAlignment", "Align / 16px grid")));
         const cancel = button("myntLayoutCancel", t("dialogCancel", "Cancel"), cancelEditing);
         const done = button("myntLayoutSave", t("layoutSaveLock", "Save and lock"), () => { activeDrag?.finish(); save(); }); done.className = "primary";
-        top.append(title, dockToggle, undoButton, redoButton, snapLabel, cancel, done);
+        top.append(grip, title, minimizeButton);
+        const actions = document.createElement("div"); actions.className = "myntLayoutToolbarRow myntLayoutActions";
+        actions.append(undoButton, redoButton, cancel, done);
         const bottom = document.createElement("div"); bottom.className = "myntLayoutToolbarRow myntLayoutHelp";
         selectedLabel = document.createElement("span");
         resetSelectedButton = button("myntLayoutResetSelected", t("layoutResetSelected", "Reset selected"), () => {
@@ -583,7 +590,36 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
         row.append(button('myntLayoutPreciseApply',t('layoutApplyNumbers','Apply values'),()=>preciseChange()),button('myntLayoutAlignLeft',t('layoutAlignLeft','Align left'),()=>preciseChange('left')),button('myntLayoutAlignCenter',t('layoutAlignCenter','Center horizontally'),()=>preciseChange('center')));
         warnings=document.createElement('p');warnings.id='myntLayoutWarnings';warnings.setAttribute('role','status');precise.append(row,warnings);
-        toolbar.append(top, bottom, precise, status); document.body.append(toolbar);
+        moreBox = document.createElement("details"); moreBox.className = "myntLayoutMore";
+        const moreSummary = document.createElement("summary"); moreSummary.textContent = t("layoutMoreOptions", "More options");
+        moreBox.append(moreSummary, snapLabel, bottom, precise);
+        moreBox.addEventListener("toggle", clampToolbar); // keep an expanded panel inside the viewport
+        toolbar.append(top, actions, status, moreBox); document.body.append(toolbar);
+        setToolbarCollapsed(toolbarUi.collapsed);
+        if (toolbarUi.x !== null) placeToolbar(toolbarUi.x, toolbarUi.y);
+    }
+    function placeToolbar(x, y) {
+        if (!toolbar) return;
+        const w = toolbar.offsetWidth || 0, h = toolbar.offsetHeight || 0;
+        toolbarUi.x = Math.max(8, Math.min(innerWidth - w - 8, x)); toolbarUi.y = Math.max(8, Math.min(innerHeight - h - 8, y));
+        toolbar.dataset.dock = "free"; toolbar.style.left = toolbarUi.x + "px"; toolbar.style.top = toolbarUi.y + "px";
+    }
+    function moveToolbar(dx, dy) { const r = toolbar.getBoundingClientRect(); placeToolbar(r.left + dx, r.top + dy); }
+    function clampToolbar() { if (toolbarUi.x !== null) placeToolbar(toolbarUi.x, toolbarUi.y); }
+    function startToolbarDrag(e) {
+        if (e.button !== 0 || !toolbar) return;
+        e.preventDefault(); const r = toolbar.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top;
+        const move = ev => placeToolbar(ev.clientX - ox, ev.clientY - oy);
+        const end = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", end); removeEventListener("pointercancel", end); };
+        addEventListener("pointermove", move); addEventListener("pointerup", end); addEventListener("pointercancel", end);
+    }
+    function setToolbarCollapsed(on) {
+        toolbarUi.collapsed = on; toolbar.dataset.collapsed = String(on);
+        minimizeButton.textContent = on ? "▢" : "–";
+        minimizeButton.setAttribute("aria-expanded", String(!on));
+        const label = on ? t("layoutToolbarExpand", "Expand toolbar") : t("layoutToolbarCollapse", "Collapse toolbar");
+        minimizeButton.setAttribute("aria-label", label); minimizeButton.title = label;
+        clampToolbar();
     }
     function closeEditor() {
         activeDrag?.cancel();
@@ -595,7 +631,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         toolbar?.remove(); toolbar = null; guideLayer?.remove(); guideLayer = null;
         resizeObserver?.disconnect(); resizeObserver = null;
         if (frame !== null) cancelAnimationFrame(frame); frame = null;
-        removeEventListener("scroll", scheduleOverlays, true); removeEventListener("resize", scheduleOverlays);
+        removeEventListener("scroll", scheduleOverlays, true); removeEventListener("resize", scheduleOverlays); removeEventListener("resize", clampToolbar);
         editButton.setAttribute("aria-expanded", "false"); dock.hidden = true;
         (document.getElementById("layoutEditInfo")?.parentElement || dock).append(status);
         lockStatus.textContent = layout.locked ? t("layoutPositionsLocked", "Positions locked") : t("layoutEditOff", "Edit mode off");
@@ -629,8 +665,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const help=document.createElement('p');help.textContent=t('layoutGuideText','Drag the handles, use arrows for 1px steps (Shift: 10px), or hold Alt while dragging to bypass snapping. Undo and Cancel are safe; Save and lock commits your layout.');
         let seen=false;try{seen=localStorage.getItem('myntLayoutGuideSeen')==='1';}catch{}guide.open=!seen;
         const dismiss=button('myntGuideDismiss',t('layoutGuideDismiss','Got it'),()=>{guide.open=false;try{localStorage.setItem('myntLayoutGuideSeen','1');}catch{}});
-        guide.append(heading,help,dismiss);toolbar.append(guide);
-        addEventListener("scroll", scheduleOverlays, true); addEventListener("resize", scheduleOverlays);
+        guide.append(heading,help,dismiss);moreBox.append(guide);
+        addEventListener("scroll", scheduleOverlays, true); addEventListener("resize", scheduleOverlays); addEventListener("resize", clampToolbar);
         if (typeof ResizeObserver !== "undefined") {
             resizeObserver = new ResizeObserver(scheduleOverlays);
             MYNT_LAYOUT_BLOCKS.forEach(([, selector]) => elementsFor(selector).forEach(el => resizeObserver.observe(el)));
