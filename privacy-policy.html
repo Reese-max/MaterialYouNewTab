@@ -163,7 +163,7 @@
 <p>背景圖片與影片像素只在本機 Canvas 進行低解析度色彩、亮度與紋理分析，不傳送到模型或伺服器。localStorage 的 myntAdaptiveBackground（版本 1）保存配色、對比、透明度開關，舊自動排版設定固定轉為關閉；myntLayout（版本 2）保存手動相對位置、縮放、格線與鎖定。背景功能不會移動元件，也不覆寫手動位置。這些設定不跨裝置同步，清除網站資料會刪除設定。無新增權限、網路服務或遙測。</p>
 <p>Adaptive background processing stays on-device. Versioned local preferences are stored in myntAdaptiveBackground and myntLayout. No pixels are uploaded and no new remote service is used.</p>
 <h2>資料收集與權限</h2>
-        <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用搜尋建議、天氣、語音辨識、隨機桌布、語錄或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
+        <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用天氣、語音辨識、隨機桌布、語錄或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
 
         <h3>權限</h3>
         <p>我們僅要求提供豐富、動態瀏覽體驗所需的最低權限。以下是所使用權限的說明：</p>
@@ -171,7 +171,6 @@
         <ul>
             <li><strong>書籤：</strong>只在您啟用書籤功能後請求。此權限可讀取、新增、修改與刪除瀏覽器書籤。</li>
             <li><strong>網站圖示</strong>（Chrome 選用）：用於從瀏覽器快取讀取書籤圖示。若快取沒有圖示，書籤會改用內建替代圖示，不傳送書籤網域。</li>
-            <li><strong>Google 網域</strong>（選用）：只在您啟用 Google 搜尋建議後請求。</li>
             <li><strong>擴充功能儲存空間：</strong>在瀏覽器的 extension storage 中保存呆呆的受限本機配對權杖與已處理操作 ID；不會保存呆呆主權杖。</li>
             <li><strong>本機呆呆橋接</strong>（選用）：只有按下「連接呆呆」後，才請求連線至 <code>http://127.0.0.1/*</code>。此位址只代表目前電腦，不會連到區域網路或專案營運者的伺服器。</li>
         </ul>
@@ -191,13 +190,6 @@
         <h3>外部 API</h3>
         <p>只有相關功能啟用或觸發時，MYNT 才會使用下列服務：</p>
         <ul>
-            <li><strong>搜尋建議：</strong>
-                <ul>
-                    <li>Google：<code>https://www.google.com/complete/search?client=*</code></li>
-                </ul>
-                <p>搜尋建議預設關閉。啟用後，輸入的查詢字詞會直接傳送至 Google；若同時啟用代理，查詢會先傳送至您設定的代理伺服器。</p>
-            </li>
-
             <li><strong>位置偵測（<a href="https://ipinfo.io/" target="_blank" rel="noopener noreferrer">IPinfo</a>）：</strong>
                 <ul>
                     <li><code>https://ipinfo.io/json</code> — 天氣功能開啟且未設定手動位置或 GPS 時，根據 IP 位址取得約略經緯度。</li>
@@ -247,17 +239,6 @@
         <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、首頁稱呼、每日焦點文字／完成狀態／延續日期、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。首頁稱呼只會顯示在本機問候語中；每日焦點也不會自動分享給呆呆。兩者都會包含在您主動匯出的 MYNT 備份檔。呆呆受限配對權杖與最近已確認／拒絕的操作 ID 存在 extension storage，不會進入 MYNT 一般備份檔；重設 MYNT 或解除連動時會清除。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
         <p>控制中心的服務狀態只會在 localStorage 記錄服務識別名稱、成功或失敗結果、HTTP 狀態碼及時間；不會記錄完整網址、搜尋文字、位置、API 金鑰，也不會傳送至專案營運者。</p>
 
-        <h3>代理伺服器（選用）</h3>
-        <p>
-            MYNT: Material You New Tab 包含一項選用的代理功能，<strong>預設為停用</strong>。此功能可用於在取得搜尋建議時繞過 CORS 限制。
-        </p>
-        <p>
-            對於希望啟用此功能的使用者，我們<strong>強烈建議<a
-                    href="https://github.com/Minuga-RC/MYNT-CORS-Bypass-Proxy" target="_blank" rel="noopener noreferrer">自行架設代理伺服器</a></strong>，以保持完全控制並確保最大程度的隱私保護。
-        </p>
-        <p>
-            如果啟用並保持預設設定，搜尋建議請求將透過以下公共代理轉發：<code>https://mynt-proxy.rhythmcorehq.com</code>。代理營運者會看到您的 IP 位址與完整搜尋建議請求。
-        </p>
 
 
         <h3>更新與解除安裝頁面</h3>

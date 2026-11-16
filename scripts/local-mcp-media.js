@@ -374,7 +374,7 @@
             return ok({ items, truncated: sizeTruncated || stack.length > 0 });
         }
         return ok({ features: [
-            ['search', 'browser_ui', 'Search engines, suggestions, bangs, voice search and navigation require the search UI; microphone permission is never requested by MCP.'],
+            ['search', 'browser_ui', 'Search engines, bangs, voice search and navigation require the search UI; microphone permission is never requested by MCP.'],
             ['shortcuts', 'implemented_with_limits', 'Read/create/update/recoverable trash/undo are supported through the data adapter. Icon file selection and Alt+1–9 navigation remain browser UI.'],
             ['weather', 'browser_ui', 'Location, provider keys and refresh remain in weather settings; no keys are exported.'],
             ['ai_tools_google_apps', 'partial', 'Built-in AI tool order and visibility are supported through preferences. Links and Google Apps remain in the UI; no automatic navigation.'],

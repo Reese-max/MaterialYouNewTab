@@ -43,21 +43,15 @@ const run = (c, source) => vm.runInContext(source, c);
 const tests = [];
 const test = (id, fn) => tests.push([id, fn]);
 
-for (const finding of ['2', '5']) test('search-nav#' + finding, () => {
-    const c = context(); c.searchInput = node(); c.searchbar = { contains: () => true }; let searched = 0;
-    c.performSearch = () => searched++;
-    run(c, read('scripts/search-suggestions.js'));
-    const box = c.document.getElementById('resultBox'), input = c.searchInput, item = node();
-    item.textContent = '!yt · YouTube'; item.setAttribute('data-query', '!yt '); item.setAttribute('data-index', '0');
-    item.classList.add('active'); box.children = [item]; box.classList.add('show');
-    if (finding === '2') for (const flag of [{ isComposing: true }, { keyCode: 229 }]) for (const key of ['Enter', 'ArrowDown', 'ArrowUp', 'ArrowRight', 'Tab']) {
-        input.value = '!y'; input.selectionStart = 2;
-        assert.ok(!input.emit('keydown', { key, ...flag }).prevented); assert.equal(input.value, '!y');
-    }
-    assert.equal(searched, 0);
-    run(c, 'lastInteractionBy = "mouse";');
-    for (const key of ['Tab', 'ArrowRight']) { input.value = '!y'; input.selectionStart = 2; input.emit('keydown', { key }); assert.equal(input.value, '!yt '); }
-    box.children = []; box.classList.remove('show'); input.emit('keydown', { key: 'Enter' }); assert.equal(searched, 1);
+test('search-enter#2', () => {
+    const c = context(); c.searchInput = node(); const searched = [];
+    c.performSearch = query => searched.push(query);
+    run(c, between('scripts/search.js', '// Enter searches;', 'enterBTN.addEventListener'));
+    const input = c.searchInput; input.value = '!yt cats';
+    for (const flag of [{ isComposing: true }, { keyCode: 229 }]) assert.ok(!input.emit('keydown', { key: 'Enter', ...flag }).prevented);
+    assert.ok(!input.emit('keydown', { key: 'ArrowDown' }).prevented);
+    assert.deepEqual(searched, []);
+    assert.ok(input.emit('keydown', { key: 'Enter' }).prevented); assert.deepEqual(searched, ['!yt cats']);
 });
 
 for (const finding of ['6', '9']) test('notes-ai#' + finding, () => {

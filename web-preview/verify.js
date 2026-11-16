@@ -21,7 +21,6 @@
         ["ext-icon", "自訂圖示可使用圖片網址、上傳圖片與安全 SVG，重載後仍保留。"],
         ["ext-icon-security", "含 script、onload、javascript: 或 foreignObject 的 SVG 會被拒絕且不會保存。"],
         ["ext-bookmarks", "書籤功能只在你主動啟用後要求權限，拒絕時不影響其他功能。"],
-        ["ext-suggestions", "搜尋建議只在主動啟用後要求 Google host permission。"],
         ["ext-backup", "備份檔不含 WeatherAPI key；還原成功且錯誤檔案不會破壞目前設定。"],
         ["ext-private", "無痕模式、更新頁與解除安裝連結符合預期，沒有指向上游私人表單。"],
     ];

@@ -36,7 +36,7 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 
 ## Core features
 
-- Google Search with optional Google autocomplete suggestions and voice typing
+- Google Search with search bangs and voice typing
 - Material You themes, dark/light/system mode, custom colors, wallpaper, and video background
 - Clock and live weather
 - Quick shortcuts with uploaded/URL/SVG custom icons and `Alt+1`–`Alt+9` launching
@@ -146,7 +146,6 @@ The Chromium build uses minimal optional permissions:
 
 - `bookmarks` — requested only when browser bookmark integration is enabled
 - `favicon` — optional Chromium favicon access
-- `https://www.google.com/*` — optional host access for Google search suggestions
 
 MYNT also uses browser storage (`localStorage` and IndexedDB) for interface settings and productivity data. Weather and other optional features may contact their documented third-party services when enabled.
 

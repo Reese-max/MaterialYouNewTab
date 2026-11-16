@@ -61,57 +61,6 @@ async function runTodoProbe() {
   assert.equal(row.classList.contains('edit'), false, 'Editing state must clear');
   assert.equal(context.suppressNextClick, false, 'Click suppression must eventually clear');
 }
-function makeSearchFixture() {
-  const source = read('scripts/search-suggestions.js');
-  // Include state, helpers, input/keyboard handlers, fetch implementation and
-  // outside-click dismissal; omit permission/setup listeners completely.
-  const searchSource = between(source, '// ---------------------------- Search Suggestions', '// ------------------------- Toggles');
-  const searchInput = element('input'), resultBox = element(), searchbar = element();
-  searchbar.children = [searchInput, resultBox];
-  const checkbox = { checked: true }, pending = [], documentListeners = {};
-  const document = {
-    activeElement: searchInput,
-    getElementById(id) { return id === 'resultBox' ? resultBox : id === 'searchsuggestionscheckbox' ? checkbox : { checked: false }; },
-    createElement: element,
-    addEventListener(type, fn) { (documentListeners[type] ||= []).push(fn); }
-  };
-  const context = { searchInput, searchbar, document, SEARCH_BANGS: {},
-    isFirefox: true, isOpera: false, isChromiumBased: false, isSafari: false,
-    console, AbortController, setTimeout, clearTimeout, performSearch() {},
-    fetch(url) { return new Promise(resolve => pending.push({ url, resolve })); }
-  };
-  vm.createContext(context); vm.runInContext(searchSource, context);
-  return {
-    searchInput, resultBox, document,
-    type(value) { searchInput.value = value; return searchInput.listeners.input[0].call(searchInput); },
-    async resolve(index, suggestions) { pending[index].resolve({ ok: true, json: async () => ['', suggestions] }); },
-    outside() { const target = element('button'); document.activeElement = target; for (const fn of documentListeners.click || []) fn({ target }); },
-    escape() { for (const fn of searchInput.listeners.keydown || []) fn.call(searchInput, { key: 'Escape', preventDefault() {}, stopPropagation() {} }); }
-  };
-}
-async function runSearchProbe() {
-  const results = [];
-  {
-    const f = makeSearchFixture();
-    const old = f.type('old'), recent = f.type('new');
-    await f.resolve(1, ['NEW']); await recent;
-    await f.resolve(0, ['OLD']); await old;
-    results.push(['Latest query wins', f.resultBox.children.map(x => x.textContent).join('|') === 'NEW']);
-  }
-  {
-    const f = makeSearchFixture();
-    const pending = f.type('typing'); f.outside();
-    await f.resolve(0, ['LATE']); await pending;
-    results.push(['Outside dismissal survives late response', !f.resultBox.classList.contains('show')]);
-  }
-  {
-    const f = makeSearchFixture();
-    const pending = f.type('typing'); await f.resolve(0, ['MATCH']); await pending;
-    f.escape();
-    results.push(['Escape dismisses suggestions', !f.resultBox.classList.contains('show')]);
-  }
-  assert.ok(results.every(([, ok]) => ok), results.map(([name, ok]) => `${ok ? 'PASS' : 'FAIL'}: ${name}`).join('; '));
-}
 async function runGalleryProbe() {
   const source = read('scripts/wallpaper-gallery.js');
   // Includes gallery-local state and helpers so a nearby render revision counter
@@ -193,7 +142,7 @@ function runGalleryModeProbe() {
 }
 (async () => {
   let failed = 0;
-  for (const [name, test] of [['GALLERY_MODE_CONTROLS', runGalleryModeProbe], ['BOOKMARK_FOCUS_AND_ESCAPE', runBookmarkFocusProbe], ['FOCUS_PANEL_ESCAPE', runFocusEscapeProbe], ['TASK_RENAME', runTodoProbe], ['SEARCH_DISMISSAL_AND_ORDER', runSearchProbe], ['GALLERY_RENDER_RACE', runGalleryProbe]]) {
+  for (const [name, test] of [['GALLERY_MODE_CONTROLS', runGalleryModeProbe], ['BOOKMARK_FOCUS_AND_ESCAPE', runBookmarkFocusProbe], ['FOCUS_PANEL_ESCAPE', runFocusEscapeProbe], ['TASK_RENAME', runTodoProbe], ['GALLERY_RENDER_RACE', runGalleryProbe]]) {
     try { await test(); console.log(`PASS ${name}`); }
     catch (error) { failed++; console.error(`FAIL ${name}: ${error.name}: ${error.message}`); }
   }

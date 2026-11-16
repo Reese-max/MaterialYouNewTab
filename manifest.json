@@ -12,7 +12,6 @@
     "nativeMessaging"
   ],
   "optional_host_permissions": [
-    "https://www.google.com/*",
     "http://127.0.0.1/*"
   ],
   "icons": {

@@ -61,7 +61,6 @@
     <link href="styles/quicklink-icons.css" rel="stylesheet">
     <script defer src="scripts/shortcuts.js"></script>
     <script defer src="scripts/script.js"></script>
-    <script defer src="scripts/search-suggestions.js"></script>
     <script defer src="scripts/ai-tools.js"></script>
     <script defer src="scripts/todo-list.js"></script>
     <script defer src="scripts/pomodoro-timer-core.js"></script>
@@ -922,7 +921,6 @@
                     </div>
                 </div>
             </div>
-            <div id="resultBox" class="resultBox bgLightTint" style="display: none;"></div>
             <!-- ----------end of searchbar-------------- -->
 
             <!-- Search Engine SVG Definitions -->
@@ -1654,47 +1652,6 @@
                                             </label>
                                         </div>
                                     </div>
-
-                                    <div class="ttcont" id="searchSuggestionsHeader">
-                                        <div class="texts">
-                                            <div class="bigText" id="search_suggestions_button">Search Suggestions</div>
-                                            <div class="infoText" id="search_suggestions_text">Enable search suggestions
-                                            </div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="searchsuggestionscheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="proxyOptions">
-                                        <div class="ttcont" id="proxybypassField">
-                                            <div class="texts">
-                                                <div class="bigText" id="useproxytitletext">Proxy Bypass</div>
-                                                <div class="infoText" id="useproxyText">If search suggestions aren't
-                                                    working</div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="useproxyCheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
-
-                                        <div class="ttcont unflex" id="proxyField">
-                                            <div class="texts">
-                                                <div class="bigText" id="ProxyText">CORS Bypass Proxy</div>
-                                                <div class="infoText" id="ProxySubtext">Add your own CORS bypass proxy
-                                                </div>
-                                            </div>
-                                            <input id="userproxy" placeholder="https://mynt-proxy.rhythmcorehq.com"
-                                                type="text">
-                                            <div class="bottom">
-                                                <a href="https://github.com/Minuga-RC/MYNT-CORS-Bypass-Proxy"
-                                                    id="HostproxyButton" target="_blank" rel="noopener noreferrer">Host your own proxy</a>
-                                                <button class="savebtn" id="saveproxy">Save</button>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2342,10 +2299,6 @@
                         <span class="permissionControls"><em id="permissionBookmarksStatus">Checking...</em><button type="button" data-permission-action="bookmarks">Manage</button></span>
                     </div>
                     <div class="permissionRow">
-                        <span><strong id="permissionSuggestionsTitle">Google suggestions</strong><small id="permissionSuggestionsInfo">Send typed queries to Google only when suggestions are enabled.</small></span>
-                        <span class="permissionControls"><em id="permissionSuggestionsStatus">Checking...</em><button type="button" data-permission-action="suggestions">Manage</button></span>
-                    </div>
-                    <div class="permissionRow">
                         <span><strong id="permissionNotificationsTitle">Notifications</strong><small id="permissionNotificationsInfo">Show a local alert when a Pomodoro phase ends.</small></span>
                         <span class="permissionControls"><em id="permissionNotificationsStatus">Checking...</em><button type="button" data-permission-action="notifications">Request</button></span>
                     </div>
@@ -2357,7 +2310,6 @@
                 <ul class="privacyDisclosureList">
                     <li id="privacyDisclosureWeather">WeatherAPI receives your configured location and API key in HTTPS query parameters.</li>
                     <li id="privacyDisclosureIp">IPinfo receives your IP address when weather is on without manual location or GPS.</li>
-                    <li id="privacyDisclosureSearch">Google or your selected proxy receives search text only when suggestions are on.</li>
                     <li id="privacyDisclosureLocal">Focus history, habits, accessibility, and workspace preferences stay in this browser.</li>
                 </ul>
             </section>

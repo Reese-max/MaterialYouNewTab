@@ -131,7 +131,6 @@ if (typeof document !== "undefined") {
             workspaces: "myntWorkspacePresets"
         };
         const MAX_CUSTOM_HABITS = 12;
-        const GOOGLE_ORIGIN = "https://www.google.com/*";
         const lang = localStorage.getItem("selectedLanguage") || "zh_TW";
 
         function t(key, fallback = key) {
@@ -171,10 +170,10 @@ if (typeof document !== "undefined") {
                 "accessibilityInfo", "reduceMotionText", "reduceMotionInfo", "highContrastText",
                 "highContrastInfo", "fontScaleText", "fontScaleInfo", "privacyCenterTitle",
                 "privacyCenterInfo", "privacyPolicyLink", "permissionBookmarksTitle",
-                "permissionBookmarksInfo", "permissionSuggestionsTitle", "permissionSuggestionsInfo",
+                "permissionBookmarksInfo",
                 "permissionNotificationsTitle", "permissionNotificationsInfo", "permissionLocationTitle",
                 "permissionLocationInfo", "privacyDisclosureWeather", "privacyDisclosureIp",
-                "privacyDisclosureSearch", "privacyDisclosureLocal", "serviceStatusTitle",
+                "privacyDisclosureLocal", "serviceStatusTitle",
                 "serviceStatusInfo", "commandPaletteTitle", "commandPaletteEmpty"
             ];
             sameKeyIds.forEach(id => {
@@ -196,7 +195,6 @@ if (typeof document !== "undefined") {
             ["network", "serviceNetwork"],
             ["weather", "serviceWeather"],
             ["location", "serviceLocation"],
-            ["suggestions", "serviceSuggestions"],
             ["wallpaper", "serviceWallpaper"],
             ["quotes", "serviceQuotes"]
         ];
@@ -210,11 +208,6 @@ if (typeof document !== "undefined") {
                 if (url.hostname === "ipinfo.io") return "location";
                 if (url.hostname === "picsum.photos") return "wallpaper";
                 if (url.hostname === "prem-k-r.github.io" && url.pathname.includes("multilingual-quotes-api")) return "quotes";
-                if (url.hostname === "www.google.com" && url.pathname.includes("complete/search")) return "suggestions";
-
-                const customProxy = localStorage.getItem("proxy");
-                const proxyHost = customProxy ? new URL(customProxy).hostname : "mynt-proxy.rhythmcorehq.com";
-                if (url.hostname === proxyHost) return "suggestions";
             } catch {
                 return null;
             }
@@ -979,7 +972,7 @@ if (typeof document !== "undefined") {
             status.className = state;
             button.disabled = !actionable;
             button.dataset.permissionState = state;
-            button.textContent = state === "granted" && ["Bookmarks", "Suggestions"].includes(name)
+            button.textContent = state === "granted" && name === "Bookmarks"
                 ? t("permissionRemove", "Remove")
                 : state === "prompt"
                     ? t("permissionGrant", "Grant")
@@ -989,15 +982,10 @@ if (typeof document !== "undefined") {
         async function renderPermissions() {
             if (permissionApi) {
                 const bookmarkPermissions = isFirefoxPermissionApi ? ["bookmarks"] : ["bookmarks", "favicon"];
-                const [bookmarksGranted, suggestionsGranted] = await Promise.all([
-                    callPermission("contains", { permissions: bookmarkPermissions }),
-                    callPermission("contains", { origins: [GOOGLE_ORIGIN] })
-                ]);
+                const bookmarksGranted = await callPermission("contains", { permissions: bookmarkPermissions });
                 setPermissionRow("Bookmarks", bookmarksGranted ? "granted" : "prompt");
-                setPermissionRow("Suggestions", suggestionsGranted ? "granted" : "prompt");
             } else {
                 setPermissionRow("Bookmarks", "unsupported", false);
-                setPermissionRow("Suggestions", "unsupported", false);
             }
 
             if ("Notification" in window) {
@@ -1029,12 +1017,6 @@ if (typeof document !== "undefined") {
                     await callPermission(state === "granted" ? "remove" : "request", { permissions });
                     if (state === "granted") {
                         const checkbox = document.getElementById("bookmarksCheckbox");
-                        if (checkbox.checked) checkbox.click();
-                    }
-                } else if (action === "suggestions") {
-                    await callPermission(state === "granted" ? "remove" : "request", { origins: [GOOGLE_ORIGIN] });
-                    if (state === "granted") {
-                        const checkbox = document.getElementById("searchsuggestionscheckbox");
                         if (checkbox.checked) checkbox.click();
                     }
                 } else if (action === "notifications" && Notification.permission === "default") {

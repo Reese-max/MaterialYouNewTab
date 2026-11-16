@@ -238,8 +238,6 @@ function applyLanguage(lang) {
         "motivationalQuotesInfo",
         "newQuoteOnRefreshText",
         "newQuoteOnRefreshInfo",
-        "search_suggestions_button",
-        "search_suggestions_text",
         "hideClockBox",
         "hideClockBoxInfo",
         "digitalclocktitle",
@@ -252,11 +250,6 @@ function applyLanguage(lang) {
         "greetingNameInfo",
         "userTextTitle",
         "userTextInfo",
-        "useproxytitletext",
-        "useproxyText",
-        "ProxyText",
-        "ProxySubtext",
-        "HostproxyButton",
         "UserLocText",
         "UserLocSubtext",
         "useGPS",
@@ -341,7 +334,6 @@ function applyLanguage(lang) {
         { id: "pomodoroPhaseLabel", key: "pomodoroWork" },
         { id: "googleEngineDD", key: "googleEngine" },
         { id: "bookmarksHover", key: "bookmarksHeading" },
-        { id: "saveproxy", key: "saveAPI" },
         { id: "saveLoc", key: "saveAPI" },
         { id: "saveBookmarkChanges", key: "saveAPI" },
         { id: "cancelBookmarkEdit", key: "cancelText" },
@@ -464,7 +456,7 @@ function applyLanguage(lang) {
 
     // Apply the direction attribute to specific selectors for RTL languages
     const isRTL = rtlLanguages.includes(lang);
-    const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont", ".resultBox", ".quotesCont",
+    const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont", ".quotesCont",
         ".leftDiv", ".shortcutsContainer", ".page", "#prompt-modal-box", ".todo-container",
         ".bookmark-sidebar", ".bookmark-search-container", ".bookmark-controls-container", ".bookmark-state",
         ".bookmark-section", ".bookmark-action-popover", "#editBookmarkModal", ".liquidGlass-toast"];

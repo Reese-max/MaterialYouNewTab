@@ -96,6 +96,13 @@ function performSearch(query) {
     window.location.href = searchURL.toString();
 }
 
+// Enter searches; Enter that confirms an IME composition is left alone.
+searchInput.addEventListener("keydown", event => {
+    if (event.isComposing || event.keyCode === 229 || event.key !== "Enter") return;
+    event.preventDefault();
+    performSearch(searchInput.value);
+});
+
 enterBTN.addEventListener("click", () => performSearch());
 
 // Google AI Mode button (upstream #247). This build always searches with Google,
@@ -168,7 +175,7 @@ document.addEventListener("keydown", function (event) {
     }
 });
 
-// Pure MCP refresh: no navigation, suggestion fetch or persistence.
+// Pure MCP refresh: no navigation or persistence.
 window.myntSearchPreferences = { reload() {
     hideSearchWith.checked = localStorage.getItem('showShortcutSwitch') === 'true';
     applySearchProviderVisibility(hideSearchWith.checked, false);

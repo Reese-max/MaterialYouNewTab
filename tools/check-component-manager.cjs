@@ -35,7 +35,7 @@ for(const d of core.definitions)for(const s of d.selectors)assert(app.node(s.sli
 assert(!app.node('menuButton').attrs.has('data-mynt-component-hidden'));
 app.change('pomodoro',true);assert.equal(app.values.get('pomodoroCheckboxState'),'checked');assert(!app.node('pomodoroCont').attrs.has('data-mynt-component-hidden'));assert.equal(app.values.get('myntPomoTimerV1'),'timer-private');
 app.change('countdowns',false);assert(!app.node('eventCountdownDialog').attrs.has('data-mynt-component-hidden'),'configuration cannot be hidden/inert');
-app.change('search',true);assert(!app.node('searchbar').attrs.has('data-mynt-component-hidden'));assert.equal(app.node('resultBox').attrs.get('data-mynt-component-display'),undefined,'do not open suggestions');
+app.change('search',true);assert(!app.node('searchbar').attrs.has('data-mynt-component-hidden'));
 app.values.set('myntSearchVisible','false');app.events.storage({key:'myntSearchVisible'});assert.equal(app.control('search').checked,false);
 assert(app.node('searchbar').attrs.has('data-mynt-component-hidden'));
 const invalid=setup({myntSearchVisible:'broken'});assert(invalid.control('search').disabled);assert.equal(invalid.values.get('myntSearchVisible'),'broken');

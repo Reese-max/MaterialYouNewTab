@@ -22,12 +22,12 @@ const firefoxManifest = JSON.parse(read("manifest(firefox).json"));
 assert.ok(!chromeManifest.permissions?.includes("search"), "Chrome manifest still requests the unused search permission");
 assert.deepEqual(chromeManifest.permissions, ["storage"]);
 assert.deepEqual(chromeManifest.optional_permissions.sort(), ["bookmarks", "favicon", "nativeMessaging"].sort());
-assert.deepEqual(chromeManifest.optional_host_permissions, ["https://www.google.com/*", "http://127.0.0.1/*"]);
+assert.deepEqual(chromeManifest.optional_host_permissions, ["http://127.0.0.1/*"]);
 assert.deepEqual(firefoxManifest.permissions, ["storage"]);
-assert.deepEqual(firefoxManifest.optional_permissions.sort(), ["bookmarks", "nativeMessaging", "https://www.google.com/*", "http://127.0.0.1/*"].sort());
+assert.deepEqual(firefoxManifest.optional_permissions.sort(), ["bookmarks", "nativeMessaging", "http://127.0.0.1/*"].sort());
 
 const html = read("index.html");
-const searchCode = read("scripts/search.js") + read("scripts/search-suggestions.js");
+const searchCode = read("scripts/search.js");
 const dashboardCode = read("scripts/dashboard-tools.js");
 const clockCode = read("scripts/clock.js");
 const backupCode = read("scripts/backup-restore.js");
@@ -173,8 +173,9 @@ assert.equal(workspaces[0].widgets.shortcutsCheckbox, false);
 
 assert.doesNotMatch(searchCode, /duckduckgo|brave\.com|wikipedia\.org|reddit\.com|engine\d/i);
 assert.doesNotMatch(searchCode, /dropdown-content/);
-assert.match(searchCode, /https:\/\/www\.google\.com\/complete\/search/);
-assert.doesNotMatch(html, /id="searchsuggestionscheckbox"[^>]*checked/);
+// Search suggestions and the CORS proxy were removed (owner decision 2026-11-17).
+assert.ok(!existsSync(resolve(root, "scripts/search-suggestions.js")));
+assert.doesNotMatch(searchCode + html + dashboardCode, /complete\/search|searchsuggestionscheckbox|useproxyCheckbox|userproxy|resultBox/);
 assert.match(html, /id="userAPI"[^>]*type="password"/);
 assert.match(read("privacy-policy.html"), /src="scripts\/privacy-policy\.js"/);
 assert.match(backupCode, /BACKUP_FORMAT\s*=\s*["']material-you-newtab["']/);
