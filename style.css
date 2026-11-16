@@ -4672,25 +4672,40 @@ input:checked + .toggle:before {
 	transform: none;
 }
 
+/* Four row actions share one size and surface in a 2x2 grid, leaving width for the name and URL. */
 .shortcutActions {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
+	display: grid;
+	grid-template-columns: repeat(2, 44px);
+	gap: 4px;
+	flex: none;
 	margin-inline-start: 8px;
 }
 
-.shortcutMoveUp, .shortcutMoveDown {
-	width: 32px;
-	height: 32px;
-	border: none;
-	border-radius: 7px;
-	background: var(--bg-color-blue);
-	color: var(--textColorDark-blue);
-	cursor: pointer;
+.shortcutDelete {
+	display: flex;
 }
-.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { opacity: 0.4; cursor: default; }
-.shortcutMoveUp:focus-visible, .shortcutMoveDown:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.shortcutActions svg {
+	width: 20px;
+	height: 20px;
+}
+
+.shortcutMoveUp, .shortcutMoveDown {
+	width: 44px;
+	height: 44px;
+	border: none;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.4);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	transition: 0.3s all;
+}
+.shortcutMoveUp:not(:disabled):hover, .shortcutMoveDown:not(:disabled):hover { color: white; background: var(--darkColor-blue); }
+.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { opacity: 0.38; cursor: default; }
+.shortcutActions button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .shortcutDelete button,
 .uploadCustomIconButton {
@@ -4698,11 +4713,11 @@ input:checked + .toggle:before {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 42px;
-	height: 42px;
+	width: 44px;
+	height: 44px;
 	background: rgba(255, 255, 255, 0.4);
 	border: none;
-	border-radius: 7px;
+	border-radius: 12px;
 	cursor: pointer;
 	transition: 0.3s all;
 }
@@ -6230,7 +6245,9 @@ body[data-bg="wallpaper"] .dropdown-content {
 .black-theme #resetButton,
 .black-theme #newShortcutButton,
 .black-theme .shortcutDelete button,
-.black-theme .uploadCustomIconButton {
+.black-theme .uploadCustomIconButton,
+.black-theme .shortcutMoveUp,
+.black-theme .shortcutMoveDown {
 	background: #232221;
 }
 
@@ -6241,7 +6258,9 @@ body[data-bg="wallpaper"] .dropdown-content {
 }
 
 .black-theme .uploadCustomIconButton:hover,
-.black-theme .shortcutDelete button:hover {
+.black-theme .shortcutDelete button:hover,
+.black-theme .shortcutMoveUp:not(:disabled):hover,
+.black-theme .shortcutMoveDown:not(:disabled):hover {
 	background: #404040;
 }
 

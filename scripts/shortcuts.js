@@ -975,6 +975,17 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 button.setAttribute("aria-label", template.replace("{name}", entry.querySelector(".shortcutName").value));
             }
         });
+        // Icon-only row actions need a name; the draft row included.
+        dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry").forEach(entry => {
+            const name = entry.querySelector(".shortcutName").value;
+            for (const [selector, key] of [[".uploadCustomIconButton", "shortcutUploadIcon"], [".shortcutDelete button", "shortcutDeleteItem"]]) {
+                const button = entry.querySelector(selector);
+                if (!button) continue;
+                const label = shortcutTranslation(key).replace("{name}", name);
+                button.setAttribute("aria-label", label);
+                button.title = label;
+            }
+        });
     }
 
     function draftEntry() {
