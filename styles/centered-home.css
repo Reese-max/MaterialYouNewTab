@@ -379,4 +379,12 @@ html.mynt-removed-features body #pomodoroPanel .mynt-pomo-mode-settings { margin
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-mode-settings > .mynt-pomo-image-framing { margin-top: 4px !important; border-top: 0 !important; }
 html.mynt-removed-features body #pomodoroPanel .mynt-pomo-mode-settings > .mynt-pomo-image-framing > summary { padding: 8px 0 4px !important; }
 html.mynt-removed-features body #pomodoroPanel #myntPomoExtras > .pomoStudioCardsLabel { margin: 0 0 8px !important; font-size: 12px !important; font-weight: 600 !important; color: var(--pomo-muted, #35465e) !important; }
+/* With shortcuts switched off the row would show a lone "+"; name the action instead. */
+html.mynt-removed-features body:has(#shortcutsCheckbox:not(:checked)) #addQuickLinkButton {
+  width: auto !important; min-width: 44px !important; flex-basis: auto !important;
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 18px 0 14px !important; white-space: nowrap;
+}
+html.mynt-removed-features body:has(#shortcutsCheckbox:not(:checked)) #addQuickLinkButton::after {
+  content: attr(aria-label); font-size: 15px; font-weight: 500;
+}
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
