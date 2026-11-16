@@ -2531,7 +2531,8 @@ body[data-bg="wallpaper"] .opacityBarControl {
 	opacity: 1;
 	transform: translateY(0);
 	pointer-events: auto;
-	max-height: 150px;
+	/* Room for the adaptive-opacity row that adaptive-background.js adds; 150px clipped the slider. */
+	max-height: 320px;
 	overflow: hidden;
 	margin-top: 20px;
 	border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -2629,8 +2630,29 @@ body[data-bg="wallpaper"] .humidityBar .thinLine {
 }
 
 #opacityTextContainer {
+	flex-wrap: wrap;
 	border-bottom: 0;
 	padding: 8px 4px 6px;
+}
+
+/* Same row as the adaptive panel's checkboxes: box and text on one line (not the .ttcont text-input style). */
+#opacityTextContainer > label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding-top: 8px;
+	color: var(--textColorDark-blue);
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+#opacityTextContainer > label > input {
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--darkColor-blue);
 }
 /* End of _____________________- */
 
