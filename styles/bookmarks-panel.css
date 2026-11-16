@@ -335,27 +335,27 @@
 #bookmarkSidebar :is(button, summary, a[href]):focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
 #bookmarkSidebar #bookmarkSearch:focus-visible { outline: 2px solid var(--darkColor-blue) !important; outline-offset: 2px; }
 
-/* Nested lists own their grid; sections and folders keep the whole row. */
-#bookmarkSidebar #bookmarkList.grid-view :is(.bookmark-section-list, .bookmark-folder-children) {
+/* Grid cards only for the top level of each section; opened folders keep the list rows. */
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list {
     grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
     gap: 8px;
 }
-#bookmarkSidebar #bookmarkList.grid-view :is(.bookmark-section-list, .bookmark-folder-children):not(:has(> .bookmark-item)) { row-gap: 2px; }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item {
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list:not(:has(> .bookmark-item)) { row-gap: 2px; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     padding: 0;
 }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > a {
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > a {
     flex-direction: column;
     gap: 6px;
     min-block-size: 0;
     padding: 10px;
 }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > a .favicon { flex-basis: 44px; inline-size: 44px; block-size: 44px; padding: 12px; border-radius: 16px; }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item-copy { display: block; inline-size: 100%; text-align: center; }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item-copy strong {
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > a .favicon { flex-basis: 44px; inline-size: 44px; block-size: 44px; padding: 12px; border-radius: 16px; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item .bookmark-item-copy { display: block; inline-size: 100%; text-align: center; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item .bookmark-item-copy strong {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -363,25 +363,25 @@
     overflow-wrap: anywhere;
     text-align: center;
 }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item-copy small { display: none; }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary {
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item .bookmark-item-copy small { display: none; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary {
     position: absolute;
     inset-block-start: 4px;
     inset-inline-end: 4px;
     background: var(--whitishColor-blue);
     opacity: 0;
 }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item:is(:hover, :focus-within) > .bookmark-action-menu > summary,
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu[open] > summary { opacity: 1; }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item:has(> .bookmark-action-menu[open]) { grid-column: 1 / -1; }
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu[open] { margin-block-start: 0; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item:is(:hover, :focus-within) > .bookmark-action-menu > summary,
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu[open] > summary { opacity: 1; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item:has(> .bookmark-action-menu[open]) { grid-column: 1 / -1; }
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu[open] { margin-block-start: 0; }
 
 /* Theme variables already follow the selected palette, including dark mode. */
 #bookmarkSidebar:where(.black-theme, .black-theme *) { --bookmark-hover: color-mix(in srgb, var(--textColorDark-blue) 10%, transparent); --bookmark-danger: #f2b8b5; }
 
 @media (hover: none) {
     #bookmarkSidebar .bookmark-action-menu > summary,
-    #bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary { opacity: 1; }
+    #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary { opacity: 1; }
 }
 @media (max-width: 480px) {
     #bookmarkSidebar { inline-size: 100vw; border-radius: 0; }
@@ -393,7 +393,7 @@
     #bookmarkSidebar :is(.bookmark-action-popover, .bookmark-controls-container, .bookmark-undo-bar, .bookmark-section-header > span) { border: 1px solid CanvasText; box-shadow: none; }
     #bookmarkSidebar #bookmarkList :is(.bookmark-item, .bookmark-folder-row):is(:hover, :focus-within) { outline: 1px solid Highlight; outline-offset: -1px; }
     #bookmarkSidebar .bookmark-action-menu > summary,
-    #bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary { opacity: 1; }
+    #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary { opacity: 1; }
     #bookmarkSidebar :is(button, summary, a[href]):focus-visible { outline: 2px solid Highlight; }
 }
 
@@ -409,7 +409,7 @@
 
 /* Dark palette: --whitishColor-blue becomes light grey while text stays light, so raised surfaces need a dark fill. */
 .black-theme #bookmarkSidebar :is(.bookmark-action-popover, .bookmark-controls-container, #bookmarkUndoButton),
-.black-theme #bookmarkSidebar #bookmarkList.grid-view .bookmark-item > .bookmark-action-menu > summary {
+.black-theme #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary {
 	background: #2f2f2f;
 	color: var(--textColorDark-blue);
 }
