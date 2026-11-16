@@ -109,9 +109,6 @@
         bag.day = todayKey();
         saveBag(bag);
         render();
-        // A short fade marks the change; skipped when motion is reduced.
-        const reduce = document.documentElement.classList.contains("myntReducedMotion") || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-        if (!reduce) $("studyQuoteText")?.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: "ease-out" });
     }
     let toastTimer = null;
     function showAfterPomodoro() {
