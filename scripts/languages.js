@@ -404,9 +404,21 @@ function applyLanguage(lang) {
         { id: "settingsGroupTabs", key: "settingsGroupLabel" },
         { id: "clearSearchButton", key: "clearBookmarkSearchLabel", title: true },
         { id: "newShortcutButton", key: "addShortcutLabel", title: true },
+        { id: "addQuickLinkButton", key: "addShortcutLabel", title: true },
         { id: "resetButton", key: "resetShortcutsLabel", title: true },
         { id: "backButton", key: "shortcutBackLabel", title: true }
     ];
+    // Theme colour swatches are bare radios; name each one after its colour.
+    document.querySelectorAll("input.colorPlate[name=color]").forEach(input => {
+        const key = "themeColor" + input.value.charAt(0).toUpperCase() + input.value.slice(1);
+        const label = translations[lang]?.[key] || translations.en?.[key];
+        if (label) input.setAttribute("aria-label", label);
+    });
+    // Settings switches wrap only a decorative span; name them by their row title.
+    document.querySelectorAll(".ttcont label.switch > input:not([aria-label]):not([aria-labelledby])").forEach(input => {
+        const title = input.closest(".ttcont")?.querySelector(".bigText[id]");
+        if (title) input.setAttribute("aria-labelledby", title.id);
+    });
     accessibleLabelMap.forEach(({ id, key, title }) => {
         const element = document.getElementById(id);
         const label = translations[lang]?.[key] || translations.en?.[key];

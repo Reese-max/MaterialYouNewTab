@@ -669,6 +669,18 @@ const en = {
     "bookmarkShortcutInvalid": "This bookmark does not have a valid web address.",
     "bookmarkShortcutError": "Could not add this bookmark. Try again.",
     "addShortcutLabel": "Add shortcut",
+    "themeColorRed": "Red",
+    "themeColorYellow": "Yellow",
+    "themeColorGreen": "Green",
+    "themeColorCyan": "Cyan",
+    "themeColorBlue": "Blue",
+    "themeColorPink": "Pink",
+    "themeColorPurple": "Purple",
+    "themeColorOrange": "Orange",
+    "themeColorBrown": "Brown",
+    "themeColorSilver": "Silver",
+    "themeColorPeach": "Peach",
+    "themeColorDark": "Dark",
     "resetShortcutsLabel": "Reset shortcuts",
 
     // New Tab Item

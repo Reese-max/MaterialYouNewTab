@@ -132,9 +132,14 @@
 /* ===== 右下角「開啟設定」提示對比 =====
    .tooltip-text 的 rgba(255,255,255,0.9) 白字在 --darkColor-blue(#4382ec) 底上
    只有約 3.3:1；改用較深的 --darkerColor-blue 實心底（ID 優先權同時蓋過
-   桌布模式的半透明底色規則）配純白字，對比約 5.5:1（AA ≥ 4.5）。 */
-#settingsHintText {
-    background-color: var(--darkerColor-blue);
+   桌布模式的半透明底色規則）配純白字，對比約 5.5:1（AA ≥ 4.5）。
+   新手期常駐的「書籤」提示與其他角落按鈕的 hover／聚焦提示是同一種膠囊（原本都約 3.3:1），
+   套用同一組顏色。便籤提示原本就是深灰底，不在此列。
+   只限淺色主題：深色主題的 --darkerColor-blue 是淺色，白字會降到約 1.2:1；
+   深色主題沿用 .black-theme 的深灰底白字（約 13:1）。 */
+html:not(.black-theme) :is(#settingsHintText, #bookmarksHover, #todoListHover, #pomodoroHover, #googleAppsHover, #wallpaperGalleryHint) {
+    /* 與黑色混合：黃、橘、蜜桃等淺主題色的 --darkerColor-blue 本身不夠深。 */
+    background-color: color-mix(in srgb, var(--darkerColor-blue) 75%, #000);
     color: #ffffff;
 }
 

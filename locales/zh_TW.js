@@ -669,6 +669,18 @@ const zh_TW = {
     "bookmarkShortcutInvalid": "這個書籤沒有有效的網站網址。",
     "bookmarkShortcutError": "無法加入這個書籤，請再試一次。",
     "addShortcutLabel": "新增捷徑",
+    "themeColorRed": "紅色",
+    "themeColorYellow": "黃色",
+    "themeColorGreen": "綠色",
+    "themeColorCyan": "青色",
+    "themeColorBlue": "藍色",
+    "themeColorPink": "粉紅色",
+    "themeColorPurple": "紫色",
+    "themeColorOrange": "橘色",
+    "themeColorBrown": "棕色",
+    "themeColorSilver": "銀灰色",
+    "themeColorPeach": "蜜桃色",
+    "themeColorDark": "深色",
     "resetShortcutsLabel": "重設捷徑",
 
     // New Tab Item
