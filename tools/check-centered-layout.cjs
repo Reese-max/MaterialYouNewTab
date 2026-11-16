@@ -75,6 +75,7 @@ assert.match(centeredCss, /#pomodoroPanel::after \{ content: none !important; \}
 assert.match(centeredCss, /body #pomodoroPanel:not\(\.mynt-pomo-static\) > \.pomoStudioBackdrop \{ display: none !important; \}/, 'Original background: the main panel is one solid surface.');
 assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static > \.pomoStudioBackdrop::before \{[^}]*background-image: var\(--pomo-background, none\)/, 'A chosen background paints the main panel.');
 assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static \.pomodoroRingBg \{ fill: var\(--pomo-surface, #ffffff\) !important; \}/, 'The time sits on a solid disc so it stays readable over a sharp picture.');
+assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static > \.pomoStudioBackdrop::after \{ content: ""; position: absolute; inset: calc\(var\(--pomo-diameter, 160px\) \+ 160px\) 0 0 0;[^}]*background: #f7f7f7;/, 'Below the start button the controls sit on one solid sheet instead of loose translucent pieces over the picture.');
 assert.match(centeredCss, /\.pomoStudioBackdrop::before \{ filter: invert\(1\) hue-rotate\(180deg\); \}/, 'Dark mode undoes the page inversion on the picture so photos are not negatives.');
 assert.match(centeredCss, /body #pomodoroPanel \{ background-color: #f7f7f7 !important; \}/, 'The solid panel uses the near-white surface so white fields and pills stand out.');
 assert.doesNotMatch(centeredCss, /blur\(14px\)/, 'No blurred picture layer remains in the main panel.');
