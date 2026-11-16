@@ -17,6 +17,9 @@ for(const storage of [{getItem(){return '{invalid';}},{getItem(){throw Error('bl
 const save=source.match(/    function save\(\) \{[\s\S]*?\n    \}/)[0];
 const c={layout:{version:2,locked:true,blocks:{}},dirty:true,KEY:'myntLayout',myntNormalizeLayout:normalize,localStorage:{setItem(){throw Error('full')}},announce(m){c.message=m}};
 vm.createContext(c); vm.runInContext(save+'; result=save()',c);assert.equal(c.result,false);assert.match(c.message,/儲存失敗/);assert.equal(c.dirty,true);
+// The search-services row sits outside #searchbar, so it needs its own block to be movable.
+assert.deepEqual([...ctx.module.exports.MYNT_LAYOUT_BLOCKS.find(([id])=>id==='searchWith')],['searchWith','#search-with-container','layoutBlockSearchWith','Search services']);
+assert.deepEqual({...normalize({version:2,blocks:{searchWith:{x:.1,y:-.2,s:1.5}}}).blocks.searchWith},{x:.1,y:-.2,s:1.5});
 console.log('LAYOUT_SAVE_CHECK_OK: schema, malformed-storage and storage-failure assertions passed');
 
 const applyAll=source.match(/    function applyAll\(\) \{[^\n]+/)[0];

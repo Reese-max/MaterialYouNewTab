@@ -933,6 +933,7 @@ const en = {
     "layoutBlockClock": "Clock",
     "layoutBlockFocus": "Today’s focus",
     "layoutBlockSearch": "Search bar",
+    "layoutBlockSearchWith": "Search services",
     "layoutBlockAiTools": "AI tools",
     "layoutBlockShortcuts": "Quick links",
     "layoutBlockQuote": "Quote",

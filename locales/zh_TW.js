@@ -933,6 +933,7 @@ const zh_TW = {
     "layoutBlockClock": "時鐘",
     "layoutBlockFocus": "今日焦點",
     "layoutBlockSearch": "搜尋列",
+    "layoutBlockSearchWith": "搜尋服務",
     "layoutBlockAiTools": "AI 工具",
     "layoutBlockShortcuts": "快速連結列",
     "layoutBlockQuote": "鼓勵語",
