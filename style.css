@@ -4547,11 +4547,22 @@ input:checked + .toggle:before {
 }
 
 .shortcutSettingsEntry input {
-	width: 100%;
+	box-sizing: border-box;
+	/* Inline padding gives focus a rounded box; the negative margin keeps the text where it was. */
+	width: calc(100% + 6px);
+	padding: 2px 6px;
+	margin-inline-start: -6px;
+	border-radius: 6px;
 	background: none;
 	border: none;
 	color: var(--textColorDark-blue);
 	text-overflow: ellipsis;
+}
+
+.shortcutSettingsEntry input:focus-visible {
+	outline: 2px solid var(--darkColor-blue);
+	outline-offset: 0;
+	background: rgba(255, 255, 255, 0.55);
 }
 
 .shortcutSettingsEntry input:hover {
@@ -4569,8 +4580,8 @@ input:checked + .toggle:before {
 }
 
 .shortcutSettingsEntry .URL {
+	min-height: 24px;
 	font-size: 0.76rem;
-	opacity: 0.9;
 }
 
 .shortcutSettingsEntry .iconURL {
@@ -4580,13 +4591,13 @@ input:checked + .toggle:before {
 
 .shortcutSettingsEntry input::placeholder {
 	color: var(--textColorDark-blue);
-	opacity: 0.6;
+	opacity: 0.75;
 }
 
 .shortcutInputRow {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 8px;
 }
 
 .shortcutInputRow:last-child {
