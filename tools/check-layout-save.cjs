@@ -20,6 +20,17 @@ vm.createContext(c); vm.runInContext(save+'; result=save()',c);assert.equal(c.re
 // The search-services row sits outside #searchbar, so it needs its own block to be movable.
 assert.deepEqual([...ctx.module.exports.MYNT_LAYOUT_BLOCKS.find(([id])=>id==='searchWith')],['searchWith','#search-with-container','layoutBlockSearchWith','Search services']);
 assert.deepEqual({...normalize({version:2,blocks:{searchWith:{x:.1,y:-.2,s:1.5}}}).blocks.searchWith},{x:.1,y:-.2,s:1.5});
+// Width/height are optional viewport fractions: kept when valid, clamped, dropped when not finite or not positive.
+const sized=b=>({...normalize({version:2,blocks:{search:b}}).blocks.search});
+assert.deepEqual(sized({x:0,y:0,s:1,w:.3}),{x:0,y:0,s:1,w:.3},'A width-only change is a real layout change');
+assert.deepEqual(sized({x:.1,y:0,s:1,w:5,h:.001}),{x:.1,y:0,s:1,w:1,h:.01});
+assert.deepEqual(sized({x:.1,y:0,s:1,w:NaN,h:-1}),{x:.1,y:0,s:1});
+assert.deepEqual(sized({x:.1,y:0,s:1,w:'0.5'}),{x:.1,y:0,s:1});
+const mcpBlock=require('../scripts/local-mcp-data.js').tools.find(t=>t.name==='mynt_layouts_mutate').inputSchema.properties.layout.properties.blocks.properties.search;
+assert.deepEqual([...mcpBlock.required],['x','y','s']);assert.ok(mcpBlock.properties.w&&mcpBlock.properties.h,'MCP accepts saved width/height');
+const profilesApi=require('../scripts/layout-profiles.js'),lay=b=>({version:2,snap:false,locked:true,blocks:{search:b}});
+assert.equal(profilesApi.validateLayout(lay({x:0,y:0,s:1,w:.4,h:.1}),normalize).blocks.search.w,.4);
+for(const bad of [{w:'0.5'},{w:0},{h:1.5},{h:NaN}])assert.throws(()=>profilesApi.validateLayout(lay({x:0,y:0,s:1,...bad}),normalize),/invalid/,'Imported profiles reject malformed width/height');
 console.log('LAYOUT_SAVE_CHECK_OK: schema, malformed-storage and storage-failure assertions passed');
 
 const applyAll=source.match(/    function applyAll\(\) \{[^\n]+/)[0];

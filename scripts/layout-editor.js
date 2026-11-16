@@ -21,6 +21,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["menu", "#menuButton", "layoutBlockMenu", "Settings"]
 ];
 const MYNT_REMOVED_LAYOUT_IDS = new Set(globalThis.MYNT_REMOVED_COMPONENT_IDS || []);
+const MYNT_ICON_LAYOUT_IDS = new Set(["pomodoro", "scratchpad", "bookmarks", "wallpaper", "menu"]);
 const MYNT_LAYOUT_LIMITS = { minScale: 0.5, maxScale: 2, grid: 16, snapDistance: 8 };
 
 function myntNormalizeLayout(raw) {
@@ -37,7 +38,9 @@ function myntNormalizeLayout(raw) {
             y: num(value.y, -1, 1, 0),
             s: num(value.s, MYNT_LAYOUT_LIMITS.minScale, MYNT_LAYOUT_LIMITS.maxScale, 1)
         };
-        if (block.x || block.y || block.s !== 1) out.blocks[id] = block;
+        // Optional width/height as viewport fractions; applyBlock never lets them clip content.
+        for (const key of ["w", "h"]) if (Number.isFinite(value[key]) && value[key] > 0) block[key] = num(value[key], 0.01, 1, 1);
+        if (block.x || block.y || block.s !== 1 || block.w || block.h) out.blocks[id] = block;
     }
     return out;
 }
@@ -259,6 +262,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function applyBlock(id, settle = true) {
         const entry = MYNT_LAYOUT_BLOCKS.find(item => item[0] === id), block = layout.blocks[id];
         for (const el of elementsFor(entry[1])) {
+            clearSize(el);
             if (!block) {
                 el.style.removeProperty("translate"); el.style.removeProperty("scale"); el.style.removeProperty("transform-origin");
                 delete el.dataset.myntLayout; delete el.dataset.myntLayoutConstrained;
@@ -267,6 +271,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             el.dataset.myntLayout = id;
             el.style.transformOrigin = "0 0";
             el.style.scale = "1";
+            applySize(el, block);
             const natural = el.getBoundingClientRect();
             const fit = Math.min(block.s, (innerWidth - 32) / Math.max(1, natural.width), (innerHeight - 120) / Math.max(1, natural.height));
             el.style.scale = String(Math.max(0.1, fit));
@@ -279,6 +284,47 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             }
         }
         if (settle) settleClock();
+    }
+    const SIZE_PROPS = ["box-sizing", "width", "min-width", "max-width", "height", "min-height", "max-height"];
+    const savedSize = new WeakMap();
+    function clearSize(el) {
+        const saved = savedSize.get(el);
+        if (!saved) return;
+        for (const prop of SIZE_PROPS) el.style.setProperty(prop, saved[prop].value, saved[prop].priority);
+        savedSize.delete(el);
+    }
+    function applySize(el, block) {
+        if (!block.w && !block.h) return;
+        const saved = {};
+        for (const prop of SIZE_PROPS) saved[prop] = { value: el.style.getPropertyValue(prop), priority: el.style.getPropertyPriority(prop) };
+        savedSize.set(el, saved);
+        const set = (prop, value) => el.style.setProperty(prop, value, "important");
+        set("box-sizing", "border-box");
+        // A smaller saved size only trims empty space: the width floor is the content on its
+        // current lines (inputs keep their width), and height stays auto so new content still fits.
+        if (block.w) {
+            const natural = el.offsetWidth;
+            // shortcut: text fields may shrink to a fixed 120px; make it per-field if a block needs wider inputs.
+            const fields = [...el.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea")].filter(field => field.offsetWidth);
+            const fieldSlack = fields.reduce((sum, field) => sum + Math.max(0, field.offsetWidth - 120), 0);
+            set("min-width", "0"); set("max-width", "none");
+            set("width", "max-content"); const oneLine = el.offsetWidth;
+            set("width", "min-content");
+            const floor = Math.max(el.offsetWidth, Math.min(oneLine, natural), fields.length ? natural - fieldSlack : 0);
+            set("width", `${Math.max(floor, block.w * innerWidth)}px`);
+        }
+        if (block.h) { set("max-height", "none"); set("height", "auto"); set("min-height", `${block.h * innerHeight}px`); }
+    }
+    // Drag/keys change one side only: the opposite edge stays put, measured from the gesture start.
+    function resizeAxis(id, el, axis, px, base = currentBlock(id, el), start = el.getBoundingClientRect()) {
+        const viewport = axis === "w" ? innerWidth : innerHeight;
+        layout.blocks[id] = { ...base, [axis]: Math.min(1, Math.max(1, px) / viewport) };
+        applyBlock(id);
+        const r = el.getBoundingClientRect(), b = layout.blocks[id];
+        if (axis === "w") b.x = Math.max(-1, Math.min(1, base.x + (start.left - r.left) / innerWidth));
+        else b.y = Math.max(-1, Math.min(1, base.y + (start.top - r.top) / innerHeight));
+        b[axis] = Math.min(1, (axis === "w" ? el.offsetWidth : el.offsetHeight) / viewport);
+        applyBlock(id);
     }
     function settleClock() {
         // 同一輪先定位所有遮擋區塊，再以存檔位置判斷；不把回退寫入 layout。
@@ -354,6 +400,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const sx = event.clientX, sy = event.clientY, pointerId = event.pointerId;
         const peers = MYNT_LAYOUT_BLOCKS.filter(item => item[0] !== id).map(item => elementFor(item[0])).filter(Boolean).map(item => item.getBoundingClientRect());
         let moved = false;
+        const unscaled = { w: el.offsetWidth, h: el.offsetHeight }, visualScale = rect.width / Math.max(1, el.offsetWidth);
         const move = e => {
             if (e.pointerId !== pointerId) return;
             const dx = e.clientX - sx, dy = e.clientY - sy;
@@ -365,6 +412,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 const clamped = myntClampOffset(shifted, result.dx, result.dy, innerWidth, innerHeight);
                 layout.blocks[id] = { ...base, x: (base.x * innerWidth + clamped.x) / innerWidth, y: (base.y * innerHeight + clamped.y) / innerHeight };
                 showGuides(result.guides.filter(g => g.axis === "x" ? Math.abs(clamped.x - result.dx) < 0.5 : Math.abs(clamped.y - result.dy) < 0.5));
+            } else if (mode === "width" || mode === "height") {
+                const axis = mode === "width" ? "w" : "h";
+                resizeAxis(id, el, axis, unscaled[axis] + (axis === "w" ? dx : dy) / visualScale, base, rect);
+                placeOverlays(); return;
             } else {
                 const ratio = Math.max((rect.width + dx) / rect.width, (rect.height + dy) / rect.height);
                 const scale = Math.min(MYNT_LAYOUT_LIMITS.maxScale, Math.max(MYNT_LAYOUT_LIMITS.minScale, base.s * ratio));
@@ -420,14 +471,35 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             resize.addEventListener("pointerdown", e => startDrag(e, id, "resize"));
             resize.addEventListener("focus", () => select(id));
             overlay.addEventListener("keydown", e => {
-                if (editing && !layout.locked && !activeDrag && ["+", "=", "-", "_"].includes(e.key)) {
+                const axis = e.target?.dataset?.axis, keys = axis === "w" ? ["ArrowLeft", "ArrowRight"] : ["ArrowUp", "ArrowDown"];
+                if (axis && editing && !layout.locked && !activeDrag && keys.includes(e.key)) {
+                    e.preventDefault(); e.stopPropagation(); select(id);
+                    const el = elementFor(id); if (!el) return;
+                    const step = (e.shiftKey ? 10 : 1) * (e.key === keys[1] ? 1 : -1);
+                    resizeAxis(id, el, axis, (axis === "w" ? el.offsetWidth : el.offsetHeight) + step);
+                    placeOverlays(); recordChange();
+                } else if (editing && !layout.locked && !activeDrag && ["+", "=", "-", "_"].includes(e.key)) {
                     e.preventDefault(); e.stopPropagation(); select(id);
                     const b = { ...(layout.blocks[id] || { x: 0, y: 0, s: 1 }) };
                     b.s = Math.round(Math.min(2, Math.max(0.5, b.s + (["-", "_"].includes(e.key) ? -0.05 : 0.05))) * 100) / 100;
                     layout.blocks[id] = b; applyBlock(id); placeOverlays(); recordChange();
                 } else nudge(e, id);
             });
-            overlay.append(handle, resize); document.body.append(overlay); overlays.set(id, overlay);
+            overlay.append(handle, resize);
+            // Icon-sized controls have no empty space to trim; only content blocks get side handles.
+            if (!MYNT_ICON_LAYOUT_IDS.has(id)) for (const [axis, mode, glyph, key, fallback] of [
+                ["w", "width", "↔", "layoutWidthAria", "Change width of {name}; Left/Right arrows 1px, Shift 10px"],
+                ["h", "height", "↕", "layoutHeightAria", "Change height of {name}; Up/Down arrows 1px, Shift 10px"]
+            ]) {
+                const side = button("", glyph);
+                side.removeAttribute("id"); side.className = `myntLayoutResize myntLayoutResize-${axis}`; side.dataset.axis = axis;
+                side.setAttribute("aria-label", t(key, fallback, { name }));
+                side.title = t("layoutSideHint", "Drag to change only this direction; content is never cut off");
+                side.addEventListener("pointerdown", e => startDrag(e, id, mode));
+                side.addEventListener("focus", () => select(id));
+                overlay.append(side);
+            }
+            document.body.append(overlay); overlays.set(id, overlay);
         }
     }
     function changeHistory(direction) {
@@ -460,7 +532,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             layout.blocks[selected]={...b,s:scale};applyBlock(selected);
             r=el.getBoundingClientRect();b=currentBlock(selected,el);x=(innerWidth-r.width)/2;
         }
-        layout.blocks[selected]={x:Math.max(-1,Math.min(1,b.x+(x-r.left)/innerWidth)),y:Math.max(-1,Math.min(1,b.y+(y-r.top)/innerHeight)),s:scale};
+        layout.blocks[selected]={...b,x:Math.max(-1,Math.min(1,b.x+(x-r.left)/innerWidth)),y:Math.max(-1,Math.min(1,b.y+(y-r.top)/innerHeight)),s:scale};
         applyBlock(selected);placeOverlays();recordChange();
     }
     function buildToolbar() {
