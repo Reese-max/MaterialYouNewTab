@@ -557,7 +557,7 @@ const en = {
     "hideSearchWith": "Hide Search Provider Row",
     "hideSearchWithInfo": "Hide the Google provider row below the search bar",
     "motivationalQuotesText": "Motivational Quotes",
-    "motivationalQuotesInfo": "Show quotes below the searchbar",
+    "motivationalQuotesInfo": "Shows below the searchbar; turn on the option above first",
     "newQuoteOnRefreshText": "Daily Quote",
     "newQuoteOnRefreshInfo": "Show one quote per day instead of refreshing each time",
     "search_suggestions_button": "Search Suggestions",
