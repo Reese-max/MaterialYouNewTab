@@ -101,6 +101,19 @@
         ex.textContent = exam;
         ex.hidden = !exam;
         el.hidden = false;
+        // Only one-line quotes: skip any that would be cut off at the current width.
+        for (let tries = 1; !fitsOneLine() && tries < list.length; tries++) {
+            const bag = loadBag();
+            bag.current = draw(bag);
+            bag.day = todayKey();
+            saveBag(bag);
+            fillQuote(list[bag.current]);
+        }
+    }
+    function fitsOneLine() {
+        const body = $("studyQuoteBody");
+        // An unmeasurable (hidden) line counts as fitting.
+        return !body || !body.clientWidth || body.scrollWidth <= body.clientWidth + 1;
     }
     function nextQuote() {
         if (!list.length) return;
@@ -109,9 +122,6 @@
         bag.day = todayKey();
         saveBag(bag);
         render();
-        // A short fade marks the change; skipped when motion is reduced.
-        const reduce = document.documentElement.classList.contains("myntReducedMotion") || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-        if (!reduce) $("studyQuoteText")?.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: "ease-out" });
     }
     let toastTimer = null;
     function showAfterPomodoro() {
@@ -170,6 +180,8 @@
             openPomodoro();
         });
         render();
+        // Web fonts can widen the line after first paint; re-check once they are ready.
+        document.fonts?.ready.then(() => { if (!fitsOneLine()) render(); });
     }
     document.addEventListener('mynt:mcp-settings-refresh', render);
     window.myntStudy = { count: () => list.length, bag: loadBag, current: () => format(currentQuote()), next: nextQuote, render, openPomodoro, showAfterPomodoro };

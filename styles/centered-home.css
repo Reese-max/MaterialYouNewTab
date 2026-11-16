@@ -389,21 +389,4 @@ html.mynt-removed-features body:has(#shortcutsCheckbox:not(:checked)) #addQuickL
 html.mynt-removed-features #quickLinksRow:not(:has(#shortcutsContainer > * > a)) #addQuickLinkButton::after {
   content: attr(aria-label); font-size: 15px; font-weight: 500;
 }
-/* Daily quote: never cut a line off (23 of 118 quotes were truncated at 390px and the
-   source was hidden below 900px). Wrap instead, give the source its own line on narrow
-   screens, and show a quiet ↻ so "click for another" is discoverable. */
-html.mynt-removed-features body #studyQuoteBody { white-space: normal; overflow: visible; text-overflow: clip; text-wrap: balance; }
-/* A quote that needs two lines takes the whole row, so the source drops below it. */
-html.mynt-removed-features body #studyQuoteText { flex-wrap: wrap; justify-content: center; row-gap: 2px; }
-html.mynt-removed-features body #studyQuoteText::after {
-  content: "↻"; flex: none; align-self: center; margin-inline-start: 2px; font-size: 13px; line-height: 1;
-}
-/* Long sources (e.g. English titles) wrap too instead of overflowing the capsule. */
-html.mynt-removed-features body #studyQuoteSource { white-space: normal; flex-shrink: 1; min-width: 0; text-wrap: balance; }
-@media (max-width: 900px) {
-  html.mynt-removed-features body #studyQuote { border-radius: 20px !important; padding: 8px 16px !important; }
-  html.mynt-removed-features body #studyQuoteText { flex-wrap: wrap; justify-content: center; row-gap: 2px; column-gap: 6px; }
-  html.mynt-removed-features body #studyQuoteBody { flex-basis: 100%; }
-  html.mynt-removed-features body #studyQuoteSource { display: inline; }
-}
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
