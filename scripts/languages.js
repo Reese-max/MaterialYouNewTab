@@ -399,6 +399,7 @@ function applyLanguage(lang) {
         { id: "googleAppsCont", key: "googleAppsMenuText" },
         { id: "aiToolsIcon", key: "ai_tools_button" },
         { id: "micIcon", key: "voiceSearchLabel" },
+        { id: "randomImageTrigger", key: "commandWallpaperRandom", title: true },
         { id: "menuButton", key: "openSettingsLabel" },
         { id: "settingsGroupTabs", key: "settingsGroupLabel" },
         { id: "clearSearchButton", key: "clearBookmarkSearchLabel", title: true },
