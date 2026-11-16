@@ -106,6 +106,11 @@ function getFavoriteIds() {
 }
 
 function getExpandedFolderIds() {
+    // Until the user toggles a folder, the first browser root (the bookmarks bar) starts open.
+    if (readBookmarkSetting(BOOKMARK_FOLDERS_KEY) === null) {
+        const first = bookmarkTree.flatMap(root => root.children || []).find(node => node.children?.length);
+        return new Set(first ? [String(first.id)] : []);
+    }
     return new Set(readStoredArray(BOOKMARK_FOLDERS_KEY));
 }
 
@@ -413,11 +418,12 @@ function renderBookmarks() {
         return;
     }
     const favorites = getFavoriteIds().map(id => bookmarkNodeMap.get(id)).filter(Boolean);
-    const roots = bookmarkTree.flatMap(root => root.children || []);
+    // Browser root folders keep the browser's own order (bookmarks bar first); empty ones are hidden.
+    const roots = bookmarkTree.flatMap(root => root.children || []).filter(node => node.url || node.children?.length);
     bookmarkList.append(
         createBookmarkSection("bookmarkSectionFavorites", favorites, "bookmarkSectionFavoritesEmpty", true),
         createBookmarkSection("bookmarkSectionRecent", recentBookmarks, "bookmarkSectionRecentEmpty", true),
-        createBookmarkSection("bookmarkSectionFolders", sortBookmarkNodes(roots), "bookmarkSectionFoldersEmpty", true)
+        createBookmarkSection("bookmarkSectionFolders", roots, "bookmarkSectionFoldersEmpty", true)
     );
     showBookmarkContent();
 }
