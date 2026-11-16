@@ -326,6 +326,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const iconInput = entry.querySelector(".iconURL");
         entry.querySelector(".shortcutName").value = String(name || "");
         entry.querySelector(".URL").value = String(url || "");
+        // The placeholder disappears once a value exists, so the fields keep a programmatic name.
+        entry.querySelector(".shortcutName").setAttribute("aria-label", PLACEHOLDER.inputName);
+        entry.querySelector(".URL").setAttribute("aria-label", PLACEHOLDER.inputUrl);
         iconInput.value = String(iconUrl || "");
         iconInput.type = "hidden";
         const deleteBtn = entry.querySelector(".shortcutDelete button");
@@ -973,6 +976,17 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 button.disabled = direction === "Up" ? index === 0 : index === entries.length - 1;
                 const template = translations[currentLanguage]?.[`shortcutMove${direction}`] || translations.en[`shortcutMove${direction}`];
                 button.setAttribute("aria-label", template.replace("{name}", entry.querySelector(".shortcutName").value));
+            }
+        });
+        // Icon-only row actions need a name; the draft row included.
+        dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry").forEach(entry => {
+            const name = entry.querySelector(".shortcutName").value;
+            for (const [selector, key] of [[".uploadCustomIconButton", "shortcutUploadIcon"], [".shortcutDelete button", "shortcutDeleteItem"]]) {
+                const button = entry.querySelector(selector);
+                if (!button) continue;
+                const label = shortcutTranslation(key).replace("{name}", name);
+                button.setAttribute("aria-label", label);
+                button.title = label;
             }
         });
     }
