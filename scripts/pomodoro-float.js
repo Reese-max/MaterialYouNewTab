@@ -506,7 +506,9 @@
         const round = el(doc, 'p', '', 'pomodoroRoundDisplay');
         const taskPreview = el(doc, 'p', '', 'mynt-pomo-task-preview'); taskPreview.hidden = true;
         const context = el(doc, 'div', '', 'mynt-pomo-context'); context.append(taskPreview, round);
-        main.append(phase, circle, context);
+        // One sheet holds everything below the ring, so text never sits directly on the picture.
+        const dock = el(doc, 'div', '', 'mynt-pomo-dock');
+        main.append(phase, circle, dock); dock.append(context);
         const controls = el(doc, 'div', '', 'mynt-pomo-controls');
         const note = el(doc, 'p', '', 'mynt-pomo-note'); note.setAttribute('role', 'status');
         let noteKey = '', noteQuiet = false;
@@ -527,7 +529,7 @@
         const reset = button(doc, 'reset', confirmReset); reset.className = 'mynt-pomo-reset';
         reset.title = t('reset'); reset.setAttribute('aria-label', t('reset'));
         reset.replaceChildren(icon('M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 16.22 7.78L13 11h7V4z'));
-        controls.append(toggle, reset); main.append(controls);
+        controls.append(toggle, reset); dock.append(controls);
         let resetPrompt = null;
         function dismissReset() {
             if (!resetPrompt) return;
@@ -699,7 +701,7 @@
             renderTransport(ambientRow, ambientButton, ambientIndicator, ambientState?.playing, `${t(ambientState?.playing ? 'ambientPause' : 'ambientPlay')}: ${t('ambient_' + type)}`);
             audioRow.hidden = musicRow.hidden && ambientRow.hidden;
         }
-        main.append(audioRow, options, note); doc.body.append(main);
+        dock.append(audioRow, options); main.append(note); doc.body.append(main);
         const render = state => {
             if (!state || win.closed || disconnected) return;
             const seconds = Math.max(0, Math.ceil(state.timeRemaining));
