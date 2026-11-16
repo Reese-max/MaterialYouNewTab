@@ -356,9 +356,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     Object.assign(cold.context,{
         setTimeout:()=>++nextTimer,setInterval(fn,delay){const id=++nextTimer;intervals.set(id,{fn,delay});return id;},clearInterval:id=>intervals.delete(id),
         getLanguageStatus:()=> 'en',localizeNumbers:value=>value,numberMappings:{},isFirefoxAll:false,
-        myntNormalizeGreetingName:require('../scripts/dashboard-tools.js').myntNormalizeGreetingName,
-        myntFormatGreeting:require('../scripts/dashboard-tools.js').myntFormatGreeting,
-        translations:{en:{days:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],greeting:{morning:'Morning',afternoon:'Afternoon',evening:'Evening'}}}
+        translations:{en:{days:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']}}
     });
     for(const script of ['save-load-states.js','clock.js']) vm.runInNewContext(fs.readFileSync(path.join(root,'scripts',script),'utf8'),cold.context);
     assert.equal(cold.root.myntClockPreferences,undefined,'Hidden-at-start real clock does not initialize.');

@@ -1,7 +1,7 @@
 [
   {
     "name": "mynt_clock_get",
-    "description": "Read clock mode, 12-hour format, greeting and visibility.",
+    "description": "Read clock mode, 12-hour format and visibility.",
     "readOnly": true,
     "annotations": {
       "readOnlyHint": true,
@@ -17,7 +17,7 @@
   },
   {
     "name": "mynt_clock_update",
-    "description": "Change only local clock presentation and greeting; no timezone or location access.",
+    "description": "Change only local clock presentation; no timezone or location access.",
     "readOnly": false,
     "annotations": {
       "readOnlyHint": false,
@@ -36,13 +36,6 @@
         },
         "hour12": {
           "type": "boolean"
-        },
-        "greeting": {
-          "type": "boolean"
-        },
-        "name": {
-          "type": "string",
-          "maxLength": 120
         },
         "hidden": {
           "type": "boolean"

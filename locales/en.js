@@ -520,12 +520,6 @@ const en = {
     "digitalclockinfo": "Switch to the digital clock",
     "timeformattitle": "12-Hour Format",
     "timeformatinfo": "Use 12-hour time format (digital clock only)",
-    "greetingtitle": "Greeting",
-    "greetinginfo": "Show greeting below custom text (digital clock only)",
-    "greetingNameTitle": "Your name",
-    "greetingNameInfo": "Used only for your local greeting",
-    "greetingNamePlaceholder": "What should this page call you?",
-    "greetingWithName": "{greeting}, {name}",
 
     // Misc
     "userTextTitle": "Customizable Text",
@@ -684,12 +678,6 @@ const en = {
     "searchWithHint": "Search Provider",
     "userText": "What matters most today?",
 
-    // Greeting
-    greeting: {
-        "morning": "Good Morning!",
-        "afternoon": "Good Afternoon!",
-        "evening": "Good Evening!"
-    },
 
     // Search Provider
     "googleEngine": "Google",

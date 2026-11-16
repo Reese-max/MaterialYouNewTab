@@ -244,10 +244,6 @@ function applyLanguage(lang) {
         "digitalclockinfo",
         "timeformattitle",
         "timeformatinfo",
-        "greetingtitle",
-        "greetinginfo",
-        "greetingNameTitle",
-        "greetingNameInfo",
         "userTextTitle",
         "userTextInfo",
         "UserLocText",
@@ -324,8 +320,7 @@ function applyLanguage(lang) {
         { id: "todoInput", key: "todoPlaceholder" },
         { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "editBookmarkName", key: "editBookmarkName" },
-        { id: "editBookmarkURL", key: "editBookmarkURL" },
-        { id: "greetingNameInput", key: "greetingNamePlaceholder" }
+        { id: "editBookmarkURL", key: "editBookmarkURL" }
     ];
 
     // Mapping of elements and their different translation keys

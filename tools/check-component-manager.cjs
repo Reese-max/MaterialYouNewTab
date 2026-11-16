@@ -69,7 +69,7 @@ assert.equal(video.values.get('hideWeatherVisible'),'true','Unrelated legacy wea
 crossTab.values.set('clocktype','digital');crossTab.events.storage({key:'clocktype'});
 assert.equal(crossTab.calls.clockRefresh,1);assert.equal(crossTab.calls.clockReload,0,'Visibility synchronization must not invoke legacy layout-changing reload.');
 crossTab.change('clock',false);assert.equal(crossTab.calls.clockRefresh,2,'Local manager hide updates clock intervals too.');
-for(const key of ['hourformat','greetingEnabled']){
+for(const key of ['hourformat']){
  const previous=crossTab.calls.clockRefresh;crossTab.values.set(key,'true');crossTab.events.storage({key});
  assert.equal(crossTab.calls.clockRefresh,previous+1,`${key} cross-tab writes refresh canonical controls immediately.`);
 }

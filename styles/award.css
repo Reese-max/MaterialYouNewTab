@@ -4340,31 +4340,6 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
 	outline-offset: 3px;
 }
 
-/* ===== 7. 姓名欄沿用現有表面變數；一般深色模式由整頁反相處理 ===== */
-#menuCont #greetingNameInput {
-	min-height: 44px;
-	padding: 8px 12px;
-	border: 1px solid var(--menu-input-border);
-	border-radius: 12px;
-	background-color: var(--menu-input-bg);
-	color: var(--menu-input-text);
-}
-
-#menuCont #greetingNameInput::placeholder {
-	color: var(--award-surface-light-muted);
-	opacity: 1;
-}
-
-html.black-theme #menuCont #greetingNameInput::placeholder {
-	color: var(--award-surface-dark-muted);
-}
-
-#menuCont #greetingNameInput:focus {
-	outline: 2px solid var(--darkerColor-blue);
-	outline-offset: 2px;
-	box-shadow: none;
-}
-
 /* ===== 8. 筆電高度減少留白，長字串仍可換行並隨文字縮放增高 ===== */
 #menuCont > .topDiv {
 	height: 72px;
@@ -4568,7 +4543,7 @@ html.black-theme #menuCont {
 
 /* 窄螢幕保留文字空間；其他尺寸用縮排與連續細線表示數位時鐘子選項。 */
 @media (min-width: 360px) {
-	#menuCont :is(#timeformatField, #greetingField, #quotesToggle, .quotesOptions > .ttcont) {
+	#menuCont :is(#timeformatField, #quotesToggle, .quotesOptions > .ttcont) {
 		margin-inline-start: 16px;
 		border-inline-start: 2px solid var(--menu-row-divider);
 		padding-inline-start: 12px;
@@ -5072,7 +5047,7 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-l
     & #amPm { transform: translate(190px, -70px); font-size: 24px; }
     & #digicolon { animation: none; }
 
-    /* 類比鐘面與日期同屬既有可移動區塊，日期不取代問候語。 */
+    /* 類比鐘面與日期同屬既有可移動區塊。 */
     & #analogClock { width: 132px; height: 132px; margin-bottom: calc(36px * var(--mynt-font-scale, 1)); }
     & #analogClock .centerPoint { width: calc(20% / 3); height: calc(20% / 3); }
     & #analogClock .sui { width: 100%; height: 500%; top: -450%; }

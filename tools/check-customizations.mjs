@@ -72,7 +72,7 @@ for (const id of [
     "shortcutsHelpDialog", "scratchpadDownloadBtn", "bookmarksSubtitle", "bookmarkShortcutStatus",
     "scratchpadAskDaidaiBtn", "scratchpadOrganizeDaidaiBtn", "daidaiIntegrationSection", "daidaiConnectBtn",
     "daidaiActionDialog", "daidaiActionConfirmBtn", "daidaiActionRejectBtn",
-    "daidaiActionToast", "daidaiActionUndoBtn", "greetingNameField", "greetingNameInput",
+    "daidaiActionToast", "daidaiActionUndoBtn",
     "dailyFocusActions", "dailyFocusStatus", "dailyFocusToggle", "settingsGroupTabs",
     "settingsGroupPersonal", "settingsGroupWork", "settingsGroupAdvanced", "settingsHintText"
 ]) {
@@ -130,12 +130,9 @@ assert.equal(myntPlanDaidaiAction({
 const dashboardContext = { module: { exports: {} } };
 vm.runInNewContext(dashboardCode, dashboardContext);
 const dashboard = dashboardContext.module.exports;
-assert.equal(dashboard.myntNormalizeGreetingName("  Reese \n Max  "), "Reese Max");
-assert.equal(dashboard.myntFormatGreeting("早安！", "Reese", "{greeting}，{name}"), "早安，Reese");
-assert.equal(dashboard.myntFormatGreeting("Good Morning!", "", "{greeting}, {name}"), "Good Morning!");
-assert.equal(dashboard.myntFormatGreeting("Hello!", "$&", "{greeting}, {name}"), "Hello, $&");
-assert.match(clockCode, /localStorage\.getItem\(["']myntGreetingName["']\)/);
-assert.match(read("privacy-policy.html"), /首頁稱呼只會顯示在本機問候語中/);
+// Greeting and greeting name were removed (owner decision 2026-11-17).
+assert.equal(dashboard.myntNormalizeGreetingName, undefined);
+assert.doesNotMatch(clockCode + html, /greetingEnabled|myntGreetingName|greetingcheckbox|greetingNameInput/);
 assert.match(read("privacy-policy.html"), /每日焦點文字／完成狀態／延續日期/);
 const dailyFocusContext = { module: { exports: {} } };
 vm.runInNewContext(customTextCode, dailyFocusContext);

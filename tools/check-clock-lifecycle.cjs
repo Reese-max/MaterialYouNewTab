@@ -33,10 +33,8 @@ function fixture(initial = {}, { readyState = 'complete', visibilityState = 'vis
         setInterval(fn, delay) { const id = ++sequence; intervals.set(id, { fn, delay }); return id; },
         clearInterval: id => intervals.delete(id), setTimeout: () => ++sequence,
         getLanguageStatus: () => values.get('selectedLanguage') || 'en', localizeNumbers: value => value, numberMappings: {}, isFirefoxAll: false,
-        myntNormalizeGreetingName: value => value || '', myntFormatGreeting: (greeting, name) => name ? `${greeting}, ${name}` : greeting,
         translations: { en: { days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-            months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-            greeting: { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening' } } },
+            months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] } },
         saveCheckboxState: (key, input) => localStorage.setItem(key, input.checked ? 'checked' : 'unchecked'),
         saveActiveStatus: (key, value) => localStorage.setItem(key, value),
         loadCheckboxState: (key, input) => { input.checked = localStorage.getItem(key) === 'checked'; },
@@ -80,20 +78,12 @@ late.values.set('clocktype', 'analog'); late.context.myntClockPreferences.refres
 assert.deepEqual([...late.intervals.values()].map(timer => timer.delay), [500]);
 assert.equal(late.node('analogClock').style.display, 'block');
 assert.equal(late.node('digitalCheckbox').checked, false, 'Cross-tab mode changes also update the original control.');
-assert.equal(late.node('greetingcheckbox').disabled, true);
 assert.equal(late.node('timeformatField').classes.has('inactive'), true);
-assert.equal(late.node('greetingField').classes.has('inactive'), true);
-late.node('greetingNameInput').value = 'in-progress name';
-late.values.set('clocktype', 'digital'); late.values.set('hourformat', 'true'); late.values.set('greetingEnabled', 'false');
+late.values.set('clocktype', 'digital'); late.values.set('hourformat', 'true');
 late.context.myntClockPreferences.refreshVisibility();
 assert.equal(late.node('digitalCheckbox').checked, true);
 assert.equal(late.node('12hourcheckbox').checked, true);
-assert.equal(late.node('greetingcheckbox').disabled, false);
-assert.equal(late.node('greetingcheckbox').checked, false);
 assert.equal(late.node('timeformatField').classes.has('inactive'), false);
-assert.equal(late.node('greetingField').classes.has('inactive'), false);
-assert.equal(late.node('greetingNameInput').disabled, true);
-assert.equal(late.node('greetingNameInput').value, 'in-progress name', 'Clock synchronization does not replace a name draft.');
 assert.deepEqual(['leftDiv', 'rightDiv', '.clockOptions'].map(id => [...late.node(id).classes]), classes);
 assert.equal(late.node('digitalClock').style.translate, '125px 75px');
 assert.equal(late.node('digitalClock').style.scale, '0.8');
@@ -135,7 +125,7 @@ assert.equal(fresh.node('analogClock').style.display, 'block');
 const analogDate = fresh.node('analogClock').children[0];
 assert.equal(analogDate.className, 'mynt-clock-date');
 assert.equal(analogDate.textContent, 'Sat, Oct 24', 'Video workspaces show a date below the analog clock.');
-assert.equal(fresh.node('date').innerText, 'Sat, Oct 24', 'The centered date line stays visible; the optional greeting may be omitted.');
+assert.equal(fresh.node('date').innerText, 'Sat, Oct 24', 'The centered date line stays visible.');
 fresh.change('hideClock', false);
 assert.equal(fresh.values.get('hideClockVisible'), 'true', 'Unchecked stores the canonical hidden=true.');
 assert.equal(fresh.intervals.size, 0);
@@ -148,16 +138,13 @@ assert.equal(fresh.node('analogClock').children.length, 1, 'Re-enabling never du
 fresh.tick(86400000);
 assert.equal(analogDate.textContent, 'Sun, Oct 25', 'The analog date advances at midnight.');
 
-const videoDigital = fixture({ clocktype: 'digital', greetingEnabled: 'false', hourformat: 'false' }, { video: true });
+const videoDigital = fixture({ clocktype: 'digital', greetingEnabled: 'false', hourformat: 'false' }, { video: true }); // legacy greetingEnabled is inert
 assert.equal(videoDigital.node('digihours').textContent, '18');
 assert.equal(videoDigital.node('digidate').textContent, '24 Sat');
 assert.equal(videoDigital.node('date').style.display, 'block');
 videoDigital.values.set('hourformat', 'true'); videoDigital.context.myntClockPreferences.refreshVisibility();
 assert.equal(videoDigital.node('digihours').textContent, '6');
 assert.equal(videoDigital.node('amPm').textContent, 'PM');
-videoDigital.values.set('greetingEnabled', 'true'); videoDigital.context.myntClockPreferences.refreshVisibility();
-assert.equal(videoDigital.node('date').style.display, 'block');
-assert.equal(videoDigital.node('date').textContent, '24 Sat', 'The date remains visible regardless of the optional greeting preference.');
 
 function locale(name) {
     return vm.runInNewContext(fs.readFileSync(require.resolve(`../locales/${name}.js`), 'utf8') + `;${name}`);
@@ -208,4 +195,4 @@ const manual = fixture({ clocktype: 'analog' });
 assert.equal(manual.node('date').innerText, manual.node('analogClock').children[0].textContent, 'The duplicate date content is covered by the CSS rule above');
 for (const [, animation] of css.matchAll(/\banimation:\s*([^;]+);/g)) assert.equal(animation.trim(), 'none');
 console.log('Clock lifecycle checks passed: late/early controls, one runtime across resize, ticking re-add, mode synchronization, no hidden-tab timers, malformed preservation and untouched saved positions.');
-console.log('Clock defaults checks passed: new-install visibility, positive toggle/readback, video dates, 12/24 hours, greeting, locale fallback and scoped layout styling.');
+console.log('Clock defaults checks passed: new-install visibility, positive toggle/readback, video dates, 12/24 hours, locale fallback and scoped layout styling.');

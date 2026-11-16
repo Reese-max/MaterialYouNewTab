@@ -8,7 +8,7 @@
     const translated = (key, zh, en) => { try { return (typeof translations !== 'undefined' && translations[localStorage.getItem('selectedLanguage') || 'zh_TW']?.[key]) || text(zh, en); } catch (_) { return text(zh, en); } };
     let panel, status, queued = false;
     const controls = new Map();
-    const clockRefreshKeys = ['clocktype', 'hideClockVisible', 'hourformat', 'greetingEnabled'];
+    const clockRefreshKeys = ['clocktype', 'hideClockVisible', 'hourformat'];
     function refresh() {
         let items;
         try { items = core.read(localStorage); } catch (_) { if (status) status.textContent = text('無法讀取設定，未變更任何資料。', 'Settings unavailable. No data was changed.'); return; }

@@ -520,12 +520,6 @@ const zh_TW = {
     "digitalclockinfo": "切換到數位時鐘",
     "timeformattitle": "12 小時制",
     "timeformatinfo": "使用 12 小時制時間格式（僅數位時鐘）",
-    "greetingtitle": "問候語",
-    "greetinginfo": "在自訂文字下顯示問候語（僅數位時鐘）",
-    "greetingNameTitle": "你的稱呼",
-    "greetingNameInfo": "只用於這台裝置上的問候語",
-    "greetingNamePlaceholder": "希望首頁怎麼稱呼你？",
-    "greetingWithName": "{greeting}，{name}",
 
     // Misc
     "userTextTitle": "自訂文字",
@@ -684,12 +678,6 @@ const zh_TW = {
     "searchWithHint": "搜尋服務",
     "userText": "今天，最重要的一件事是……",
 
-    // Greeting
-    greeting: {
-        "morning": "早安！",
-        "afternoon": "午安！",
-        "evening": "晚安！"
-    },
 
     // Search Provider
     "googleEngine": "Google",

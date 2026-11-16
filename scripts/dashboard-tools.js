@@ -74,19 +74,6 @@ function myntSevenDayStats(history, now = new Date()) {
     });
 }
 
-function myntNormalizeGreetingName(value) {
-    return Array.from(String(value || "").trim().replace(/\s+/gu, " ")).slice(0, 30).join("");
-}
-
-function myntFormatGreeting(greeting, name, template = "{greeting}, {name}") {
-    const normalizedName = myntNormalizeGreetingName(name);
-    if (!normalizedName) return String(greeting || "");
-    const greetingStem = String(greeting || "").trim().replace(/[.!。！?？]+$/u, "");
-    return String(template)
-        .replace("{greeting}", () => greetingStem)
-        .replace("{name}", () => normalizedName);
-}
-
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
     "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox", "scratchpadCheckbox"
@@ -115,8 +102,8 @@ function myntNormalizeWorkspaces(raw, defaults = []) {
 
 if (typeof module !== "undefined") {
     module.exports = {
-        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeGreetingName,
-        myntFormatGreeting, myntNormalizeWorkspaces, myntValidateHabits
+        myntDateKey, myntFocusStreak, myntSevenDayStats,
+        myntNormalizeWorkspaces, myntValidateHabits
     };
 }
 
