@@ -64,7 +64,7 @@ const {createEngine,createRecovery,HOST}=require('../scripts/local-mcp-bridge.js
  engine.setAccess({enabled:false});assert.equal((await undo('settings')).error.code,'INVALID_ARGUMENT');assert.equal(recoveryCalls,0);assert.equal((await undo('todos')).ok,true);assert.equal(recoveryCalls,2);assert.equal(engine.status().enabled,false);
  assert.equal((await createRecovery({storage,adapter,commit:engine.commit,lock:null})('todos')).error.code,'UNAVAILABLE');
  const busyRecovery=createRecovery({storage,lock,beforeCommit:()=>false,commit:()=>{throw Error('must not commit');},adapter:{async execute(name,args,context){return name.endsWith('_get')?{ok:true,revision:'r'}:context.commit({});}}});assert.equal((await busyRecovery('shortcuts')).error.code,'EDITOR_BUSY');
- const html=require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');assert.match(html,/id="localMcpSection"/);
+ const html=require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');assert.doesNotMatch(html,/id="localMcpSection"/);/* settings entry removed 2026-11-17; bridge stays dormant without it */
  for(const name of ['manifest.json','manifest(firefox).json']){const manifest=require('../'+name);assert(!(manifest.permissions||[]).includes('nativeMessaging'));assert((manifest.optional_permissions||[]).includes('nativeMessaging'));}
  // Exercise the real UI/native-port wiring without connecting any browser,
  // showing real permission prompts, registering a host, or listening on an IPC socket.
