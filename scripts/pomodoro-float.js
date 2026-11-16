@@ -34,11 +34,11 @@
         musicPlay: ['Play music', '播放音樂'], musicPause: ['Pause music', '暫停音樂'], musicNext: ['Next track', '下一首'],
         ambientPlay: ['Play ambient audio', '播放環境音'], ambientPause: ['Pause ambient audio', '暫停環境音'], ambientType: ['Ambient sound type', '環境音類型'],
         ambient_nature: ['Nature', '自然'], ambient_noise: ['Noise', '噪音'],
-        ambient_rain: ['🌧️ Rain', '🌧️ 雨聲'], ambient_thunder: ['⛈️ Thunderstorm', '⛈️ 雷雨'],
-        ambient_ocean: ['🌊 Ocean', '🌊 海浪'], ambient_stream: ['🏞️ Stream', '🏞️ 溪流'],
-        ambient_wind: ['🍃 Wind', '🍃 風聲'], ambient_forest: ['🐦 Forest birds', '🐦 森林鳥鳴'],
-        ambient_night: ['🦗 Summer night', '🦗 夏夜蟲鳴'], ambient_campfire: ['🪵 Campfire', '🪵 柴火'],
-        ambient_whitenoise: ['☕ White noise', '☕ 白噪音'], ambient_pink: ['🌸 Pink noise', '🌸 粉紅噪音'], ambient_brown: ['🟤 Brown noise', '🟤 棕色噪音'],
+        ambient_rain: ['Rain', '雨聲'], ambient_thunder: ['Thunderstorm', '雷雨'],
+        ambient_ocean: ['Ocean', '海浪'], ambient_stream: ['Stream', '溪流'],
+        ambient_wind: ['Wind', '風聲'], ambient_forest: ['Forest birds', '森林鳥鳴'],
+        ambient_night: ['Summer night', '夏夜蟲鳴'], ambient_campfire: ['Campfire', '柴火'],
+        ambient_whitenoise: ['White noise', '白噪音'], ambient_pink: ['Pink noise', '粉紅噪音'], ambient_brown: ['Brown noise', '棕色噪音'],
         ready: ['Saved on this device only.', '僅儲存在此裝置。'], missing: ['Choose a local image first.', '請先選擇本機圖片。']
     };
     function language() {
