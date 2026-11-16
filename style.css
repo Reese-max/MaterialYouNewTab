@@ -4714,8 +4714,9 @@ input:checked + .toggle:before {
 	.shortcutSettingsEntry .shortcutActions {
 		flex-basis: 100%;
 		grid-template-columns: repeat(4, 44px);
-		justify-content: end;
-		margin: 8px 0 0;
+		justify-content: start;
+		/* Line up with the name and icon picker: grip column (32px) + input group margin (5px). */
+		margin: 8px 0 0 37px;
 	}
 }
 
