@@ -7,6 +7,7 @@ const MYNT_LAYOUT_BLOCKS = [
     ["clock", "#analogClock, #digitalClock", "layoutBlockClock", "Clock"],
     ["focus", ".ttteexxtt", "layoutBlockFocus", "Today’s focus"],
     ["search", "#rightDiv", "layoutBlockSearch", "Search bar"],
+    ["searchWith", "#search-with-container", "layoutBlockSearchWith", "Search services"],
     ["aiTools", "#aiToolsCont", "layoutBlockAiTools", "AI tools"],
     ["shortcuts", "#shortcutsContainer", "layoutBlockShortcuts", "Quick links"],
     ["quote", "#studyQuote", "layoutBlockQuote", "Quote"],

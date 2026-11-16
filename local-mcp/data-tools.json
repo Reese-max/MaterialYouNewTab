@@ -799,6 +799,32 @@
                   ],
                   "additionalProperties": false
                 },
+                "searchWith": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "s": {
+                      "type": "number",
+                      "minimum": 0.5,
+                      "maximum": 2
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "s"
+                  ],
+                  "additionalProperties": false
+                },
                 "aiTools": {
                   "type": "object",
                   "properties": {
