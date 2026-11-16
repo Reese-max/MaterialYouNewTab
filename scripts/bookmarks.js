@@ -978,6 +978,13 @@ document.addEventListener("keydown", event => {
     loadCheckboxState("bookmarksCheckboxState", bookmarksCheckbox);
     loadDisplayStatus("bookmarksDisplayStatus", bookmarkButton);
     loadCheckboxState("bookmarkGridCheckboxState", bookmarkGridCheckbox);
+    // One-time move to the list view: the grid used to be switched on automatically and saved as if chosen.
+    try {
+        if (localStorage.getItem("myntBookmarkListDefault") === null) {
+            localStorage.setItem("myntBookmarkListDefault", "1");
+            if (bookmarkGridCheckbox.checked) bookmarkGridCheckbox.click();
+        }
+    } catch { /* Storage blocked: keep the current view. */ }
     if (bookmarksCheckbox.checked) bookmarkButton.style.display = "flex";
     updateSortButtons();
     updateViewButtons();
