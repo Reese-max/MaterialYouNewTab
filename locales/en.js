@@ -317,7 +317,7 @@ const en = {
     "commandPalettePlaceholder": "Search commands, bookmarks, tools, settings, or modes...",
     "commandPaletteEmpty": "No matching items",
     "commandOpenControl": "Open Control Center",
-    "commandOpenControlInfo": "Focus, habits, privacy, and status",
+    "commandOpenControlInfo": "Workspaces, privacy, and status",
     "commandWorkspaces": "Manage work modes",
     "commandWorkspacesInfo": "Edit tools, sites, background, and timer",
     "commandPrivacy": "Manage permissions",
@@ -450,8 +450,6 @@ const en = {
     "aiModeIconInfo": "Hide Google AI Mode search button",
     "hideSearchWith": "Hide Search Provider Row",
     "hideSearchWithInfo": "Hide the Google provider row below the search bar",
-
-    // Proxy
 
     // Location
     "useGPS": "Use GPS",

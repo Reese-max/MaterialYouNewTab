@@ -317,7 +317,7 @@ const zh_TW = {
     "commandPalettePlaceholder": "搜尋指令、書籤、工具、設定或模式...",
     "commandPaletteEmpty": "找不到相符項目",
     "commandOpenControl": "開啟控制中心",
-    "commandOpenControlInfo": "專注、習慣、隱私權與狀態",
+    "commandOpenControlInfo": "工作區、隱私權與狀態",
     "commandWorkspaces": "管理工作模式",
     "commandWorkspacesInfo": "編輯工具、網站、背景與計時設定",
     "commandPrivacy": "管理權限",
@@ -450,8 +450,6 @@ const zh_TW = {
     "aiModeIconInfo": "隱藏搜尋列上的 Google AI 模式按鈕",
     "hideSearchWith": "隱藏搜尋服務列",
     "hideSearchWithInfo": "隱藏搜尋列下方的 Google 服務列",
-
-    // Proxy
 
     // Location
     "useGPS": "使用 GPS",
