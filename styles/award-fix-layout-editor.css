@@ -1082,3 +1082,144 @@ body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize.mynt
     translate: -50% 0;
     cursor: ns-resize;
 }
+
+/* ==========================================================================
+   第 17 輪（2026-11-17）：筆電尺寸的工具列與把手
+   - 1366×768／1280×720 時，置中的搜尋列與捷徑列右端把手被 320×512 工具箱蓋住；
+     兩側只剩約 230px 空白，換停靠位置無解。工具列改為精簡版：
+     標題列（⠿ 拖曳移動、縮小）＋ 復原／重做／取消／儲存，其餘收進「更多選項」，
+     預設停在右上角，可拖曳或用方向鍵移到任何位置，也可縮成只剩標題列。
+   - 寬而矮的區塊（搜尋列、捷徑列、語錄）原本被第 16 輪縮成框內 20px 圖示、
+     蓋住內容左上角；改回框外上緣的「⠿ 名稱」標籤，縮放把手放大到 24px。
+   ========================================================================== */
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 10px 10px;
+    width: min(300px, calc(100vw - 16px));
+    max-width: min(300px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+}
+body.mynt-layout-editing #myntLayoutToolbar[data-dock="corner"] {
+    left: auto;
+    right: max(16px, env(safe-area-inset-right));
+    top: max(16px, env(safe-area-inset-top));
+    bottom: auto;
+    transform: none;
+}
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar[data-dock="free"] {
+    right: auto;
+    bottom: auto;
+    transform: none;
+}
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar > .myntLayoutToolbarRow {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar strong {
+    flex: 1;
+    font-size: 14px;
+}
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutToolbarGrip, #myntLayoutMinimize) {
+    flex: none;
+    width: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #35465c;
+    font: 600 16px/1 system-ui, sans-serif;
+}
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutToolbarGrip {
+    cursor: grab;
+    touch-action: none;
+}
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutToolbarGrip, #myntLayoutMinimize):hover {
+    background: #e2eaf5;
+}
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutActions > button {
+    flex: 1 1 0;
+}
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutActions > #myntLayoutSave {
+    flex: 1.6 1 0;
+}
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar #myntLayoutSaveStatus {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutMore {
+    display: grid;
+    gap: 8px;
+    border-top: 1px solid #d9e4f2;
+    padding-top: 4px;
+}
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutMore > summary {
+    min-height: 32px;
+    padding: 6px 0;
+    box-sizing: border-box;
+    font: 600 12px/20px var(--main-font-family, system-ui, sans-serif);
+    color: #35465c;
+    cursor: pointer;
+}
+body.mynt-layout-editing #myntLayoutToolbar .myntLayoutMore > :is(label, .myntLayoutHelp) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    min-height: 32px;
+    font-size: 12px;
+    color: #35465c;
+}
+/* 縮小後保留標題列與復原／儲存，只收起狀態文字與更多選項。 */
+body.mynt-layout-editing #myntLayoutToolbar[data-collapsed="true"] > :is(#myntLayoutSaveStatus, .myntLayoutMore) {
+    display: none;
+}
+@container myntlayoutblock (width >= 110px) and (height < 110px) and (not style(--mynt-handle-top: 0px)) {
+    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutLabel.myntLayoutMove {
+        top: -30px;
+        bottom: auto;
+        left: 0;
+        right: auto;
+        width: auto;
+        height: 26px;
+        min-width: 26px;
+        min-height: 26px;
+        padding: 0 10px;
+        gap: 4px;
+        font-size: 12px;
+    }
+    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutLabel.myntLayoutMove::before {
+        content: none;
+    }
+}
+@container myntlayoutblock (width >= 110px) and (height < 110px) {
+    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize {
+        bottom: calc(var(--mynt-resize-bottom, -20px) * 0.6);
+        right: calc(var(--mynt-resize-right, -20px) * 0.6);
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        min-height: 24px;
+        border-radius: 7px;
+        font-size: 13px;
+    }
+}
+/* 「更多選項」內的選取狀態與快捷鍵說明各占一行，兩個還原鈕並排。 */
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > .myntLayoutHelp {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+}
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > .myntLayoutHelp > * {
+    grid-area: auto;
+}
+body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > .myntLayoutHelp > span {
+    grid-column: 1 / -1;
+}

@@ -89,7 +89,6 @@
     <script defer src="scripts/local-mcp-studio.js"></script>
     <script defer src="scripts/local-mcp-preferences.js"></script>
     <script defer src="scripts/local-mcp-bridge.js"></script>
-    <link rel="stylesheet" href="styles/local-mcp.css">
     <link rel="stylesheet" href="styles/local-recovery-controls.css">
     <script defer src="scripts/lazy-loader.js"></script>
 
@@ -1989,17 +1988,6 @@
                                     <!-- end of languageSelector -->
                                 </div>
 
-            <section class="controlSection" id="localMcpSection" aria-labelledby="mcpTitle">
-                <details>
-                    <summary id="mcpTitle">本機 MCP</summary>
-                    <p id="mcpInfo">預設關閉。僅連接此電腦上另行核准安裝的主機；關閉此新分頁即斷線，不會自行啟用權限。</p>
-                    <p id="mcpPrivacy">工具結果可能由你使用的 AI 用戶端傳送給其模型供應商。預設不分享便箋內容與書籤，不傳送媒體檔或金鑰。</p>
-                    <label class="controlSettingRow"><span id="mcpWriteLabel">本次連線允許修改（需僅開啟一個 MYNT 分頁）</span><input type="checkbox" data-mcp-write></label>
-                    <label class="controlSettingRow"><span id="mcpPrivateLabel">本次連線允許讀取便箋與書籤</span><input type="checkbox" data-mcp-private></label>
-                    <div class="workspaceEditorActions"><button type="button" data-mcp-connect id="mcpConnect">連接本機 MCP</button><button type="button" data-mcp-disconnect id="mcpDisconnect" disabled>中斷連線</button></div>
-                    <p role="status" aria-live="polite" id="mcpStatus">尚未連線。沒有分享資料。</p>
-                </details>
-            </section>
 
                                 <div class="ttcont controlCenterLaunch">
                                     <div class="texts">
@@ -2051,53 +2039,6 @@
                         </div>
                     </div>
 
-                    <details id="settingsHelp" class="settingsHelp">
-                        <summary id="settingsHelpTitle">Quick help</summary>
-
-                    <!-- ----------Tips---------- -->
-                    <div class="tips" id="tips">
-                        <div class="ttcont">
-                            <div class="texts">
-                                <div class="bigText" id="switchSearchModes">Switch Search Modes</div>
-                                <div class="infoText" id="switchSearchModesInfo">Click on ‘Search With’ to
-                                    change the mode.</div>
-                            </div>
-                        </div>
-
-                        <div class="ttcont hideOnMobile">
-                            <div class="texts">
-                                <div class="bigText" id="adjustZoom">Adjust Zoom</div>
-                                <div class="infoText" id="adjustZoomInfo">Press Ctrl + "+" or Ctrl + "-" to
-                                    adjust the zoom.</div>
-                            </div>
-                        </div>
-
-                        <div class="ttcont hideOnMobile">
-                            <div class="texts">
-                                <div class="bigText" id="changeBrowserTheme">Change Browser Theme</div>
-                                <div class="infoText" id="changeBrowserThemeInfo">Click the three dots (⋮) >
-                                    More tools > Customize Chrome, then choose a color that matches the extension
-                                    theme.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ttcont hideOnMobile" id="firefoxHomepage" style="display: none;">
-                            <div class="texts">
-                                <div class="bigText" id="updateFirefoxHomepage">Update Homepage</div>
-                                <div class="infoText" id="updateFirefoxHomepageInfo">To change your homepage
-                                    like the new tab as well, visit <a
-                                        href="https://github.com/prem-k-r/MaterialYouNewTab#-firefox"
-                                        target="_blank" rel="noopener noreferrer">this link</a> and follow the instructions.
-                                </div>
-                            </div>
-                        </div>
-
-                        <button id="dontShowTips">Don't show it again</button>
-                    </div>
-
-                    <!-- ----------end of tips----- -->
-                    </details>
 
                     <!-- ------------------ -->
 

@@ -446,4 +446,14 @@ html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoE
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras { background: transparent !important; border: 0 !important; border-top: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 12%, transparent) !important; border-radius: 0 !important; box-shadow: none !important; padding-inline: 0 !important; }
 /* With a picture, the sheet below the start button is frosted glass instead of flat grey. */
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::after { background: color-mix(in srgb, #f7f7f7 72%, transparent); backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7); }
+/* With shortcuts switched off or all deleted the row would show a lone "+"; name the action instead. */
+html.mynt-removed-features body:has(#shortcutsCheckbox:not(:checked)) #addQuickLinkButton,
+html.mynt-removed-features #quickLinksRow:not(:has(#shortcutsContainer > * > a)) #addQuickLinkButton {
+  width: auto !important; min-width: 44px !important; flex-basis: auto !important;
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 18px 0 14px !important; white-space: nowrap;
+}
+html.mynt-removed-features body:has(#shortcutsCheckbox:not(:checked)) #addQuickLinkButton::after,
+html.mynt-removed-features #quickLinksRow:not(:has(#shortcutsContainer > * > a)) #addQuickLinkButton::after {
+  content: attr(aria-label); font-size: 15px; font-weight: 500;
+}
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
