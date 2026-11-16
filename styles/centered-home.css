@@ -428,6 +428,15 @@ html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoE
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras :is(.pomoStudioApplyCustom, .pomoStudioScenarios > button, .mynt-music-import > button) { border-radius: 999px !important; }
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras :is(.pomoStudioApplyCustom, .pomoStudioScenarios > button, .mynt-music-import > button, #pomodoroAmbientToggleBtn):not(:disabled):hover { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 86%, transparent) !important; }
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras .pomoStudioScenarios > button:disabled { box-shadow: none !important; opacity: 0.6; }
+/* Choice rows, colour swatches and the checkbox join the same family: glass fill, glass edge, 14px like the fields; the swatch inside follows 14 - 4 = 10px. */
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras .mynt-pomo-background-choice:not(.is-selected) { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 50%, transparent) !important; border-color: var(--mynt-glass-edge) !important; }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras .mynt-pomo-background-choice { border-radius: 14px !important; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7); }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras .mynt-pomo-background-choice.is-selected { background: color-mix(in srgb, var(--pomo-surface, #ffffff) 72%, transparent) !important; }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras input[type="color"] { border-radius: 14px !important; padding: 4px !important; }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 10px; }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras input[type="color"]::-moz-color-swatch { border: 0; border-radius: 10px; }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras .mynt-music-shuffle input[type="checkbox"]:not(:checked) { background-color: color-mix(in srgb, var(--pomo-surface, #ffffff) 62%, transparent) !important; }
 /* With a picture, the sheet below the start button is frosted glass instead of flat grey. */
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::after { background: color-mix(in srgb, #f7f7f7 72%, transparent); backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7); }
 @media (max-width: 600px) { body #quickLinksRow { row-gap: 6px; column-gap: 6px; } }
