@@ -105,11 +105,10 @@ html.black-theme .todolistitem:hover {
    2. 操作圖示大小與對齊一致
    ========================================================================== */
 
-/* 統整四個操作圖示按鈕的容器尺寸 (24px x 24px)、垂直置中對齊與基礎配色 */
+/* 統整三個操作圖示按鈕的容器尺寸 (24px x 24px)、垂直置中對齊與基礎配色 */
 .todolistitem .todoremovebtn,
 .todolistitem .todopinbtn,
-.todolistitem .todoeditbtn,
-.todolistitem .todoDaidaiBtn {
+.todolistitem .todoeditbtn {
 	width: 24px;
 	height: 24px;
 	top: 50%;
@@ -130,23 +129,15 @@ html.black-theme .todolistitem:hover {
 	line-height: 1;
 }
 
-/* 覆蓋 style.css 第 2139 行之 25px x 25px，使四者尺寸完全一致 */
-.todolistitem .todoDaidaiBtn {
-	width: 24px;
-	height: 24px;
-}
-
 /* 操作圖示懸浮狀態 */
 .todolistitem .todoremovebtn:hover,
 .todolistitem .todopinbtn:hover,
-.todolistitem .todoeditbtn:hover,
-.todolistitem .todoDaidaiBtn:hover {
+.todolistitem .todoeditbtn:hover {
 	opacity: 1;
 }
 
 .todolistitem .todopinbtn:hover,
-.todolistitem .todoeditbtn:hover,
-.todolistitem .todoDaidaiBtn:hover {
+.todolistitem .todoeditbtn:hover {
 	color: var(--todo-icon-hover-color);
 }
 
@@ -157,8 +148,7 @@ html.black-theme .todolistitem:hover {
 /* 覆蓋 style.css 第 6009-6019 行深色模式下的過暗顏色 (#616161) */
 .black-theme .todolistitem .todoremovebtn,
 .black-theme .todolistitem .todopinbtn,
-.black-theme .todolistitem .todoeditbtn,
-.black-theme .todolistitem .todoDaidaiBtn {
+.black-theme .todolistitem .todoeditbtn {
 	color: var(--todo-icon-color);
 }
 
@@ -167,23 +157,20 @@ html.black-theme .todolistitem:hover {
 }
 
 .black-theme .todolistitem .todopinbtn:hover,
-.black-theme .todolistitem .todoeditbtn:hover,
-.black-theme .todolistitem .todoDaidaiBtn:hover {
+.black-theme .todolistitem .todoeditbtn:hover {
 	color: var(--todo-icon-hover-color);
 }
 
 /* 已完成項目的操作圖示稍降權重，懸浮時恢復清晰 */
 .todolistitem.checked .todoremovebtn,
 .todolistitem.checked .todopinbtn,
-.todolistitem.checked .todoeditbtn,
-.todolistitem.checked .todoDaidaiBtn {
+.todolistitem.checked .todoeditbtn {
 	opacity: 0.65;
 }
 
 .todolistitem.checked .todoremovebtn:hover,
 .todolistitem.checked .todopinbtn:hover,
-.todolistitem.checked .todoeditbtn:hover,
-.todolistitem.checked .todoDaidaiBtn:hover {
+.todolistitem.checked .todoeditbtn:hover {
 	opacity: 1;
 }
 
@@ -265,7 +252,6 @@ html.black-theme #todoInput::placeholder {
 	.todolistitem .todoremovebtn,
 	.todolistitem .todopinbtn,
 	.todolistitem .todoeditbtn,
-	.todolistitem .todoDaidaiBtn,
 	.ttcont input,
 	.ttcont textarea {
 		transition: none !important;

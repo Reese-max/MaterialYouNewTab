@@ -5,7 +5,6 @@
  */
 const MYNT_LAYOUT_BLOCKS = [
     ["clock", "#analogClock, #digitalClock", "layoutBlockClock", "Clock"],
-    ["focus", ".ttteexxtt", "layoutBlockFocus", "Today’s focus"],
     ["search", "#rightDiv", "layoutBlockSearch", "Search bar"],
     ["searchWith", "#search-with-container", "layoutBlockSearchWith", "Search services"],
     ["aiTools", "#aiToolsCont", "layoutBlockAiTools", "AI tools"],
@@ -14,14 +13,13 @@ const MYNT_LAYOUT_BLOCKS = [
     ["countdowns", "#eventCountdownCard", "layoutBlockCountdowns", "Countdowns"],
     ["exam", "#examDaily", "layoutBlockExam", "Daily exam"],
     ["pomodoro", "#pomodoroCont", "layoutBlockPomodoro", "Pomodoro"],
-    ["scratchpad", "#scratchpadCont", "layoutBlockScratchpad", "Scratchpad"],
     ["homeWidgets", "#myntHomeWidgets", "layoutBlockHomeWidgets", "Today widgets"],
     ["bookmarks", "#bookmarkButton", "layoutBlockBookmarks", "Bookmarks"],
     ["wallpaper", "#wallpaperQuickActions", "layoutBlockWallpaper", "Wallpaper"],
     ["menu", "#menuButton", "layoutBlockMenu", "Settings"]
 ];
 const MYNT_REMOVED_LAYOUT_IDS = new Set(globalThis.MYNT_REMOVED_COMPONENT_IDS || []);
-const MYNT_ICON_LAYOUT_IDS = new Set(["pomodoro", "scratchpad", "bookmarks", "wallpaper", "menu"]);
+const MYNT_ICON_LAYOUT_IDS = new Set(["pomodoro", "bookmarks", "wallpaper", "menu"]);
 const MYNT_LAYOUT_LIMITS = { minScale: 0.5, maxScale: 2, grid: 16, snapDistance: 8 };
 
 function myntNormalizeLayout(raw) {
@@ -58,17 +56,6 @@ function myntOverlapRatio(rect, other) {
     const area = Math.max(0, Math.min(rect.right, other.right) - Math.max(rect.left, other.left))
         * Math.max(0, Math.min(rect.bottom, other.bottom) - Math.max(rect.top, other.top));
     return rect.width * rect.height > 0 ? area / (rect.width * rect.height) : 0;
-}
-
-// 只回傳顯示用偏移；原始儲存區塊不變，拖曳沿用 currentBlock 的畫面座標。
-function myntClockFallback(block, clock, focus, obstacles, controls, vw, vh) {
-    if (!focus || !obstacles.some(rect => myntOverlapRatio(clock, rect) > .2)) return { ...block };
-    let left = focus.left + (focus.width - clock.width) / 2, top = focus.top - clock.height - 16;
-    const above = { left, top, right: left + clock.width, bottom: top + clock.height, width: clock.width, height: clock.height };
-    if (top < 8 || controls.some(rect => myntOverlapRatio(above, rect) > 0)) {
-        left = focus.right + 16; top = focus.top + (focus.height - clock.height) / 2;
-    }
-    return { ...block, x: block.x + (left - clock.left) / vw, y: block.y + (top - clock.top) / vh };
 }
 
 function myntClockDatePosition(clock, width, height, obstacles, vw) {
@@ -129,7 +116,7 @@ function myntLayoutHistory(initial, limit = 100) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { MYNT_LAYOUT_BLOCKS, MYNT_LAYOUT_LIMITS, myntNormalizeLayout, myntClampOffset, myntSnapMove, myntLayoutHistory, myntOverlapRatio, myntClockFallback, myntClockDatePosition };
+    module.exports = { MYNT_LAYOUT_BLOCKS, MYNT_LAYOUT_LIMITS, myntNormalizeLayout, myntClampOffset, myntSnapMove, myntLayoutHistory, myntOverlapRatio, myntClockDatePosition };
 }
 
 if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", () => {
@@ -341,13 +328,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
         const clock = elementFor("clock");
         if (!clock) return;
-        const peers = ["focus", "search", "aiTools"].map(elementFor).filter(Boolean).map(el => el.getBoundingClientRect());
-        const focus = elementFor("focus"), block = layout.blocks.clock;
-        if (block) {
-            const controls = elementsFor("#pomodoroCont, #scratchpadCont, #myntProfilesPanel").filter(visible).map(el => el.getBoundingClientRect());
-            const display = myntClockFallback(currentBlock("clock", clock), clock.getBoundingClientRect(), focus?.getBoundingClientRect(), peers, controls, innerWidth, innerHeight);
-            clock.style.translate = `${display.x * innerWidth}px ${display.y * innerHeight}px`;
-        }
+        const peers = ["search", "aiTools"].map(elementFor).filter(Boolean).map(el => el.getBoundingClientRect());
         const date = clock.querySelector(".mynt-clock-date");
         if (!date) return;
         const rect = clock.getBoundingClientRect(), scale = rect.width / clock.offsetWidth;
@@ -573,7 +554,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             delete layout.blocks[selected]; applyBlock(selected); placeOverlays(); recordChange();
         });
         const reset = button("myntLayoutReset", t("layoutResetAll", "Reset all"), async () => {
-            const message = t("layoutResetDraftConfirm", "Reset all block positions? You can undo or cancel before saving. Notes and tasks will not be deleted.");
+            const message = t("layoutResetDraftConfirm", "Reset all block positions? You can undo or cancel before saving. Tasks will not be deleted.");
             if (!(window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message))) return;
             if (!editing) return;
             layout.blocks = {}; applyAll(); recordChange();

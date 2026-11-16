@@ -22,7 +22,7 @@ body:is([data-bg="wallpaper"], [data-workspace-background="video"]) .shortcutsCo
 }
 
 /* 影片名言已有高不透明度底板；一般圖片桌布補上同等保護。 */
-body[data-bg="wallpaper"]:not([data-workspace-background="video"]) :is(#studyQuote, .quotesContainer) {
+body[data-bg="wallpaper"]:not([data-workspace-background="video"]) #studyQuote {
 	background-color: rgba(255, 255, 255, 0.96);
 	color: #202020;
 	text-shadow: none;

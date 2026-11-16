@@ -50,15 +50,6 @@
                 },
                 "googleAppsCheckbox": {
                   "type": "boolean"
-                },
-                "motivationalQuotesCheckbox": {
-                  "type": "boolean"
-                },
-                "bongoCatCheckbox": {
-                  "type": "boolean"
-                },
-                "scratchpadCheckbox": {
-                  "type": "boolean"
                 }
               },
               "required": [],
@@ -175,7 +166,7 @@
   },
   {
     "name": "mynt_dashboard_get",
-    "description": "Read dashboard counts and seven-day focus statistics, excluding task titles, notes and credentials.",
+    "description": "Read dashboard counts, excluding task titles, notes and credentials.",
     "readOnly": true,
     "annotations": {
       "readOnlyHint": true,
@@ -251,56 +242,6 @@
       "type": "object",
       "properties": {},
       "required": [],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_habits_mutate",
-    "description": "Create, rename, check today or recoverably trash/restore a custom habit. Built-in habits cannot be edited or removed.",
-    "readOnly": false,
-    "annotations": {
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "operation": {
-          "type": "string",
-          "enum": [
-            "create",
-            "rename",
-            "check",
-            "trash",
-            "undo"
-          ]
-        },
-        "id": {
-          "type": "string",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
-          "maxLength": 80
-        },
-        "name": {
-          "type": "string",
-          "maxLength": 60
-        },
-        "completed": {
-          "type": "boolean"
-        },
-        "expectedRevision": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$",
-          "maxLength": 64
-        },
-        "requestId": {
-          "type": "string",
-          "maxLength": 100
-        }
-      },
-      "required": [
-        "expectedRevision"
-      ],
       "additionalProperties": false
     }
   },
@@ -452,7 +393,7 @@
   },
   {
     "name": "mynt_todos_mutate",
-    "description": "Create, update, recoverably trash or restore a task and synchronize system habit completion.",
+    "description": "Create, update, recoverably trash or restore a task.",
     "readOnly": false,
     "annotations": {
       "readOnlyHint": false,
@@ -485,154 +426,6 @@
         },
         "pinned": {
           "type": "boolean"
-        },
-        "expectedRevision": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$",
-          "maxLength": 64
-        },
-        "requestId": {
-          "type": "string",
-          "maxLength": 100
-        }
-      },
-      "required": [
-        "expectedRevision"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_focus_get",
-    "description": "Read current daily focus using daily rollover model.",
-    "readOnly": true,
-    "annotations": {
-      "readOnlyHint": true,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_focus_update",
-    "description": "Update daily focus text, completion, subject or steps and synchronize bounded focus history.",
-    "readOnly": false,
-    "annotations": {
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "text": {
-          "type": "string",
-          "maxLength": 160
-        },
-        "completed": {
-          "type": "boolean"
-        },
-        "subject": {
-          "type": "string",
-          "enum": [
-            "",
-            "db",
-            "sec",
-            "im",
-            "prog",
-            "chi",
-            "law",
-            "police",
-            "case"
-          ]
-        },
-        "steps": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "text": {
-                "type": "string",
-                "maxLength": 80
-              },
-              "done": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "text",
-              "done"
-            ],
-            "additionalProperties": false
-          },
-          "maxItems": 3
-        },
-        "linked": {
-          "type": "boolean"
-        },
-        "expectedRevision": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$",
-          "maxLength": 64
-        },
-        "requestId": {
-          "type": "string",
-          "maxLength": 100
-        }
-      },
-      "required": [
-        "expectedRevision"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_scratchpad_get",
-    "description": "Read bounded scratchpad text.",
-    "readOnly": true,
-    "annotations": {
-      "readOnlyHint": true,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_scratchpad_update",
-    "description": "Append text or replace one exact occurrence, with conflict checks.",
-    "readOnly": false,
-    "annotations": {
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "operation": {
-          "type": "string",
-          "enum": [
-            "append",
-            "replace"
-          ]
-        },
-        "text": {
-          "type": "string",
-          "maxLength": 2000
-        },
-        "before": {
-          "type": "string",
-          "maxLength": 2000
         },
         "expectedRevision": {
           "type": "string",
@@ -722,42 +515,6 @@
               "type": "object",
               "properties": {
                 "clock": {
-                  "type": "object",
-                  "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": -1,
-                      "maximum": 1
-                    },
-                    "y": {
-                      "type": "number",
-                      "minimum": -1,
-                      "maximum": 1
-                    },
-                    "s": {
-                      "type": "number",
-                      "minimum": 0.5,
-                      "maximum": 2
-                    },
-                    "w": {
-                      "type": "number",
-                      "minimum": 0.01,
-                      "maximum": 1
-                    },
-                    "h": {
-                      "type": "number",
-                      "minimum": 0.01,
-                      "maximum": 1
-                    }
-                  },
-                  "required": [
-                    "x",
-                    "y",
-                    "s"
-                  ],
-                  "additionalProperties": false
-                },
-                "focus": {
                   "type": "object",
                   "properties": {
                     "x": {
@@ -1081,7 +838,7 @@
                   ],
                   "additionalProperties": false
                 },
-                "scratchpad": {
+                "homeWidgets": {
                   "type": "object",
                   "properties": {
                     "x": {
@@ -1224,42 +981,6 @@
                     "s"
                   ],
                   "additionalProperties": false
-                },
-                "homeWidgets": {
-                  "type": "object",
-                  "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": -1,
-                      "maximum": 1
-                    },
-                    "y": {
-                      "type": "number",
-                      "minimum": -1,
-                      "maximum": 1
-                    },
-                    "s": {
-                      "type": "number",
-                      "minimum": 0.5,
-                      "maximum": 2
-                    },
-                    "w": {
-                      "type": "number",
-                      "minimum": 0.01,
-                      "maximum": 1
-                    },
-                    "h": {
-                      "type": "number",
-                      "minimum": 0.01,
-                      "maximum": 1
-                    }
-                  },
-                  "required": [
-                    "x",
-                    "y",
-                    "s"
-                  ],
-                  "additionalProperties": false
                 }
               },
               "required": [],
@@ -1336,9 +1057,6 @@
                 "system"
               ]
             },
-            "userTextVisible": {
-              "type": "boolean"
-            },
             "myntExamDailyVisible": {
               "type": "boolean"
             },
@@ -1366,22 +1084,6 @@
       "required": [
         "expectedRevision"
       ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_habits_get",
-    "description": "Read bounded habit completion history with stable IDs.",
-    "readOnly": true,
-    "annotations": {
-      "readOnlyHint": true,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {},
-      "required": [],
       "additionalProperties": false
     }
   },

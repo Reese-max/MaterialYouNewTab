@@ -32,7 +32,6 @@
           "enum": [
             "clock",
             "weather",
-            "focus",
             "search",
             "shortcuts",
             "aiTools",
@@ -41,10 +40,7 @@
             "todo",
             "pomodoro",
             "homeWidgets",
-            "bongo",
-            "scratchpad",
             "studyQuote",
-            "motivationalQuotes",
             "exam",
             "countdowns",
             "galleryEntry",

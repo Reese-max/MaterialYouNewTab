@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  settings.append(scenarios);const cardsLabel=el('p',t('pomoStudioFocusBreak','專注／休息（分）'));cardsLabel.className='pomoStudioCardsLabel';cardsLabel.setAttribute('aria-hidden','true');extras.prepend(cardsLabel,cards,settings);extras.append(alarmNotes);
  // The ordinary-window action closes the card in reading and focus order too, not only visually.
  const ordinaryWindow=extras.querySelector(':scope > .mynt-pomo-open-popup');if(ordinaryWindow){const note=ordinaryWindow.nextElementSibling;extras.append(ordinaryWindow);if(note&&note.classList.contains('mynt-pomo-note'))extras.append(note);}
- const stats=el('div');stats.className='pomoStudioStats';for(const selector of ['.pomodoroSessionsToday','.pomodoroFocusSummary']){const child=panel.querySelector(selector);if(child)stats.append(child);}if(stats.children.length)panel.append(stats);
+ const stats=el('div');stats.className='pomoStudioStats';for(const selector of ['.pomodoroSessionsToday']){const child=panel.querySelector(selector);if(child)stats.append(child);}if(stats.children.length)panel.append(stats);
  // Both primary states keep an identical footprint; labels and keyboard focus survive swaps.
  const controls=panel.querySelector('.pomodoroControls'),start=panel.querySelector('#pomodoroStartBtn'),pause=panel.querySelector('#pomodoroPauseBtn'),reset=panel.querySelector('#pomodoroResetBtn');
  for(const [button,key,fallback] of [[start,'pomoFloat_start','開始'],[pause,'pomoFloat_pause','暫停'],[reset,'pomoFloat_reset','重設']]){

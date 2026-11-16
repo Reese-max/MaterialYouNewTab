@@ -25,13 +25,11 @@ async function until(predicate) {
 (async () => {
     for (const [key, value] of [
         ['todoList', '{broken json'], ['todoList', '[]'], ['todoList', '{"tbad":{"title":"missing fields"}}'],
-        ['myntHabits', '{broken json'], ['myntHabits', '{}'],
-        ['myntHabits', '[{"id":"hbad","name":"Habit","source":null,"doneDates":["2026-02-30"]}]'],
         ['myntLayout', '{broken json'], ['myntLayout', '{}'],
         ['myntLayout', '{"version":2,"snap":true,"locked":true,"blocks":{"search":{"x":8,"y":0,"s":1}}}'],
         ['myntLayoutProfiles', '{broken json'], ['myntLayoutProfiles', '{}'],
-        ['myntDailyFocus', '{broken json'], ['myntWorkspacePresets', '{broken json'],
-        ['myntAccessibility', '{broken json'], ['myntFocusLog', '{broken json'],
+        ['myntWorkspacePresets', '{broken json'],
+        ['myntAccessibility', '{broken json'],
         ['pomodoroState', '{broken json'], ['aiToolsSettings', '{broken json'],
         ['myntPomoScenarios', '{broken json'], ['myntPomoMusicSettingsV1', '{broken json'],
         [KEY, '{"version":1,"phase":"snapshot"}']
@@ -43,6 +41,12 @@ async function until(predicate) {
         assert.equal(env.run('isValidBackupFile(fixture)'), false, key);
         await assert.rejects(env.run('restoreData(fixture)'), /Invalid backup/);
         assert.deepEqual(await snapshot(env), before); assert.equal(writes(), 0); assert.equal(env.writes.length, 0);
+    }
+    // Keys of features removed on 2026-11-17 are inert: old backups holding them still restore.
+    for (const key of ['myntHabits', 'myntHabitRecoveryV1', 'myntDailyFocus', 'myntFocusLog', 'myntFocusHistory']) {
+        const env = environment(); loadFixture(env); env.context.badKey = key;
+        env.run('fixture.localStorage[badKey]="{broken json"');
+        assert.equal(env.run('isValidBackupFile(fixture)'), true, key);
     }
     // Quota at durable snapshot creation cannot leave a changed domain or marker.
     const quota = environment(); loadFixture(quota); const quotaBefore = await snapshot(quota);

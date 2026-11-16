@@ -21,13 +21,6 @@
 	z-index: 2;
 }
 
-/* 名言列維持於捷徑列下方，並確保圖層順序正常 */
-.quotesCont,
-#motivationalQuotesCont {
-	position: relative;
-	z-index: 1;
-}
-
 /* 確保捷徑名稱標籤在深色模式與有桌布時可正確點擊與顯示 */
 .shortcuts .shortcut-name {
 	pointer-events: auto;
@@ -330,15 +323,11 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk,
 	text-shadow: none;
 }
 
-#pomodoroPanel .pomodoroFocusSummary,
-.pomodoro-panel .pomodoroFocusSummary,
 #pomodoroPanel .mynt-pomo-note,
 .pomodoro-panel .mynt-pomo-note {
 	color: var(--pomo-muted);
 }
 
-#pomodoroPanel #pomodoroStatsBtn,
-.pomodoro-panel #pomodoroStatsBtn,
 #pomodoroPanel .mynt-pomo-settings summary,
 .pomodoro-panel .mynt-pomo-settings summary {
 	color: var(--pomo-fg);
@@ -484,14 +473,12 @@ html.black-theme .pomodoro-panel {
 
 html.black-theme #pomodoroPanel .pomodoroPhaseLabel,
 html.black-theme #pomodoroPanel .pomodoroTimeDisplay,
-html.black-theme #pomodoroPanel #pomodoroStatsBtn,
 html.black-theme #pomodoroPanel .mynt-pomo-settings summary {
 	color: var(--award-surface-dark-text);
 }
 
 html.black-theme #pomodoroPanel .pomodoroRoundDisplay,
 html.black-theme #pomodoroPanel .pomodoroSessionsToday,
-html.black-theme #pomodoroPanel .pomodoroFocusSummary,
 html.black-theme #pomodoroPanel .mynt-pomo-note {
 	color: var(--award-surface-dark-muted);
 }
@@ -516,68 +503,13 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 }
 
 /* ==========================================================================
-   3. 便籤面板 (#scratchpadContainer)
-   ========================================================================== */
-
-/* 淺色模式：不透明度至少 0.94，防止底下首頁文字透出 */
-#scratchpadContainer,
-.scratchpadContainer {
-	background: var(--award-surface-light-opaque);
-	color: var(--award-surface-light-text);
-	border: 1px solid var(--award-surface-light-border);
-	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15);
-	backdrop-filter: blur(16px);
-}
-
-#scratchpadContainer textarea,
-#scratchpadContainer input,
-#scratchpadContainer select {
-	background: rgba(255, 255, 255, 0.92);
-	color: inherit;
-	border: 1px solid rgba(0, 0, 0, 0.15);
-}
-
-/* 黑色主題：深色表面、淺色文字、不透出底下內容 */
-html.black-theme #scratchpadContainer,
-html.black-theme .scratchpadContainer {
-	background: var(--award-surface-dark-opaque);
-	color: var(--award-surface-dark-text);
-	border: 1px solid var(--award-surface-dark-border);
-	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
-	backdrop-filter: blur(16px);
-}
-
-/* 黑色主題便籤編輯區與輸入元件 */
-html.black-theme #scratchpadContainer textarea,
-html.black-theme #scratchpadContainer input,
-html.black-theme #scratchpadContainer select,
-html.black-theme #scratchpadContainer [contenteditable="true"] {
-	background-color: rgba(0, 0, 0, 0.35);
-	color: var(--award-surface-dark-text);
-	border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-/* 黑色主題便籤操作按鈕 */
-html.black-theme #scratchpadContainer button {
-	background-color: rgba(255, 255, 255, 0.12);
-	color: var(--award-surface-dark-text);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-html.black-theme #scratchpadContainer button:hover {
-	background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* ==========================================================================
    4. 動畫偏好設定（prefers-reduced-motion）
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
 	dialog.myntAppDialog,
 	dialog.myntDialog,
 	#pomodoroPanel,
-	.pomodoro-panel,
-	#scratchpadContainer,
-	.scratchpadContainer {
+	.pomodoro-panel {
 		transition: none;
 		animation: none;
 	}
@@ -597,8 +529,7 @@ html.black-theme #scratchpadContainer button:hover {
 		--award-filter-border: rgba(54, 68, 86, 0.18);
 
 		/* 半透明底色保留桌布層次；不依賴模糊或新增動效。 */
-		& :is(.ttteexxtt, #searchbar, .aiToolsCont .toolsCont a,
-			#dailyFocusPanel, #myntHomeWidgets .home-widget-card) {
+		& :is(#searchbar, .aiToolsCont .toolsCont a, #myntHomeWidgets .home-widget-card) {
 			background: var(--award-filter-surface);
 			color: var(--award-filter-text);
 			border: 1px solid var(--award-filter-border);
@@ -615,24 +546,21 @@ html.black-theme #scratchpadContainer button:hover {
 
 		/* 搜尋列維持既有外尺寸；輸入文字與小工具標頭同步離開純黑底。 */
 		& #searchbar { box-sizing: border-box; }
-		& #userText { background: transparent; color: var(--award-filter-text); }
 		& #searchQ { color: var(--award-filter-text); }
 		& #myntHomeWidgets h2 {
 			background: var(--award-filter-surface);
 			color: var(--award-filter-text);
 		}
-		& :is(#dailyFocusStepInput, #dailyFocusPaste,
-			#myntHomeWidgets button, #myntHomeWidgets .home-widget-add input) {
+		& :is(#myntHomeWidgets button, #myntHomeWidgets .home-widget-add input) {
 			background: var(--award-filter-elevated);
 			color: var(--award-filter-text);
 			border-color: var(--award-filter-border);
 		}
 		& #myntHomeWidgets button:hover { background: var(--award-filter-surface); }
-		& :is(#searchQ, #dailyFocusStepInput, #dailyFocusPaste)::placeholder {
+		& :is(#searchQ)::placeholder {
 			color: var(--award-filter-muted);
 			opacity: 1;
 		}
-		& .ttteexxtt .dailyFocusStepRemove { opacity: 0.72; }
 		& #myntHomeWidgets :disabled { opacity: 1; }
 
 		/* 只覆寫既存強制變數，故需 !important；壓過本檔舊值及 paint()
@@ -815,11 +743,10 @@ html.black-theme .todolistitem:hover {
    2. 操作圖示大小與對齊一致
    ========================================================================== */
 
-/* 統整四個操作圖示按鈕的容器尺寸 (24px x 24px)、垂直置中對齊與基礎配色 */
+/* 統整三個操作圖示按鈕的容器尺寸 (24px x 24px)、垂直置中對齊與基礎配色 */
 .todolistitem .todoremovebtn,
 .todolistitem .todopinbtn,
-.todolistitem .todoeditbtn,
-.todolistitem .todoDaidaiBtn {
+.todolistitem .todoeditbtn {
 	width: 24px;
 	height: 24px;
 	top: 50%;
@@ -840,23 +767,15 @@ html.black-theme .todolistitem:hover {
 	line-height: 1;
 }
 
-/* 覆蓋 style.css 第 2139 行之 25px x 25px，使四者尺寸完全一致 */
-.todolistitem .todoDaidaiBtn {
-	width: 24px;
-	height: 24px;
-}
-
 /* 操作圖示懸浮狀態 */
 .todolistitem .todoremovebtn:hover,
 .todolistitem .todopinbtn:hover,
-.todolistitem .todoeditbtn:hover,
-.todolistitem .todoDaidaiBtn:hover {
+.todolistitem .todoeditbtn:hover {
 	opacity: 1;
 }
 
 .todolistitem .todopinbtn:hover,
-.todolistitem .todoeditbtn:hover,
-.todolistitem .todoDaidaiBtn:hover {
+.todolistitem .todoeditbtn:hover {
 	color: var(--todo-icon-hover-color);
 }
 
@@ -867,8 +786,7 @@ html.black-theme .todolistitem:hover {
 /* 覆蓋 style.css 第 6009-6019 行深色模式下的過暗顏色 (#616161) */
 .black-theme .todolistitem .todoremovebtn,
 .black-theme .todolistitem .todopinbtn,
-.black-theme .todolistitem .todoeditbtn,
-.black-theme .todolistitem .todoDaidaiBtn {
+.black-theme .todolistitem .todoeditbtn {
 	color: var(--todo-icon-color);
 }
 
@@ -877,23 +795,20 @@ html.black-theme .todolistitem:hover {
 }
 
 .black-theme .todolistitem .todopinbtn:hover,
-.black-theme .todolistitem .todoeditbtn:hover,
-.black-theme .todolistitem .todoDaidaiBtn:hover {
+.black-theme .todolistitem .todoeditbtn:hover {
 	color: var(--todo-icon-hover-color);
 }
 
 /* 已完成項目的操作圖示稍降權重，懸浮時恢復清晰 */
 .todolistitem.checked .todoremovebtn,
 .todolistitem.checked .todopinbtn,
-.todolistitem.checked .todoeditbtn,
-.todolistitem.checked .todoDaidaiBtn {
+.todolistitem.checked .todoeditbtn {
 	opacity: 0.65;
 }
 
 .todolistitem.checked .todoremovebtn:hover,
 .todolistitem.checked .todopinbtn:hover,
-.todolistitem.checked .todoeditbtn:hover,
-.todolistitem.checked .todoDaidaiBtn:hover {
+.todolistitem.checked .todoeditbtn:hover {
 	opacity: 1;
 }
 
@@ -975,7 +890,6 @@ html.black-theme #todoInput::placeholder {
 	.todolistitem .todoremovebtn,
 	.todolistitem .todopinbtn,
 	.todolistitem .todoeditbtn,
-	.todolistitem .todoDaidaiBtn,
 	.ttcont input,
 	.ttcont textarea {
 		transition: none !important;
@@ -1046,7 +960,6 @@ body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
    大型焦點卡、搜尋區與捷徑列不套用此規則。 */
 body.mynt-layout-editing .myntLayoutOverlay:is(
     [data-block="pomodoro"],
-    [data-block="scratchpad"],
     [data-block="bookmarks"],
     [data-block="wallpaper"],
     [data-block="menu"]
@@ -1697,7 +1610,6 @@ body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel) {
    把手再離標籤 6px（間距 ≥4px），區塊下方不再伸出任何控制項。 */
 body.mynt-layout-editing .myntLayoutOverlay:is(
     [data-block="pomodoro"],
-    [data-block="scratchpad"],
     [data-block="bookmarks"]
 ) > .myntLayoutResize {
     top: auto;
@@ -2232,7 +2144,7 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 /* 第 3 輪：待辦項目操作圖示、文字斷行與已完成狀態 */
 
 /* ==========================================================================
-   1. 四個操作鈕：32×32px 可點範圍、等距排列、視覺圖示約 18–20px
+   1. 三個操作鈕：32×32px 可點範圍、等距排列、視覺圖示約 18–20px
    原因：svgs/ 下六枚圖示全是 #ffffff，第二輪改成淺色表面後整個隱形。
    鉛筆／釘選改用 CSS mask 取形狀、用 --todo-icon-color 上色，
    顏色 token 沿用 award-fix-todo-inputs.css 的定義，深淺主題自動切換。
@@ -2240,8 +2152,7 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 
 .todolistitem .todoremovebtn,
 .todolistitem .todopinbtn,
-.todolistitem .todoeditbtn,
-.todolistitem .todoDaidaiBtn {
+.todolistitem .todoeditbtn {
 	width: 32px;
 	height: 32px;
 	opacity: 1;
@@ -2250,14 +2161,13 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 	transition: color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
 }
 
-/* 右側四鈕以 32px 節距排列（呆 → 鉛筆 → 釘選 → ×），並補足右側留白 */
+/* 右側三鈕以 32px 節距排列（鉛筆 → 釘選 → ×），並補足右側留白 */
 .todolistitem .todoremovebtn { inset-inline-end: 4px; }
 .todolistitem .todopinbtn { inset-inline-end: 36px; }
 .todolistitem .todoeditbtn { inset-inline-end: 68px; }
-.todolistitem .todoDaidaiBtn { inset-inline-end: 100px; }
 
 .todolistitem {
-	padding-inline-end: 136px; /* 100 + 32 + 4px 緩衝，文字不會伸到圖示底下 */
+	padding-inline-end: 104px; /* 68 + 32 + 4px 緩衝，文字不會伸到圖示底下 */
 	min-width: 0; /* .todolist 是 flex 欄容器，允許項目隨空間收窄 */
 }
 
@@ -2311,50 +2221,20 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 /* 已完成列的操作圖示：上一輪降到 0.65 後對比低於 3:1，補回 0.8 */
 .todolistitem.checked .todoremovebtn,
 .todolistitem.checked .todopinbtn,
-.todolistitem.checked .todoeditbtn,
-.todolistitem.checked .todoDaidaiBtn {
+.todolistitem.checked .todoeditbtn {
 	opacity: 0.8;
-}
-
-/* ==========================================================================
-   3. 「呆」徽章：一致的圓形小標籤（22px 視覺 + 32×32 點擊範圍）
-   透明 border 是點擊區的一部分；background-clip 把底色限縮在內圈。
-   ========================================================================== */
-
-.todolistitem .todoDaidaiBtn {
-	padding: 0;
-	border: 5px solid transparent;
-	border-radius: 999px;
-	background-color: color-mix(in srgb, var(--todo-icon-hover-color) 15%, transparent);
-	background-clip: padding-box; /* 視覺圓徽 22px，外圈 5px 透明可點 */
-	/* 淺色模式 ≈ #234163（文字色混入 30% 主色藍），對淡藍徽章底對比 ≈ 7.8:1，
-	   checked 0.8 透明度下仍 ≈ 4.8:1；深色模式兩 token 同為 #f1f5f9，結果不變 */
-	color: color-mix(in srgb, var(--todo-item-text) 70%, var(--todo-icon-hover-color));
-	font-size: 11px;
-	font-weight: 700;
-	text-decoration: none;
-}
-
-.todolistitem .todoDaidaiBtn:hover {
-	background-color: color-mix(in srgb, var(--todo-icon-hover-color) 26%, transparent);
-	/* 覆蓋 inputs.css 的 hover 還原色，維持與一般狀態相同的深色文字（≈ 6.7:1） */
-	color: color-mix(in srgb, var(--todo-item-text) 70%, var(--todo-icon-hover-color));
-	/* 上游 hover 會畫 --whitishColor 白框（淺底看不見），改成可見的深色框 */
-	outline: 2px solid var(--todo-icon-hover-color);
-	outline-offset: 1px;
 }
 
 /* 鍵盤焦點框（原本用 --whitishColor 畫框，淺色底上看不到，換成深色 token） */
 .todolistitem .todoremovebtn:focus-visible,
 .todolistitem .todopinbtn:focus-visible,
-.todolistitem .todoeditbtn:focus-visible,
-.todolistitem .todoDaidaiBtn:focus-visible {
+.todolistitem .todoeditbtn:focus-visible {
 	outline: 2px solid var(--todo-icon-hover-color);
 	outline-offset: 1px;
 }
 
 /* ==========================================================================
-   4. 任務文字斷行：避免「一／步」孤字
+   3. 任務文字斷行：避免「一／步」孤字
    任務文字是 <li> 的直接文字節點（匿名 flex item），選不到也設不了
    min-width，靠 overflow-wrap 讓它能收窄、text-wrap: pretty 改善斷行品質
    （不支援的引擎自動退回一般斷行，屬漸進增強）。
@@ -2368,11 +2248,11 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 }
 
 /* ==========================================================================
-   5. 已完成狀態：勾選圖示要清楚可見
+   4. 已完成狀態：勾選圖示要清楚可見
    todo-check-fill.svg 是純白實心勾，在淺色已完成表面直接隱形，
    評審看到的「被刪除線蓋住」其實是白勾消失只剩刪除線。
    淺色版用濾鏡把白勾染成主題深色；刪除線本就只畫在文字節點上
-   （::before 與四鈕皆絕對定位，不在裝飾傳遞範圍內），再明確補一刀防回歸。
+   （::before 與三鈕皆絕對定位，不在裝飾傳遞範圍內），再明確補一刀防回歸。
    ========================================================================== */
 
 :root:not(.black-theme) .todolistitem.checked::before {
@@ -2388,8 +2268,7 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 .todolistitem.checked::before,
 .todolistitem.checked .todoremovebtn,
 .todolistitem.checked .todopinbtn,
-.todolistitem.checked .todoeditbtn,
-.todolistitem.checked .todoDaidaiBtn {
+.todolistitem.checked .todoeditbtn {
 	text-decoration: none;
 }
 
@@ -2874,57 +2753,6 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 	text-shadow: none;
 }
 
-#pomodoroPanel .pomodoroFocusSummary {
-	grid-column: 1 / -1 !important;
-	order: 31;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0 4px;
-	margin-top: 4px;
-	font-size: 12px;
-	line-height: 1.4;
-	color: var(--pomo-fg, #17243b);
-	font-variant-numeric: tabular-nums;
-	text-shadow: none;
-}
-
-/* 統計按鈕（Stats）：統一為次要膠囊按鈕樣式（透明底＋細框） */
-#pomodoroPanel #pomodoroStatsBtn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 28px;
-	padding: 2px 10px;
-	/* 次要按鈕樣式：透明底與細邊框 */
-	background: transparent !important;
-	border: 1px solid transparent !important;
-	border-radius: 14px;
-	font-size: 11.5px;
-	font-weight: 500;
-	line-height: 1.2;
-	color: var(--pomo-fg, #17243b) !important;
-	box-shadow: none !important;
-	cursor: pointer;
-	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-#pomodoroPanel #pomodoroStatsBtn:hover {
-	background: var(--accentLightTint-blue, #e2eeff) !important;
-	border-color: rgba(67, 130, 236, 0.4) !important;
-	color: var(--pomo-accent, #3569b2) !important;
-}
-
-#pomodoroPanel #pomodoroStatsBtn:active {
-	background: rgba(67, 130, 236, 0.15) !important;
-	transform: scale(0.97);
-}
-
-#pomodoroPanel #pomodoroStatsBtn:focus-visible {
-	outline: 2px solid var(--pomo-accent, #3569b2);
-	outline-offset: 2px;
-}
-
 /* --------------------------------------------------------------------------
    8. 無障礙動畫偏好（prefers-reduced-motion）
    -------------------------------------------------------------------------- */
@@ -3047,7 +2875,6 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 #pomodoroPanel #myntPomoFloatMount > button:hover,
 #pomodoroPanel .pomoStudioRow > button:hover,
 #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup:hover,
-#pomodoroPanel #pomodoroStatsBtn:hover,
 #pomodoroPanel #myntPomoStudioMount button:not(#myntPomoTask):hover {
     background: var(--pomo-accent, #3569b2) !important;
     color: var(--pomo-on-accent, #ffffff) !important;
@@ -3068,7 +2895,6 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
     #pomodoroPanel #myntPomoFloatMount > button { min-height: 32px; padding-block: 4px; }
     #pomodoroPanel > .pomoStudioStats { padding: 4px 0 0; }
     #pomodoroPanel .pomodoroSessionsToday { padding-block: 0; margin-top: 0; border-top: 0; }
-    #pomodoroPanel .pomodoroFocusSummary { margin-top: 0; }
     #pomodoroPanel #myntPomoExtras { margin: 2px 0 0; padding: 0 8px 12px; }
     #pomodoroPanel #myntPomoExtras summary,
     #pomodoroPanel #myntPomoExtras .mynt-pomo-appearance > summary { min-height: 32px; padding-block: 6px; }
@@ -3284,7 +3110,6 @@ html.myntReducedMotion #pomodoroPanel button:is(:hover, :active) { transform: no
         padding: 0;
     }
     #pomodoroPanel .pomodoroSessionsToday { padding: 0; }
-    #pomodoroPanel .pomodoroFocusSummary { flex: 1; gap: 4px; padding: 0; }
 }
 
 /* 單一捲動區保留底部入口，原生換列避免次要動作斷字。
@@ -3379,62 +3204,6 @@ html.myntReducedMotion #pomodoroPanel button:is(:hover, :active) { transform: no
     #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music:has(.mynt-music-library[open]) .mynt-music-controls { grid-row: auto; }
 }
 /* ==== award-fix-home-actions.css ==== */
-/* 第 3 輪：首頁焦點卡動作按鈕與搜尋服務 */
-
-/* ===== 焦點卡動作列 =====
-   「完成」按鈕與 ▶ ✦ ⋯ 三個圖示按鈕統一為 32px 高；
-   圖示可點範圍放大到 32×32px、glyph 至少 16px，
-   hover／focus 狀態與主按鈕一致。 */
-
-#dailyFocusToggle {
-    /* 由 30px 改為 32px，與右側圖示按鈕同高 */
-    min-height: 32px;
-    padding: 4px 14px;
-}
-
-#dailyFocusToggle:hover {
-    /* 與圖示按鈕的 hover 回饋等量：輕微提亮，不位移 */
-    filter: brightness(1.08);
-}
-
-#dailyFocusTools {
-    gap: 4px;
-    align-items: center;
-}
-
-#dailyFocusTools .dailyFocusIcon {
-    /* 覆蓋 focus-card.css 的 padding 定位，改為 flex 置中，
-       讓三個圖示按鈕與「完成」等高、且有一致的可點範圍 */
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    /* glyph（▶ ✦ ⋯）至少 16px；原本 0.8rem 只有約 12.8px */
-    font-size: 16px;
-    line-height: 1;
-    opacity: 0.72;
-}
-
-#dailyFocusTools .dailyFocusIcon:hover,
-#dailyFocusTools .dailyFocusIcon:focus-visible,
-#dailyFocusTools .dailyFocusIcon[aria-expanded="true"] {
-    opacity: 1;
-    background: rgba(127, 127, 127, 0.22);
-}
-
-#dailyFocusTools .dailyFocusIcon:active {
-    background: rgba(127, 127, 127, 0.3);
-}
-
-#dailyFocusTools .dailyFocusIcon:focus-visible {
-    /* 與 #dailyFocusToggle 相同的焦點框，四個動作一致 */
-    outline: 2px solid var(--darkColor-blue);
-    outline-offset: 1px;
-}
-
 /* ===== 搜尋服務列 =====
    原本是 100px 高的素色標籤方塊（.hint）加上無外框的 Google 晶片，
    看不出是「目前選用的搜尋引擎」。改為同高的分段控制外觀：
@@ -3567,69 +3336,6 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger,
        背景上的可見度比 darkColor 好 */
     outline: 2px solid var(--darkerColor-blue);
     outline-offset: 2px;
-}
-
-/* ===== 次要按鈕：焦點卡「完成」（#dailyFocusToggle） =====
-   原本是 --darkColor-blue 底 + 白字（藍主題約 3.5:1，不足 AA），
-   反相後又變成深底黑字。改為淺底深字的次要配色；
-   尺寸沿用上一輪（32px 高、padding 不動），只統一顏色。 */
-#dailyFocusToggle {
-    background: var(--accentLightTint-blue);
-    color: var(--darkerColor-blue);
-}
-
-/* hover／鍵盤焦點時升級為主要按鈕配色（深底白字），回饋明確。
-   filter: none 用來蓋掉上一輪遺留的 brightness(1.08)——
-   那是為舊的深色底設計的，留在新配色上會把 hover 對比拉到邊界。 */
-#dailyFocusToggle:hover,
-#dailyFocusToggle:focus-visible {
-    background: var(--darkerColor-blue);
-    color: #fff;
-    filter: none;
-}
-
-#dailyFocusToggle:focus-visible {
-    /* 焦點框用深主題色，在淺色卡片背景上清楚可見 */
-    outline: 2px solid var(--darkerColor-blue);
-    outline-offset: 2px;
-}
-
-/* 已標記完成（aria-pressed="true"，由 custom-text.js 切換）維持
-   主要配色，讓「已完成」狀態一眼可辨 */
-#dailyFocusToggle[aria-pressed="true"] {
-    background: var(--darkerColor-blue);
-    color: #fff;
-}
-
-/* ===== 停用狀態：細框深字、不靠淡化 =====
-   custom-text.js 以 toggle.disabled = !focus.text 停用按鈕；
-   style.css 原本只用 opacity: .45 淡化次要配色，淺色已偏淡，
-   反相後對比更掉到 2:1 以下，評審認為幾乎隱形。
-   改為「細框＋主題深色文字、無填色」：用線框外觀表達停用而非低對比。
-   - opacity: 1 蓋掉 style.css 的 0.45 淡化（淡化是對比元兇）
-   - --darkerColor-blue 字在淺色頁面背景約 5.4:1，達 AA（≥4.5）
-   - 邊框用主色 60% 混合，比可用態的實色弱一階，仍可辨外框 */
-#dailyFocusToggle:disabled,
-#dailyFocusToggle[disabled],
-#dailyFocusToggle[aria-disabled="true"] {
-    opacity: 1;
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--darkerColor-blue) 60%, transparent);
-    color: var(--darkerColor-blue);
-    cursor: not-allowed;
-}
-
-/* 停用態的 hover／焦點不升級為深底白字（避免看起來可按），
-   只鋪淡主題底；深字在淡底上約 4.7:1，仍過 AA。
-   aria-disabled 的按鈕仍可被聚焦，所以一併涵蓋 :focus-visible。 */
-#dailyFocusToggle:disabled:hover,
-#dailyFocusToggle[disabled]:hover,
-#dailyFocusToggle[aria-disabled="true"]:hover,
-#dailyFocusToggle:disabled:focus-visible,
-#dailyFocusToggle[aria-disabled="true"]:focus-visible {
-    background: var(--accentLightTint-blue);
-    color: var(--darkerColor-blue);
-    filter: none;
 }
 
 /* 第 15 輪：首頁膠囊沿用 r13 浮動工具的表面、細框、陰影與焦點。
@@ -3775,7 +3481,6 @@ html.myntReducedMotion body :is(#examDaily #examDailyChip, #studyQuote, #aiTools
    pointer-events:none，佔位保留（皆為 position:fixed，不影響版面），
    面板關閉後自動恢復；已展開的 details[open] 不命中，照常顯示。 */
 body:not(.mynt-layout-editing):has(#todoContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
-body:not(.mynt-layout-editing):has(#scratchpadContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
 body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]) {
     visibility: hidden;
     pointer-events: none;
@@ -3799,7 +3504,7 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
 
     /* 三種面板以行內 display 切換；預留左側 20px、面板 372px 與間距 24px。
        保留原本的置中位置，空間不足才縮欄，最小寬度為 480px。 */
-    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])):has(:is(#todoContainer, #scratchpadContainer, #pomodoroPanel):not([style*="display: none"])) {
+    body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-layout-editing):not(:has([data-mynt-layout])):has(:is(#todoContainer, #pomodoroPanel):not([style*="display: none"])) {
         --workspace-left: max(416px, calc((100vw - min(720px, 60vw)) / 2));
         --workspace-width: max(480px, min(720px, 60vw, calc(100vw - var(--workspace-left) - 24px)));
     }
@@ -3880,8 +3585,8 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
 /* ==== award-fix-home-polish.css ==== */
 /* 第 5 輪：首頁工具列圖示、浮動鈕分組、焦點卡排版細節 */
 
-/* ===== 左上三顆工具鈕：統一外形 =====
-   待辦 .todoListCont、便籤 .scratchpadCont、番茄鐘 .pomodoroCont
+/* ===== 左上工具鈕：統一外形 =====
+   待辦 .todoListCont、番茄鐘 .pomodoroCont
    原本同為 52×52 但造型不一：便籤是圓形半透明浮鈕，
    另兩顆是無底圖示（待辦圖示甚至沒設 fill，顯示成純黑）。
    統一為 44×44px 圓角方塊浮鈕，沿用便籤的半透明底板配方
@@ -3890,7 +3595,7 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
    定位（top／inset-inline-start／margin）不動；
    三鈕頂緣原本就對齊在 40px（--gap 30 + 10），
    44px 高度下底緣仍同線（84px）。 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+:is(.todoListCont, .pomodoroCont) {
     width: 44px;
     height: 44px;
     border-radius: 14px;
@@ -3902,7 +3607,7 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
-:is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+:is(.todoListCont, .pomodoroCont) .dot-icon {
     width: 24px;
     height: 24px;
     fill: var(--darkColor-blue);
@@ -3911,31 +3616,31 @@ body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"]))
 
 /* hover／active：三鈕一致的按壓回饋；
    順便壓掉番茄鐘原本的內層圖示放大，避免它獨自膨脹一圈。 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover {
+:is(.todoListCont, .pomodoroCont):hover {
     transform: scale(1.06);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+:is(.todoListCont, .pomodoroCont):hover .dot-icon {
     transform: none;
 }
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):active {
+:is(.todoListCont, .pomodoroCont):active {
     transform: scale(0.96);
 }
 
-/* 鍵盤焦點框，與 #dailyFocusToggle 同一套 */
-:is(.todoListCont, .scratchpadCont, .pomodoroCont):focus-visible {
+/* 鍵盤焦點框 */
+:is(.todoListCont, .pomodoroCont):focus-visible {
     outline: 2px solid var(--darkColor-blue);
     outline-offset: 2px;
 }
 
 /* 黑色主題（html.black-theme）：沿用便籤原本的深色浮鈕配色，
    把待辦與番茄鐘一併補齊，鐘面刻度描邊同步成淺藍。 */
-html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+html.black-theme :is(.todoListCont, .pomodoroCont) {
     background: rgba(30, 31, 35, 0.75);
     border-color: rgba(255, 255, 255, 0.1);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
-html.black-theme :is(.todoListCont, .scratchpadCont, .pomodoroCont) .dot-icon {
+html.black-theme :is(.todoListCont, .pomodoroCont) .dot-icon {
     fill: #a8c7fa;
 }
 html.black-theme .pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
@@ -3944,18 +3649,18 @@ html.black-theme .pomodoroCont :is(.pomodoro-clock-face, .pomodoro-clock-hand) {
 
 /* 尊重減少動態：保留顏色／陰影回饋，去掉縮放位移 */
 @media (prefers-reduced-motion: reduce) {
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+    :is(.todoListCont, .pomodoroCont) {
         transition: none;
     }
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active),
-    :is(.todoListCont, .scratchpadCont, .pomodoroCont):hover .dot-icon {
+    :is(.todoListCont, .pomodoroCont):is(:hover, :active),
+    :is(.todoListCont, .pomodoroCont):hover .dot-icon {
         transform: none;
     }
 }
-html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont) {
+html.myntReducedMotion :is(.todoListCont, .pomodoroCont) {
     transition: none;
 }
-html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:hover, :active) {
+html.myntReducedMotion :is(.todoListCont, .pomodoroCont):is(:hover, :active) {
     transform: none;
 }
 
@@ -3973,138 +3678,6 @@ html.myntReducedMotion :is(.todoListCont, .scratchpadCont, .pomodoroCont):is(:ho
     }
 }
 
-/* ===== 焦點卡標題改用主題深色 =====
-   「今天，最重要的一件事是……」（#userText）原本沒有自己的
-   color，吃卡片 .ttteexxtt 寫死的 #20334c，和卡片其他文字
-   （#date 的 #405976、面板的 #213851）不是同一套色。
-   改指到主題變數 --textColorDark-blue（#1b3041）：在淺色
-   卡片底（rgba(236,244,255,.9)）上對比約 9:1，且跟著主題換色。
-   adaptive-contrast 模式下的 #userText 規則特異度更高，
-   自適應取色開啟時仍由它接管，不受影響。 */
-#userText {
-    color: var(--textColorDark-blue);
-}
-
-/* 第 14 輪：問候與狀態維持卡片的高對比文字，動作列統一尺寸。 */
-body .ttteexxtt #date {
-    font-size: max(14px, calc(14px * var(--mynt-font-scale, 1)));
-    font-weight: 600;
-    color: inherit;
-    opacity: 1;
-}
-#dailyFocusStatus {
-    font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
-    color: inherit;
-    opacity: 1;
-}
-#dailyFocusActions {
-    position: relative;
-    align-items: center;
-    gap: 4px;
-}
-#dailyFocusToggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 36px;
-    min-height: 36px;
-}
-#dailyFocusTools {
-    gap: 4px;
-    flex: 0 0 auto;
-}
-#dailyFocusTools .dailyFocusIcon {
-    flex: 0 0 36px;
-    width: 36px;
-    min-width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    opacity: 1;
-    background: color-mix(in srgb, currentColor 5%, transparent);
-}
-#dailyFocusTools .dailyFocusIcon:is(:hover, :focus-visible, [aria-expanded="true"]) {
-    background: color-mix(in srgb, currentColor 12%, transparent);
-}
-#dailyFocusTools .dailyFocusIcon:focus-visible {
-    outline: 2px solid var(--darkerColor-blue);
-    outline-offset: 2px;
-}
-
-/* 既有程式會補上翻譯後的 aria-label；以整列為定位範圍，提示在按鈕上方且不越過卡片左右邊緣。 */
-#dailyFocusTools .dailyFocusIcon[aria-label]:not([aria-label=""]):is(:hover, :focus-visible)::after {
-    content: attr(aria-label);
-    position: absolute;
-    inset-inline-end: 0;
-    bottom: calc(100% + 8px);
-    z-index: 1;
-    width: max-content;
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 6px 10px;
-    border-radius: 8px;
-    background: var(--textColorDark-blue);
-    color: var(--accentLightTint-blue);
-    font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
-    line-height: 1.5;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    text-align: start;
-    pointer-events: none;
-}
-
-/* 第 18 輪：頂列保留等高空間，收緊內距與列距，不改使用者儲存的座標與縮放。
-   標準字級下即使標題達既有 4.3rem 上限，卡片經 1.01 倍縮放仍低於 158px。 */
-body:is([data-workspace-background="video"], .mynt-manual-workspace) .ttteexxtt:has(> #dailyFocusActions:not([style*="display: none"])) {
-    --focus-header-top: 12px;
-    --focus-header-side: 24px;
-    position: relative;
-    padding-block-start: calc(var(--focus-header-top) + max(16.9px, calc(16.9px * var(--mynt-font-scale, 1))) + 4px);
-    padding-block-end: 12px;
-    gap: 4px;
-
-    & #dailyFocusStatus,
-    & #date {
-        position: absolute;
-        inset-block-start: var(--focus-header-top);
-        width: calc(50% - var(--focus-header-side) - 8px);
-        max-width: none;
-        font-size: max(13px, calc(13px * var(--mynt-font-scale, 1)));
-        line-height: 1.3;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    & #dailyFocusStatus {
-        inset-inline-start: var(--focus-header-side);
-        font-weight: 600;
-        letter-spacing: .06em;
-    }
-
-    & #date {
-        inset-inline-end: var(--focus-header-side);
-        font-weight: 400;
-        letter-spacing: normal;
-        text-align: end;
-    }
-
-    & #dailyFocusActions {
-        position: static;
-        justify-content: flex-end;
-        margin: 0;
-        gap: 4px;
-    }
-
-    /* 操作列不再作為定位容器，提示改錨定圖示組；寬度留在窄版卡片內。 */
-    & #dailyFocusTools { position: relative; }
-    & #dailyFocusTools .dailyFocusIcon::after {
-        max-width: min(260px, calc(100vw - 96px));
-    }
-
-    @media (max-width: 900px) {
-        --focus-header-side: 20px;
-    }
-}
 /* ==== award-fix-dialog-polish.css ==== */
 /* 第 5 輪：對話框遮罩、危險按鈕焦點框、便籤標題、待辦完成狀態 */
 
@@ -4144,19 +3717,6 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
 	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
 ) :is(dialog.myntAppDialog, .myntAppDialog) .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visible {
 	outline-color: #f28b82;
-}
-
-/* ==========================================================================
-   3. 便籤標題不換行
-   評審：窄面板時「便籤」被擠成直排「便／籤」。
-   標題設 nowrap + flex-shrink:0，縮放空間全讓給右側
-   .scratchpadHeaderActions（本身 flex-wrap:wrap，會自動折行）；
-   父層的 space-between + align-items:center 不變，維持與工具列對齊。
-   ========================================================================== */
-.scratchpadHeader h2,
-#scratchpadHeading {
-	white-space: nowrap;
-	flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -4338,31 +3898,6 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
 #menuCont .switch input:focus-visible + .toggle {
 	outline: 2px solid var(--darkerColor-blue);
 	outline-offset: 3px;
-}
-
-/* ===== 7. 姓名欄沿用現有表面變數；一般深色模式由整頁反相處理 ===== */
-#menuCont #greetingNameInput {
-	min-height: 44px;
-	padding: 8px 12px;
-	border: 1px solid var(--menu-input-border);
-	border-radius: 12px;
-	background-color: var(--menu-input-bg);
-	color: var(--menu-input-text);
-}
-
-#menuCont #greetingNameInput::placeholder {
-	color: var(--award-surface-light-muted);
-	opacity: 1;
-}
-
-html.black-theme #menuCont #greetingNameInput::placeholder {
-	color: var(--award-surface-dark-muted);
-}
-
-#menuCont #greetingNameInput:focus {
-	outline: 2px solid var(--darkerColor-blue);
-	outline-offset: 2px;
-	box-shadow: none;
 }
 
 /* ===== 8. 筆電高度減少留白，長字串仍可換行並隨文字縮放增高 ===== */
@@ -4568,7 +4103,7 @@ html.black-theme #menuCont {
 
 /* 窄螢幕保留文字空間；其他尺寸用縮排與連續細線表示數位時鐘子選項。 */
 @media (min-width: 360px) {
-	#menuCont :is(#timeformatField, #greetingField, #quotesToggle, .quotesOptions > .ttcont) {
+	#menuCont #timeformatField {
 		margin-inline-start: 16px;
 		border-inline-start: 2px solid var(--menu-row-divider);
 		padding-inline-start: 12px;
@@ -4739,7 +4274,7 @@ html.black-theme #menuCont .themeSegment {
 /* 第 13 輪：首頁浮動工具共用表面；座標與縮放仍交給既有版面。
    使用不透明主題淺底與主題文字色，避免桌布透色及深色反相後的低對比。
    :root 提高具體性，覆蓋黑色主題原本的粗框，保留高對比模式的系統色。 */
-:root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+:root body :is(#pomodoroCont, #bookmarkButton,
     #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
     #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
     --mynt-fab-ink: var(--textColorDark-blue);
@@ -4846,20 +4381,20 @@ html.black-theme #menuCont .themeSegment {
    後載入的 award-fix-dark-shadows.css，避免設定粗環與不一致陰影回來。 */
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
-    & body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    & body :is(#pomodoroCont, #bookmarkButton,
         #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
         #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
         &, &:hover { box-shadow: 0 2px 6px rgb(255 255 255 / 0.1); }
     }
 }
 
-html.myntReducedMotion body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+html.myntReducedMotion body :is(#pomodoroCont, #bookmarkButton,
     #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
     #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
     transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-    :root body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
+    :root body :is(#pomodoroCont, #bookmarkButton,
         #googleAppsCont, #menuButton, #wallpaperGalleryBtn,
         #myntProfilesPanel > summary, #myntAdaptivePanel > summary) {
         transition: none;
@@ -4874,15 +4409,15 @@ html.myntReducedMotion body :is(#pomodoroCont, #scratchpadCont, #bookmarkButton,
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"]) .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked), .myntHighContrast),
 html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked), .myntHighContrast) {
     /* 卡片、搜尋列、名言列及展開面板：保留輕微層次，移除彩色光暈。 */
-    & :is(.ttteexxtt, .searchbar, .studyQuote, #dailyFocusPanel,
-        #todoContainer, #scratchpadContainer, #pomodoroPanel,
+    & :is(.searchbar, .studyQuote,
+        #todoContainer, #pomodoroPanel,
         .myntProfilesContent, #myntAdaptivePanel .adaptiveContent,
         .icon-container, .dropdown-content) {
         box-shadow: 0 6px 18px rgba(255, 255, 255, 0.12);
     }
 
     /* 浮動工具、背景配色膠囊與版面編輯入口；同時覆蓋 hover 的較重陰影。 */
-    & :is(.todoListCont, .scratchpadCont, .pomodoroCont,
+    & :is(.todoListCont, .pomodoroCont,
         .wallpaperQuickBtn, #myntAdaptivePanel summary,
         #myntLayoutSaveDock, #serviceStatusPill) {
         box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1);
@@ -4905,7 +4440,6 @@ html:has(body:is([data-bg="color"], [data-bg="wallpaper"])[sysTheme="systemDark"
     /* 捷徑鍵徽章、工具提示與便籤內按鈕不需要浮起陰影。
        搜尋服務的 inset 選取框、輸入框的 focus 陰影與既有 outline 均保留。 */
     & .shortcuts a[data-shortcut]::after,
-    & .scratchpadCont .tooltip-text,
     & .workspaceLaunchBtn:hover {
         box-shadow: none;
     }
@@ -4935,7 +4469,7 @@ body:is([data-bg="wallpaper"], [data-workspace-background="video"]) .shortcutsCo
 }
 
 /* 影片名言已有高不透明度底板；一般圖片桌布補上同等保護。 */
-body[data-bg="wallpaper"]:not([data-workspace-background="video"]) :is(#studyQuote, .quotesContainer) {
+body[data-bg="wallpaper"]:not([data-workspace-background="video"]) #studyQuote {
 	background-color: rgba(255, 255, 255, 0.96);
 	color: #202020;
 	text-shadow: none;
@@ -5072,7 +4606,7 @@ body:is([data-workspace-background="video"], .mynt-manual-workspace):not(.mynt-l
     & #amPm { transform: translate(190px, -70px); font-size: 24px; }
     & #digicolon { animation: none; }
 
-    /* 類比鐘面與日期同屬既有可移動區塊，日期不取代問候語。 */
+    /* 類比鐘面與日期同屬既有可移動區塊。 */
     & #analogClock { width: 132px; height: 132px; margin-bottom: calc(36px * var(--mynt-font-scale, 1)); }
     & #analogClock .centerPoint { width: calc(20% / 3); height: calc(20% / 3); }
     & #analogClock .sui { width: 100%; height: 500%; top: -450%; }

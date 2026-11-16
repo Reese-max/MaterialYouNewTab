@@ -5,12 +5,10 @@
         ["web-language", "首次開啟時介面與標題是繁體中文。"],
         ["web-shortcuts", "捷徑區正常顯示，名稱、網址與圖示沒有空白或錯位。"],
         ["web-search", "搜尋框可輸入，Google 搜尋與 Search Bang（例如 !yt）可觸發。"],
-        ["web-control", "控制中心可以開啟，工作模式、習慣、隱私與無障礙區塊可見。"],
+        ["web-control", "控制中心可以開啟，工作模式、隱私與無障礙區塊可見。"],
         ["web-todo", "待辦清單可新增、完成及刪除任務。"],
-        ["web-scratchpad", "Scratchpad 可輸入、複製、轉任務並匯出 Markdown。"],
         ["web-workspace", "Work／Study／Relax 工作模式可以切換，顯示的小工具符合預期。"],
         ["web-pomodoro", "番茄鐘可以啟動、暫停與重設；環境音按鈕可操作。"],
-        ["web-quote", "每日語錄選項可切換，重新整理後行為符合設定。"],
         ["web-keyboard", "Ctrl/⌘+K、? 與 Alt+1～9 等快捷鍵沒有互相衝突。"],
     ];
 
@@ -21,7 +19,6 @@
         ["ext-icon", "自訂圖示可使用圖片網址、上傳圖片與安全 SVG，重載後仍保留。"],
         ["ext-icon-security", "含 script、onload、javascript: 或 foreignObject 的 SVG 會被拒絕且不會保存。"],
         ["ext-bookmarks", "書籤功能只在你主動啟用後要求權限，拒絕時不影響其他功能。"],
-        ["ext-suggestions", "搜尋建議只在主動啟用後要求 Google host permission。"],
         ["ext-backup", "備份檔不含 WeatherAPI key；還原成功且錯誤檔案不會破壞目前設定。"],
         ["ext-private", "無痕模式、更新頁與解除安裝連結符合預期，沒有指向上游私人表單。"],
     ];
@@ -115,7 +112,6 @@
         );
         addAutoCheck(list, "控制中心存在", Boolean(snapshot?.hasControlCenter), pending);
         addAutoCheck(list, "待辦小工具存在", Boolean(snapshot?.hasTodo), pending);
-        addAutoCheck(list, "Scratchpad 存在", Boolean(snapshot?.hasScratchpad), pending);
         addAutoCheck(
             list,
             "沒有致命 JavaScript 錯誤",

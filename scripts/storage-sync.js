@@ -7,17 +7,12 @@
             if (event.key === null || (typeof keys === "function" ? keys(event.key) : keys.includes(event.key))) refresh();
         });
     }
-    function conflictText(current, draft) {
-        if (current === draft) return current;
+    // A rejected draft stays copyable in a dialog; the latest stored data is reloaded by the caller.
+    function preserve(draft) {
         const lang = localStorage.getItem("selectedLanguage") || "zh_TW";
         const words = typeof translations === "undefined" ? {} : translations;
-        const label = words[lang]?.storageConflictCopy || words.en?.storageConflictCopy || "Conflicting draft kept from this tab";
-        return `${current}\n\n--- ${label} ---\n${draft}\n---`;
-    }
-    function preserve(draft) {
-        const key = "myntScratchpadContent";
-        localStorage.setItem(key, conflictText(localStorage.getItem(key) || "", draft));
-        window.myntScratchpad?.reload();
+        const message = words[lang]?.storageConflictSaved || words.en?.storageConflictSaved || "Another tab changed this data and the latest data has been loaded. Copy your unsaved draft below if you still need it.";
+        return window.myntDialog ? window.myntDialog.prompt(message, draft) : Promise.resolve(window.prompt(message, draft));
     }
     // Three-way entity merge: unchanged local entities follow remote deletions;
     // conflicting edits retain the remote entity and a separate local copy.
@@ -49,5 +44,5 @@
         }
         return merged;
     }
-    window.MyntStorageSync = { equal, watch, conflictText, preserve, mergeRecords };
+    window.MyntStorageSync = { equal, watch, preserve, mergeRecords };
 })();

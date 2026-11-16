@@ -122,7 +122,6 @@
             settingsEntryCount: document.querySelectorAll("#shortcutList .shortcutSettingsEntry").length,
             hasControlCenter: Boolean(document.querySelector("#controlCenterDialog")),
             hasTodo: Boolean(document.querySelector("#todoListCont")),
-            hasScratchpad: Boolean(document.querySelector("#scratchpadContainer")),
             fatalErrors,
             errors,
         };

@@ -15,10 +15,9 @@
         selectors, panelSelectors: [], caches: [], ...extra
     });
     const definitions = [
-        entry('clock', '時鐘與問候', 'Clock and greeting', 'hideClockVisible', 'inverse', true, 'hideClock', ['#analogClock', '#digitalClock', '#date']),
+        entry('clock', '時鐘', 'Clock', 'hideClockVisible', 'inverse', true, 'hideClock', ['#analogClock', '#digitalClock', '#date']),
         entry('weather', '天氣', 'Weather', 'hideWeatherVisible', 'inverse', true, 'hideWeatherCheckbox', ['#hideWeather']),
-        entry('focus', '今日焦點', 'Today\u2019s focus', 'userTextVisible', 'boolean', true, 'userTextCheckbox', ['#userText', '#dailyFocusActions'], { panelSelectors: ['#dailyFocusPanel'] }),
-        entry('search', '搜尋列', 'Search bar', 'myntSearchVisible', 'boolean', true, null, ['#searchbar', '#search-with-container'], { panelSelectors: ['#resultBox'], newPreference: true }),
+        entry('search', '搜尋列', 'Search bar', 'myntSearchVisible', 'boolean', true, null, ['#searchbar', '#search-with-container'], { newPreference: true }),
         entry('shortcuts', '網站捷徑', 'Site shortcuts', 'shortcutsCheckboxState', 'checked', false, 'shortcutsCheckbox', ['#shortcuts-section'], {
             display: 'flex', caches: [cache('shortcutsDisplayStatus'), cache('shortcutEditField', 'active', 'inactive'), cache('adaptiveIconField', 'active', 'inactive')]
         }),
@@ -38,16 +37,9 @@
             display: 'flex', caches: [cache('pomodoroDisplayStatus')], panelSelectors: ['#pomodoroPanel']
         }),
         entry('homeWidgets', '首頁今日小工具', 'Homepage Today widgets', 'myntHomeWidgetsVisible', 'boolean', true, null, ['#myntHomeWidgets'], { newPreference: true }),
-        entry('bongo', '鍵盤貓', 'Bongo cat', 'bongoCatCheckboxState', 'checked', false, 'bongoCatCheckbox', ['#bongoCatWidget'], {
-            display: 'block', caches: [cache('bongoCatDisplayStatus', 'block')]
-        }),
-        entry('scratchpad', '隨手筆記', 'Scratchpad', 'scratchpadCheckboxState', 'checked', true, 'scratchpadCheckbox', ['#scratchpadCont'], {
-            display: 'inline-flex', panelSelectors: ['#scratchpadContainer']
-        }),
         entry('studyQuote', '讀書鼓勵', 'Study encouragement', 'myntStudyQuoteEnabled', 'string01', true, 'studyQuoteCheckbox', ['#studyQuote'], {
             panelSelectors: ['#studyQuoteToast']
         }),
-        entry('motivationalQuotes', '每日語錄', 'Daily quotes', 'motivationalQuotesVisible', 'boolean', false, 'motivationalQuotesCheckbox', ['#motivationalQuotesCont'], { display: 'flex' }),
         entry('exam', '今日考古題', 'Daily exam question', 'myntExamDailyVisible', 'boolean', true, 'examDailyCheckbox', ['#examDaily'], { panelSelectors: ['#examDailyPanel'] }),
         entry('countdowns', '重要日期倒數', 'Event countdowns', 'myntEventCountdownsV1', 'event-enabled', true, 'eventCountdownEnabled', ['#eventCountdownCard'], {
             legacyKeys: ['myntExamDate']

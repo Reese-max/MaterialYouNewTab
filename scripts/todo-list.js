@@ -48,16 +48,6 @@ function createTodo(title) {
     return id;
 }
 
-function setTodoDaidaiLabel(button, title) {
-    const language = localStorage.getItem("selectedLanguage") || "zh_TW";
-    const template = typeof translations === "undefined"
-        ? "Ask DaiDai about {title}"
-        : translations[language]?.todoAskDaidaiLabel || translations.en.todoAskDaidaiLabel;
-    const label = template.replace("{title}", title);
-    button.title = label;
-    button.setAttribute("aria-label", label);
-}
-
 function createTodoItemDOM(id, title, status, pinned) {
     let li = document.createElement("li");
     li.textContent = title;
@@ -85,21 +75,6 @@ function createTodoItemDOM(id, title, status, pinned) {
     removebtn.setAttribute("class", "todoremovebtn");
     removebtn.textContent = "\u00d7";
     li.appendChild(removebtn);
-
-    const daidaiButton = document.createElement("button");
-    daidaiButton.type = "button";
-    daidaiButton.className = "todoDaidaiBtn";
-    daidaiButton.textContent = "呆";
-    setTodoDaidaiLabel(daidaiButton, title);
-    daidaiButton.addEventListener("click", event => {
-        event.stopPropagation();
-        const current = todoList[id];
-        if (!current) return;
-        document.dispatchEvent(new CustomEvent("mynt:daidai-prompt", {
-            detail: { kind: "todo", item: { id, title: current.title, status: current.status } }
-        }));
-    });
-    li.appendChild(daidaiButton);
 
     // Set base class and status
     li.setAttribute("class", "todolistitem");
@@ -222,8 +197,6 @@ todoulList.addEventListener("click", (event) => {
             function saveEdit() {
                 const newTitle = input.value.trim();
                 todo.title = (newTitle !== "") ? newTitle : previousTitle; // Check for empty title
-                const daidaiButton = li.querySelector(".todoDaidaiBtn");
-                if (daidaiButton) setTodoDaidaiLabel(daidaiButton, todo.title);
                 li.querySelector(".todocomplete")?.setAttribute("aria-label", todo.title);
                 const textNode = document.createTextNode(todo.title);
                 li.insertBefore(textNode, input);

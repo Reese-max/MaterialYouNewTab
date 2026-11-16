@@ -43,39 +43,15 @@ const run = (c, source) => vm.runInContext(source, c);
 const tests = [];
 const test = (id, fn) => tests.push([id, fn]);
 
-for (const finding of ['2', '5']) test('search-nav#' + finding, () => {
-    const c = context(); c.searchInput = node(); c.searchbar = { contains: () => true }; let searched = 0;
-    c.performSearch = () => searched++;
-    run(c, read('scripts/search-suggestions.js'));
-    const box = c.document.getElementById('resultBox'), input = c.searchInput, item = node();
-    item.textContent = '!yt · YouTube'; item.setAttribute('data-query', '!yt '); item.setAttribute('data-index', '0');
-    item.classList.add('active'); box.children = [item]; box.classList.add('show');
-    if (finding === '2') for (const flag of [{ isComposing: true }, { keyCode: 229 }]) for (const key of ['Enter', 'ArrowDown', 'ArrowUp', 'ArrowRight', 'Tab']) {
-        input.value = '!y'; input.selectionStart = 2;
-        assert.ok(!input.emit('keydown', { key, ...flag }).prevented); assert.equal(input.value, '!y');
-    }
-    assert.equal(searched, 0);
-    run(c, 'lastInteractionBy = "mouse";');
-    for (const key of ['Tab', 'ArrowRight']) { input.value = '!y'; input.selectionStart = 2; input.emit('keydown', { key }); assert.equal(input.value, '!yt '); }
-    box.children = []; box.classList.remove('show'); input.emit('keydown', { key: 'Enter' }); assert.equal(searched, 1);
-});
-
-for (const finding of ['6', '9']) test('notes-ai#' + finding, () => {
-    const c = context({ updateCounts() {}, STORAGE_KEY: 'note' }); c.scratchpadInput = node();
-    c.savedContent = '';
-    run(c, read('scripts/storage-sync.js'));
-    run(c, between('scripts/scratchpad.js', '    function saveContent()', '    window.myntScratchpad'));
-    run(c, between('scripts/scratchpad.js', '    // Smart list continuation', '    // Global shortcut'));
-    const n = c.scratchpadInput;
-    if (finding === '6') for (const flag of [{ isComposing: true }, { keyCode: 229 }]) {
-        n.value = '- [ ] 注音'; n.selectionStart = n.value.length;
-        assert.ok(!n.emit('keydown', { key: 'Enter', ...flag }).prevented); assert.equal(n.value, '- [ ] 注音');
-    }
-    for (const marker of ['x', 'X']) {
-        n.value = `- [${marker}] Task`; n.selectionStart = 7;
-        n.emit('keydown', { key: 'Enter', ctrlKey: true }); assert.equal(n.value, '- [ ] Task');
-        n.emit('keydown', { key: 'Enter', ctrlKey: true }); assert.equal(n.value, '- [x] Task');
-    }
+test('search-enter#2', () => {
+    const c = context(); c.searchInput = node(); const searched = [];
+    c.performSearch = query => searched.push(query);
+    run(c, between('scripts/search.js', '// Enter searches;', 'enterBTN.addEventListener'));
+    const input = c.searchInput; input.value = '!yt cats';
+    for (const flag of [{ isComposing: true }, { keyCode: 229 }]) assert.ok(!input.emit('keydown', { key: 'Enter', ...flag }).prevented);
+    assert.ok(!input.emit('keydown', { key: 'ArrowDown' }).prevented);
+    assert.deepEqual(searched, []);
+    assert.ok(input.emit('keydown', { key: 'Enter' }).prevented); assert.deepEqual(searched, ['!yt cats']);
 });
 
 test('search-nav#3', () => {
@@ -99,7 +75,7 @@ for (const finding of ['2-palette', '4', '6']) test('search-nav#' + finding, asy
     c.window.location = {};
     run(c, between('scripts/bookmarks.js', 'function safeBookmarkLink(', 'function safeHostname('));
     run(c, between('scripts/dashboard-tools.js', '        let filteredCommands = []', '        function remoteWorkspaceState()'));
-    c.window.myntFocusCommands = () => [{ id: 'old', labelText: 'OLD', run: () => executed++ }];
+    c.commandDefinitions.push({ id: 'old', labelText: 'OLD', run: () => executed++ });
     const first = c.renderCommands('old'); resolveSearch([]); await first;
     const input = c.document.getElementById('commandPaletteInput');
     if (finding === '2-palette') for (const flag of [{ isComposing: true }, { keyCode: 229 }]) for (const key of ['Enter', 'ArrowDown', 'ArrowUp']) assert.ok(!input.emit('keydown', { key, ...flag }).prevented);
@@ -109,24 +85,6 @@ for (const finding of ['2-palette', '4', '6']) test('search-nav#' + finding, asy
     }
     const links = c.bookmarkCommands('bad'); resolveSearch([{ title: 'bad', url: 'javascript:alert(1)' }, { title: 'bad', url: 'data:text/html,x' }, { title: 'bad', url: 'https://safe.test/' }]);
     const result = await links; assert.equal(result.length, 1); result[0].run(); assert.equal(c.window.location?.href, 'https://safe.test/');
-});
-
-for (const finding of ['7', '8']) test('notes-ai#' + finding, async () => {
-    let release, applied = 0, successes = 0, failures = 0;
-    const c = context({ pendingAction: { id: 'p1', type: 'todo.create', title: 'Task' }, pendingPlan: {}, finishingAction: false,
-        decisions: new Map(), confirmButton: node(), rejectButton: node(), actionDialog: node(), focusBreakdownUntil: 0,
-        myntPlanDaidaiAction: () => ({ valid: true }), localState: () => ({}), acknowledge: async () => {},
-        showActionFeedback: () => successes++, notify: () => failures++, t: (k, f) => f, pollActions() {} });
-    c.document.addEventListener('mynt:todo-action', e => { applied++; e.detail.applied = true; });
-    c.storageCall = () => new Promise(resolve => { release = resolve; }); c.DECISIONS_KEY = 'decisions';
-    run(c, between('scripts/daidai-integration.js', '    async function rememberDecision(', '    async function acknowledge('));
-    run(c, between('scripts/daidai-integration.js', '    async function finishAction(', '    rejectButton.addEventListener('));
-    const a = c.finishAction('confirmed', true), b = finding === '8' ? c.finishAction('confirmed', true) : Promise.resolve();
-    assert.equal(applied, 1); if (finding === '8') assert.equal(c.confirmButton.disabled, true); release(); await Promise.all([a, b]);
-    assert.equal(successes, 1); assert.equal(failures, 0);
-    c.pendingAction = { id: 'p1', type: 'todo.create' }; await c.finishAction('confirmed', true); assert.equal(applied, 1);
-    c.pendingAction = { id: 'p2', type: 'scratchpad.replace' }; c.myntPlanDaidaiAction = () => ({ valid: false });
-    const invalid = c.finishAction('confirmed', true); release(); await invalid; assert.equal(failures, 1);
 });
 
 test('look-layout#3', async () => {
@@ -144,17 +102,6 @@ test('look-layout#8', () => {
         between('scripts/weather.js', '                updateTemperatureDisplay();', '                // Setting weather Icon').split('\n').slice(1).join('\n'));
     const checkbox = c.document.getElementById('fahrenheitCheckbox'); checkbox.checked = true; checkbox.onchange?.(); checkbox.emit('change');
     assert.equal(c.document.getElementById('temp').textContent, '68'); assert.match(c.document.getElementById('feelsLike').textContent, /°F/);
-});
-
-test('focus-study#7', () => {
-    let marks = 0;
-    const c = context({ markSystemHabit: () => marks++, habitRecoveryControl: null, myntValidateHabits() {} });
-    c.localStorage = store({ todoList: JSON.stringify({ old: { status: 'completed' }, fresh: { status: 'pending' } }) });
-    const source = read('scripts/dashboard-tools.js'), start = source.includes('        let previousTodoStatuses') ? '        let previousTodoStatuses' : '        document.addEventListener("mynt:todo-updated"';
-    run(c, between('scripts/dashboard-tools.js', start, '        // Accessibility settings'));
-    c.document.emit('DOMContentLoaded'); assert.equal(marks, 0, 'old completion must not check today');
-    c.document.emit('mynt:todo-updated', { detail: { completed: 1, items: [{ id: 'old', status: 'completed' }, { id: 'fresh', status: 'pending' }] } }); assert.equal(marks, 0);
-    c.document.emit('mynt:todo-updated', { detail: { completed: 2, items: [{ id: 'old', status: 'completed' }, { id: 'fresh', status: 'completed' }] } }); assert.equal(marks, 1);
 });
 
 test('focus-study#6', async () => {
@@ -206,18 +153,6 @@ test('focus-study#3', async () => {
     c.document.emit('mynt:ambient-state', { detail: { isPlaying: false, error: true } });
     assert.equal(c.pomodoroAmbientToggleBtn.getAttribute('aria-pressed'), 'false'); assert.match(c.document.getElementById('pomodoroAmbientStatus').textContent, /retry/);
     c.document.emit('mynt:ambient-state', { detail: { isPlaying: true } }); assert.equal(c.pomodoroAmbientToggleBtn.getAttribute('aria-pressed'), 'true');
-});
-
-test('focus-study#9', () => {
-    const c = context({ api: { get: () => ({ text: 'Read', subject: '' }) }, MYNT_FOCUS_SUBJECTS: [], myntBuildFocusPrompt: x => x, myntDaysUntil: () => 999 });
-    run(c, read('scripts/event-countdown-core.js')); c.window.MYNTCountdownCore = c.MYNTCountdownCore;
-    run(c, between('scripts/focus-card.js', '    function prompt()', '    function openGpt()'));
-    run(c, `const model = MYNTCountdownCore.defaultState(); model.events = [
-      {id:'e-old',name:'Past',date:'2000-01-01',category:'exam',emoji:'',color:'blue',annual:false},
-      {id:'e-future',name:'Exam',date:'2090-01-01',category:'exam',emoji:'',color:'blue',annual:false}];
-      localStorage.setItem(MYNTCountdownCore.KEY, JSON.stringify(model)); localStorage.setItem('myntExamDate','2000-01-01');`);
-    assert.ok(c.prompt().days > 0 && c.prompt().days !== 999);
-    run(c, "model.events=[]; localStorage.setItem(MYNTCountdownCore.KEY,JSON.stringify(model));"); assert.equal(c.prompt().days, null);
 });
 
 test('data-platform#5', () => {

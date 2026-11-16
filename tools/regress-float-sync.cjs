@@ -26,10 +26,9 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     let denyLanguage = false;
     const storage = { getItem: key => { if (denyLanguage && key === 'selectedLanguage') throw Error('Storage unavailable'); return saved.get(key) ?? null; }, setItem: (key, value) => saved.set(key, String(value)) };
     const timer = require('../scripts/pomodoro-timer-core.js').create({ storage });
-    let today = 2, subject = 'db', popup, musicSubscriptions = 0, timerSubscriptions = 0;
+    let today = 2, popup, musicSubscriptions = 0, timerSubscriptions = 0;
     window.myntPomodoro = { ...timer, getContext: () => ({ sessionsToday: today }), subscribe(fn) { timerSubscriptions++; const off = timer.subscribe(fn); return () => { timerSubscriptions--; off(); }; } };
     window.myntPomoMusic = { ...player.api, subscribe(fn) { musicSubscriptions++; const off = player.api.subscribe(fn); return () => { musicSubscriptions--; off(); }; } };
-    window.myntFocus = { get: () => ({ subject }) };
     const panelSelect = document.createElement('select'); panelSelect.id = 'pomodoroAmbientSelect'; panelSelect.value = 'rain'; panel.append(panelSelect);
     let ambientPlaying = false, ambientType = 'rain', ambientPlays = [];
     window.myntAmbientAudio = {
@@ -41,7 +40,7 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     window.open = () => popup = win();
     const dictionaries = { en: words('en'), zh_TW: words('zh_TW'), fr: { pomodoroWork: 'Travail' } };
     const observers = [];
-    const context = { document, window, localStorage: storage, translations: dictionaries, MYNT_FOCUS_SUBJECTS: [['db','資料庫','Database'], ['sec','資安','Security']],
+    const context = { document, window, localStorage: storage, translations: dictionaries,
         MutationObserver: class { constructor(fn) { this.fn = fn; observers.push(this); } observe() {} disconnect() { this.disconnected = true; } },
         getComputedStyle: node => node.style, URL, console, indexedDB: { open() { throw Error('No image store'); } } };
     vm.runInNewContext(read('scripts/pomodoro-float.js'), context);
@@ -127,9 +126,8 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     await nextButton.emit('click'); assert.ok(pd.querySelectorAll('.mynt-pomo-note').at(-1).textContent, 'a missing requested track cannot be mistaken for successful playback');
     window.myntPomoMusic.play = workingPlay;
     assert.equal(q('.pomodoroPhaseLabel').textContent, dictionaries.en.pomodoroWork);
-    assert.match(q('.pomodoroRoundDisplay').textContent, /Today 2 · Database/);
+    assert.match(q('.pomodoroRoundDisplay').textContent, /Today 2$/);
     today = 3; await document.emit('mynt:pomodoro-complete'); assert.match(q('.pomodoroRoundDisplay').textContent, /Today 3/);
-    subject = 'sec'; await document.emit('mynt:focus-changed'); assert.match(q('.pomodoroRoundDisplay').textContent, /Security/);
     const options = q('.mynt-pomo-options'); assert.ok(!options.open);
     assert.equal(options.querySelectorAll('button').find(b => b.getAttribute('data-pomo-label') === 'extend').textContent, dictionaries.en.pomoStudioExtend);
     const fields = q('.mynt-pomo-durations').querySelectorAll('input');
@@ -154,7 +152,7 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     await timer.pause();
     saved.set('selectedLanguage','zh_TW'); document.documentElement.lang = 'zh-TW'; await document.emit('mynt:language-changed');
     assert.equal(q('.pomodoroPhaseLabel').textContent, dictionaries.zh_TW.pomodoroWork);
-    assert.equal(q('summary').textContent, '計時選項'); assert.match(q('.pomodoroRoundDisplay').textContent, /資安/);
+    assert.equal(q('summary').textContent, '計時選項'); assert.match(q('.pomodoroRoundDisplay').textContent, /今日 3$/);
     assert.equal(nextButton.getAttribute('aria-label'), '下一首'); assert.ok(nextButton.querySelector('svg'), 'relabel preserves the next icon');
     assert.equal(musicButton.getAttribute('aria-label'), '播放音樂: b');
     assert.equal(ambientSelect.getAttribute('aria-label'), '環境音類型');
@@ -221,8 +219,8 @@ assert.equal(ctx.pomodoroPhaseLabel.textContent,'工作','Idle main panel must r
         script.onload();
     }
     await firstFrench; await secondFrench; assert.equal(applied, 'fr');
-    const counts = () => ['mynt:language-changed','mynt:ambient-state','mynt:focus-changed','mynt:pomodoro-complete'].reduce((n,event) => n + (document.listeners[event]?.length || 0), 0);
-    assert.equal(counts(),4); assert.equal(musicSubscriptions,1); assert.equal(timerSubscriptions,1);
+    const counts = () => ['mynt:language-changed','mynt:ambient-state','mynt:pomodoro-complete'].reduce((n,event) => n + (document.listeners[event]?.length || 0), 0);
+    assert.equal(counts(),3); assert.equal(musicSubscriptions,1); assert.equal(timerSubscriptions,1);
     assert.equal(panelSelect.listeners.change.length, 1); assert.equal(window.listeners.storage.length, 2);
     await popup.close(); assert.equal(counts(),0); assert.equal(musicSubscriptions,0); assert.equal(timerSubscriptions,0);
     for (const node of [musicButton, nextButton, ambientButton, ambientSelect, panelSelect]) {
@@ -267,7 +265,7 @@ assert.equal(ctx.pomodoroPhaseLabel.textContent,'工作','Idle main panel must r
     window.documentPictureInPicture = { requestWindow: async () => popup = win() };
     await mount.querySelector('.mynt-pomo-open-float').emit('click'); pd = popup.document;
     assert.ok(q('.mynt-pomo-compact')); assert.equal(q('.mynt-pomo-durations').querySelectorAll('input').length,3);
-    assert.equal(counts(),4); assert.equal(musicSubscriptions,1); assert.equal(timerSubscriptions,1);
+    assert.equal(counts(),3); assert.equal(musicSubscriptions,1); assert.equal(timerSubscriptions,1);
     const pipFields = q('.mynt-pomo-durations').querySelectorAll('input');
     pipFields[0].focus(); pipFields[0].value = '42'; await timer.setDurations({workMinutes:35});
     assert.equal(pipFields[0].value,'42','a main-page duration update preserves a focused floating draft');

@@ -35,82 +35,27 @@ function element(tag = 'div') {
 }
 async function runTodoProbe() {
   const source = read('scripts/todo-list.js');
-  // This executes the exact production saveEdit body, including a potential fix
-  // that resolves the DaiDai button from the row rather than an out-of-scope name.
+  // This executes the exact production saveEdit body.
   const saveEdit = between(source, '            function saveEdit()', '            // Cancel function');
   const button = element('button'), input = element('input'); input.value = 'Renamed task';
   const row = element('li'); row.children = [input, button];
-  row.querySelector = selector => selector === '.todoDaidaiBtn' ? button : null;
   row.insertBefore = (node, before) => row.children.splice(row.children.indexOf(before), 0, node);
   row.removeChild = node => row.children.splice(row.children.indexOf(node), 1);
   row.classList.add('edit');
   const todo = { title: 'Original task' };
-  let saved = 0, labelled = 0;
+  let saved = 0;
   const context = {
     input, li: row, todo, previousTitle: todo.title,
     document: { createTextNode: text => ({ nodeType: 3, textContent: text }) },
-    setTodoDaidaiLabel(node, title) { assert.equal(node, button); assert.equal(title, 'Renamed task'); labelled++; },
     SaveToDoData() { saved++; }, suppressTimeout: null, suppressNextClick: true,
     setTimeout(fn) { fn(); return 1; }, clearTimeout() {}
   };
   vm.createContext(context); vm.runInContext(saveEdit + '\nsaveEdit();', context);
   assert.equal(saved, 1, 'Rename must persist exactly once');
-  assert.equal(labelled, 1, 'DaiDai label must update on the edited row');
   assert.equal(todo.title, 'Renamed task');
   assert.equal(row.children.includes(input), false, 'Editor must be removed');
   assert.equal(row.classList.contains('edit'), false, 'Editing state must clear');
   assert.equal(context.suppressNextClick, false, 'Click suppression must eventually clear');
-}
-function makeSearchFixture() {
-  const source = read('scripts/search-suggestions.js');
-  // Include state, helpers, input/keyboard handlers, fetch implementation and
-  // outside-click dismissal; omit permission/setup listeners completely.
-  const searchSource = between(source, '// ---------------------------- Search Suggestions', '// ------------------------- Toggles');
-  const searchInput = element('input'), resultBox = element(), searchbar = element();
-  searchbar.children = [searchInput, resultBox];
-  const checkbox = { checked: true }, pending = [], documentListeners = {};
-  const document = {
-    activeElement: searchInput,
-    getElementById(id) { return id === 'resultBox' ? resultBox : id === 'searchsuggestionscheckbox' ? checkbox : { checked: false }; },
-    createElement: element,
-    addEventListener(type, fn) { (documentListeners[type] ||= []).push(fn); }
-  };
-  const context = { searchInput, searchbar, document, SEARCH_BANGS: {},
-    isFirefox: true, isOpera: false, isChromiumBased: false, isSafari: false,
-    console, AbortController, setTimeout, clearTimeout, performSearch() {},
-    fetch(url) { return new Promise(resolve => pending.push({ url, resolve })); }
-  };
-  vm.createContext(context); vm.runInContext(searchSource, context);
-  return {
-    searchInput, resultBox, document,
-    type(value) { searchInput.value = value; return searchInput.listeners.input[0].call(searchInput); },
-    async resolve(index, suggestions) { pending[index].resolve({ ok: true, json: async () => ['', suggestions] }); },
-    outside() { const target = element('button'); document.activeElement = target; for (const fn of documentListeners.click || []) fn({ target }); },
-    escape() { for (const fn of searchInput.listeners.keydown || []) fn.call(searchInput, { key: 'Escape', preventDefault() {}, stopPropagation() {} }); }
-  };
-}
-async function runSearchProbe() {
-  const results = [];
-  {
-    const f = makeSearchFixture();
-    const old = f.type('old'), recent = f.type('new');
-    await f.resolve(1, ['NEW']); await recent;
-    await f.resolve(0, ['OLD']); await old;
-    results.push(['Latest query wins', f.resultBox.children.map(x => x.textContent).join('|') === 'NEW']);
-  }
-  {
-    const f = makeSearchFixture();
-    const pending = f.type('typing'); f.outside();
-    await f.resolve(0, ['LATE']); await pending;
-    results.push(['Outside dismissal survives late response', !f.resultBox.classList.contains('show')]);
-  }
-  {
-    const f = makeSearchFixture();
-    const pending = f.type('typing'); await f.resolve(0, ['MATCH']); await pending;
-    f.escape();
-    results.push(['Escape dismisses suggestions', !f.resultBox.classList.contains('show')]);
-  }
-  assert.ok(results.every(([, ok]) => ok), results.map(([name, ok]) => `${ok ? 'PASS' : 'FAIL'}: ${name}`).join('; '));
 }
 async function runGalleryProbe() {
   const source = read('scripts/wallpaper-gallery.js');
@@ -158,14 +103,6 @@ async function runBookmarkFocusProbe() {
  const event={key:'Escape',preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
  sidebar.listeners.keydown.forEach(fn=>fn(event));assert.ok(closed&&event.prevented&&event.stopped,'Sidebar Escape must not reach layout draft cancellation');
 }
-function runFocusEscapeProbe() {
- const source=read('scripts/focus-card.js'), panel={hidden:false}, more={focused:false,focus(){this.focused=true;}};
- const context={panel,more,setPanel(open){panel.hidden=!open;}}; vm.createContext(context);
- vm.runInContext(between(source,'    const dismissPanel = event => {','    panel.addEventListener("keydown", dismissPanel);')+'\nthis.dismiss=dismissPanel;',context);
- const event={key:'Escape',preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
- context.dismiss({...event,isComposing:true}); assert.equal(panel.hidden,false);
- context.dismiss(event); assert.equal(panel.hidden,true); assert.ok(more.focused&&event.prevented&&event.stopped);
-}
 function runGalleryModeProbe() {
   const source = read('scripts/wallpaper-gallery.js');
   const controls = {wallpaperModeSelect:element('select'), wallpaperMinutesSelect:element('select'), wallpaperIntervalGroup:element()};
@@ -193,7 +130,7 @@ function runGalleryModeProbe() {
 }
 (async () => {
   let failed = 0;
-  for (const [name, test] of [['GALLERY_MODE_CONTROLS', runGalleryModeProbe], ['BOOKMARK_FOCUS_AND_ESCAPE', runBookmarkFocusProbe], ['FOCUS_PANEL_ESCAPE', runFocusEscapeProbe], ['TASK_RENAME', runTodoProbe], ['SEARCH_DISMISSAL_AND_ORDER', runSearchProbe], ['GALLERY_RENDER_RACE', runGalleryProbe]]) {
+  for (const [name, test] of [['GALLERY_MODE_CONTROLS', runGalleryModeProbe], ['BOOKMARK_FOCUS_AND_ESCAPE', runBookmarkFocusProbe], ['TASK_RENAME', runTodoProbe], ['GALLERY_RENDER_RACE', runGalleryProbe]]) {
     try { await test(); console.log(`PASS ${name}`); }
     catch (error) { failed++; console.error(`FAIL ${name}: ${error.name}: ${error.message}`); }
   }

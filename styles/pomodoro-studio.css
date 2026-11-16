@@ -140,8 +140,6 @@
 .pomoStudioStatus:empty { display: none; }
 .pomoStudioStats { position: relative; z-index: 1; padding: 8px; border-radius: 0; background: transparent; }
 #pomodoroPanel .pomodoroSessionsToday { padding-top: 0; margin-top: 0; border-top: 0; text-shadow: var(--pomo-text-shadow, none); font-size: var(--pomo-type-small); line-height: 1.4; color: var(--pomo-muted, #ffffffc9); border-color: var(--pomo-border, #ffffff24); font-variant-numeric: tabular-nums; }
-#pomodoroPanel .pomodoroFocusSummary { flex-wrap: wrap; margin-top: 0; font-size: var(--pomo-type-small); line-height: 1.4; color: var(--pomo-muted, #ffffffc9); font-variant-numeric: tabular-nums; }
-#pomodoroPanel #pomodoroStatsBtn { display: inline-flex; align-items: center; justify-content: center; font-size: var(--pomo-type-small); line-height: 1.25; min-height: 36px; padding-inline: 10px; background: transparent; color: var(--pomo-fg, #fff); }
 #pomodoroPanel :focus-visible { outline: 2px solid var(--pomo-accent, #fff); outline-offset: 3px; }
 #pomodoroPanel button:disabled { opacity: .5; cursor: default; }
 .pomoStudioSrOnly { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -61,7 +61,6 @@ function initializeSpeechRecognition() {
     speechRecognitionInitialized = true;
 
     const searchInput = document.getElementById("searchQ");
-    const resultBox = document.getElementById("resultBox");
     const currentLanguage = getLanguageStatus("selectedLanguage") || "en";
 
     // Check if the browser supports SpeechRecognition API
@@ -98,12 +97,7 @@ function initializeSpeechRecognition() {
             }
             // Display the interim result in the search input
             searchInput.value = transcript;
-            // Trigger the input event manually to update suggestions
             searchInput.dispatchEvent(new Event("input"));
-            // If the result is final, hide the result box
-            if (event.results[event.results.length - 1].isFinal) {
-                resultBox.style.display = "none"; // Hide result box after final input
-            }
         };
 
         // When an error occurs during speech recognition

@@ -35,7 +35,7 @@ for(const d of core.definitions)for(const s of d.selectors)assert(app.node(s.sli
 assert(!app.node('menuButton').attrs.has('data-mynt-component-hidden'));
 app.change('pomodoro',true);assert.equal(app.values.get('pomodoroCheckboxState'),'checked');assert(!app.node('pomodoroCont').attrs.has('data-mynt-component-hidden'));assert.equal(app.values.get('myntPomoTimerV1'),'timer-private');
 app.change('countdowns',false);assert(!app.node('eventCountdownDialog').attrs.has('data-mynt-component-hidden'),'configuration cannot be hidden/inert');
-app.change('search',true);assert(!app.node('searchbar').attrs.has('data-mynt-component-hidden'));assert.equal(app.node('resultBox').attrs.get('data-mynt-component-display'),undefined,'do not open suggestions');
+app.change('search',true);assert(!app.node('searchbar').attrs.has('data-mynt-component-hidden'));
 app.values.set('myntSearchVisible','false');app.events.storage({key:'myntSearchVisible'});assert.equal(app.control('search').checked,false);
 assert(app.node('searchbar').attrs.has('data-mynt-component-hidden'));
 const invalid=setup({myntSearchVisible:'broken'});assert(invalid.control('search').disabled);assert.equal(invalid.values.get('myntSearchVisible'),'broken');
@@ -69,7 +69,7 @@ assert.equal(video.values.get('hideWeatherVisible'),'true','Unrelated legacy wea
 crossTab.values.set('clocktype','digital');crossTab.events.storage({key:'clocktype'});
 assert.equal(crossTab.calls.clockRefresh,1);assert.equal(crossTab.calls.clockReload,0,'Visibility synchronization must not invoke legacy layout-changing reload.');
 crossTab.change('clock',false);assert.equal(crossTab.calls.clockRefresh,2,'Local manager hide updates clock intervals too.');
-for(const key of ['hourformat','greetingEnabled']){
+for(const key of ['hourformat']){
  const previous=crossTab.calls.clockRefresh;crossTab.values.set(key,'true');crossTab.events.storage({key});
  assert.equal(crossTab.calls.clockRefresh,previous+1,`${key} cross-tab writes refresh canonical controls immediately.`);
 }

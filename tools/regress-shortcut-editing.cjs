@@ -225,7 +225,7 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
         }
     }
     const storage = createStorage(initial);
-    const alerts = [];
+    const alerts = [], drafts = [];
     const windowListeners = new Map();
     const context = {
         document, URL, Intl, TextDecoder, Uint8Array, atob, console,
@@ -234,6 +234,7 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
         setTimeout, clearTimeout, requestAnimationFrame: () => 0,
         CustomEvent: class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } },
         alertPrompt: message => alerts.push(String(message)),
+        myntDialog: { prompt: (message, value) => { alerts.push(String(message)); drafts.push(String(value)); return Promise.resolve(null); } },
         confirmPrompt: async () => true,
         localizeNumbers: value => String(value),
         loadCheckboxState() {}, saveCheckboxState() {}, loadActiveStatus() {}, saveActiveStatus() {},
@@ -251,7 +252,7 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
     vm.runInContext(read("scripts/shortcuts.js"), context, { filename: "scripts/shortcuts.js" });
     document.emit("DOMContentLoaded");
     return {
-        document, storage, alerts, context,
+        document, storage, alerts, drafts, context,
         el: id => byId.get(id),
         entries: () => document.querySelectorAll(".shortcutSettingsEntry"),
         recoveryRow: () => byId.get("shortcutList").parentElement.querySelector(".myntRecoveryControl"),

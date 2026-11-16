@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Reese-max customized edition</strong><br>
-  A Traditional Chinese-first, Material You-inspired browser dashboard for search, focus, tasks, notes, bookmarks, weather, and workspaces.
+  A Traditional Chinese-first, Material You-inspired browser dashboard for search, tasks, bookmarks, weather, and workspaces.
 </p>
 
 <p align="center">
@@ -27,28 +27,25 @@ MYNT replaces the browser New Tab page with a local-first productivity dashboard
 
 - **Traditional Chinese first** — `zh-TW` remains the default while all 32 upstream locales are restored; missing custom strings fall back to English.
 - **Google search + search bangs** — use shortcuts such as `!yt`, `!gh`, and `!gpt` to jump directly to common services.
-- **Scratchpad** — quick notes, smart list continuation, Markdown task toggling, copy, convert-to-task, and `.md` export.
 - **Workspaces** — create Study, Work, Coding, Relax, or custom modes with preferred widgets, focus duration, background, and launch URLs.
 - **Pomodoro + ambient sound** — configurable focus sessions with rain, ocean, white-noise, and campfire audio.
 - **Command palette** — press `Ctrl+K` (`⌘K` on macOS) to launch actions quickly.
 - **Keyboard help** — press `?` outside text fields to open the shortcut guide; use `Alt+1`–`Alt+9` to launch the first nine shortcuts.
-- **Local-first state** — tasks, settings, habits, focus history, workspaces, and scratchpad content are stored in browser storage.
+- **Local-first state** — tasks, settings, and workspaces are stored in browser storage.
 
 ## Core features
 
-- Google Search with optional Google autocomplete suggestions and voice typing
+- Google Search with search bangs and voice typing
 - Material You themes, dark/light/system mode, custom colors, wallpaper, and video background
 - Clock and live weather
 - Quick shortcuts with uploaded/URL/SVG custom icons and `Alt+1`–`Alt+9` launching
 - Configurable AI tool launchers with right-click settings access
-- To-Do List and daily habits
-- Pomodoro timer, seven-day focus stats, and streaks
-- Scratchpad and Markdown export
+- To-Do List
+- Pomodoro timer
 - Workspace presets and multi-tab launchers
 - Sidebar bookmarks and Google Apps launcher
-- Command Palette, keyboard shortcuts, Daily Quote mode, and an in-extension What's New page
+- Command Palette, keyboard shortcuts, and an in-extension What's New page
 - Accessibility controls including reduced motion, contrast, and text scaling
-- Bongo Cat widget
 - Backup, restore, and local reset controls
 
 ## Version
@@ -138,7 +135,7 @@ If you prefer the upstream stable release instead of this customized fork, use t
 - [Upstream Mozilla Add-ons build](https://addons.mozilla.org/en-US/firefox/addon/mynt/)
 - [Upstream GitHub releases](https://github.com/prem-k-r/MaterialYouNewTab/releases/latest)
 
-> These upstream packages may not contain the Scratchpad, workspace launcher, ambient audio, shortcut guide, or other Reese-max customizations present in this repository.
+> These upstream packages may not contain the workspace launcher, ambient audio, shortcut guide, or other Reese-max customizations present in this repository.
 
 ## Permissions and privacy
 
@@ -146,7 +143,6 @@ The Chromium build uses minimal optional permissions:
 
 - `bookmarks` — requested only when browser bookmark integration is enabled
 - `favicon` — optional Chromium favicon access
-- `https://www.google.com/*` — optional host access for Google search suggestions
 
 MYNT also uses browser storage (`localStorage` and IndexedDB) for interface settings and productivity data. Weather and other optional features may contact their documented third-party services when enabled.
 
@@ -171,9 +167,8 @@ The check validates, among other things:
 - local asset references
 - required custom scripts and UI IDs
 - duplicate HTML IDs and CSP-sensitive patterns
-- focus / workspace data helpers
+- workspace data helpers
 - backup rollback behavior
-- Google-only autocomplete configuration
 - locale key parity
 - Traditional Chinese default language and 32-locale fallback wiring
 - upstream/custom fused feature invariants
@@ -221,7 +216,6 @@ This edition contains a real Git merge of `prem-k-r/MaterialYouNewTab` through c
 
 This project is derived from [prem-k-r/MaterialYouNewTab](https://github.com/prem-k-r/MaterialYouNewTab), which itself includes work from earlier MYNT contributors. Upstream author and contributor attribution in source files and project history is intentionally retained.
 
-The multilingual quotes service used by the project is maintained separately at [prem-k-r/multilingual-quotes-api](https://github.com/prem-k-r/multilingual-quotes-api).
 
 ## License
 

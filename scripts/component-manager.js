@@ -8,7 +8,7 @@
     const translated = (key, zh, en) => { try { return (typeof translations !== 'undefined' && translations[localStorage.getItem('selectedLanguage') || 'zh_TW']?.[key]) || text(zh, en); } catch (_) { return text(zh, en); } };
     let panel, status, queued = false;
     const controls = new Map();
-    const clockRefreshKeys = ['clocktype', 'hideClockVisible', 'hourformat', 'greetingEnabled'];
+    const clockRefreshKeys = ['clocktype', 'hideClockVisible', 'hourformat'];
     function refresh() {
         let items;
         try { items = core.read(localStorage); } catch (_) { if (status) status.textContent = text('無法讀取設定，未變更任何資料。', 'Settings unavailable. No data was changed.'); return; }
@@ -25,14 +25,13 @@
             for (const id of settingsRows) document.getElementById(id)?.classList.toggle('inactive', !item.visible);
             for (const selector of item.selectors) for (const node of document.querySelectorAll(selector)) {
                 const isRemoved = removed.has(item.id);
-                node.toggleAttribute('data-mynt-component-hidden', item.id === 'focus' ? !item.visible : isRemoved || !item.visible);
-                const display = isRemoved && item.id !== 'focus' ? 'none' : item.display;
+                node.toggleAttribute('data-mynt-component-hidden', isRemoved || !item.visible);
+                const display = isRemoved ? 'none' : item.display;
                 if (display) { node.setAttribute('data-mynt-component-display', display); node.style.setProperty('--mynt-component-display', display); }
-                if (item.id === 'focus') node.inert = isRemoved;
             }
             for (const selector of item.panelSelectors) for (const node of document.querySelectorAll(selector)) node.toggleAttribute('data-mynt-component-hidden', !item.visible);
             if (item.id === 'clock') {
-                // Hide only the clock, not the sibling focus card; never rewrite layout coordinates.
+                // Hide only the clock; never rewrite layout coordinates.
                 document.getElementById('leftDiv')?.classList.remove('clock-hidden-left');
                 const digital = localStorage.getItem('clocktype') === 'digital';
                 for (const [id, show] of [['analogClock', !digital], ['digitalClock', digital]]) {
@@ -43,15 +42,6 @@
             if (item.id === 'weather') {
                 const node = document.getElementById('hideWeather');
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
-            }
-            if (item.id === 'motivationalQuotes') {
-                const node = document.getElementById('motivationalQuotesCont');
-                if (node) node.toggleAttribute('data-mynt-component-hidden', !item.visible || localStorage.getItem('showShortcutSwitch') !== 'true');
-            }
-            if (item.id === 'focus' && item.visible) {
-                const heading = document.getElementById('userText'), actions = document.getElementById('dailyFocusActions');
-                if (heading) heading.style.display = 'block';
-                if (actions) actions.style.display = 'flex';
             }
             if (item.id === 'exam') { const node = document.getElementById('examDaily'); if (node) node.hidden = !item.visible; }
         }
@@ -102,7 +92,7 @@
         if (id === 'studyQuote') root.myntStudy?.render();
         if (id === 'clock') refreshClock();
         refresh();
-        const hint = visible && ['weather', 'motivationalQuotes'].includes(id)
+        const hint = visible && id === 'weather'
             ? text('已顯示；如尚無內容，請到該功能設定完成啟用。', 'Shown. If empty, finish setup in that feature’s settings.')
             : text('已儲存。隱藏不會刪除資料或改變已儲存位置。', 'Saved. Hiding preserves data and saved positions.');
         status.textContent = hint;

@@ -44,7 +44,7 @@ const allEntries = map => [...map.entries()].sort(([a], [b]) => a.localeCompare(
     const f = setup(privateData);
     let current = await f.call('mynt_components_get');
     assert(current.ok);
-    assert.equal(current.data.components.length, 20);
+    assert.equal(current.data.components.length, 16);
     assert.equal(current.revision.length, 64);
     assert.equal(current.data.visibilityOnly, true);
     assert.equal(current.data.playbackUnchanged, true);
@@ -91,7 +91,7 @@ const allEntries = map => [...map.entries()].sort(([a], [b]) => a.localeCompare(
         let state = await one.call('mynt_components_get');
         const visible = !definition.defaultVisible;
         let changed = await one.call('mynt_components_update', { id: definition.id, visible, expectedRevision: state.revision });
-        if (visible && ['weather', 'motivationalQuotes', 'exam'].includes(definition.id)) {
+        if (visible && ['weather', 'exam'].includes(definition.id)) {
             assert.equal(changed.error.code, 'ACTION_REQUIRED');
             assert.equal(one.map.size, 0);
             continue;
@@ -101,7 +101,7 @@ const allEntries = map => [...map.entries()].sort(([a], [b]) => a.localeCompare(
         assert([...one.map.keys()].every(key => definition.keys.includes(key)), 'Unexpected write for ' + definition.id);
         state = await one.call('mynt_components_get');
         changed = await one.call('mynt_components_update', { id: definition.id, visible: !visible, expectedRevision: state.revision });
-        if (!visible && ['weather', 'motivationalQuotes', 'exam'].includes(definition.id)) assert.equal(changed.error.code, 'ACTION_REQUIRED');
+        if (!visible && ['weather', 'exam'].includes(definition.id)) assert.equal(changed.error.code, 'ACTION_REQUIRED');
         else { assert(changed.ok); assert.equal(component(changed, definition.id).visible, !visible); }
     }
 

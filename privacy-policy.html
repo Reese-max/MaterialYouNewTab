@@ -163,7 +163,7 @@
 <p>背景圖片與影片像素只在本機 Canvas 進行低解析度色彩、亮度與紋理分析，不傳送到模型或伺服器。localStorage 的 myntAdaptiveBackground（版本 1）保存配色、對比、透明度開關，舊自動排版設定固定轉為關閉；myntLayout（版本 2）保存手動相對位置、縮放、格線與鎖定。背景功能不會移動元件，也不覆寫手動位置。這些設定不跨裝置同步，清除網站資料會刪除設定。無新增權限、網路服務或遙測。</p>
 <p>Adaptive background processing stays on-device. Versioned local preferences are stored in myntAdaptiveBackground and myntLayout. No pixels are uploaded and no new remote service is used.</p>
 <h2>資料收集與權限</h2>
-        <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用搜尋建議、天氣、語音辨識、隨機桌布、語錄或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
+        <p>MYNT 不包含由專案營運的分析工具、追蹤腳本、遙測或遠端記錄系統。偏好設定、待辦事項、快取資料與客製內容主要儲存在您的瀏覽器內；但啟用天氣、語音辨識、隨機桌布或網站圖示等功能時，瀏覽器會直接連線至下列第三方服務。第三方至少會看到一般網路請求中包含的 IP 位址，並可能收到查詢字詞、位置或網站網域。</p>
 
         <h3>權限</h3>
         <p>我們僅要求提供豐富、動態瀏覽體驗所需的最低權限。以下是所使用權限的說明：</p>
@@ -171,9 +171,6 @@
         <ul>
             <li><strong>書籤：</strong>只在您啟用書籤功能後請求。此權限可讀取、新增、修改與刪除瀏覽器書籤。</li>
             <li><strong>網站圖示</strong>（Chrome 選用）：用於從瀏覽器快取讀取書籤圖示。若快取沒有圖示，書籤會改用內建替代圖示，不傳送書籤網域。</li>
-            <li><strong>Google 網域</strong>（選用）：只在您啟用 Google 搜尋建議後請求。</li>
-            <li><strong>擴充功能儲存空間：</strong>在瀏覽器的 extension storage 中保存呆呆的受限本機配對權杖與已處理操作 ID；不會保存呆呆主權杖。</li>
-            <li><strong>本機呆呆橋接</strong>（選用）：只有按下「連接呆呆」後，才請求連線至 <code>http://127.0.0.1/*</code>。此位址只代表目前電腦，不會連到區域網路或專案營運者的伺服器。</li>
         </ul>
 
         <h3>瀏覽器 API</h3>
@@ -182,22 +179,9 @@
             <li><strong>地理位置：</strong>僅在您確認啟用 GPS 天氣後請求。取得的經緯度會傳送至 WeatherAPI 以查詢天氣。</li>
         </ul>
 
-        <h3>呆呆連動（選用）</h3>
-        <p>呆呆連動預設未配對。配對時，呆呆會顯示一次性 6 位數配對碼；成功後 MYNT 只取得無法存取一般呆呆橋接 API 的受限權杖。解除連動會撤銷該權杖並移除本機主機權限。</p>
-        <p>連動後，MYNT 會將今日待辦的標題與完成狀態、今日專注分鐘／階段／連續天數，以及習慣名稱與今日狀態送至本機呆呆橋接。便籤全文不會自動分享；只有按下「問呆呆」或「呆呆整理待辦」時，才會送出目前選取文字或游標所在行。書籤、捷徑網址、搜尋紀錄與首頁稱呼不會透過此連動分享。</p>
-        <p>只有在您向呆呆提出 MYNT、待辦、便籤、專注、習慣或今日工作相關要求時，相關摘要或您主動送出的便籤文字才會隨該次訊息交給呆呆目前設定的 AI 後端／模型供應商處理。資料處理由該供應商的政策約束；MYNT 專案本身不接收副本。</p>
-        <p>呆呆提出的新增、修改、完成待辦或便籤操作只會排入本機預覽。您在 MYNT 明確按下「確認套用」前不會寫入；拒絕、過期、資料版本不符或關閉配對時都不會套用。</p>
-
         <h3>外部 API</h3>
         <p>只有相關功能啟用或觸發時，MYNT 才會使用下列服務：</p>
         <ul>
-            <li><strong>搜尋建議：</strong>
-                <ul>
-                    <li>Google：<code>https://www.google.com/complete/search?client=*</code></li>
-                </ul>
-                <p>搜尋建議預設關閉。啟用後，輸入的查詢字詞會直接傳送至 Google；若同時啟用代理，查詢會先傳送至您設定的代理伺服器。</p>
-            </li>
-
             <li><strong>位置偵測（<a href="https://ipinfo.io/" target="_blank" rel="noopener noreferrer">IPinfo</a>）：</strong>
                 <ul>
                     <li><code>https://ipinfo.io/json</code> — 天氣功能開啟且未設定手動位置或 GPS 時，根據 IP 位址取得約略經緯度。</li>
@@ -220,13 +204,6 @@
                 </ul>
             </li>
 
-            <li><strong>語錄（<a href="https://github.com/prem-k-r/multilingual-quotes-api"
-                        target="_blank" rel="noopener noreferrer">多語言語錄 API</a>）：</strong>
-                <ul>
-                    <li><code>https://prem-k-r.github.io/multilingual-quotes-api/</code> — 語錄功能啟用時下載語系中繼資料與語錄內容。</li>
-                </ul>
-            </li>
-
             <li><strong>網站圖示擷取（Google Favicon API）：</strong>
                 <ul>
                     <li><code>https://s2.googleusercontent.com/s2/favicons*</code></li>
@@ -236,28 +213,14 @@
             </li>
         </ul>
 
-        <h3>考古題與主動開啟 ChatGPT</h3>
+        <h3>考古題</h3>
         <p>「今日考古題」預設顯示，啟用時會在閒置後從 raw.githubusercontent.com 的 Reese-max/police-exam-archive 公開題庫下載並快取當日題目。GitHub 會收到一般網路請求資訊（例如 IP），請求不含待辦、便籤或書籤。可在設定停用此卡片，停止後續自動題庫請求。</p>
-        <p>只有按下每日焦點的「問 GPT 拆解步驟」時，才會透過 chatgpt.com/?q= 開啟已填入的提示，包含目前焦點文字、選擇的科目及距考試天數。這些內容會傳至 OpenAI，並可能留在瀏覽器歷史；請勿填入不想分享的私人資料。MYNT 不會自動替您送出聊天訊息。</p>
         <h3>本機儲存</h3>
-        <p>專注紀錄 myntFocusLog 的第 2 版項目保存每輪完成時的實際分鐘與當時科目，切換科目或計時長度不會改寫過去紀錄。舊紀錄缺少實際時長，固定以每輪 25 分鐘估算並保留原科目。資料只存在本機並沿用既有備份範圍。</p>
-        <p>Version 2 entries in myntFocusLog retain each completed round’s actual minutes and subject. Later timer or subject changes do not rewrite earlier rounds. Legacy rounds lack duration data and use a fixed 25-minute estimate with their original subject. Records remain local and use the existing backup scope.</p>
-        <p>一般待辦與習慣介面的刪除也會在既有 myntTodoRecoveryV1／myntHabitRecoveryV1 保留最後一筆項目及原位置；習慣包含完整打卡日期。寫入失敗會嘗試回滾；再次刪除會取代同類型的上一筆復原紀錄。復原不需要連接 MCP。</p>
-        <p>Task and habit deletions in the ordinary UI retain the last item and its original position in myntTodoRecoveryV1 / myntHabitRecoveryV1, including habit check-in dates. Failed writes attempt rollback. Another UI deletion replaces the preceding recovery item in that list. Undo needs no MCP connection.</p>
-        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、首頁稱呼、每日焦點文字／完成狀態／延續日期、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、語錄快取與每日語錄、番茄鐘狀態、專注紀錄、便籤、每日習慣、工作區預設、無障礙偏好及上傳的桌布。首頁稱呼只會顯示在本機問候語中；每日焦點也不會自動分享給呆呆。兩者都會包含在您主動匯出的 MYNT 備份檔。呆呆受限配對權杖與最近已確認／拒絕的操作 ID 存在 extension storage，不會進入 MYNT 一般備份檔；重設 MYNT 或解除連動時會清除。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
+        <p>一般待辦介面的刪除也會在既有 myntTodoRecoveryV1 保留最後一筆項目及原位置。寫入失敗會嘗試回滾；再次刪除會取代同類型的上一筆復原紀錄。復原不需要連接 MCP。</p>
+        <p>Task deletions in the ordinary UI retain the last item and its original position in myntTodoRecoveryV1. Failed writes attempt rollback. Another UI deletion replaces the preceding recovery item in that list. Undo needs no MCP connection.</p>
+        <p>MYNT 使用 localStorage 與 IndexedDB 儲存介面設定、待辦事項、書籤顯示偏好、自訂捷徑圖示、天氣位置與快取、番茄鐘狀態、工作區預設、無障礙偏好及上傳的桌布。移除擴充功能或清除網站資料時，瀏覽器可能一併刪除這些內容。</p>
         <p>控制中心的服務狀態只會在 localStorage 記錄服務識別名稱、成功或失敗結果、HTTP 狀態碼及時間；不會記錄完整網址、搜尋文字、位置、API 金鑰，也不會傳送至專案營運者。</p>
 
-        <h3>代理伺服器（選用）</h3>
-        <p>
-            MYNT: Material You New Tab 包含一項選用的代理功能，<strong>預設為停用</strong>。此功能可用於在取得搜尋建議時繞過 CORS 限制。
-        </p>
-        <p>
-            對於希望啟用此功能的使用者，我們<strong>強烈建議<a
-                    href="https://github.com/Minuga-RC/MYNT-CORS-Bypass-Proxy" target="_blank" rel="noopener noreferrer">自行架設代理伺服器</a></strong>，以保持完全控制並確保最大程度的隱私保護。
-        </p>
-        <p>
-            如果啟用並保持預設設定，搜尋建議請求將透過以下公共代理轉發：<code>https://mynt-proxy.rhythmcorehq.com</code>。代理營運者會看到您的 IP 位址與完整搜尋建議請求。
-        </p>
 
 
         <h3>更新與解除安裝頁面</h3>
@@ -275,9 +238,9 @@
     <script src="scripts/privacy-policy.js"></script>
 <p>Layout draft recovery uses sessionStorage (myntLayoutDraft) only in the current tab and survives reload, not guaranteed tab closure. The dismissible guide preference uses localStorage (myntLayoutGuideSeen). Deleted layout profiles remain recoverable locally; no data is uploaded.</p>
 <p>Wallpaper gallery removal is recoverable: removed custom images and videos stay in this browser’s local IndexedDB so Undo remains available after reload. They are excluded from gallery playback but still use local storage. Original files on your device are not modified or uploaded.</p>
-<p>「僅設定」可匯出一般設定、排版、待辦、便籤及還原後暫停的計時狀態，不讀取或包含媒體資料庫，也不包含桌布偏好、計時器外觀、音樂偏好與已儲存專注情境。還原時保留目的端的這些媒體及偏好；舊版 v1／v2 備份同樣保留未涵蓋的媒體關聯偏好。完整備份不會自動降級為僅設定；音樂庫可達 300 MiB，不代表能放入 32 MiB 備份，請另行保留原始媒體檔。</p>
+<p>「僅設定」可匯出一般設定、排版、待辦及還原後暫停的計時狀態，不讀取或包含媒體資料庫，也不包含桌布偏好、計時器外觀、音樂偏好與已儲存專注情境。還原時保留目的端的這些媒體及偏好；舊版 v1／v2 備份同樣保留未涵蓋的媒體關聯偏好。完整備份不會自動降級為僅設定；音樂庫可達 300 MiB，不代表能放入 32 MiB 備份，請另行保留原始媒體檔。</p>
 <p>Settings-only exports omit media databases and media-linked wallpaper, timer appearance, music and saved scenario preferences. Restoring them preserves those existing destination files and preferences. Legacy v1/v2 restores likewise preserve omitted media-linked preferences. Full exports never silently downgrade; retain original media separately when the 32 MiB encoded backup limit is exceeded.</p>
-<p>本機備份第 3 版的「設定＋媒體」包含設定、排版、待辦、便籤、圖庫（含回收項目）、番茄鐘圖片和音樂，含編碼媒體上限 32 MiB。超過時不會匯出不完整備份。WeatherAPI 金鑰、瀏覽器書籤與權限、DaiDai 配對不包含在內。備份檔含私人內容，請自行妥善保存；本功能不會上傳。網址媒體僅保留連結。還原前會顯示取代範圍，首次變更前會在本機 myntRestoreJournalV1 保存復原快照與進度；中斷後下次開啟會先回復，再重新載入開放操作。一般設定與媒體寫入於還原期間暫停；回復時比對預期版本並保留其他分頁的新內容。復原紀錄可能包含私人內容與媒體，僅存本機，不納入匯出；成功後移除。若瀏覽器可用空間不足以保存快照，會在變更資料前停止。</p>
+<p>本機備份第 3 版的「設定＋媒體」包含設定、排版、待辦、圖庫（含回收項目）、番茄鐘圖片和音樂，含編碼媒體上限 32 MiB。超過時不會匯出不完整備份。WeatherAPI 金鑰、瀏覽器書籤與權限不包含在內。備份檔含私人內容，請自行妥善保存；本功能不會上傳。網址媒體僅保留連結。還原前會顯示取代範圍，首次變更前會在本機 myntRestoreJournalV1 保存復原快照與進度；中斷後下次開啟會先回復，再重新載入開放操作。一般設定與媒體寫入於還原期間暫停；回復時比對預期版本並保留其他分頁的新內容。復原紀錄可能包含私人內容與媒體，僅存本機，不納入匯出；成功後移除。若瀏覽器可用空間不足以保存快照，會在變更資料前停止。</p>
 <p>取消套用背景不刪圖庫檔案。回收區可逐張復原；顯示容量僅計算圖庫本機媒體和縮圖 Blob，不是瀏覽器整站儲存用量，也不包含遠端網址內容。書籤圖示只使用瀏覽器本機快取或內建替代圖示，不將書籤網域送往 Google 圖示服務。</p>
 <p>Before restore changes any domain data, a local-only myntRestoreJournalV1 journal saves rollback snapshots and write-ahead progress. Interrupted restores are undone on next startup before ordinary operations resume. Normal settings/media writers are paused across tabs, and recovery preserves concurrently changed content instead of overwriting it. The journal may contain private content and media, is excluded from exports, and is removed after successful restore/recovery. Insufficient snapshot storage stops restore before domain changes.</p>
 <section><h2>Local event countdowns / 本機重要日期倒數</h2><p>Exam, anniversary and custom event names, calendar dates, display preferences and the latest recoverable deletion are stored only in this browser under myntEventCountdownsV1. Both settings-only and full backups include these events. No dates are sent to a server; exam dates are user-defined, not verified official schedules. Annual dates use the Gregorian calendar and observe February 29 on February 28 in non-leap years. / 特考、紀念日及自訂日期僅存於本機，兩種備份均包含；不自動查詢官方考期，不上傳資料。每年重複使用公曆，非閏年以 2 月 28 日計算 2 月 29 日事件。</p></section>
@@ -286,12 +249,10 @@
 <p>本機 MCP 的可復原刪除會在 localStorage 的 <code>myntTodoRecoveryV1</code> 保留一筆待辦，在 <code>myntShortcutRecoveryV1</code> 保留一筆捷徑。待辦保留識別碼、標題、完成／釘選狀態及原位置；捷徑保留名稱、網址、自訂圖示及原位置，並非永久刪除。同一清單尚有復原項目時，不接受下一次 MCP 刪除。重新載入後仍可直接在一般待辦面板或捷徑編輯器復原，不必連接 MCP；成功後才移除復原紀錄。清除瀏覽器資料或解除安裝可能刪除復原資料。</p>
 <p>Both local backup scopes include validated recovery records and custom shortcut icons, as with the existing shortcut settings. Settings-only export does not open wallpaper, gallery, timer-image or music databases. Backup files can therefore contain private task text, full shortcut URLs and retained icons; keep them private. Recovery records are validated before export or restore, and malformed records are not applied. MCP shortcut responses omit icon data and redact credentials, queries and fragments from URLs. Recovery adds no telemetry, network service, permission or automatic upload.</p>
 <p>兩種本機備份都包含驗證通過的復原紀錄與自訂捷徑圖示，與既有捷徑設定相同。「僅設定」不會開啟桌布、圖庫、計時器圖片或音樂資料庫。備份可能包含私人待辦文字、完整捷徑網址及保留的圖示，請妥善保管。匯出或還原前會驗證復原紀錄，不會套用格式錯誤的資料。MCP 的捷徑回覆不包含圖示原始資料，網址也會隱去帳密、查詢參數及片段。此功能不新增遙測、網路服務、權限或自動上傳。</p></section>
-<section><h2>Habit and music recovery / 習慣與音樂復原</h2>
-<p>Local MCP can recoverably remove a custom habit, never a built-in automatic habit. <code>myntHabitRecoveryV1</code> retains one custom habit with its identifier, name, original list position and completion-date history. Another removal is refused until it is restored. Undo in the ordinary habits panel works without connecting MCP; duplicate identifiers or names and a full 12-habit list block restoration without discarding the retained item. Both local backup scopes include validated habit recovery data. Malformed habit or recovery records are preserved rather than silently reset.</p>
-<p>本機 MCP 可復原地移除自訂習慣，但不能移除內建自動習慣。<code>myntHabitRecoveryV1</code> 保留一筆自訂習慣的識別碼、名稱、原清單位置與完成日期紀錄，復原前不接受下一次移除。不必連接 MCP，即可在一般習慣面板復原；識別碼或名稱重複、或已達 12 個自訂習慣上限時，會停止復原並保留紀錄。兩種本機備份都包含驗證通過的習慣復原資料。格式錯誤的習慣或復原紀錄會保留，不會默默重設。</p>
+<section><h2>Music recovery / 音樂復原</h2>
 <p>Removed music tracks remain in the existing local <code>myntPomodoroMusicV1/tracks</code> store with their audio file and a <code>removedAt</code> timestamp. They stay out of active playback and can be restored from the music panel without automatically starting playback. Retained tracks still count toward the 30-track and 300 MiB library limits. Full backups preserve retained tracks and timestamps within the separate 32 MiB encoded backup limit; settings-only backups never read or include this music database. Original device files are not changed or uploaded. These recovery features add no permissions, remote services or telemetry.</p>
 <p>已移除曲目的音訊檔及 <code>removedAt</code> 時間戳記會保留在既有本機 <code>myntPomodoroMusicV1/tracks</code> 儲存區，不參與播放，可在音樂面板還原，且不會自動開始播放。保留曲目仍計入 30 首及 300 MiB 音樂庫上限。「設定＋媒體」備份保留這些曲目與時間戳記，但仍受含編碼資料 32 MiB 的備份上限限制；「僅設定」不會讀取或包含音樂資料庫。不會更動或上傳裝置上的原始檔案，也不新增權限、遠端服務或遙測。</p></section>
-<section><h2>Optional local MCP / 可選本機 MCP</h2><p>The MCP bridge is off by default. Chromium and Firefox declare nativeMessaging only as an optional permission: clicking Connect requests browser approval before any native connection. Denial leaves the bridge disconnected. Separate, explicitly approved native host registration is still required. A manually connected session exposes only documented domain tools to local AI clients, not arbitrary scripts, filesystem access, credentials or raw media. Read/write and scratchpad/bookmark access are separately selected for each session and are not included in backups. Your chosen AI client may transmit tool results to its model provider. Disconnect or close the page to revoke this session. Local IPC is not an authorization boundary against other malicious software already running as your OS user.</p><p>本機 MCP 預設關閉。Chromium 與 Firefox 僅宣告選用 nativeMessaging 權限；點選連線時才要求瀏覽器授權，拒絕時維持中斷連線。仍須另行明確核准原生主機註冊，並手動連接。每次連線分別選擇修改及私人內容讀取；關閉分頁或中斷即撤回，不納入備份。不提供任意程式、檔案系統、憑證或媒體原始檔。請注意 AI 用戶端可能把工具結果傳送給其模型供應商，同一作業系統帳號的惡意程式不在本機 IPC 的安全隔離範圍內。</p></section>
+<section><h2>Optional local MCP / 可選本機 MCP</h2><p>The MCP bridge is off by default. Chromium and Firefox declare nativeMessaging only as an optional permission: clicking Connect requests browser approval before any native connection. Denial leaves the bridge disconnected. Separate, explicitly approved native host registration is still required. A manually connected session exposes only documented domain tools to local AI clients, not arbitrary scripts, filesystem access, credentials or raw media. Read/write and bookmark access are separately selected for each session and are not included in backups. Your chosen AI client may transmit tool results to its model provider. Disconnect or close the page to revoke this session. Local IPC is not an authorization boundary against other malicious software already running as your OS user.</p><p>本機 MCP 預設關閉。Chromium 與 Firefox 僅宣告選用 nativeMessaging 權限；點選連線時才要求瀏覽器授權，拒絕時維持中斷連線。仍須另行明確核准原生主機註冊，並手動連接。每次連線分別選擇修改及私人內容讀取；關閉分頁或中斷即撤回，不納入備份。不提供任意程式、檔案系統、憑證或媒體原始檔。請注意 AI 用戶端可能把工具結果傳送給其模型供應商，同一作業系統帳號的惡意程式不在本機 IPC 的安全隔離範圍內。</p></section>
 <section><h2>Component visibility / 元件顯示</h2><p>Component management uses existing local visibility preferences, plus myntSearchVisible, myntGalleryEntryVisible, myntProfilesEntryVisible and myntAdaptiveEntryVisible for optional entry points. The homepage Today widgets visibility preference (myntHomeWidgetsVisible) is stored only locally. Hiding preserves content and saved layout positions. A one-time myntComponentsMigrationV1 marker preserves previously CSS-hidden defaults only when the old preference was absent, recording only null preimages. Explicit choices are never rewritten. Both backup scopes include these preferences and migration marker. No new network service, permission or upload is added.</p><p>元件管理沿用既有本機顯示設定，另保存搜尋列、桌布圖庫、排版設定檔與自動外觀入口的顯示偏好，以及首頁今日小工具顯示偏好（myntHomeWidgetsVisible，只存在本機）。隱藏不刪除內容及已儲存位置。myntComponentsMigrationV1 只在舊顯示偏好缺值時，記錄一次相容處理及空值原貌，不覆蓋明確設定；兩種備份皆包含這些設定；不新增連線服務、權限或上傳。</p></section><section><h2>Quick-link icons / 快捷連結圖示</h2><p>Shortcut icons remain string values in shortcutIcon&lt;N&gt;. AI tool name, website URL and icon overrides are stored locally in aiToolsCustom, alongside aiToolsSettings for visibility and order. Both backup scopes include these settings and icon data. The bundled icon library, emoji and text badges run locally. Automatic website icons use the browser favicon endpoint only when its existing optional favicon permission is granted; otherwise shortcuts retain their existing preset / favicon behaviour. Custom image URLs are loaded only as images. No new service, permission, telemetry or automatic upload is added.</p><p>捷徑圖示沿用 shortcutIcon&lt;N&gt; 字串；AI 工具名稱、網址與圖示的客製值保存在本機 aiToolsCustom，顯示與順序沿用 aiToolsSettings。兩種備份皆包含這些資料與圖示。內建圖示庫、Emoji 與文字圖示均在本機處理；自動網站圖示只在既有選用 favicon 權限已授予時使用瀏覽器端點，否則沿用捷徑原有圖示行為。自訂圖片網址僅作為圖片載入；不新增服務、權限、遙測或自動上傳。</p></section>
 </body>
 

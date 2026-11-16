@@ -10,7 +10,6 @@
    pointer-events:none，佔位保留（皆為 position:fixed，不影響版面），
    面板關閉後自動恢復；已展開的 details[open] 不命中，照常顯示。 */
 body:not(.mynt-layout-editing):has(#todoContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
-body:not(.mynt-layout-editing):has(#scratchpadContainer:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]),
 body:not(.mynt-layout-editing):has(#pomodoroPanel:not([style*="display: none"])) :is(#myntProfilesPanel, #myntAdaptivePanel):not([open]) {
     visibility: hidden;
     pointer-events: none;

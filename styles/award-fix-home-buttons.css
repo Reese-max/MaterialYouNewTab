@@ -24,69 +24,6 @@
     outline-offset: 2px;
 }
 
-/* ===== 次要按鈕：焦點卡「完成」（#dailyFocusToggle） =====
-   原本是 --darkColor-blue 底 + 白字（藍主題約 3.5:1，不足 AA），
-   反相後又變成深底黑字。改為淺底深字的次要配色；
-   尺寸沿用上一輪（32px 高、padding 不動），只統一顏色。 */
-#dailyFocusToggle {
-    background: var(--accentLightTint-blue);
-    color: var(--darkerColor-blue);
-}
-
-/* hover／鍵盤焦點時升級為主要按鈕配色（深底白字），回饋明確。
-   filter: none 用來蓋掉上一輪遺留的 brightness(1.08)——
-   那是為舊的深色底設計的，留在新配色上會把 hover 對比拉到邊界。 */
-#dailyFocusToggle:hover,
-#dailyFocusToggle:focus-visible {
-    background: var(--darkerColor-blue);
-    color: #fff;
-    filter: none;
-}
-
-#dailyFocusToggle:focus-visible {
-    /* 焦點框用深主題色，在淺色卡片背景上清楚可見 */
-    outline: 2px solid var(--darkerColor-blue);
-    outline-offset: 2px;
-}
-
-/* 已標記完成（aria-pressed="true"，由 custom-text.js 切換）維持
-   主要配色，讓「已完成」狀態一眼可辨 */
-#dailyFocusToggle[aria-pressed="true"] {
-    background: var(--darkerColor-blue);
-    color: #fff;
-}
-
-/* ===== 停用狀態：細框深字、不靠淡化 =====
-   custom-text.js 以 toggle.disabled = !focus.text 停用按鈕；
-   style.css 原本只用 opacity: .45 淡化次要配色，淺色已偏淡，
-   反相後對比更掉到 2:1 以下，評審認為幾乎隱形。
-   改為「細框＋主題深色文字、無填色」：用線框外觀表達停用而非低對比。
-   - opacity: 1 蓋掉 style.css 的 0.45 淡化（淡化是對比元兇）
-   - --darkerColor-blue 字在淺色頁面背景約 5.4:1，達 AA（≥4.5）
-   - 邊框用主色 60% 混合，比可用態的實色弱一階，仍可辨外框 */
-#dailyFocusToggle:disabled,
-#dailyFocusToggle[disabled],
-#dailyFocusToggle[aria-disabled="true"] {
-    opacity: 1;
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--darkerColor-blue) 60%, transparent);
-    color: var(--darkerColor-blue);
-    cursor: not-allowed;
-}
-
-/* 停用態的 hover／焦點不升級為深底白字（避免看起來可按），
-   只鋪淡主題底；深字在淡底上約 4.7:1，仍過 AA。
-   aria-disabled 的按鈕仍可被聚焦，所以一併涵蓋 :focus-visible。 */
-#dailyFocusToggle:disabled:hover,
-#dailyFocusToggle[disabled]:hover,
-#dailyFocusToggle[aria-disabled="true"]:hover,
-#dailyFocusToggle:disabled:focus-visible,
-#dailyFocusToggle[aria-disabled="true"]:focus-visible {
-    background: var(--accentLightTint-blue);
-    color: var(--darkerColor-blue);
-    filter: none;
-}
-
 /* 第 15 輪：首頁膠囊沿用 r13 浮動工具的表面、細框、陰影與焦點。
    只調整元件本身；外層定位、使用者縮放與隱藏狀態仍由原規則管理。
    祖先 ID 提高具體性，覆蓋影片工作區與自動取色的舊表面。 */

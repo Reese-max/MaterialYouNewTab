@@ -10,7 +10,8 @@ function setup(initial={}){const map=new Map(Object.entries(initial));let failur
  const f=setup({weatherApiKey:'SECRET',cachedQuote:'KEEP',selectedLanguage:'zh_TW'});
  let x=await f.call('mynt_clock_get');assert(x.ok);assert.equal(x.data.mode,'analog');assert(!JSON.stringify(x).includes('SECRET'));
  f.fail('hourcheckboxState');let result=await f.call('mynt_clock_update',{mode:'digital',hour12:true,expectedRevision:x.revision});assert.equal(result.error.code,'STORAGE_FAILURE');assert.equal(f.storage.getItem('clocktype'),null);
- result=await f.call('mynt_clock_update',{mode:'digital',hour12:true,greeting:true,name:'  Alex  ',expectedRevision:x.revision});assert(result.ok);assert.equal(result.data.name,'Alex');assert.equal(f.storage.getItem('digitalCheckboxState'),'checked');assert.equal(f.storage.getItem('greetingField'),'active');
+ assert.equal((await f.call('mynt_clock_update',{greeting:true,expectedRevision:x.revision})).error.code,'INVALID_ARGUMENT','Removed greeting fields are rejected');
+ result=await f.call('mynt_clock_update',{mode:'digital',hour12:true,expectedRevision:x.revision});assert(result.ok);assert.equal(result.data.name,undefined);assert.equal(f.storage.getItem('digitalCheckboxState'),'checked');assert.equal(f.storage.getItem('timeformatField'),'active');
  assert.equal((await f.call('mynt_clock_update',{hidden:true,expectedRevision:x.revision})).error.code,'CONFLICT');
  x=await f.call('mynt_search_settings_get');assert(x.data.bangAliases.includes('!b'));assert.equal((await f.call('mynt_search_settings_update',{engine:'bing',expectedRevision:x.revision})).error.code,'ACTION_REQUIRED');result=await f.call('mynt_search_settings_update',{providerRowHidden:true,aiModeVisible:false,expectedRevision:x.revision});assert(result.ok);assert.equal(f.storage.getItem('cachedQuote'),'KEEP');assert.equal(f.storage.getItem('aiModeIconVisible'),'false');
  x=await f.call('mynt_ai_settings_get');assert.equal(x.data.tools.length,3);result=await f.call('mynt_ai_settings_update',{tools:[{id:'claude',visible:true},{id:'chatGPT',visible:false},{id:'youtube',visible:true}],visible:true,expectedRevision:x.revision});assert(result.ok);assert.deepEqual(JSON.parse(f.storage.getItem('aiToolsSettings')),['claude',{chatGPT:false},'youtube']);assert.equal(f.storage.getItem('aiToolsDisplayStatus'),'flex');
@@ -26,22 +27,21 @@ function setup(initial={}){const map=new Map(Object.entries(initial));let failur
  const vm=require('node:vm');const aiSource=fs.readFileSync(require.resolve('../scripts/ai-tools.js'),'utf8');const nodes=new Map();const el=id=>{if(!nodes.has(id))nodes.set(id,{style:{},classList:{toggle(){}},setAttribute(){}});return nodes.get(id);};
  const fresh=setup();let freshAI=await fresh.call('mynt_ai_settings_get');freshAI=await fresh.call('mynt_ai_settings_update',{tools:[{id:'youtube',visible:true},{id:'claude',visible:false},{id:'chatGPT',visible:true}],expectedRevision:freshAI.revision});assert.equal(freshAI.data.visible,false);
  const hookContext={window:{},localStorage:fresh.storage,document:{getElementById:el},getDefaultAIToolsSettings:()=>['chatGPT','claude','youtube'],applyAIToolsSettings(){},aiToolsCont:el('container'),aiToolsEditField:el('edit'),aiToolName:el('name'),aiToolsIcon:el('icon')};vm.runInNewContext(aiSource.slice(aiSource.indexOf('window.myntAiPreferences =')),hookContext);hookContext.window.myntAiPreferences.reload();assert.equal(hookContext.aiToolsCont.style.display,'none');assert.equal(el('aiToolsCheckbox').checked,false);
- // Execute actual search visibility helper and pure refresh across all quote/provider states.
+ // Execute actual search visibility helper and pure refresh across provider states.
  const searchSource=fs.readFileSync(require.resolve('../scripts/search.js'),'utf8');
  const searchFixture=setup(), searchStorage=searchFixture.storage, searchNodes=new Map(), searchNode=id=>{if(!searchNodes.has(id))searchNodes.set(id,{style:{},classList:{toggle(){}}});return searchNodes.get(id);};
  let aiRefresh=0;const searchContext={window:{},localStorage:searchStorage,hideSearchWith:{},searchIcons:[{style:{}},{style:{}}],searchProviderRow:{style:{display:'none'}},document:{getElementById:searchNode,querySelector:searchNode},aiModeIconCheckbox:{},updateAiModeIconVisibility(){aiRefresh++;}};
  vm.runInNewContext(searchSource.slice(searchSource.indexOf('function applySearchProviderVisibility('),searchSource.indexOf('hideSearchWith.addEventListener'))+searchSource.slice(searchSource.indexOf('window.myntSearchPreferences =')),searchContext);
- for(const quotes of [true,false])for(const hidden of [true,false,true,false]){
-  searchStorage.setItem('motivationalQuotesVisible',String(quotes));searchStorage.setItem('showShortcutSwitch',String(hidden));
+ for(const hidden of [true,false,true,false]){
+  searchStorage.setItem('showShortcutSwitch',String(hidden));
   const before=[...searchFixture.map];searchContext.window.myntSearchPreferences.reload();
-  assert.equal(searchContext.searchProviderRow.style.display,quotes&&hidden?'none':'flex');
+  assert.equal(searchContext.searchProviderRow.style.display,'flex');
   assert.equal(searchContext.searchProviderRow.style.visibility,hidden?'hidden':'visible');
-  assert.equal(searchNode('motivationalQuotesCont').style.display,quotes&&hidden?'flex':'none');
   assert.deepEqual([...searchFixture.map],before,'Pure refresh does not change any stored preference');
  }
- assert.equal(aiRefresh,8);
+ assert.equal(aiRefresh,4);
  const clockSource=fs.readFileSync(require.resolve('../scripts/clock.js'),'utf8');const clockHook=clockSource.slice(clockSource.indexOf('    window.myntClockPreferences ='),clockSource.indexOf('    // Initial clock display'));
- const clockContext={window:{},localStorage:setup().storage,document:{getElementById:el},hideClockCheckbox:{},applyClockState(){},toggleHideState(){},myntNormalizeGreetingName:v=>v||'',displayClock(){},stopAnalogClock(){},startDigitalClock(){},stopDigitalClock(){},updatedigiClock(){},startAnalogClock(){},updateanalogclock(){},resetDateDisplay(){},updateDate(){}};vm.runInNewContext(clockHook,clockContext);clockContext.window.myntClockPreferences.reload();assert.equal(el('greetingcheckbox').checked,true);
+ const clockContext={window:{},localStorage:setup().storage,document:{getElementById:el},hideClockCheckbox:{},applyClockState(){},toggleHideState(){},displayClock(){},stopAnalogClock(){},startDigitalClock(){},stopDigitalClock(){},updatedigiClock(){},startAnalogClock(){},updateanalogclock(){},resetDateDisplay(){},updateDate(){}};vm.runInNewContext(clockHook,clockContext);clockContext.window.myntClockPreferences.reload();assert.equal(el('digitalCheckbox').checked,false);
  const hiddenClock=setup({hideClockVisible:'true'}),hiddenState=await hiddenClock.call('mynt_clock_get');global.document={};try{const unavailable=await hiddenClock.call('mynt_clock_update',{hidden:false,expectedRevision:hiddenState.revision});assert.equal(unavailable.error.code,'ACTION_REQUIRED');assert.equal(hiddenClock.storage.getItem('hideClockVisible'),'true');}finally{delete global.document;}
  const {createEngine}=require('../scripts/local-mcp-bridge.js');
  for(const failure of ['ACCESS_REVOKED','EDITOR_BUSY']){

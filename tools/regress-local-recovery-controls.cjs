@@ -12,7 +12,7 @@ const { createEngine, createRecovery } = require(path.join(root, "scripts/local-
 const todo = { version: 1, index: 0, item: { id: "trecovery", title: "私人待辦", status: "completed", pinned: true } };
 const shortcut = { version: 1, index: 0, item: { name: "Private shortcut", url: "https://example.org/?private=fixture#fragment", icon: "data:image/png;base64,UFJJVkFURS1JQ09O" } };
 const habit = { version: 1, index: 2, item: { id: "hfixture", name: "Read daily", source: null, doneDates: ["2024-02-29", "2026-10-24"] } };
-const keyFor = domain => ({ todos: "myntTodoRecoveryV1", shortcuts: "myntShortcutRecoveryV1", habits: "myntHabitRecoveryV1" })[domain];
+const keyFor = domain => ({ todos: "myntTodoRecoveryV1", shortcuts: "myntShortcutRecoveryV1" })[domain];
 function storageFixture(initial = {}) {
     const storage = Object.assign(Object.create(null), initial), writes = [];
     Object.defineProperties(storage, {
@@ -28,7 +28,7 @@ function eventTarget() {
         async emit(type, value = {}) { for (const callback of events[type] || []) await callback(value); } };
 }
 function uiFixture(domain, recovery, language = "en") {
-    const initial = { selectedLanguage: language, todoList: "{}", myntHabits: "[]", shortcutAmount: "1", shortcutName0: "Existing", shortcutURL0: "https://example.com/", shortcutIcon0: "" };
+    const initial = { selectedLanguage: language, todoList: "{}", shortcutAmount: "1", shortcutName0: "Existing", shortcutURL0: "https://example.com/", shortcutIcon0: "" };
     if (recovery !== undefined) initial[keyFor(domain)] = typeof recovery === "string" ? recovery : JSON.stringify(recovery);
     const { storage, writes } = storageFixture(initial), timers = new Map();
     const document = Object.assign(eventTarget(), { activeElement: null });
@@ -111,7 +111,7 @@ function settingsBackup(recovery = todo) {
 (async () => {
     const absent = uiFixture("todos");
     assert(absent.row.hidden); assert(absent.button.hidden); assert.equal(absent.writes.length, 0);
-    for (const [domain, recovery] of [["todos", todo], ["shortcuts", shortcut], ["habits", habit]]) {
+    for (const [domain, recovery] of [["todos", todo], ["shortcuts", shortcut]]) {
         const ui = uiFixture(domain, recovery);
         assert(!ui.row.hidden); assert(!ui.button.hidden);
         assert.equal(ui.button.tagName, "BUTTON"); assert.equal(ui.button.type, "button");
@@ -131,8 +131,7 @@ function settingsBackup(recovery = todo) {
         assert(ui.button.hidden); assert.equal(ui.status.textContent, "Restored.");
         ui.expire(); assert(ui.row.hidden);
         if (domain === "todos") assert.equal(JSON.parse(ui.storage.todoList).trecovery.title, todo.item.title);
-        else if (domain === "shortcuts") { assert.equal(ui.storage.shortcutName0, shortcut.item.name); assert.equal(ui.storage.shortcutIcon0, shortcut.item.icon); }
-        else assert.deepEqual(JSON.parse(ui.storage.myntHabits)[2], habit.item);
+        else { assert.equal(ui.storage.shortcutName0, shortcut.item.name); assert.equal(ui.storage.shortcutIcon0, shortcut.item.icon); }
         assert.equal(ui.engine.status().enabled, false, "Undo must not grant remote access");
     }
     const translated = uiFixture("todos", todo, "zh_TW");
@@ -228,9 +227,9 @@ function settingsBackup(recovery = todo) {
         await assert.rejects(env.run("restoreData(fixture)"), /Invalid backup/); assert.equal(env.writes.length, 0);
     }
     for (const invalid of ["broken", JSON.stringify({ ...habit, item: { ...habit.item, id: "system-todo" } }), JSON.stringify({ ...habit, item: { ...habit.item, doneDates: ["2026-02-30"] } })]) {
+        // Habit recovery was removed on 2026-11-17: a leftover record is inert and never blocks a restore.
         const env = backupFixture(), candidate = settingsBackup(); candidate.localStorage.myntHabitRecoveryV1 = invalid;
-        env.setBackup(candidate); await assert.rejects(env.run("restoreData(fixture)"), /Invalid backup/);
-        assert.equal(env.writes.length, 0); assert.equal(env.reads.length, 0);
+        env.setBackup(candidate); assert.equal(env.run("isValidBackupFile(fixture)"), true);
     }
     const music = backupFixture();
     music.run(`readMediaEntries = async kind => kind === 'music' ? [['retained-track', { id:'retained-track', name:'retained.mp3', removedAt:1234, blob:new Blob(['private fixture music'], {type:'audio/mpeg'}) }]] : [];`);
@@ -270,16 +269,6 @@ function settingsBackup(recovery = todo) {
     loadContext.window = {};
     vm.runInContext(`let shortcutsCache=[]; ${rememberSource}; ${loadSource}; loadShortcuts();`, loadContext);
     assert.equal(states.at(-1), false, "A deletion from a full list re-enables the Add shortcut control");
-    const dashboardSource = read("scripts/dashboard-tools.js");
-    const habitReadSource = dashboardSource.slice(dashboardSource.indexOf("        let habitsStorageInvalid"), dashboardSource.indexOf("        function markSystemHabit"));
-    const { myntValidateHabits } = require(path.join(root, "scripts/dashboard-tools.js"));
-    for (const invalid of ["", "broken", "{}", JSON.stringify([{ ...habit.item, doneDates: ["2026-02-30"] }])]) {
-        const fixture = storageFixture({ myntHabits: invalid });
-        const context = vm.createContext({ localStorage: fixture.storage, KEYS: { habits: "myntHabits" }, myntValidateHabits, normalizeHabits: value => value });
-        vm.runInContext(`${habitReadSource}; saveHabits();`, context);
-        assert.equal(fixture.writes.length, 0, "Dashboard initialization must not overwrite malformed habit storage");
-        assert.equal(fixture.storage.myntHabits, invalid);
-    }
     for (const locale of ["en", "zh_TW"]) {
         const words = vm.runInNewContext(`${read(`locales/${locale}.js`)}\n;${locale}`, {});
         assert(words.recovery_todos); assert(words.recovery_shortcuts);

@@ -1035,7 +1035,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const draft = readShortcutOrder();
         if (!window.MyntStorageSync.equal(draft, shortcutsCache)) {
             window.MyntStorageSync.preserve(JSON.stringify(draft, null, 2));
-            alertPrompt(translations[currentLanguage]?.storageConflictSaved || translations.en.storageConflictSaved);
         }
         window.myntShortcuts.reload();
         return false;

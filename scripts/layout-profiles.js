@@ -5,11 +5,14 @@
     'use strict';
     const KEY='myntLayoutProfiles', MAX=20, LIMIT=150000;
     const clone=v=>JSON.parse(JSON.stringify(v));
+    // Blocks of features removed on 2026-11-17; old profiles and backups keep loading without them.
+    const RETIRED_BLOCKS=new Set(['focus','scratchpad']);
     const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
     function validateLayout(v, normalize) {
         if(!plain(v)||v.version!==2||typeof v.snap!=='boolean'||typeof v.locked!=='boolean'||!plain(v.blocks))throw Error('invalid');
         const out=normalize(v);
         for(const [id,b] of Object.entries(v.blocks)){
+            if(RETIRED_BLOCKS.has(id))continue;
             if(!plain(b)||!['x','y','s'].every(k=>Number.isFinite(b[k]))||Math.abs(b.x)>1||Math.abs(b.y)>1||b.s<.5||b.s>2||['w','h'].some(k=>k in b&&!(Number.isFinite(b[k])&&b[k]>0&&b[k]<=1)))throw Error('invalid');
             if(!Object.prototype.hasOwnProperty.call(out.blocks,id)&& (b.x||b.y||b.s!==1))throw Error('invalid');
             if(!normalize({version:2,blocks:{[id]:{x:.001,y:0,s:1}}}).blocks[id])throw Error('invalid');

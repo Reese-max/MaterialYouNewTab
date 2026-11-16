@@ -21,7 +21,7 @@ const source=fs.readFileSync(path.join(__dirname,'../scripts/local-mcp-ui.js'),'
  // Exercise the production workspace hook without a real browser or user data.
  const dashboard=fs.readFileSync(path.join(__dirname,'../scripts/dashboard-tools.js'),'utf8');
  const hook=dashboard.slice(dashboard.indexOf('        function remoteWorkspaceState()'),dashboard.indexOf('        window.myntDashboard ='));
- const ids=['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox','motivationalQuotesCheckbox','bongoCatCheckbox','scratchpadCheckbox'];
+ const ids=['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox'];
  const store=new Map(),boxes=Object.fromEntries(ids.map(id=>[id,{checked:false,click(){this.checked=!this.checked;store.set(id+'State',this.checked?'checked':'unchecked');}}]));
  let duration={workMinutes:25,shortBreakMinutes:5,longBreakMinutes:15,roundsBeforeLong:4},paused=0,timerCalls=0;
  const preset={id:'study',name:'Study',urls:['https://private.invalid/?secret=private'],background:'color',focusMinutes:50,widgets:Object.fromEntries(ids.map(id=>[id,id==='todoListCheckbox']))};
@@ -29,9 +29,6 @@ const source=fs.readFileSync(path.join(__dirname,'../scripts/local-mcp-ui.js'),'
  vm.runInNewContext(hook+';this.get=remoteWorkspaceState;this.apply=applyWorkspaceRemote;',ws);
  assert.equal(JSON.stringify(ws.get()).includes('private.invalid'),false);
  const workspaceApplied=await ws.apply('study',()=>{},()=>{});assert.equal(workspaceApplied.openedUrls,0);assert.equal(workspaceApplied.playbackDeferred,true);assert.equal(paused,1);assert.equal(boxes.todoListCheckbox.checked,true);assert.equal(duration.workMinutes,50);assert.equal(store.get('active'),'study');assert.equal(ws.resumeDecorativeAfterHidden,false);assert.equal(ws.startDecorativeWhenVisible,false);
- preset.widgets.motivationalQuotesCheckbox=true;
- await assert.rejects(ws.apply('study',()=>{},()=>{}),/ACTION_REQUIRED/);assert.equal(timerCalls,1);
- preset.widgets.motivationalQuotesCheckbox=false;
  await assert.rejects(ws.apply('study',()=>{},()=>{throw Error('ACCESS_REVOKED');}),/ACCESS_REVOKED/);assert.equal(paused,1);
  ws.window.myntPomodoro.runRemote=async()=>{timerCalls++;return true;};store.set('pomodoroWorkMinutes','25');
  await assert.rejects(ws.apply('study',()=>{},()=>{}),/OPERATION_FAILED/);assert.equal(paused,1);

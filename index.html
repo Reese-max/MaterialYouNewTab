@@ -17,7 +17,6 @@
     <script src="scripts/restore-guard.js"></script>
     <script src="scripts/removed-features.js"></script>
     <link href="style.css" rel="stylesheet">
-    <link href="styles/focus-card.css" rel="stylesheet">
     <link href="styles/layout-editor.css" rel="stylesheet">
     <link href="styles/quote-contrast.css" rel="stylesheet">
     <link href="styles/exam-daily.css" rel="stylesheet">
@@ -47,21 +46,17 @@
     <script defer src="scripts/widgets-transparency.js"></script>
     <script defer src="scripts/clock.js"></script>
     <script defer src="scripts/weather.js"></script>
-    <script defer src="scripts/custom-text.js"></script>
-    <script defer src="scripts/focus-card.js"></script>
     <script defer src="scripts/exam-daily.js"></script>
     <script defer src="scripts/layout-profiles.js"></script>
     <script defer src="scripts/centered-layout.js"></script>
     <script defer src="scripts/layout-draft.js"></script>
     <script defer src="scripts/layout-editor.js"></script>
     <script defer src="scripts/search.js"></script>
-    <script defer src="scripts/quotes.js"></script>
     <script defer src="scripts/local-recovery-controls.js"></script>
     <script defer src="scripts/quicklink-icons.js"></script>
     <link href="styles/quicklink-icons.css" rel="stylesheet">
     <script defer src="scripts/shortcuts.js"></script>
     <script defer src="scripts/script.js"></script>
-    <script defer src="scripts/search-suggestions.js"></script>
     <script defer src="scripts/ai-tools.js"></script>
     <script defer src="scripts/todo-list.js"></script>
     <script defer src="scripts/pomodoro-timer-core.js"></script>
@@ -72,11 +67,9 @@
     <link href="styles/pomodoro-studio.css" rel="stylesheet">
     <link href="styles/pomodoro-float.css" rel="stylesheet">
     <link href="styles/pomodoro-music.css" rel="stylesheet">
-    <script defer src="scripts/bongocat.js"></script>
     <script defer src="scripts/google-apps.js"></script>
     <script defer src="scripts/voice-search.js"></script>
     <script defer src="scripts/backup-restore.js"></script>
-    <script defer src="scripts/scratchpad.js"></script>
     <script defer src="scripts/ambient-sound.js"></script>
     <script defer src="scripts/component-visibility-core.js"></script>
     <script defer src="scripts/component-manager.js"></script>
@@ -141,32 +134,6 @@
         </ul>
     </div>
 
-
-    <!-- Scratchpad Widget -->
-    <button class="scratchpadCont" id="scratchpadCont" type="button" aria-controls="scratchpadContainer" aria-expanded="false" style="display: none;">
-        <svg id="scratchpadIcon" xmlns="http://www.w3.org/2000/svg" class="dot-icon" width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-        </svg>
-        <span class="tooltip-text" id="scratchpadHover">Scratchpad</span>
-    </button>
-
-    <div id="scratchpadContainer" class="scratchpad-container" style="display: none;">
-        <div class="scratchpadHeader">
-            <h2 id="scratchpadHeading">Scratchpad</h2>
-            <div class="scratchpadHeaderActions">
-                <button id="scratchpadAskDaidaiBtn" class="scratchpadActionBtn" type="button">Ask DaiDai</button>
-                <button id="scratchpadOrganizeDaidaiBtn" class="scratchpadActionBtn" type="button">DaiDai → Tasks</button>
-                <button id="scratchpadToTaskBtn" class="scratchpadActionBtn" type="button" title="Convert to Task">➔ Task</button>
-                <button id="scratchpadCopyBtn" class="scratchpadActionBtn" type="button" title="Copy all">Copy</button>
-                <button id="scratchpadDownloadBtn" class="scratchpadActionBtn" type="button" title="Download .md">↓ .md</button>
-                <button id="scratchpadClearBtn" class="scratchpadActionBtn scratchpadClearBtn" type="button" title="Clear">×</button>
-            </div>
-        </div>
-        <textarea id="scratchpadInput" placeholder="Quick notes, ideas, drafts..." rows="8"></textarea>
-        <div class="scratchpadFooter">
-            <span id="scratchpadCharCount">0 w · 0 c</span>
-        </div>
-    </div>
 
     <!-- Pomodoro Timer Widget -->
     <button class="pomodoroCont" id="pomodoroCont" type="button" aria-controls="pomodoroPanel" aria-expanded="false" style="display: none;">
@@ -237,12 +204,6 @@
         <div id="myntPomoExtras" hidden><div id="myntPomoMusicMount"></div></div>
         <div class="pomodoroSessionsToday">
             <span id="pomodoroSessionsLabel">Today</span>: <span id="pomodoroSessionsCount">0</span>
-        </div>
-        <div class="pomodoroFocusSummary">
-            <span id="pomodoroFocusMinutes">0 min</span>
-            <span aria-hidden="true">·</span>
-            <span id="pomodoroFocusStreak">0 day streak</span>
-            <button id="pomodoroStatsBtn" type="button">Stats</button>
         </div>
     </div>
 
@@ -789,35 +750,6 @@
 
             <!-- ____________end of clock______________ -->
 
-            <div class="ttteexxtt">
-                <div id="userText" contenteditable="true" spellcheck="false" role="textbox"
-                    aria-label="Editable home heading">What matters most today?</div>
-                <div id="dailyFocusActions" class="dailyFocusActions">
-                    <span id="dailyFocusStatus" role="status" aria-live="polite">Today’s focus</span>
-                    <span id="dailyFocusSubjectBadge" hidden></span>
-                    <span id="dailyFocusCounter" hidden>0/160</span>
-                    <button id="dailyFocusToggle" type="button" aria-pressed="false">Done</button>
-                    <span id="dailyFocusTools">
-                        <button id="dailyFocusPlayBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusPlay|Start a Pomodoro for this focus" data-focus-attr="title">▶</button>
-                        <button id="dailyFocusGptBtn" class="dailyFocusIcon" type="button" data-focus-title data-focus-i18n="dailyFocusGpt|Break down with ChatGPT" data-focus-attr="title">✦</button>
-                        <button id="dailyFocusMoreBtn" class="dailyFocusIcon" type="button" aria-expanded="false" aria-controls="dailyFocusPanel" data-focus-title data-focus-i18n="dailyFocusMore|Steps and subject" data-focus-attr="title">⋯</button>
-                    </span>
-                </div>
-                <div id="dailyFocusPanel" hidden>
-                    <div id="dailyFocusSubjects" role="group"></div>
-                    <ul id="dailyFocusSteps"></ul>
-                    <input id="dailyFocusStepInput" type="text" maxlength="80" autocomplete="off">
-                    <div class="dailyFocusRow">
-                        <button id="dailyFocusPasteToggle" type="button" data-focus-i18n="dailyFocusPasteToggle|Paste GPT answer">Paste GPT answer</button>
-                        <button id="dailyFocusDaidaiBtn" type="button" hidden data-focus-i18n="dailyFocusDaidai|Break down with DaiDai">Break down with DaiDai</button>
-                    </div>
-                    <div id="dailyFocusPasteWrap" hidden>
-                        <textarea id="dailyFocusPaste" data-focus-i18n="dailyFocusPastePlaceholder|Paste a numbered list (1. 2. 3.)" data-focus-attr="placeholder"></textarea>
-                        <div class="dailyFocusRow"><button id="dailyFocusPasteApply" type="button" data-focus-i18n="dailyFocusPasteApply|Turn into steps">Turn into steps</button></div>
-                    </div>
-                    <p id="dailyFocusNote" role="status" aria-live="polite" hidden></p>
-                </div>
-            </div>
         </div>
         <div id="date"></div>
         <!-- ---------end of leftDiv--------------- -->
@@ -922,7 +854,6 @@
                     </div>
                 </div>
             </div>
-            <div id="resultBox" class="resultBox bgLightTint" style="display: none;"></div>
             <!-- ----------end of searchbar-------------- -->
 
             <!-- Search Engine SVG Definitions -->
@@ -950,23 +881,6 @@
                 </div>
             </div>
             <!-- ----------end of search with------------- -->
-            <div class="quotesCont" id="motivationalQuotesCont">
-                <div class="quotesContainer">
-                </div>
-                <div class="authorWrapper">
-                    <div class="authorName"><span></span></div>
-                    <div class="qtRounder">
-                        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-                            <path class="lessDark targeted" d="M30 0L0 0C16.5685 0 30 13.4315 30 30L30 0Z" />
-                        </svg>
-                    </div>
-                    <div class="qtRounder2">
-                        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-                            <path class="lessDark targeted" d="M30 0L0 0C16.5685 0 30 13.4315 30 30L30 0Z" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
 
         </div>
         <!-- --------end of rightDiv---------------------- -->
@@ -1441,51 +1355,6 @@
                                         <button id="eventCountdownManage" class="settingsActionBtn" type="button">管理倒數</button>
                                     </div>
 
-                                    <div class="ttcont">
-                                        <div class="texts">
-                                            <div class="bigText" id="bongoCatText">Bongo Cat</div>
-                                            <div class="infoText" id="bongoCatInfo">Show Bongo Cat in bottom left</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="bongoCatCheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="ttcont unflex bongoCostumeHidden" id="bongoCatCostumeRow">
-                                        <div class="texts">
-                                            <div class="bigText" id="bongoCatCostumeText">Costume</div>
-                                        </div>
-                                        <div class="bongoCostumeGrid" id="bongoCostumeGrid">
-                                            <!-- 7 costume thumbnails generated by JS -->
-                                        </div>
-                                    </div>
-
-                                    <div class="ttcont unflex bongoCostumeHidden" id="bongoCatStyleRow">
-                                        <div class="texts">
-                                            <div class="bigText" id="bongoCatStyleText">Style</div>
-                                        </div>
-                                        <div class="bongoCostumeGrid" id="bongoStyleGrid">
-                                            <!-- 2 style thumbnails generated by JS -->
-                                        </div>
-                                    </div>
-
-                                                                        <div class="ttcont">
-                                        <div class="texts">
-                                            <div class="bigText" id="scratchpadText">Scratchpad</div>
-                                            <div class="infoText" id="scratchpadInfo">Quick notes and task drafting</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="scratchpadCheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-                                    <div class="ttcont bongoCostumeHidden" id="bongoCatPositionRow">
-                                        <div class="texts">
-                                            <div class="bigText" id="bongoCatResetPositionText">Reset Position</div>
-                                        </div>
-                                        <button class="resetbtn" id="bongoCatResetPositionBtn" style="width:auto; padding:6px 16px;">↺</button>
-                                    </div>
 
 
                                 </div>
@@ -1534,39 +1403,6 @@
                                             </div>
                                             <label class="switch">
                                                 <input id="12hourcheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
-
-                                        <div class="ttcont" id="greetingField">
-                                            <div class="texts">
-                                                <div class="bigText" id="greetingtitle">Greeting</div>
-                                                <div class="infoText" id="greetinginfo">Show greeting below custom text
-                                                </div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="greetingcheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
-
-                                        <div class="ttcont unflex" id="greetingNameField">
-                                            <div class="texts">
-                                                <label class="bigText" id="greetingNameTitle" for="greetingNameInput">Your name</label>
-                                                <div class="infoText" id="greetingNameInfo">Used only for your local greeting</div>
-                                            </div>
-                                            <input id="greetingNameInput" maxlength="30" autocomplete="off" spellcheck="false"
-                                                placeholder="What should this page call you?">
-                                        </div>
-
-                                        <div class="ttcont">
-                                            <div class="texts">
-                                                <div class="bigText" id="userTextTitle">Customizable Text</div>
-                                                <div class="infoText" id="userTextInfo">Show custom text below the clock
-                                                </div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="userTextCheckbox" type="checkbox">
                                                 <span class="toggle"></span>
                                             </label>
                                         </div>
@@ -1627,73 +1463,6 @@
                                             <input id="shortcut_switchcheckbox" type="checkbox">
                                             <span class="toggle"></span>
                                         </label>
-                                    </div>
-
-                                    <div class="ttcont" id="quotesToggle">
-                                        <div class="texts">
-                                            <div class="bigText" id="motivationalQuotesText">Motivational Quotes</div>
-                                            <div class="infoText" id="motivationalQuotesInfo">Show quotes below the
-                                                searchbar</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="motivationalQuotesCheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="quotesOptions">
-                                        <div class="ttcont" id="newQuoteOnRefreshToggle">
-                                            <div class="texts">
-                                                <div class="bigText" id="newQuoteOnRefreshText">Daily Quote</div>
-                                                <div class="infoText" id="newQuoteOnRefreshInfo">Show one quote per day
-                                                    instead of refreshing each time</div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="newQuoteOnRefreshCheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div class="ttcont" id="searchSuggestionsHeader">
-                                        <div class="texts">
-                                            <div class="bigText" id="search_suggestions_button">Search Suggestions</div>
-                                            <div class="infoText" id="search_suggestions_text">Enable search suggestions
-                                            </div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="searchsuggestionscheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="proxyOptions">
-                                        <div class="ttcont" id="proxybypassField">
-                                            <div class="texts">
-                                                <div class="bigText" id="useproxytitletext">Proxy Bypass</div>
-                                                <div class="infoText" id="useproxyText">If search suggestions aren't
-                                                    working</div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="useproxyCheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
-
-                                        <div class="ttcont unflex" id="proxyField">
-                                            <div class="texts">
-                                                <div class="bigText" id="ProxyText">CORS Bypass Proxy</div>
-                                                <div class="infoText" id="ProxySubtext">Add your own CORS bypass proxy
-                                                </div>
-                                            </div>
-                                            <input id="userproxy" placeholder="https://mynt-proxy.rhythmcorehq.com"
-                                                type="text">
-                                            <div class="bottom">
-                                                <a href="https://github.com/Minuga-RC/MYNT-CORS-Bypass-Proxy"
-                                                    id="HostproxyButton" target="_blank" rel="noopener noreferrer">Host your own proxy</a>
-                                                <button class="savebtn" id="saveproxy">Save</button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1992,7 +1761,7 @@
                                 <div class="ttcont controlCenterLaunch">
                                     <div class="texts">
                                         <div class="bigText" id="controlCenterText">Control Center</div>
-                                        <div class="infoText" id="controlCenterInfo">Focus, habits, privacy, accessibility, and service status</div>
+                                        <div class="infoText" id="controlCenterInfo">Workspaces, privacy, accessibility, and service status</div>
                                     </div>
                                     <button class="settingsActionBtn" id="openControlCenterBtn" type="button">Open</button>
                                 </div>
@@ -2076,16 +1845,6 @@
         </div>
     </div>
     <!-- ------end of Menu-bar----------- -->
-
-    <!-- BongoCat Widget -->
-    <div id="bongoCatWidget">
-        <div id="bongoCatDragHandle"></div>
-        <div id="bongoCatContainer">
-            <div id="bongoCatHead"></div>
-            <div id="bongoCatPawLeft"></div>
-            <div id="bongoCatPawRight"></div>
-        </div>
-    </div>
 
     <button id="serviceStatusPill" type="button" hidden aria-live="polite">
         <span class="serviceStatusDot" aria-hidden="true"></span>
@@ -2174,7 +1933,6 @@
         <div class="shortcutsHelpGrid">
             <div class="shortcutItem"><kbd>/</kbd><span id="shortcutSearchHelp">Focus search bar</span></div>
             <div class="shortcutItem"><kbd>Ctrl</kbd> + <kbd>K</kbd><span id="shortcutCmdHelp">Command Palette</span></div>
-            <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>S</kbd><span id="shortcutScratchpadHelp">Toggle Scratchpad</span></div>
             <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>P</kbd><span id="shortcutPomodoroHelp">Open Pomodoro timer</span></div>
             <div class="shortcutItem"><kbd>Alt</kbd> + <kbd>W</kbd><span id="shortcutWallpaperHelp">Next wallpaper</span></div>
             <div class="shortcutItem"><kbd>?</kbd><span id="shortcutHelpHelp">Shortcuts Guide</span></div>
@@ -2192,21 +1950,6 @@
         </header>
 
         <div class="controlCenterContent">
-            <section class="controlSection" id="focusStatsSection" aria-labelledby="focusStatsTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="focusStatsTitle">Focus statistics</h3>
-                        <p id="focusStatsInfo">Your completed Pomodoro work sessions from the last seven days.</p>
-                    </div>
-                </div>
-                <div class="focusStatGrid">
-                    <div class="focusStatCard"><strong id="focusMinutesValue">0</strong><span id="focusMinutesLabel">Minutes today</span></div>
-                    <div class="focusStatCard"><strong id="focusSessionsValue">0</strong><span id="focusSessionsValueLabel">Sessions today</span></div>
-                    <div class="focusStatCard"><strong id="focusStreakValue">0</strong><span id="focusStreakLabel">Day streak</span></div>
-                </div>
-                <div id="focusWeekChart" class="focusWeekChart" aria-label="Seven-day focus chart"></div>
-            </section>
-
             <section class="controlSection" id="workspaceSection" aria-labelledby="workspaceTitle">
                 <div class="controlSectionHeading">
                     <div>
@@ -2234,9 +1977,6 @@
                         <label><input type="checkbox" data-workspace-widget="pomodoroCheckbox"><span id="workspaceWidgetPomodoro">Pomodoro</span></label>
                         <label><input type="checkbox" data-workspace-widget="aiToolsCheckbox"><span id="workspaceWidgetAi">AI tools</span></label>
                         <label><input type="checkbox" data-workspace-widget="googleAppsCheckbox"><span id="workspaceWidgetGoogle">Google Apps</span></label>
-                        <label><input type="checkbox" data-workspace-widget="motivationalQuotesCheckbox"><span id="workspaceWidgetQuotes">Quotes</span></label>
-                        <label><input type="checkbox" data-workspace-widget="bongoCatCheckbox"><span id="workspaceWidgetBongo">Bongo Cat</span></label>
-                        <label><input type="checkbox" data-workspace-widget="scratchpadCheckbox"><span id="workspaceWidgetScratchpad">Scratchpad</span></label>
                     </fieldset>
                     <div class="workspaceEditorFields">
                         <label class="workspaceEditorField" for="workspaceBackgroundSelect">
@@ -2263,43 +2003,6 @@
                         <button id="workspaceSaveBtn" class="settingsActionBtn" type="submit">Save &amp; apply</button>
                     </div>
                 </form>
-            </section>
-
-            <section class="controlSection" id="habitsSection" aria-labelledby="habitsTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="habitsTitle">Daily habits</h3>
-                        <p id="habitsInfo">Pomodoro and completed tasks update automatically. Add up to 12 custom habits.</p>
-                    </div>
-                </div>
-                <form id="habitForm" class="habitForm">
-                    <label class="srOnly" for="habitInput" id="habitInputLabel">New habit</label>
-                    <input id="habitInput" maxlength="60" required autocomplete="off" placeholder="Add a daily habit...">
-                    <button type="submit" id="habitAddBtn">Add</button>
-                </form>
-                <ul id="habitList" class="habitList"></ul>
-            </section>
-
-            <section class="controlSection" id="daidaiIntegrationSection" aria-labelledby="daidaiIntegrationTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="daidaiIntegrationTitle">DaiDai integration</h3>
-                        <p id="daidaiIntegrationInfo">Let DaiDai read today's summary and propose changes for your approval.</p>
-                    </div>
-                    <span id="daidaiConnectionStatus" class="daidaiConnectionStatus" aria-live="polite">Disconnected</span>
-                </div>
-                <div class="daidaiConnectRow">
-                    <span>
-                        <strong id="daidaiConnectionTitle">Local connection</strong>
-                        <small id="daidaiConnectionInfo">Connects only to DaiDai on this computer.</small>
-                    </span>
-                    <button id="daidaiConnectBtn" class="settingsActionBtn" type="button">Connect DaiDai</button>
-                </div>
-                <ul class="privacyDisclosureList daidaiDisclosureList">
-                    <li id="daidaiDisclosureSummary">Shares today's task titles and status, focus minutes, and habits.</li>
-                    <li id="daidaiDisclosurePrivate">Scratchpad text is sent only when you press a DaiDai button; bookmarks and searches are never shared.</li>
-                    <li id="daidaiDisclosureApproval">Every proposed task or scratchpad change requires a preview and explicit confirmation.</li>
-                </ul>
             </section>
 
             <section class="controlSection" id="accessibilitySection" aria-labelledby="accessibilityTitle">
@@ -2342,10 +2045,6 @@
                         <span class="permissionControls"><em id="permissionBookmarksStatus">Checking...</em><button type="button" data-permission-action="bookmarks">Manage</button></span>
                     </div>
                     <div class="permissionRow">
-                        <span><strong id="permissionSuggestionsTitle">Google suggestions</strong><small id="permissionSuggestionsInfo">Send typed queries to Google only when suggestions are enabled.</small></span>
-                        <span class="permissionControls"><em id="permissionSuggestionsStatus">Checking...</em><button type="button" data-permission-action="suggestions">Manage</button></span>
-                    </div>
-                    <div class="permissionRow">
                         <span><strong id="permissionNotificationsTitle">Notifications</strong><small id="permissionNotificationsInfo">Show a local alert when a Pomodoro phase ends.</small></span>
                         <span class="permissionControls"><em id="permissionNotificationsStatus">Checking...</em><button type="button" data-permission-action="notifications">Request</button></span>
                     </div>
@@ -2357,8 +2056,7 @@
                 <ul class="privacyDisclosureList">
                     <li id="privacyDisclosureWeather">WeatherAPI receives your configured location and API key in HTTPS query parameters.</li>
                     <li id="privacyDisclosureIp">IPinfo receives your IP address when weather is on without manual location or GPS.</li>
-                    <li id="privacyDisclosureSearch">Google or your selected proxy receives search text only when suggestions are on.</li>
-                    <li id="privacyDisclosureLocal">Focus history, habits, accessibility, and workspace preferences stay in this browser.</li>
+                    <li id="privacyDisclosureLocal">Accessibility and workspace preferences stay in this browser.</li>
                 </ul>
             </section>
 
@@ -2373,43 +2071,6 @@
             </section>
         </div>
     </dialog>
-
-    <dialog id="focusHistoryDialog" class="myntDialog focusHistoryDialog" aria-labelledby="focusHistoryTitle">
-        <h2 id="focusHistoryTitle" data-focus-i18n="focusHistoryTitle|Focus history">Focus history</h2>
-        <ol id="focusHistoryList"></ol>
-        <details id="focusStatsDetails" class="focusStats">
-            <summary data-focus-i18n="focusSubjectHoursTitle|Weekly hours by subject">Weekly hours by subject</summary>
-            <ul id="focusStatsList"></ul>
-        </details>
-        <a id="focusExamLink" class="focusExamLink" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener" data-focus-i18n="focusExamLink|One past exam question today ↗">One past exam question today ↗</a>
-        <button id="focusHistoryClose" type="button" data-focus-i18n="focusHistoryClose|Close">Close</button>
-    </dialog>
-    <dialog id="daidaiActionDialog" class="myntDialog daidaiActionDialog" aria-labelledby="daidaiActionTitle" aria-describedby="daidaiActionWarning">
-        <header class="controlCenterHeader">
-            <div>
-                <span class="controlCenterEyebrow" id="daidaiActionEyebrow">DaiDai proposal</span>
-                <h2 id="daidaiActionTitle">Preview change</h2>
-            </div>
-        </header>
-        <div class="daidaiActionContent">
-            <h3 id="daidaiActionSummary"></h3>
-            <div class="daidaiActionDiff">
-                <div><span id="daidaiActionBeforeLabel">Current</span><pre id="daidaiActionBefore"></pre></div>
-                <div><span id="daidaiActionAfterLabel">After confirmation</span><pre id="daidaiActionAfter"></pre></div>
-            </div>
-            <p id="daidaiActionStale" class="daidaiActionStale" hidden></p>
-            <p id="daidaiActionWarning">Nothing changes until you confirm.</p>
-        </div>
-        <footer class="daidaiActionFooter">
-            <button id="daidaiActionRejectBtn" type="button">Reject</button>
-            <button id="daidaiActionConfirmBtn" class="settingsActionBtn" type="button">Confirm change</button>
-        </footer>
-    </dialog>
-
-    <div id="daidaiActionToast" class="daidaiActionToast" role="status" aria-live="polite" hidden>
-        <span id="daidaiActionToastText">Change applied.</span>
-        <button id="daidaiActionUndoBtn" type="button">Undo</button>
-    </div>
 
     <div id="examDaily" class="examDaily" hidden>
         <button id="examDailyChip" class="examDailyChip" type="button" aria-expanded="false" aria-controls="examDailyPanel"><span aria-hidden="true">📝</span><span id="examDailyChipText">今日考古題</span></button>
