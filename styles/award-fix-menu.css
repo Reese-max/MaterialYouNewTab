@@ -449,13 +449,3 @@ html.black-theme #menuCont .themeSegment {
 		transition: none;
 	}
 }
-
-/* 桌布按鈕列：主題藍字在白底約 3.6:1、白字在主題藍底約 3.3:1，未達 AA；改用
-   --darkerColor-blue 與黑色 75% 混色（黃、橘、蜜桃等淺主題色也 ≥4.5:1）。「取消套用背景」不在按鈕內斷行（原本被擠成三行）；放不下時整顆換到下一列。 */
-html:not(.black-theme) .uploadButton:not(:hover, :active),
-html:not(.black-theme) .randomButton:not(:hover, :active) { color: color-mix(in srgb, var(--darkerColor-blue) 75%, #000); }
-html:not(.black-theme) .clearButton:not(:hover, :active) { background-color: color-mix(in srgb, var(--darkerColor-blue) 75%, #000); color: #ffffff; }
-.uploadClearContainer { flex-wrap: wrap; }
-.uploadClearContainer .uploadButton { flex: 1 1 8rem; }
-/* 平常單行；只有整列都放不下時（極窄或高倍縮放）才在按鈕內換行。 */
-.clearButton { flex: 1 1 auto; min-width: min(100%, max-content); padding-inline: 16px; }
