@@ -229,6 +229,7 @@ async function testTreeAndNavigation(kind) {
     app.id('bookmarkSearch').value = '繁體'; app.id('bookmarkSearch').emit('input'); await app.tick(120);
     assert.equal(app.state(), 'content'); assert.equal(app.id('bookmarkList').children.length, 1);
     const found = app.id('bookmarkList').all().filter(node => node.className === 'bookmark-item'); assert.equal(found.length, 1); assert.equal(found[0].dataset.id, '12');
+    assert.equal(found[0].children[0].children[1].children[1].textContent, 'beta.example · 工作', 'Search results name the folder');
     assert.equal(found[0].children[0].href, 'https://beta.example/', 'Open uses the verified anchor URL; no actual navigation in this mock');
     app.id('bookmarkSearch').value = 'ALPHA.EXAMPLE'; app.context.renderBookmarks(); assert.equal(app.id('bookmarkList').all().filter(node => node.className === 'bookmark-item')[0].dataset.id, '11');
     app.id('bookmarkSearch').value = 'no-fixture-matches'; app.context.renderBookmarks(); assert.equal(app.state(), 'search-empty'); assert.equal(app.id('bookmarkAddButton').disabled, false);

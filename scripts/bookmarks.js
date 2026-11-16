@@ -563,7 +563,9 @@ function createBookmarkItem(node) {
     const title = document.createElement("strong");
     title.textContent = node.title || safeHostname(node.url);
     const url = document.createElement("small");
-    url.textContent = safeHostname(node.url);
+    // Search results also name the folder, so same-named bookmarks can be told apart.
+    const folder = bookmarkSearch.value.trim() ? bookmarkNodeMap.get(String(node.parentId))?.title : "";
+    url.textContent = folder ? `${safeHostname(node.url)} · ${folder}` : safeHostname(node.url);
     copy.append(title, url);
     link.append(favicon, copy);
     item.append(link, createBookmarkActions(node));
