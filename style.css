@@ -5086,6 +5086,11 @@ option:checked {
 	background-color: var(--darkerColor-blue);
 }
 
+/* The unfilled track was white on the near-white panel; tint it so the slider's range reads (light theme only). */
+:root:not(.black-theme) .opacityBar .thinLine {
+	background-color: color-mix(in srgb, var(--textColorDark-blue) 22%, var(--whitishColor-blue));
+}
+
 /* The percentage sits on the slider fill: the darker blue keeps it readable. */
 :root:not(.black-theme) #opacitySlider {
 	background-color: var(--darkerColor-blue);
