@@ -2531,7 +2531,8 @@ body[data-bg="wallpaper"] .opacityBarControl {
 	opacity: 1;
 	transform: translateY(0);
 	pointer-events: auto;
-	max-height: 150px;
+	/* Room for the adaptive-opacity row that adaptive-background.js adds; 150px clipped the slider. */
+	max-height: 320px;
 	overflow: hidden;
 	margin-top: 20px;
 	border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -2629,8 +2630,29 @@ body[data-bg="wallpaper"] .humidityBar .thinLine {
 }
 
 #opacityTextContainer {
+	flex-wrap: wrap;
 	border-bottom: 0;
 	padding: 8px 4px 6px;
+}
+
+/* Same row as the adaptive panel's checkboxes: box and text on one line (not the .ttcont text-input style). */
+#opacityTextContainer > label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding-top: 8px;
+	color: var(--textColorDark-blue);
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+#opacityTextContainer > label > input {
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--darkColor-blue);
 }
 /* End of _____________________- */
 
@@ -5022,8 +5044,56 @@ option:checked {
 /* Upload/Clear Buttons */
 .uploadClearContainer {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 10px;
+}
+
+/* Labels stay on one line: the row wraps instead of squeezing "Stop using background" into a column. */
+.uploadClearContainer .uploadButton {
+	flex: 1 1 auto;
+	width: auto;
+	min-width: 0;
+	white-space: nowrap;
+}
+
+/* Upload is the one filled action. --darkerColor-blue keeps white text >=4.5:1 (#4382ec gave 3.7:1). */
+.uploadClearContainer .uploadButton {
+	color: var(--whitishColor-blue);
+	background-color: var(--darkerColor-blue);
+}
+
+.uploadClearContainer .uploadButton:hover {
+	color: var(--whitishColor-blue);
+	background-color: color-mix(in srgb, var(--darkerColor-blue) 82%, black);
+}
+
+.uploadClearContainer .randomButton {
+	color: var(--darkerColor-blue);
+}
+
+/* Upload is the primary action; clearing the background is secondary, in the random button's white style. */
+.uploadClearContainer .clearButton {
+	flex: 1 0 auto;
+	white-space: nowrap;
+	color: var(--darkerColor-blue);
+	background-color: var(--whitishColor-blue);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.uploadClearContainer .clearButton:hover {
+	color: var(--whitishColor-blue);
+	background-color: var(--darkerColor-blue);
+}
+
+/* The unfilled track was white on the near-white panel; tint it so the slider's range reads (light theme only). */
+:root:not(.black-theme) .opacityBar .thinLine {
+	background-color: color-mix(in srgb, var(--textColorDark-blue) 22%, var(--whitishColor-blue));
+}
+
+/* The percentage sits on the slider fill: the darker blue keeps it readable. */
+:root:not(.black-theme) #opacitySlider {
+	background-color: var(--darkerColor-blue);
 }
 
 .uploadButton {
@@ -6022,6 +6092,10 @@ body[data-bg="wallpaper"] .dropdown-content {
 
 .black-theme .clearButton {
 	color: var(--textColorDark-dark);
+}
+
+.black-theme .uploadClearContainer .clearButton {
+	background-color: var(--darkColor-blue);
 }
 
 .black-theme .clearButton:hover {

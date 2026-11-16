@@ -403,7 +403,8 @@ function applyLanguage(lang) {
         { id: "settingsGroupTabs", key: "settingsGroupLabel" },
         { id: "clearSearchButton", key: "clearBookmarkSearchLabel", title: true },
         { id: "newShortcutButton", key: "addShortcutLabel", title: true },
-        { id: "resetButton", key: "resetShortcutsLabel", title: true }
+        { id: "resetButton", key: "resetShortcutsLabel", title: true },
+        { id: "randomImageTrigger", key: "commandWallpaperRandom", title: true }
     ];
     accessibleLabelMap.forEach(({ id, key, title }) => {
         const element = document.getElementById(id);
