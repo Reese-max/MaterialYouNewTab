@@ -382,6 +382,11 @@
 @media (hover: none) {
     #bookmarkSidebar .bookmark-action-menu > summary,
     #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary { opacity: 1; }
+    /* Always visible on touch, so keep it in the card corner instead of over the site icon (28px >= 24px target). */
+    #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary {
+        inline-size: 28px; block-size: 28px; min-inline-size: 28px; min-block-size: 28px; padding: 0;
+        inset-block-start: 2px; inset-inline-end: 2px;
+    }
 }
 @media (max-width: 480px) {
     #bookmarkSidebar { inline-size: 100vw; border-radius: 0; }
