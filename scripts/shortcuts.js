@@ -326,6 +326,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const iconInput = entry.querySelector(".iconURL");
         entry.querySelector(".shortcutName").value = String(name || "");
         entry.querySelector(".URL").value = String(url || "");
+        // The placeholder disappears once a value exists, so the fields keep a programmatic name.
+        entry.querySelector(".shortcutName").setAttribute("aria-label", PLACEHOLDER.inputName);
+        entry.querySelector(".URL").setAttribute("aria-label", PLACEHOLDER.inputUrl);
         iconInput.value = String(iconUrl || "");
         iconInput.type = "hidden";
         const deleteBtn = entry.querySelector(".shortcutDelete button");

@@ -4695,6 +4695,20 @@ input:checked + .toggle:before {
 	}
 }
 
+/* Below ~360px the name column shrinks to ~110px: move the actions under the content so the URL stays readable. */
+@media (max-width: 360px) {
+	.shortcutSettingsEntry {
+		flex-wrap: wrap;
+	}
+
+	.shortcutSettingsEntry .shortcutActions {
+		flex-basis: 100%;
+		grid-template-columns: repeat(4, 44px);
+		justify-content: end;
+		margin: 8px 0 0;
+	}
+}
+
 /* Drag and drop styles */
 .shortcutSettingsEntry.dragging {
 	opacity: 0.5;
