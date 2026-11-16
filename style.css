@@ -4547,11 +4547,24 @@ input:checked + .toggle:before {
 }
 
 .shortcutSettingsEntry input {
-	width: 100%;
+	box-sizing: border-box;
+	/* Inline padding gives focus a rounded box; the negative margin keeps the text where it was. */
+	width: calc(100% + 6px);
+	padding: 2px 6px;
+	margin-inline-start: -6px;
+	border-radius: 6px;
 	background: none;
 	border: none;
 	color: var(--textColorDark-blue);
 	text-overflow: ellipsis;
+}
+
+.shortcutSettingsEntry input:focus-visible {
+	/* Theme blue darkened toward the text color: >=3:1 against the card (3.6:1 on the blue theme). */
+	outline: 2px solid color-mix(in srgb, var(--darkColor-blue) 70%, var(--textColorDark-blue));
+	/* Inset so the ring stays clear of the globe icon and the icon picker. */
+	outline-offset: -2px;
+	background: rgba(255, 255, 255, 0.55);
 }
 
 .shortcutSettingsEntry input:hover {
@@ -4569,8 +4582,8 @@ input:checked + .toggle:before {
 }
 
 .shortcutSettingsEntry .URL {
+	min-height: 24px;
 	font-size: 0.76rem;
-	opacity: 0.9;
 }
 
 .shortcutSettingsEntry .iconURL {
@@ -4580,13 +4593,13 @@ input:checked + .toggle:before {
 
 .shortcutSettingsEntry input::placeholder {
 	color: var(--textColorDark-blue);
-	opacity: 0.6;
+	opacity: 0.75;
 }
 
 .shortcutInputRow {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 8px;
 }
 
 .shortcutInputRow:last-child {
@@ -4622,6 +4635,89 @@ input:checked + .toggle:before {
 	outline: 1px solid #d32f2f;
 	outline-offset: 1px;
 	border-radius: 2px;
+}
+
+/* The icon picker is a quiet tonal chip in the row actions' surface, not an outlined button. */
+.shortcutSettingsEntry .quicklinkChooseIcon {
+	/* Name and URL are one group; the icon picker starts the next, clear of the URL focus ring. */
+	margin-top: 8px;
+	border-color: transparent;
+	border-radius: 12px;
+	padding: 8px 12px 8px 10px;
+	background: rgba(255, 255, 255, 0.4);
+	transition: 0.3s background;
+}
+
+.shortcutSettingsEntry .quicklinkChooseIcon:hover {
+	background: rgba(255, 255, 255, 0.7);
+}
+
+/* A draft without a URL has no icon yet: show an empty slot instead of a gap. */
+.shortcutSettingsEntry .quicklinkChoosePreview:empty {
+	box-sizing: border-box;
+	border: 1.5px dashed currentColor;
+	border-radius: 50%;
+	opacity: 0.5;
+}
+
+/* A hairline under the sticky top bar so scrolled rows read as passing beneath it, not cut in half. */
+#shortcutEditPage .topBar {
+	box-shadow: 0 1px 0 color-mix(in srgb, var(--textColorDark-blue) 12%, transparent);
+}
+
+/* The italic hint's last glyph overhangs its box; keep the ink inside so the sticky top bar covers it when scrolled. */
+#editShortcutsListInfo {
+	padding-inline-end: 4px;
+}
+
+/* Undo sits apart from the list in the rows' tonal language, with body-text contrast. */
+#shortcutEditPage .myntRecoveryControl {
+	margin-block: 8px 16px;
+}
+
+#shortcutEditPage .myntRecoveryUndo {
+	min-height: 40px;
+	padding: 8px 14px;
+	border-color: transparent;
+	border-radius: 12px;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	transition: 0.3s background, 0.3s color;
+}
+
+#shortcutEditPage .myntRecoveryUndo:not(:disabled):hover {
+	background: var(--darkColor-blue);
+	color: white;
+}
+
+.black-theme #shortcutEditPage .myntRecoveryUndo {
+	background: #232221;
+}
+
+.black-theme #shortcutEditPage .myntRecoveryUndo:not(:disabled):hover {
+	background: #404040;
+}
+
+@media (forced-colors: active) {
+	.shortcutSettingsEntry .quicklinkChooseIcon,
+	#shortcutEditPage .myntRecoveryUndo {
+		border-color: ButtonText;
+	}
+}
+
+/* Below ~360px the name column shrinks to ~110px: move the actions under the content so the URL stays readable. */
+@media (max-width: 360px) {
+	.shortcutSettingsEntry {
+		flex-wrap: wrap;
+	}
+
+	.shortcutSettingsEntry .shortcutActions {
+		flex-basis: 100%;
+		grid-template-columns: repeat(4, 44px);
+		justify-content: start;
+		/* Line up with the name and icon picker: grip column (32px) + input group margin (5px). */
+		margin: 8px 0 0 37px;
+	}
 }
 
 /* Drag and drop styles */
@@ -4672,25 +4768,41 @@ input:checked + .toggle:before {
 	transform: none;
 }
 
+/* Four row actions share one size and surface in a 2x2 grid, leaving width for the name and URL. */
 .shortcutActions {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
+	display: grid;
+	grid-template-columns: repeat(2, 44px);
+	gap: 4px;
+	flex: none;
 	margin-inline-start: 8px;
 }
 
-.shortcutMoveUp, .shortcutMoveDown {
-	width: 32px;
-	height: 32px;
-	border: none;
-	border-radius: 7px;
-	background: var(--bg-color-blue);
-	color: var(--textColorDark-blue);
-	cursor: pointer;
+.shortcutDelete {
+	display: flex;
 }
-.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { opacity: 0.4; cursor: default; }
-.shortcutMoveUp:focus-visible, .shortcutMoveDown:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.shortcutActions svg {
+	width: 20px;
+	height: 20px;
+}
+
+.shortcutMoveUp, .shortcutMoveDown {
+	width: 44px;
+	height: 44px;
+	border: none;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.4);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	transition: 0.3s all;
+}
+.shortcutMoveUp:not(:disabled):hover, .shortcutMoveDown:not(:disabled):hover { color: white; background: var(--darkColor-blue); }
+/* Disabled keeps its container so the slot stays visible (also on the dark theme); only the glyph fades. */
+.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { color: color-mix(in srgb, var(--textColorDark-blue) 45%, transparent); cursor: default; }
+.shortcutActions button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .shortcutDelete button,
 .uploadCustomIconButton {
@@ -4698,11 +4810,11 @@ input:checked + .toggle:before {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 42px;
-	height: 42px;
+	width: 44px;
+	height: 44px;
 	background: rgba(255, 255, 255, 0.4);
 	border: none;
-	border-radius: 7px;
+	border-radius: 12px;
 	cursor: pointer;
 	transition: 0.3s all;
 }
@@ -6227,10 +6339,20 @@ body[data-bg="wallpaper"] .dropdown-content {
 	background-color: var(--bg-color-dark);
 }
 
+.black-theme .shortcutSettingsEntry .quicklinkChooseIcon {
+	background: #232221;
+}
+
+.black-theme .shortcutSettingsEntry .quicklinkChooseIcon:hover {
+	background: #404040;
+}
+
 .black-theme #resetButton,
 .black-theme #newShortcutButton,
 .black-theme .shortcutDelete button,
-.black-theme .uploadCustomIconButton {
+.black-theme .uploadCustomIconButton,
+.black-theme .shortcutMoveUp,
+.black-theme .shortcutMoveDown {
 	background: #232221;
 }
 
@@ -6241,7 +6363,9 @@ body[data-bg="wallpaper"] .dropdown-content {
 }
 
 .black-theme .uploadCustomIconButton:hover,
-.black-theme .shortcutDelete button:hover {
+.black-theme .shortcutDelete button:hover,
+.black-theme .shortcutMoveUp:not(:disabled):hover,
+.black-theme .shortcutMoveDown:not(:disabled):hover {
 	background: #404040;
 }
 
