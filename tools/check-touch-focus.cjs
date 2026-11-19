@@ -87,4 +87,22 @@ assert.match(css, /body\.myntTouchFocus #myntTouchFocus/, 'stage styles must be 
 assert.match(css, /\.tfSheet\.tfOpen/, 'expanded sheet state must be class-driven for the transition');
 assert.match(css, /\.tfSheet:not\(\.tfOpen\) \.tfSheetBody/, 'collapsed sheet content must be removed from the a11y/keyboard tree');
 
+// --- 10. 輪次與計時數字：tabular-nums 與一致的斜線間距 ---
+assert.ok(
+    /\.tfTime\s*\{[^}]*font-variant-numeric:\s*tabular-nums/.test(css) &&
+    /\.tfMeta\s*\{[^}]*font-variant-numeric:\s*tabular-nums/.test(css),
+    'timer digits and round/session digits must use tabular-nums'
+);
+assert.ok(
+    en.includes('"tfRoundFmt": "Round {n} / {t}"') && zh.includes('"tfRoundFmt": "第 {n} / {t} 輪"'),
+    'round format must keep one consistent space on each side of the slash'
+);
+
+// --- 11. 全畫面桌布遮罩與共用 surface ---
+assert.match(css,
+    /#myntTouchFocus\s*\{[^}]*background:\s*linear-gradient\([^;]*rgba\(0,\s*0,\s*0/,
+    'stage must carry a full-screen dark gradient mask over the wallpaper');
+assert.ok((css.match(/background:\s*var\(--tf-surface\)/g) || []).length >= 3,
+    'timer card, todo card and date pill must share the same surface');
+
 console.log('check-touch-focus: all assertions passed');
