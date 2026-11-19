@@ -87,14 +87,14 @@ assert.match(css, /body\.myntTouchFocus #myntTouchFocus/, 'stage styles must be 
 assert.match(css, /\.tfSheet\.tfOpen/, 'expanded sheet state must be class-driven for the transition');
 assert.match(css, /\.tfSheet:not\(\.tfOpen\) \.tfSheetBody/, 'collapsed sheet content must be removed from the a11y/keyboard tree');
 
-// --- 10. 計時數字用 tabular-nums（倒數時寬度不跳）；輪次是靜態文字，不用（Poppins 等寬「1」會黏斜線）---
+// --- 10. 計時數字用 tabular-nums（倒數時寬度不跳）；輪次是靜態文字，不需要 ---
 assert.ok(
     /\.tfTime\s*\{[^}]*font-variant-numeric:\s*tabular-nums/.test(css) &&
     !/\.tfMeta\s*\{[^}]*font-variant-numeric:\s*tabular-nums/.test(css),
     'timer digits must use tabular-nums; the round/session line must not'
 );
 assert.ok(
-    en.includes('"tfRoundFmt": "Round {n} / {t}"') && zh.includes('"tfRoundFmt": "第 {n} / {t} 輪"'),
+    en.includes('"tfRoundFmt": "Round {n} of {t}"') && zh.includes('"tfRoundFmt": "第 {n} 輪，共 {t} 輪"'),
     'round format must keep one consistent space on each side of the slash'
 );
 

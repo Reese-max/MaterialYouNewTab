@@ -23,7 +23,7 @@ const en = {
     "tfHandleCollapse": "Collapse search, shortcuts and to-do",
     "tfFocusLabel": "Focus timer",
     "tfResume": "Resume",
-    "tfRoundFmt": "Round {n} / {t}",
+    "tfRoundFmt": "Round {n} of {t}",
     "tfSessionsFmt": "{n} focus sessions today",
     "componentsTitle": "Manage components",
     "componentsInfo": "Show or hide home components without deleting data. Settings remains available.",

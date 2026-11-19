@@ -23,7 +23,7 @@ const zh_TW = {
     "tfHandleCollapse": "收合搜尋、捷徑與待辦",
     "tfFocusLabel": "專注計時器",
     "tfResume": "繼續",
-    "tfRoundFmt": "第 {n} / {t} 輪",
+    "tfRoundFmt": "第 {n} 輪，共 {t} 輪",
     "tfSessionsFmt": "今日專注 {n} 次",
     "componentsTitle": "元件管理",
     "componentsInfo": "顯示或隱藏首頁元件，不刪除資料，設定入口永遠可用。",

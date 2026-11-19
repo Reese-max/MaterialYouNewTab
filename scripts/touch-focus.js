@@ -129,7 +129,7 @@
         const remain = Math.max(0, Math.ceil(state.timeRemaining));
         els.time.textContent = Math.floor(remain / 60) + ":" + String(remain % 60).padStart(2, "0");
         els.phase.textContent = phaseLabel(state.phase);
-        els.round.textContent = fmt("tfRoundFmt", "Round {n} / {t}",
+        els.round.textContent = fmt("tfRoundFmt", "Round {n} of {t}",
             { n: state.currentRound, t: state.settings?.roundsBeforeLong ?? 4 });
 
         if (state.sessionId !== lastSessionId) {
