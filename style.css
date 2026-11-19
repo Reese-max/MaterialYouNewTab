@@ -5284,6 +5284,8 @@ body[data-bg="wallpaper"] .dropdown-content {
 	height: 33px;
 	margin-inline-start: 0;
 	padding: 4px;
+	/* 含 padding 計入總尺寸：視覺圓維持 33px，不再超出 30px 的 .searchIcon 容器 */
+	box-sizing: border-box;
 	background-color: var(--darkColor-blue);
 	fill: white;
 	border-radius: 100%;

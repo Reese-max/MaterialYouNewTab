@@ -12,6 +12,11 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
+    <meta name="theme-color" content="#BBD6FD">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MYNT">
+    <link rel="apple-touch-icon" href="./favicon/icon48.png">
     <meta name="google-site-verification" content="j8K161R-W9yVVDoylaoPd2twGbjToAC3EzAFfZU1YOY" />
     <title>新分頁</title>
     <script src="scripts/restore-guard.js"></script>
@@ -64,6 +69,7 @@
     <script defer src="scripts/pomodoro-float.js"></script>
     <script defer src="scripts/pomodoro-music.js"></script>
     <script defer src="scripts/pomodoro-studio.js"></script>
+    <script defer src="scripts/touch-focus.js"></script>
     <link href="styles/pomodoro-studio.css" rel="stylesheet">
     <link href="styles/pomodoro-float.css" rel="stylesheet">
     <link href="styles/pomodoro-music.css" rel="stylesheet">
@@ -92,6 +98,7 @@
     <link href="styles/manual-editor-controls.css" rel="stylesheet">
     <link href="styles/award.css" rel="stylesheet">
     <link href="styles/centered-home.css" rel="stylesheet">
+    <link href="styles/touch-focus.css" rel="stylesheet">
     <link href="styles/bookmarks-panel.css" rel="stylesheet">
     <script defer src="scripts/adaptive-core.js"></script>
     <script defer src="scripts/adaptive-background.js"></script>
@@ -2105,6 +2112,34 @@
     <button id="menuButton" type="button" aria-controls="menuBar" aria-expanded="false">
         <span class="tooltip-text homeActionHint" id="settingsHintText">Settings</span>
     </button>
+
+    <!-- Touch focus stage: only revealed and populated on coarse-pointer devices by scripts/touch-focus.js -->
+    <div id="myntTouchFocus" hidden>
+        <main class="tfHero" id="tfHero">
+            <p class="tfDate" id="tfDate"></p>
+            <div class="tfFocusGroup">
+                <p class="tfPhase" id="tfPhase" aria-live="polite"></p>
+                <p class="tfTime" id="tfTime" role="timer">--:--</p>
+                <p class="tfMeta"><span class="tfRound" id="tfRound"></span><span class="tfDot" aria-hidden="true">·</span><span class="tfSessions" id="tfSessions"></span></p>
+                <div class="tfActions">
+                    <button class="tfPrimary" id="tfToggleBtn" type="button"></button>
+                    <button class="tfSecondary" id="tfResetBtn" type="button"></button>
+                </div>
+            </div>
+            <div class="tfTodoCard" id="tfTodoCard" hidden>
+                <h2 class="tfTodoTitle" id="tfTodoTitle"></h2>
+                <ul class="tfTodoList" id="tfTodoList"></ul>
+            </div>
+        </main>
+        <div class="tfScrim" id="tfScrim" hidden></div>
+        <section class="tfSheet" id="tfSheet">
+            <button class="tfSheetHandle" id="tfSheetHandle" type="button" aria-expanded="false" aria-controls="tfSheetBody">
+                <span class="tfSheetGrip" aria-hidden="true"></span>
+                <span class="tfSheetLabel" id="tfSheetLabel"></span>
+            </button>
+            <div class="tfSheetBody" id="tfSheetBody" tabindex="-1"></div>
+        </section>
+    </div>
     <!-- ending-of-body -->
 
 </body>
