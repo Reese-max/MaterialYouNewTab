@@ -104,7 +104,7 @@ body.myntTouchFocus .tfMeta {
     font-size: 0.9rem;
     font-weight: 500;
     opacity: 0.92;
-    font-variant-numeric: tabular-nums;
+    /* 輪次是靜態文字，不用等寬數字：Poppins 的等寬「1」兩側留白不均，會黏到斜線 */
     /* 關掉 CJK–Latin 自動間距，斜線兩側只吃字串裡明確的空格 */
     text-autospace: no-autospace;
 }
