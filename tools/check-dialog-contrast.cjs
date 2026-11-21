@@ -29,4 +29,28 @@ assert.match(css, /html\.myntHighContrast\.black-theme :is\(\.controlSettingRow 
 assert.match(css, /html\.myntHighContrast\.black-theme :is\(\.controlSectionHeading a, \.sectionStatus\) \{\s*color: LinkText;/);
 // Black theme: the workspace URL list matches the other editor fields.
 assert.match(css, /\.black-theme \.workspaceEditorField select,\n\.black-theme \.workspaceEditorField textarea \{\s*background: rgba\(255, 255, 255, 0\.08\);/);
-console.log('DIALOG_CONTRAST_OK: dark-mode control center surfaces, dark status/danger colours, dark dialog headers, black-theme high contrast fields and editor URL list');
+
+// Light themes: one accent ink for text on tints and fills under white text (AA in every colour theme).
+assert.match(css, /--mynt-accent-ink: color-mix\(in srgb, var\(--darkerColor-blue\) 70%, #000\);/, 'Shared accent ink token');
+const polish = read('styles/award-fix-dialog-polish.css'), home = read('styles/award-fix-home-polish.css');
+const lightDialogs = polish.slice(polish.indexOf('html:not(.black-theme, .myntHighContrast):not(:has(.menuBar'));
+for (const part of ['.controlCenterEyebrow', '.workspaceLaunchBtn', '#aiToolsForm .ai-tool-reorder button:not(:disabled)', '.floating-label-field label'])
+    assert.ok(lightDialogs.includes(part), `Light dialogs use the accent ink for ${part}`);
+// Primary vs secondary: Save is filled, Reset/Cancel are outlined, in light, dark and black.
+assert.match(lightDialogs, /:is\(#aiToolsSettingsModal \.ai-save-button, #saveBookmarkChanges\) \{\s*background: var\(--mynt-accent-ink\);\s*color: #ffffff;/);
+assert.match(lightDialogs, /:is\(#aiToolsSettingsModal \.ai-reset-button, #cancelBookmarkEdit\) \{\s*background: transparent;/);
+const darkRest = dark.slice(dark.indexOf('7. 深色模式其餘對話框'));
+for (const part of ['#aiToolsSettingsModal, #editBookmarkModal', '.commandPaletteItem', '.shortcutItem', '.studyQuotesDialog :is(.sqSearch, .sqFilter, .sqInput)', '#cancelBookmarkEdit'])
+    assert.ok(darkRest.includes(part), `Dark mode covers ${part}`);
+assert.match(darkRest, /html\.black-theme:not\(\.myntHighContrast\) \{\s*& :is\(#aiToolsSettingsModal \.ai-save-button, #saveBookmarkChanges\) \{\s*background: #e3e3e3;/, 'Black theme separates primary and secondary buttons');
+// Home: weather fills, the droplet (pseudo-elements cannot sit inside :is()) and the toast title.
+assert.match(home, /& :is\(\.tilesContainer \.location, \.humidityBar \.slider, \.opacityBar \.opacitySlider\) \{\s*background-color: var\(--mynt-accent-ink\);/);
+assert.match(home, /& \.humidityBar::after \{\s*background-color: var\(--mynt-accent-ink\);/);
+assert.match(home, /& \.toast-title \{\s*color: var\(--mynt-accent-ink\);/);
+assert.doesNotMatch(home + polish + dark, /:is\([^)]*::(after|before)/, 'Pseudo-elements never sit inside :is()');
+// Layout: the launch button aligns with Edit; reorder arrows fill their 44px targets.
+assert.match(polish, /#controlCenterDialog \.workspacePresetCard \.workspaceLaunchBtn \{\s*position: absolute;\s*inset-inline-end: 12px;\s*bottom: 12px;/);
+assert.match(polish, /#aiToolsForm \.ai-tool-reorder button \{\s*font-size: 1\.15rem;/);
+assert.match(polish, /#controlCenterDialog \.workspaceHeadingActions \.sectionStatus \{\s*white-space: nowrap;/, 'The applied-mode status never breaks one character per line');
+for (const marker of ['--mynt-accent-ink', '.commandPaletteItem', '#e3e3e3']) assert.ok(bundle.includes(marker), `Award bundle carries ${marker}`);
+console.log('DIALOG_CONTRAST_OK: dark-mode control center and dialogs, accent ink on light surfaces, primary/secondary buttons, home accent fills, status/danger colours, black-theme high contrast fields, card and reorder layout');
