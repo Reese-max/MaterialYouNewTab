@@ -43,16 +43,32 @@
 #aiToolsForm .ai-tool-controls { display: flex; align-items: center; flex: 1; min-width: 0; gap: 6px; }
 #aiToolsForm .ai-tool-controls label { display: flex; align-items: center; overflow-wrap: anywhere; }
 #aiToolsForm .ai-tool-reorder { flex-shrink: 0; }
+/* User-added AI tools: delete, add and status share the editor's 44px targets and outline focus. */
+.aiToolDelete { min-width: 44px; min-height: 44px; border: 1px solid currentColor; border-radius: 12px; padding: 8px; background: transparent; color: #a3261c; font: inherit; cursor: pointer; }
+.black-theme .aiToolDelete { color: #f2b8b5; }
+#aiToolsSettingsModal .ai-add-button { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: calc(100% - 4px); min-height: 44px; margin-block-start: 10px; padding: 8px 12px; border: 1px dashed currentColor; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+#aiToolsSettingsModal .ai-add-button:disabled { opacity: .55; cursor: not-allowed; }
+#aiToolsSettingsModal .ai-tools-status { margin: 8px 0 0; font-size: .85rem; overflow-wrap: anywhere; }
+#aiToolsSettingsModal .ai-tools-status:empty { display: none; }
+.aiToolDelete:focus-visible, #aiToolsSettingsModal .ai-add-button:focus-visible, #aiToolsShortcutManage:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+.aiToolsShortcutCard { box-sizing: border-box; margin: 16px 0 8px; padding: 14px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); background: color-mix(in srgb, currentColor 6%, transparent); overflow-wrap: anywhere; }
+.aiToolsShortcutCardTitle { margin: 0; font-size: 1rem; font-weight: 600; }
+.aiToolsShortcutCardInfo { margin: 6px 0 12px; font-size: .88rem; line-height: 1.5; }
+#aiToolsShortcutManage { min-height: 44px; padding: 8px 18px; border: 0; border-radius: 999px; background: var(--darkColor-blue); color: var(--whitishColor-blue); font: inherit; cursor: pointer; }
+#aiToolsShortcutManage:hover { background: var(--darkerColor-blue); }
 .black-theme .quicklinkIconDialog { color: var(--textColorDark-dark, #d6d6d6); background: var(--bg-color-dark, #171615); }
 .black-theme .quicklinkIconDialog button, .black-theme .quicklinkIconDialog input, .black-theme .quicklinkIconPreview { background: var(--accentLightTint-dark, #3c3c3c); color: inherit; }
 .black-theme .quicklinkIcon-icon { color: var(--textColorDark-dark, #d6d6d6); }
 @media (max-width: 500px) {
     #aiToolsSettingsModal { padding: 16px; }
+    /* User rows carry a fourth button; give the name its own line instead of breaking it mid-word. */
+    #aiToolsForm .ai-tool-user .ai-tool-controls { flex-basis: 100%; }
+    #aiToolsForm .ai-tool-user .ai-tool-reorder { margin-inline-start: auto; }
     .quicklinkIconDialog { padding: 16px; }
     .quicklinkIconTabs button { flex: 1 0 auto; }
 }
 @media (forced-colors: active) {
-    .quicklinkIconDialog, .quicklinkIconDialog button, .quicklinkChooseIcon, .aiToolCustomFields input { border: 1px solid ButtonText; }
+    .quicklinkIconDialog, .quicklinkIconDialog button, .quicklinkChooseIcon, .aiToolCustomFields input, .aiToolDelete, #aiToolsSettingsModal .ai-add-button, #aiToolsShortcutManage { border: 1px solid ButtonText; }
     .quicklinkIconTabs [aria-selected="true"], .quicklinkIconGrid [aria-pressed="true"] { outline: 2px solid Highlight; }
     .quicklinkIcon-text { background: Canvas !important; color: CanvasText !important; border: 1px solid CanvasText; }
     .quicklinkIcon-icon { color: CanvasText; }
