@@ -301,6 +301,14 @@ function validateBackupStorage(saved) {
   let custom;try{custom=JSON.parse(saved.aiToolsCustom);}catch{fail('invalid_storage','Malformed stored JSON preserved unchanged');}
   icons.customOverrides(custom,true);
  }
+ // Encouragement lines written or imported by the user are validated before any write.
+ if(Object.hasOwn(saved,'myntStudyQuotesV1')) {
+  const quotes=root.MyntStudyQuotesCore||(node&&require('./study-quotes-core.js'));
+  if(!quotes?.validate)fail('invalid_storage','Study quote validator unavailable');
+  if(typeof saved.myntStudyQuotesV1!=='string'||saved.myntStudyQuotesV1.length>quotes.LIMITS.bytes)fail('data_too_large','Study quotes too large');
+  let value;try{value=JSON.parse(saved.myntStudyQuotesV1);}catch{fail('invalid_storage','Malformed stored JSON preserved unchanged');}
+  try{quotes.validate(value,true);}catch{fail('invalid_storage','Invalid study quotes');}
+ }
  // User-added AI tools (name, website, optional icon) share the 1 MiB icon cap and are validated before any write.
  if(Object.hasOwn(saved,'aiToolsUserTools')) {
   const icons=root.MyntQuicklinkIcons||(node&&require('./quicklink-icons.js'));

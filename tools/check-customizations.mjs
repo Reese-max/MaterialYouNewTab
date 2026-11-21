@@ -342,6 +342,7 @@ execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-bridge.cj
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-ui.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-recovery-controls.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-studio.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/regress-study-quotes.cjs"), root], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-component-manager.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-clock-lifecycle.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-manual-editor.cjs")], {stdio:"inherit"});

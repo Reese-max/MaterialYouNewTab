@@ -7996,10 +7996,14 @@ body[data-bg="color"] .studyQuote { color: var(--darkerColor-blue, #333); text-s
 @media (max-width: 900px) { .studyQuote { max-width: 70vw; bottom: 74px; } }
 @media (prefers-reduced-motion: reduce) { .studyQuoteText { transition: none; } }
 
-/* === Study quotes: one calm line, ellipsis when long (full text on hover) === */
+/* === Study quotes: one calm line that may wrap to two (longer ones are skipped; full text on hover) === */
 .studyQuote { max-width: min(640px, 56vw); }
 .studyQuoteText { display: flex; gap: 8px; align-items: baseline; min-width: 0; max-width: 100%; }
-.studyQuoteBody { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studyQuoteBody {
+	min-width: 0; overflow: hidden; white-space: normal; overflow-wrap: anywhere; line-height: 1.45;
+	display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+}
+.studyQuote[data-lines="2"] .studyQuoteText { align-items: last baseline; }
 .studyQuoteSource { flex: none; font-size: 11.5px; opacity: 0.75; white-space: nowrap; }
 @media (max-width: 900px) { .studyQuote { max-width: 80vw; } .studyQuoteSource { display: none; } }
 
