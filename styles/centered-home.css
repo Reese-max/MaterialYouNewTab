@@ -232,6 +232,8 @@ html.mynt-removed-features body #studyQuote {
   background: var(--mynt-glass) !important; border: 1px solid var(--mynt-glass-edge) !important; box-shadow: 0 4px 16px rgba(18, 38, 66, .10) !important;
 }
 html.mynt-removed-features body #studyQuote :is(#studyQuoteText, #studyQuoteSource) { color: var(--mynt-ink-soft) !important; font-size: 13.5px !important; letter-spacing: .02em; }
+/* A wrapped (two-line) quote keeps a soft card shape instead of a tall capsule. */
+html.mynt-removed-features body #studyQuote[data-lines="2"] { border-radius: 20px !important; }
 @media (max-width: 600px) {
   html.mynt-removed-features body #quickLinksRow,
   html.mynt-removed-features body #quickLinksRow #shortcuts-section { column-gap: 6px; row-gap: 6px; }

@@ -4,6 +4,7 @@
 
 - Improve manual layout editing with explicit edit mode, large move/resize handles, optional alignment/grid snapping, undo/redo, keyboard adjustments, cancel, and save-and-lock.
 - Add on-device wallpaper palette, contrast, and opacity controls with stable manual positions and image/video fallback. No new permissions or remote analysis.
+- Manage the study encouragement lines: add, edit, tag, turn off and delete your own (up to 2,000, with undo), hide or copy built-in ones, paste or import many at once from text, spreadsheet columns, CSV or JSON with a preview, export to JSON or TXT, and choose which categories the homepage shows. Lines may now wrap to two lines.
 - Add your own AI tools (name, website and optional icon) in the AI tools editor and delete any AI tool, built-in ones included (deleted built-ins can be added back or reset); the shortcut editor now links to it, since AI tools share the shortcut row.
 - Add "Search provider row" and "Service status alert" to Settings → Manage components, plus a Control Center switch, so the provider row and the bottom-right service issue / offline alert can be hidden. The Control Center status list keeps working.
 

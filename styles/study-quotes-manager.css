@@ -1,0 +1,131 @@
+/* Encouragement-line manager. Shares the Material You dialog surface (.myntDialog). */
+.studyQuotesDialog { width: min(760px, calc(100vw - 24px)); max-height: min(88dvh, 900px); }
+.studyQuotesDialog[open] { display: flex; flex-direction: column; }
+.sqHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px 8px; }
+.sqTitle { margin: 0; font-size: 1.2rem; font-weight: 600; }
+.sqClose { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: color-mix(in srgb, currentColor 8%, transparent); color: inherit; font: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.sqBody { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 20px 12px; overscroll-behavior: contain; }
+.sqSectionTitle { margin: 6px 0 4px; font-size: .95rem; font-weight: 600; }
+.sqHint { margin: 0 0 8px; font-size: .84rem; line-height: 1.5; opacity: .85; }
+.sqChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.sqChip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 1px solid color-mix(in srgb, currentColor 24%, transparent); border-radius: 999px; cursor: pointer; overflow-wrap: anywhere; }
+.sqChip:has(input:checked) { border-color: var(--darkerColor-blue); background: color-mix(in srgb, var(--darkerColor-blue) 14%, transparent); }
+.sqChip input, .sqSelect, .sqCheck input { margin: 0; accent-color: var(--darkerColor-blue); }
+.sqChipCount { font-size: .78rem; opacity: .72; }
+.sqWarning { margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, #b36b00 14%, transparent); color: #7a4600; font-size: .85rem; }
+.sqWarning[hidden] { display: none; }
+
+.sqTabs { display: flex; gap: 4px; margin: 16px 0 10px; border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent); }
+.sqTab { min-height: 44px; padding: 8px 14px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.sqTab[aria-selected="true"] { border-bottom-color: var(--darkerColor-blue); font-weight: 600; }
+.sqToolbar, .sqActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sqActions { margin: 10px 0; }
+.sqSearch { flex: 1 1 220px; }
+.sqSearch, .sqFilter, .sqInput { box-sizing: border-box; min-height: 40px; padding: 8px 10px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--whitishColor-blue) 70%, transparent); color: inherit; font: inherit; }
+.sqFilter[hidden], .sqActions > [hidden] { display: none; }
+.sqPrimary, .sqSecondary, .sqLink { min-height: 40px; padding: 8px 16px; border-radius: 999px; font: inherit; cursor: pointer; white-space: nowrap; }
+.sqPrimary { border: 0; background: var(--darkerColor-blue); color: var(--onActionColor-blue, #fff); }
+.sqSecondary { border: 1px solid color-mix(in srgb, currentColor 32%, transparent); background: transparent; color: inherit; }
+.sqLink { border: 0; background: transparent; color: inherit; text-decoration: underline; padding-inline: 8px; }
+.sqPrimary:disabled, .sqSecondary:disabled, .sqIconButton:disabled { opacity: .5; cursor: not-allowed; }
+.sqDanger { color: #a3261c; }
+
+.sqEditor { display: grid; gap: 10px; margin: 4px 0 12px; padding: 14px; border-radius: 16px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.sqEditor[hidden] { display: none; }
+.sqField { display: grid; gap: 4px; font-size: .88rem; }
+.sqInput { width: 100%; }
+textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
+.sqCounter { justify-self: end; font-size: .78rem; opacity: .75; }
+.sqCounter.is-over { color: #a3261c; opacity: 1; font-weight: 600; }
+.sqCheck { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.sqError { margin: 0; color: #a3261c; font-size: .88rem; }
+.sqError:empty { display: none; }
+.sqEditorButtons { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+
+/* Bulk paste / import and the export menu */
+.sqBulk { display: grid; gap: 10px; margin: 4px 0 12px; padding: 14px; border-radius: 16px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.sqBulk[hidden] { display: none; }
+.sqBulkText { min-height: 150px; font-family: inherit; white-space: pre; overflow-wrap: normal; overflow-x: auto; }
+.sqFileRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sqFileName { margin: 0; overflow-wrap: anywhere; }
+.sqMode { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; border: 0; }
+.sqMode legend { padding: 0; margin-bottom: 4px; font-size: .88rem; }
+.sqPreview { display: grid; gap: 6px; font-size: .88rem; }
+.sqPreview .sqHint, .sqPreview .sqWarning, .sqPreview .sqError { margin: 0; }
+.sqPreviewSummary { margin: 0; font-weight: 600; }
+.sqPreviewList, .sqPreviewErrors { display: grid; gap: 4px; margin: 0; padding-inline-start: 1.2em; overflow-wrap: anywhere; }
+.sqPreviewMeta { opacity: .72; font-size: .82rem; }
+.sqPreviewErrors { color: #a3261c; }
+.sqExport { position: relative; }
+.sqExport[hidden] { display: none; }
+.sqExport > summary { display: inline-flex; align-items: center; list-style: none; }
+.sqExport > summary::-webkit-details-marker { display: none; }
+.sqExport > summary::after { content: "▾"; margin-inline-start: 6px; font-size: .8em; }
+.sqMenu { position: absolute; z-index: 2; inset-inline-start: 0; top: calc(100% + 6px); display: grid; min-width: 220px; padding: 6px; border-radius: 14px; background: color-mix(in srgb, var(--accentLightTint-blue) 96%, var(--whitishColor-blue)); border: 1px solid color-mix(in srgb, currentColor 16%, transparent); box-shadow: 0 10px 30px rgb(0 0 0 / .18); }
+.sqMenuItem { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.sqMenuItem:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+.sqExport > summary:focus-visible { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
+
+.sqBatch { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--darkerColor-blue) 16%, var(--accentLightTint-blue)); }
+.sqBatch[hidden] { display: none; }
+.sqBatchCount { font-weight: 600; margin-inline-end: 4px; }
+.sqBatchButtons { display: flex; flex-wrap: wrap; gap: 6px; }
+.sqListHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; font-size: .85rem; }
+.sqSelectPage { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.sqSelectPage[hidden] { display: none; }
+.sqCount { margin: 0; opacity: .75; }
+.sqList { display: grid; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
+.sqRow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 10px 12px; border: 1px solid color-mix(in srgb, currentColor 10%, transparent); border-radius: 14px; background: color-mix(in srgb, var(--whitishColor-blue) 55%, transparent); }
+.sqRow.is-off .sqMain { opacity: .6; }
+.sqSelect { width: 18px; height: 18px; margin-top: 3px; }
+.sqText { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }
+.sqMeta { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; font-size: .8rem; opacity: .82; }
+.sqTag { padding: 0 8px; border-radius: 999px; background: color-mix(in srgb, var(--darkerColor-blue) 14%, transparent); }
+.sqRowControls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.sqIconButton { min-width: 44px; min-height: 36px; padding: 4px 10px; border: 1px solid color-mix(in srgb, currentColor 26%, transparent); border-radius: 10px; background: transparent; color: inherit; font: inherit; font-size: .85rem; cursor: pointer; }
+.sqSwitch { position: relative; display: inline-flex; flex: none; width: 44px; height: 26px; cursor: pointer; }
+.sqSwitch input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.sqSwitchTrack { pointer-events: none; width: 100%; height: 100%; border-radius: 999px; background: color-mix(in srgb, currentColor 22%, transparent); transition: background-color .15s ease; }
+.sqSwitchTrack::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .3); transition: transform .15s ease; }
+.sqSwitch input:checked + .sqSwitchTrack { background: var(--darkerColor-blue); }
+.sqSwitch input:checked + .sqSwitchTrack::after { transform: translateX(18px); }
+.sqSwitch input:disabled + .sqSwitchTrack { opacity: .5; }
+:dir(rtl) .sqSwitch input:checked + .sqSwitchTrack::after { transform: translateX(-18px); }
+.sqEmpty { margin: 16px 0; text-align: center; opacity: .8; }
+.sqEmpty[hidden], .sqMore[hidden] { display: none; }
+.sqMore { display: block; margin: 12px auto 0; }
+.sqFooter { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px 16px; border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
+.sqStatus { margin: 0; min-height: 1.3em; font-size: .88rem; overflow-wrap: anywhere; }
+.sqUndo[hidden] { display: none; }
+
+.studyQuotesDialog :is(button, input, select, textarea):focus-visible { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
+.sqSwitch input:focus-visible + .sqSwitchTrack { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
+.sqStatus:focus { outline: none; }
+
+@media (max-width: 560px) {
+    .sqHeader { padding: 14px 14px 6px; }
+    .sqBody { padding: 0 14px 10px; }
+    .sqFooter { padding: 8px 14px 12px; }
+    .sqRow { grid-template-columns: auto minmax(0, 1fr); }
+    .sqRowControls { grid-column: 2; justify-content: flex-start; }
+    .sqSearch { flex-basis: 100%; }
+}
+
+.black-theme .studyQuotesDialog :is(.sqSearch, .sqFilter, .sqInput) { background: rgb(0 0 0 / .25); }
+.black-theme .studyQuotesDialog .sqRow { background: rgb(255 255 255 / .04); }
+.black-theme .studyQuotesDialog :is(.sqDanger, .sqError, .sqCounter.is-over, .sqPreviewErrors) { color: #f2b8b5; }
+.black-theme .studyQuotesDialog .sqMenu { background: #262d38; }
+.black-theme .studyQuotesDialog .sqWarning { color: #f5d08a; background: rgb(245 208 138 / .12); }
+.black-theme .studyQuotesDialog .sqBatch { background: rgb(255 255 255 / .08); }
+/* The black theme's accent is light; keep the switch knob visible on it. */
+.black-theme .sqSwitch input:checked + .sqSwitchTrack::after { background: #1f2630; }
+
+@media (prefers-reduced-motion: reduce) {
+    .sqSwitchTrack, .sqSwitchTrack::after { transition: none; }
+}
+html.myntReducedMotion .sqSwitchTrack, html.myntReducedMotion .sqSwitchTrack::after { transition: none; }
+
+@media (forced-colors: active) {
+    .sqChip, .sqRow, .sqIconButton, .sqSecondary, .sqSwitchTrack, .sqEditor, .sqBulk, .sqMenu { border: 1px solid CanvasText; }
+    .sqSwitch input:checked + .sqSwitchTrack { background: Highlight; }
+}
