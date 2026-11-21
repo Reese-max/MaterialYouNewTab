@@ -4220,6 +4220,24 @@ html.black-theme #menuCont .themeSegment {
 	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 45%, transparent);
 }
 
+/* ===== 服務狀態提示讓位給右下角按鈕列 =====
+   style.css 的 #serviceStatusPill 停在 inset-inline-end:100px，
+   但桌布鈕（48px）佔 right:76px～124px，膠囊右側約 24px 被蓋住，
+   「服務異常」只剩半個字。改停在桌布鈕左側並保留 12px 間距
+   （76＋48＋12＝136px），高度 42px 與 48px 圓鈕垂直置中（20＋3＝23px）。
+   桌布圖庫入口被隱藏時改接在設定鈕左側（20＋48＋12＝80px）。
+   ≤620px 時 style.css 已把膠囊移到左下角，不在此覆寫。 */
+@media screen and (min-width: 621px) {
+    #serviceStatusPill {
+        inset-inline-end: 136px;
+        bottom: 23px;
+    }
+
+    body:has(#wallpaperQuickActions[data-mynt-component-hidden]) #serviceStatusPill {
+        inset-inline-end: 80px;
+    }
+}
+
 /* ===== 「開啟設定」提示 =====
    前三次造訪時 .showHomeActionHints 會把 .homeActionHint 強制常駐顯示
    在兩顆圓鈕正上方，膠囊形狀與圓鈕語彙衝突、且看不出對應哪顆。
