@@ -80,7 +80,7 @@ test('look-layout#4', async () => {
         document: { getElementById: () => null }, localStorage: { getItem: () => 'other' }, KEY_CURRENT: 'current',
         putItem: async item => records.set(item.id, { ...item }),
         reqP: async x => x, hiddenIds: () => new Set(), saveHidden() {},
-        tx: async (_, fn) => { const copy = new Map(records); const result = await fn({ get: id => copy.get(id), put: x => copy.set(x.id, x) }); records.clear(); copy.forEach((v, k) => records.set(k, v)); return result; } });
+        tx: async (_, fn) => { const copy = new Map(records); const result = await fn({ get: id => copy.get(id), put: x => copy.set(x.id, x), delete: id => copy.delete(id) }); records.clear(); copy.forEach((v, k) => records.set(k, v)); return result; } });
     run(c, part('scripts/wallpaper-gallery.js', '    async function allItems(', '    // Items that take part'));
     run(c, part('scripts/wallpaper-gallery.js', '    // ---------- Gallery UI ----------', '    function renderSelection()'));
     c.renderGallery = async () => {}; c.setStatus = text => status = text;
@@ -88,7 +88,7 @@ test('look-layout#4', async () => {
     assert.equal(records.get('a').removedAt, 10); assert.equal(records.get('a').name, 'old'); assert(status);
     records.set('a', { ...original, name: 'newer' });
     await c.removeItems([original]);
-    assert.equal(records.get('a').name, 'newer', 'Removal preserves another tab\'s rename'); assert(records.get('a').removedAt);
+    assert(!records.has('a'), 'Confirmed delete removes the wallpaper by identity, even after another tab renamed it');
     records.set('a', { ...original, name: 'concurrent' });
     await c.renameItem(original); assert.equal(records.get('a').name, 'concurrent', 'Stale rename reports conflict');
     await c.renameItem(records.get('a')); assert.equal(records.get('a').name, 'new'); assert.equal(records.get('a').blob, 'keep');

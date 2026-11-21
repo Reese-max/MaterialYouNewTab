@@ -81,6 +81,12 @@ const zh_TW = {
     "wallpaperDeleteConfirm": "要從圖庫刪除「{name}」嗎？刪除後可按「復原」找回，重新整理後仍可復原，不會影響原始檔案。",
     "wallpaperRecoverableCount": "已移除 {count} 項，可復原；媒體仍佔用本機空間。",
     "wallpaperActionError": "這次變更未完成，已儲存的媒體並未永久刪除，請再試一次。",
+    "wallpaperDeleteForever": "永久刪除",
+    "wallpaperDeleteForeverConfirm": "要永久刪除「{name}」嗎？檔案會從這個瀏覽器移除，無法復原；你裝置上的原始檔案不受影響。",
+    "wallpaperDeleteForeverConfirmMany": "要永久刪除 {count} 張桌布嗎？檔案會從這個瀏覽器移除，無法復原；你裝置上的原始檔案不受影響。",
+    "wallpaperDeleteForeverHint": "確認後永久刪除",
+    "wallpaperDeleteBuiltinHint": "內建桌布：移到回收區，可復原",
+    "wallpaperRemovedCount": "回收區有 {count} 項，可在這裡或下方回收區復原。",
 
     "resetKeepsPomodoroMedia": "重設設定不會刪除已匯入的番茄鐘音樂與圖片。重設後仍可重新使用，或在音樂／背景設定中個別刪除。",
     "pomoStudioDeleted": "情境已刪除；重新整理前可復原。",

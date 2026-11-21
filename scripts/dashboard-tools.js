@@ -252,6 +252,19 @@ if (typeof document !== "undefined") {
         let decorativeVideoStartHandle = null;
         let decorativeVideoUsesIdleCallback = false;
 
+        // Once the built-in motion video is deleted in the wallpaper gallery, a workspace asking for it shows
+        // the gallery wallpaper, or the theme colour, instead of bringing the deleted video back.
+        function workspaceBackgroundFor(background) {
+            if (background !== "video" || document.body.dataset.galleryVideo === "on") return background;
+            let deleted = false;
+            try {
+                const hidden = JSON.parse(localStorage.getItem("myntWallpaperHiddenBuiltins") || "[]");
+                deleted = Array.isArray(hidden) && hidden.includes("bundled-video-bg");
+            } catch (_) { /* unreadable list: keep the workspace choice */ }
+            if (!deleted) return background;
+            return document.body.dataset.wallpaperId ? "wallpaper" : "color";
+        }
+
         function canPlayDecorativeVideo() {
             return Boolean(decorativeVideo)
                 && document.visibilityState === "visible"
@@ -393,9 +406,10 @@ if (typeof document !== "undefined") {
         let workspaceEditorBaseline = workspaceBaseline;
         let applyingWorkspace = false;
         const restoredWorkspace = workspaces.find(item => item.id === localStorage.getItem(KEYS.workspace));
-        if (restoredWorkspace) {
-            document.body.dataset.workspaceBackground = restoredWorkspace.background;
-            if (restoredWorkspace.background !== "video") document.body.dataset.bg = restoredWorkspace.background;
+        const startBackground = workspaceBackgroundFor(restoredWorkspace?.background || document.body.dataset.workspaceBackground || "video");
+        if (restoredWorkspace || startBackground !== document.body.dataset.workspaceBackground) {
+            document.body.dataset.workspaceBackground = startBackground;
+            if (startBackground !== "video") document.body.dataset.bg = startBackground;
         }
 
         function saveWorkspaces() {
@@ -476,8 +490,9 @@ if (typeof document !== "undefined") {
                 minutesInput.value = preset.focusMinutes;
                 minutesInput.dispatchEvent(new Event("change", { bubbles: true }));
             }
-            document.body.dataset.workspaceBackground = preset.background;
-            if (preset.background !== "video") document.body.dataset.bg = preset.background;
+            const background = workspaceBackgroundFor(preset.background);
+            document.body.dataset.workspaceBackground = background;
+            if (background !== "video") document.body.dataset.bg = background;
             syncDecorativeVideo();
             applyingWorkspace = false;
             localStorage.setItem(KEYS.workspace, id);
@@ -1031,8 +1046,9 @@ if (typeof document !== "undefined") {
                 }
                 assertAccess();
                 localStorage.setItem(KEYS.workspace,id);
-                document.body.dataset.workspaceBackground=preset.background;
-                if(preset.background!=='video')document.body.dataset.bg=preset.background;
+                const background=workspaceBackgroundFor(preset.background);
+                document.body.dataset.workspaceBackground=background;
+                if(background!=='video')document.body.dataset.bg=background;
                 cancelDecorativeVideoStart(); startDecorativeWhenVisible=false; resumeDecorativeAfterHidden=false;
                 decorativeVideo?.pause();
                 renderWorkspace();
