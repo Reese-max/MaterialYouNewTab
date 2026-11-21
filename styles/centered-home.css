@@ -219,6 +219,12 @@ html.mynt-removed-features body #menuButton {
   box-shadow: 0 4px 14px rgba(18, 38, 66, .12) !important;
   backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
 }
+/* Adaptive appearance swaps --mynt-glass for a surface measured from the wallpaper, which can be light under the
+   black theme (or dark under a light theme). Pair the icon ink with that surface, like the search bar does,
+   instead of keeping the theme's ink. Without adaptive surfaces the theme ink is unchanged. */
+html.mynt-removed-features body:is([data-adaptive-contrast="on"], [data-adaptive-opacity="on"]) :is(#pomodoroCont, #googleAppsCont, #bookmarkButton, #wallpaperGalleryBtn, #menuButton) {
+  --mynt-fab-ink: var(--mynt-ink); color: var(--mynt-ink) !important;
+}
 /* quote: a quiet caption that hugs its text, not a full-width button */
 html.mynt-removed-features body #studyQuote {
   width: fit-content !important; max-width: min(720px, calc(100vw - 32px)) !important; inset-block-end: 24px !important;

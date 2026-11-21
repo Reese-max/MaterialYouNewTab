@@ -53,6 +53,7 @@ for (const [, selectors, declarations] of pomodoroRules) {
     assert.doesNotMatch(fixedColors, /background(?:-color)?\s*:[^;}]*#f7f7f7/i, `Pomodoro panel surfaces must use --mynt-pomo-panel-bg, not a fixed light color: ${selectors.trim()}`);
 }
 assert.match(centeredCss, /html\.black-theme\.mynt-removed-features body \{[^}]*--mynt-pomo-panel-bg:\s*#1b1f27;/, 'Black theme needs a dark pomodoro panel base.');
+assert.match(centeredCss, /body:is\(\[data-adaptive-contrast="on"\], \[data-adaptive-opacity="on"\]\) :is\(#pomodoroCont, #googleAppsCont, #bookmarkButton, #wallpaperGalleryBtn, #menuButton\) \{[^}]*--mynt-fab-ink: var\(--mynt-ink\)/, 'Corner icons on adaptive surfaces must use the paired adaptive ink.');
 const full = storage({ [api.KEY]: JSON.stringify(fresh()) }); const originalSet = full.setItem; full.setItem = (key, value) => { if (key === api.KEY) throw Error('QuotaExceededError'); originalSet.call(full, key, value); };
 assert.equal(api.migrate(full), false); assert.equal(full.getItem(api.FLAG), null, 'A failed profile write must leave the migration pending.');
 full.setItem = originalSet; assert.equal(api.migrate(full), true); assert.equal(full.getItem(api.FLAG), 'true');
