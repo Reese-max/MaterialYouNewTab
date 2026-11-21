@@ -46,6 +46,13 @@ assert.match(widgets, /mynt-removed-features[\s\S]*?return;/);
 assert.match(centeredCss, /#myntComponentManager label:has\(#myntComponent-homeWidgets\)/);
 assert.match(centeredCss, /#quickLinksRow #aiToolsCont:not\(\[data-mynt-component-hidden\]\):not\(\[style\*="display: none"\]\)/, 'Disabled AI tools must stay hidden.');
 assert.doesNotMatch(centeredCss, /#quickLinksRow #aiToolsCont,/, 'Unguarded #aiToolsCont display override would show disabled AI tools.');
+// The black theme gives the pomodoro panel light --pomo-fg text, so its base surface must follow the theme too.
+const pomodoroRules = [...centeredCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, selectors]) => selectors.includes('#pomodoroPanel'));
+for (const [, selectors, declarations] of pomodoroRules) {
+    const fixedColors = declarations.replace(/var\(--mynt-pomo-panel-bg,\s*#f7f7f7\)/gi, '');
+    assert.doesNotMatch(fixedColors, /background(?:-color)?\s*:[^;}]*#f7f7f7/i, `Pomodoro panel surfaces must use --mynt-pomo-panel-bg, not a fixed light color: ${selectors.trim()}`);
+}
+assert.match(centeredCss, /html\.black-theme\.mynt-removed-features body \{[^}]*--mynt-pomo-panel-bg:\s*#1b1f27;/, 'Black theme needs a dark pomodoro panel base.');
 const full = storage({ [api.KEY]: JSON.stringify(fresh()) }); const originalSet = full.setItem; full.setItem = (key, value) => { if (key === api.KEY) throw Error('QuotaExceededError'); originalSet.call(full, key, value); };
 assert.equal(api.migrate(full), false); assert.equal(full.getItem(api.FLAG), null, 'A failed profile write must leave the migration pending.');
 full.setItem = originalSet; assert.equal(api.migrate(full), true); assert.equal(full.getItem(api.FLAG), 'true');
@@ -75,10 +82,11 @@ assert.match(centeredCss, /#pomodoroPanel::after \{ content: none !important; \}
 assert.match(centeredCss, /body #pomodoroPanel:not\(\.mynt-pomo-static\) > \.pomoStudioBackdrop \{ display: none !important; \}/, 'Original background: the main panel is one solid surface.');
 assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static > \.pomoStudioBackdrop::before \{[^}]*background-image: var\(--pomo-background, none\)/, 'A chosen background paints the main panel.');
 assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static \.pomodoroRingBg \{ fill: var\(--pomo-surface, #ffffff\) !important; \}/, 'The time sits on a solid disc so it stays readable over a sharp picture.');
-assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static > \.pomoStudioBackdrop::after \{ content: ""; position: absolute; inset: calc\(var\(--pomo-diameter, 160px\) \+ 160px\) 0 0 0;[^}]*background: #f7f7f7;/, 'Below the start button the controls sit on one solid sheet instead of loose translucent pieces over the picture.');
+assert.match(centeredCss, /#pomodoroPanel\.mynt-pomo-static > \.pomoStudioBackdrop::after \{ content: ""; position: absolute; inset: calc\(var\(--pomo-diameter, 160px\) \+ 160px\) 0 0 0;[^}]*background: var\(--mynt-pomo-panel-bg, #f7f7f7\);/, 'Below the start button the controls sit on one solid sheet instead of loose translucent pieces over the picture.');
 assert.match(centeredCss, /html\.mynt-removed-features:not\(\.myntHighContrast\) body #pomodoroPanel \{ --mynt-glass-edge:/, 'The glass finish is skipped in high contrast mode, which keeps solid, plainly outlined controls.');
 assert.match(centeredCss, /\.pomoStudioBackdrop::before \{ filter: invert\(1\) hue-rotate\(180deg\); \}/, 'Dark mode undoes the page inversion on the picture so photos are not negatives.');
-assert.match(centeredCss, /body #pomodoroPanel \{ background-color: #f7f7f7 !important; \}/, 'The solid panel uses the near-white surface so white fields and pills stand out.');
+assert.match(centeredCss, /body #pomodoroPanel \{ background-color: var\(--mynt-pomo-panel-bg, #f7f7f7\) !important; \}/, 'The solid panel uses the themed panel surface.');
+assert.match(centeredCss, /html\.mynt-removed-features body \{[^}]*--mynt-pomo-panel-bg: #f7f7f7;/, 'Light themes keep the near-white panel surface so white fields and pills stand out.');
 assert.doesNotMatch(centeredCss, /blur\(14px\)/, 'No blurred picture layer remains in the main panel.');
 assert.match(centeredCss, /body #pomodoroPanel \.pomodoroRingFg \{ filter: none !important; \}/, 'The progress ring is flat on the solid panel (no glow).');
 assert.match(centeredCss, /\.mynt-pomo-background-choices \{ grid-template-columns: minmax\(0, 1fr\) !important;[\s\S]*?\.mynt-pomo-background-label \{[^}]*overflow-wrap: normal !important;/, 'Background choices are a one-column list so English labels never break mid-word in the ~200px panel.');
