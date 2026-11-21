@@ -104,3 +104,15 @@ assert.match(src,/const delLabel = t\("wallpaperDelete", "Delete"\);/,'Every car
 console.log('GALLERY_RECOVERY_OK: deleted built-ins restore from Recovery; earlier removed media restore or delete permanently; grid shows Delete on every card');
 })();
 
+// Readable delete and gallery controls on light and dark surfaces.
+(()=>{
+const root=process.argv[2] || process.cwd(), read=f=>fs.readFileSync(require('path').join(root,f),'utf8');
+const css=read('style.css'), dark=read('styles/award-fix-dark-surfaces.css'), bundle=read('styles/award.css');
+assert.match(css,/#wallpaperGalleryDialog \.wallpaperRecoveryRow \.wallpaperDangerBtn \{ color:#b3261e; background:rgb\(179 38 30 \/ 0\.08\);/,'Light delete buttons use the error colour on its tint');
+const block=dark.slice(dark.indexOf(') #wallpaperGalleryDialog {'));
+assert.match(block,/:is\(\.wallpaperCard \.wallpaperCardDelete, \.wallpaperRecoveryRow \.wallpaperDangerBtn\) \{\s*color: #ffb4ab;/,'Dark delete buttons use the dark error colour');
+for(const id of ['#wallpaperAddUrlBtn','#wallpaperUrlInput','#wallpaperModeSelect','.wallpaperNavigation button','.wallpaperToolbar button','.wallpaperRecoveryRow button:not(.wallpaperDangerBtn)'])assert(block.slice(0,block.indexOf('}')).includes(id),'Dark gallery control: '+id);
+assert.match(dark,/\):not\(\.black-theme\) dialog\.myntDialog > \.controlCenterHeader \{\s*background: #232833;/,'Dark-mode dialog headers are dark under light titles');
+assert(bundle.includes('#ffb4ab')&&bundle.includes('background: #232833;'),'The award bundle carries the dark gallery rules');
+console.log('GALLERY_CONTRAST_OK: delete actions and gallery controls stay readable in light, black and dark themes');
+})();
