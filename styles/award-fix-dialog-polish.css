@@ -52,3 +52,62 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
 	color: var(--todo-item-checked-text, #475569);
 	text-decoration: line-through;
 }
+
+/* ==========================================================================
+   第 16 輪：淺色對話框的強調色文字與按鈕層次
+   評審（對比）：--darkColor-blue（#4382ec）當文字放在淺色底上只有 2.5–3.7:1：
+   標題列小字（2.72）、「已套用○○模式」與「政策」（3.71）、工作模式 🚀 鈕（3.92）、
+   AI 工具排序箭頭（2.51，再乘 0.8 透明度）、書籤欄位標籤（2.51）；
+   白字放在它上面的「重設／儲存／取消」也只有 3.72。
+   一律改用 --mynt-accent-ink（--darkerColor 七成混黑，各色主題 ≥ 4.7:1）。
+   評審（層次）：AI 工具的「重設」與「儲存」、書籤的「儲存」與「取消」原本是兩顆一模一樣的實心鈕，
+   看不出主要動作；改為主要＝實心、次要＝外框。
+   只在淺色模式：深色模式與黑色主題由各自的規則處理，高對比沿用系統色。
+   ========================================================================== */
+html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-active="dark"])):not(:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"])) {
+	& .controlCenterEyebrow,
+	& #controlCenterDialog :is(.controlSectionHeading a, .sectionStatus) {
+		color: var(--mynt-accent-ink);
+	}
+	& #controlCenterDialog .workspaceLaunchBtn {
+		border-color: color-mix(in srgb, var(--mynt-accent-ink) 35%, transparent);
+		background: color-mix(in srgb, var(--mynt-accent-ink) 10%, transparent);
+		color: var(--mynt-accent-ink);
+	}
+	& #controlCenterDialog .workspaceLaunchBtn:hover {
+		background: var(--mynt-accent-ink);
+		color: #ffffff;
+	}
+	& #aiToolsForm .ai-tool-reorder button:not(:disabled) {
+		color: var(--mynt-accent-ink);
+		opacity: 1;
+	}
+	& #aiToolsSettingsModal .ai-close-button {
+		color: var(--mynt-accent-ink);
+		border-radius: 50%;
+	}
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges) {
+		background: var(--mynt-accent-ink);
+		color: #ffffff;
+		border: 1px solid transparent;
+	}
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges):hover {
+		background: color-mix(in srgb, var(--mynt-accent-ink) 82%, #000);
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit) {
+		background: transparent;
+		color: var(--mynt-accent-ink);
+		border: 1px solid color-mix(in srgb, var(--mynt-accent-ink) 45%, transparent);
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit):hover {
+		background: color-mix(in srgb, var(--mynt-accent-ink) 10%, transparent);
+	}
+	& #editBookmarkModal .floating-label-field label,
+	& #editBookmarkModal .floating-label-field :is(input:focus, input:not(:placeholder-shown)) + label {
+		color: var(--mynt-accent-ink);
+	}
+	& #editBookmarkModal .floating-label-field input:focus {
+		border-color: var(--mynt-accent-ink);
+	}
+}
+

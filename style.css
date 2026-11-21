@@ -33,6 +33,10 @@
 	--textColorDark-blue: #1b3041;
 	--whitishColor-blue: #ffffff;
 	--onActionColor-blue: #ffffff;
+	/* Accent for text on light tints and for fills under white text. --darkColor is too light for either
+	   (#4382ec: 2.5:1 on its tint, 3.7:1 under white) and --darkerColor alone fails for yellow and peach;
+	   70% with black keeps every colour theme at 4.7:1 or better in both uses. Light themes only. */
+	--mynt-accent-ink: color-mix(in srgb, var(--darkerColor-blue) 70%, #000);
 
 	/* 🔴🔴🔴 */
 	--bg-color-red: #fdbdbd;

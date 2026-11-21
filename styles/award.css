@@ -3861,6 +3861,28 @@ html.myntReducedMotion :is(.todoListCont, .pomodoroCont):is(:hover, :active) {
     }
 }
 
+
+/* ===== 第 16 輪：首頁強調色實心塊與提示標題 =====
+   天氣卡的地點膠囊、濕度條與設定裡的透明度條，白字放在 --darkColor-blue（#4382ec）上只有 3.72:1；
+   「看到底部有橫幅嗎？」標題以同色當文字只有 2.51:1（18.4px 粗體未達大字門檻）。
+   旁邊的水滴圓鈕一併改色，避免亮藍圓鈕配深藍濕度條。
+   改用 --mynt-accent-ink（各色主題 ≥ 4.7:1）。深色模式下首頁整頁反相，反相後仍維持同樣對比；
+   黑色主題與高對比各有自己的配色，不套用。 */
+html:not(.black-theme, .myntHighContrast) {
+    & :is(.tilesContainer .location, .humidityBar .slider, .opacityBar .opacitySlider) {
+        background-color: var(--mynt-accent-ink);
+    }
+    /* 偽元素不能放進 :is()，水滴圓鈕需獨立一條。 */
+    & .humidityBar::after {
+        background-color: var(--mynt-accent-ink);
+    }
+    & :is(.tilesContainer .location .location_spn, #humidityLevel, #opacityLevel) {
+        color: #ffffff;
+    }
+    & .toast-title {
+        color: var(--mynt-accent-ink);
+    }
+}
 /* ==== award-fix-dialog-polish.css ==== */
 /* 第 5 輪：對話框遮罩、危險按鈕焦點框、便籤標題、待辦完成狀態 */
 
@@ -3916,6 +3938,65 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
 	color: var(--todo-item-checked-text, #475569);
 	text-decoration: line-through;
 }
+
+/* ==========================================================================
+   第 16 輪：淺色對話框的強調色文字與按鈕層次
+   評審（對比）：--darkColor-blue（#4382ec）當文字放在淺色底上只有 2.5–3.7:1：
+   標題列小字（2.72）、「已套用○○模式」與「政策」（3.71）、工作模式 🚀 鈕（3.92）、
+   AI 工具排序箭頭（2.51，再乘 0.8 透明度）、書籤欄位標籤（2.51）；
+   白字放在它上面的「重設／儲存／取消」也只有 3.72。
+   一律改用 --mynt-accent-ink（--darkerColor 七成混黑，各色主題 ≥ 4.7:1）。
+   評審（層次）：AI 工具的「重設」與「儲存」、書籤的「儲存」與「取消」原本是兩顆一模一樣的實心鈕，
+   看不出主要動作；改為主要＝實心、次要＝外框。
+   只在淺色模式：深色模式與黑色主題由各自的規則處理，高對比沿用系統色。
+   ========================================================================== */
+html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-active="dark"])):not(:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"])) {
+	& .controlCenterEyebrow,
+	& #controlCenterDialog :is(.controlSectionHeading a, .sectionStatus) {
+		color: var(--mynt-accent-ink);
+	}
+	& #controlCenterDialog .workspaceLaunchBtn {
+		border-color: color-mix(in srgb, var(--mynt-accent-ink) 35%, transparent);
+		background: color-mix(in srgb, var(--mynt-accent-ink) 10%, transparent);
+		color: var(--mynt-accent-ink);
+	}
+	& #controlCenterDialog .workspaceLaunchBtn:hover {
+		background: var(--mynt-accent-ink);
+		color: #ffffff;
+	}
+	& #aiToolsForm .ai-tool-reorder button:not(:disabled) {
+		color: var(--mynt-accent-ink);
+		opacity: 1;
+	}
+	& #aiToolsSettingsModal .ai-close-button {
+		color: var(--mynt-accent-ink);
+		border-radius: 50%;
+	}
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges) {
+		background: var(--mynt-accent-ink);
+		color: #ffffff;
+		border: 1px solid transparent;
+	}
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges):hover {
+		background: color-mix(in srgb, var(--mynt-accent-ink) 82%, #000);
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit) {
+		background: transparent;
+		color: var(--mynt-accent-ink);
+		border: 1px solid color-mix(in srgb, var(--mynt-accent-ink) 45%, transparent);
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit):hover {
+		background: color-mix(in srgb, var(--mynt-accent-ink) 10%, transparent);
+	}
+	& #editBookmarkModal .floating-label-field label,
+	& #editBookmarkModal .floating-label-field :is(input:focus, input:not(:placeholder-shown)) + label {
+		color: var(--mynt-accent-ink);
+	}
+	& #editBookmarkModal .floating-label-field input:focus {
+		border-color: var(--mynt-accent-ink);
+	}
+}
+
 /* ==== award-fix-menu.css ==== */
 /* 第 6 輪：設定選單標題列、關閉鈕焦點、停用文字對比、捲動提示 */
 
