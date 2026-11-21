@@ -818,6 +818,175 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 		background: rgba(242, 139, 130, 0.12);
 	}
 }
+
+/* ==========================================================================
+   7. 深色模式其餘對話框（第 16 輪）
+   AI 工具設定與書籤編輯在深色模式仍整片淺藍（唯一沒變深的視窗）；指令面板未選取的項目是深字配深底
+   （1.22:1，幾乎看不見）；快捷鍵說明是灰卡配黑字（4.4:1）；鼓勵語管理的搜尋與篩選是淺灰底配淺字
+   （1.86:1）。比照其他深色對話框的冷色系與黑色主題既有規則。主要動作＝淺藍實心，次要＝外框。
+   ========================================================================== */
+:is(
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+):not(.black-theme, .myntHighContrast) {
+	& :is(#aiToolsSettingsModal, #editBookmarkModal) {
+		background: #1b1f27;
+		color: #eef2f7;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		box-shadow: 0 28px 90px rgba(0, 0, 0, 0.6);
+	}
+	& #aiToolsSettingsModal .ai-close-button {
+		color: #a8c7fa;
+		border-radius: 50%;
+	}
+	& #aiToolsSettingsModal #aiToolsForm .ai-tool-option {
+		background-color: #232833;
+	}
+	& #aiToolsSettingsModal #aiToolsForm .ai-tool-option input[type="checkbox"] {
+		accent-color: #a8c7fa;
+	}
+	& #aiToolsSettingsModal #aiToolsForm .ai-tool-reorder button {
+		color: #a8c7fa;
+		background-color: #1b1f27;
+		border-color: rgba(168, 199, 250, 0.3);
+	}
+	& #aiToolsSettingsModal #aiToolsForm .ai-tool-reorder button:not(:disabled) {
+		opacity: 1;
+	}
+	& #aiToolsSettingsModal .aiToolDelete {
+		color: #f2b8b5;
+	}
+	& #aiToolsSettingsModal .ai-tools-list::-webkit-scrollbar-thumb {
+		background-color: #3a4252;
+	}
+	& #editBookmarkModal h2 {
+		color: #eef2f7;
+	}
+	& #editBookmarkModal .floating-label-field input {
+		background-color: #2a303c;
+		color: #eef2f7;
+		border-color: rgba(255, 255, 255, 0.16);
+	}
+	& #editBookmarkModal .floating-label-field input:focus {
+		border-color: #a8c7fa;
+	}
+	& #editBookmarkModal .floating-label-field label {
+		color: #abb5c2;
+	}
+	& #editBookmarkModal .floating-label-field :is(input:focus, input:not(:placeholder-shown)) + label {
+		color: #a8c7fa;
+		background-color: #1b1f27;
+	}
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges) {
+		background: #a8c7fa;
+		color: #10131a;
+		border: 1px solid transparent;
+	}
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges):hover {
+		background: #c2d7fb;
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit) {
+		background: transparent;
+		color: #a8c7fa;
+		border: 1px solid rgba(168, 199, 250, 0.45);
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit):hover {
+		background: rgba(168, 199, 250, 0.12);
+	}
+	/* 指令面板 */
+	& .commandPaletteHeader {
+		border-bottom-color: rgba(255, 255, 255, 0.1);
+	}
+	& #commandPaletteInput {
+		background: #2a303c;
+		color: #eef2f7;
+		border-color: rgba(255, 255, 255, 0.16);
+	}
+	& #commandPaletteInput::placeholder {
+		color: #abb5c2;
+	}
+	& #commandPaletteInput:focus {
+		border-color: #a8c7fa;
+		box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.25);
+	}
+	& .commandPaletteHeader kbd {
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.2);
+		color: #d6dce5;
+	}
+	& .commandPaletteItem {
+		color: #eef2f7;
+	}
+	& :is(.commandPaletteItem:hover, .commandPaletteItem[aria-selected="true"]) {
+		background: rgba(168, 199, 250, 0.16);
+	}
+	& .commandPaletteGroup {
+		background: rgba(255, 255, 255, 0.08);
+		border-color: rgba(255, 255, 255, 0.14);
+		color: #c9d4e3;
+		opacity: 1;
+	}
+	/* 快捷鍵說明 */
+	& .shortcutItem {
+		background: #232833;
+		border-color: rgba(255, 255, 255, 0.08);
+		color: #eef2f7;
+	}
+	& .shortcutItem kbd {
+		background: #12151b;
+		border-color: rgba(255, 255, 255, 0.18);
+		color: #ffffff;
+		box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+	}
+	/* 鼓勵語管理：比照 study-quotes-manager.css 的黑色主題規則 */
+	& .studyQuotesDialog :is(.sqSearch, .sqFilter, .sqInput) {
+		background: #2a303c;
+		border-color: rgba(255, 255, 255, 0.16);
+	}
+	& .studyQuotesDialog .sqRow {
+		background: rgb(255 255 255 / 0.04);
+	}
+	& .studyQuotesDialog :is(.sqDanger, .sqError, .sqCounter.is-over, .sqPreviewErrors) {
+		color: #f2b8b5;
+	}
+	& .studyQuotesDialog .sqMenu {
+		background: #262d38;
+	}
+	& .studyQuotesDialog .sqWarning {
+		color: #f5d08a;
+		background: rgb(245 208 138 / 0.12);
+	}
+	& .studyQuotesDialog .sqBatch {
+		background: rgb(255 255 255 / 0.08);
+	}
+}
+
+/* 黑色主題：同樣區分主要與次要按鈕（原本兩顆都是同色灰底） */
+html.black-theme:not(.myntHighContrast) {
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges) {
+		background: #e3e3e3;
+		color: #171615;
+		border: 1px solid transparent;
+	}
+	& :is(#aiToolsSettingsModal .ai-save-button, #saveBookmarkChanges):hover {
+		background: #ffffff;
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit) {
+		background: transparent;
+		color: #e3e3e3;
+		border: 1px solid rgba(255, 255, 255, 0.3);
+	}
+	& :is(#aiToolsSettingsModal .ai-reset-button, #cancelBookmarkEdit):hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+	& #aiToolsSettingsModal .ai-close-button {
+		border-radius: 50%;
+	}
+}
 /* ==== award-fix-todo-inputs.css ==== */
 /* 第 1 輪：待辦項目與設定輸入框的配色與對比 */
 
