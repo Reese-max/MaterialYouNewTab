@@ -102,12 +102,16 @@
             return ['http:', 'https:'].includes(url.protocol) ? url.href : null;
         } catch { return null; }
     }
+    const BUILTIN_AI_TOOL_IDS = Object.freeze(['chatGPT', 'claude', 'youtube']);
+    const AI_USER_TOOLS_MAX = 12;
+    const plainObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value) &&
+        [Object.prototype, null].includes(Object.getPrototypeOf(value));
     function customOverrides(value, strict = false) {
         const result = {};
         const reject = () => { if (strict) throw Error('Invalid AI tool customization'); };
         if (!value || typeof value !== 'object' || Array.isArray(value)) { reject(); return result; }
         for (const [id, fields] of Object.entries(value)) {
-            if (!['chatGPT', 'claude', 'youtube'].includes(id) || !fields || typeof fields !== 'object' || Array.isArray(fields)) { reject(); continue; }
+            if (!BUILTIN_AI_TOOL_IDS.includes(id) || !fields || typeof fields !== 'object' || Array.isArray(fields)) { reject(); continue; }
             const clean = {};
             for (const [key, raw] of Object.entries(fields)) {
                 if (!['label', 'url', 'icon'].includes(key) || typeof raw !== 'string') { reject(); continue; }
@@ -123,6 +127,53 @@
             }
             if (Object.keys(clean).length) result[id] = clean;
         }
+        return result;
+    }
+    // User-added AI tools (aiToolsUserTools, version 1). Built-in tools keep aiToolsSettings and
+    // aiToolsCustom unchanged; "order" only records where user tools sit between built-in slots, and
+    // "removed" lists built-ins deleted in the editor (they stay hidden in aiToolsSettings).
+    // Lenient reads skip invalid entries without rewriting storage; strict mode (imports, saves) throws.
+    function userAITools(value, strict = false) {
+        const reject = () => { if (strict) throw Error('Invalid custom AI tools'); };
+        const result = { version: 1, tools: [], order: [], removed: [] };
+        if (value === null || value === undefined) return result;
+        if (!plainObject(value) || value.version !== 1 || !Array.isArray(value.tools) ||
+            (value.order !== undefined && !Array.isArray(value.order)) || (value.removed !== undefined && !Array.isArray(value.removed)) ||
+            Object.keys(value).some(key => !['version', 'tools', 'order', 'removed'].includes(key))) { reject(); return result; }
+        if (value.tools.length > AI_USER_TOOLS_MAX) reject();
+        const ids = new Set();
+        for (const item of value.tools.slice(0, AI_USER_TOOLS_MAX)) {
+            if (!plainObject(item) || Object.keys(item).some(key => !['id', 'label', 'url', 'icon', 'visible'].includes(key))) { reject(); continue; }
+            const id = item.id, label = typeof item.label === 'string' ? item.label.trim() : '';
+            const url = typeof item.url === 'string' ? normalizeWebsiteUrl(item.url) : null;
+            const icon = item.icon === undefined ? { value: '', error: null } : typeof item.icon === 'string' ? process(item.icon) : { error: 'invalidIcon' };
+            if (typeof id !== 'string' || !/^u[a-z0-9]{6,24}$/.test(id) || ids.has(id) || !label || Array.from(label).length > 40 ||
+                unsafeText.test(label) || !url || icon.error || (item.visible !== undefined && typeof item.visible !== 'boolean')) { reject(); continue; }
+            ids.add(id);
+            result.tools.push({ id, label, url, ...(icon.value ? { icon: icon.value } : {}), visible: item.visible !== false });
+        }
+        const seen = new Set();
+        for (const id of value.order || []) {
+            if (typeof id !== 'string' || seen.has(id) || !(BUILTIN_AI_TOOL_IDS.includes(id) || ids.has(id))) { reject(); continue; }
+            seen.add(id); result.order.push(id);
+        }
+        for (const id of value.removed || []) {
+            if (!BUILTIN_AI_TOOL_IDS.includes(id) || result.removed.includes(id)) { reject(); continue; }
+            result.removed.push(id);
+        }
+        return result;
+    }
+    // Merge saved built-in entries ({id, visible} in aiToolsSettings order) with user tools.
+    // Built-in ids in user.order are slots filled in built-in order, so built-in-only
+    // reorders (for example through local MCP) never displace user tools.
+    function aiToolOrder(builtins, user) {
+        const queue = [...builtins], byId = new Map(user.tools.map(tool => [tool.id, tool])), used = new Set(), result = [];
+        for (const id of user.order) {
+            if (BUILTIN_AI_TOOL_IDS.includes(id)) { if (queue.length) result.push(queue.shift()); }
+            else if (byId.has(id) && !used.has(id)) { used.add(id); result.push({ id, visible: byId.get(id).visible, custom: true }); }
+        }
+        result.push(...queue);
+        for (const tool of user.tools) if (!used.has(tool.id)) result.push({ id: tool.id, visible: tool.visible, custom: true });
         return result;
     }
     function render(container, raw, options = {}) {
@@ -265,7 +316,7 @@
         dialog.addEventListener('close', () => { dialog.remove(); if (returnFocus?.isConnected) returnFocus.focus(); });
         activate(active); dialog.showModal(); tabButtons[kinds.indexOf(active)].focus(); return dialog;
     }
-    const api = Object.freeze({ glyphs, graphemes, parse, process, render, contrast, normalizeWebsiteUrl, customOverrides, isValidCustomIconUrl, sanitizeSvg, sanitizeSvgDataUrl, websiteIcon, chooseButton, open, t });
+    const api = Object.freeze({ glyphs, graphemes, parse, process, render, contrast, normalizeWebsiteUrl, customOverrides, userAITools, aiToolOrder, BUILTIN_AI_TOOL_IDS, AI_USER_TOOLS_MAX, isValidCustomIconUrl, sanitizeSvg, sanitizeSvgDataUrl, websiteIcon, chooseButton, open, t });
     root.MyntQuicklinkIcons = api;
     root.document?.addEventListener('mynt:language-changed', () => {
         root.document.querySelectorAll('.quicklinkChooseIcon').forEach(node => { node.refreshIcon(); });

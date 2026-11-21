@@ -176,10 +176,17 @@ document.addEventListener("keydown", function (event) {
 });
 
 // Pure MCP refresh: no navigation or persistence.
-window.myntSearchPreferences = { reload() {
-    hideSearchWith.checked = localStorage.getItem('showShortcutSwitch') === 'true';
-    applySearchProviderVisibility(hideSearchWith.checked, false);
-    searchProviderRow.style.display = 'flex';
-    if (aiModeIconCheckbox) aiModeIconCheckbox.checked = localStorage.getItem('aiModeIconVisible') === 'false';
-    updateAiModeIconVisibility();
-} };
+window.myntSearchPreferences = {
+    // Component manager refresh: apply an already-validated preference without writing it.
+    setProviderRowVisible(visible) {
+        hideSearchWith.checked = !visible;
+        applySearchProviderVisibility(!visible, false);
+    },
+    reload() {
+        hideSearchWith.checked = localStorage.getItem('showShortcutSwitch') === 'true';
+        applySearchProviderVisibility(hideSearchWith.checked, false);
+        searchProviderRow.style.display = 'flex';
+        if (aiModeIconCheckbox) aiModeIconCheckbox.checked = localStorage.getItem('aiModeIconVisible') === 'false';
+        updateAiModeIconVisibility();
+    }
+};

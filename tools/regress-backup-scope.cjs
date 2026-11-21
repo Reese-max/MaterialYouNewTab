@@ -305,11 +305,12 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.deepEqual(todoBefore.data,todoState);
     const desired = new Map(componentCore.definitions.map((item,index)=>[item.id,index%2===1]));
     for(const item of componentCore.definitions) origin.change(item.id,desired.get(item.id));
-    const canonicalKeys = ['hideClockVisible', 'hideWeatherVisible', 'myntSearchVisible',
+    const canonicalKeys = ['hideClockVisible', 'hideWeatherVisible', 'myntSearchVisible', 'showShortcutSwitch',
         'shortcutsCheckboxState', 'aiToolsCheckboxState', 'googleAppsCheckboxState', 'bookmarksCheckboxState',
         'todoListCheckboxState', 'pomodoroCheckboxState', 'myntHomeWidgetsVisible',
         'myntStudyQuoteEnabled', 'myntExamDailyVisible',
-        'myntEventCountdownsV1', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible'];
+        'myntEventCountdownsV1', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible',
+        'myntServiceStatusPillVisible'];
     assert.deepEqual(componentCore.definitions.map(item=>item.key),canonicalKeys);
     assert.equal(desired.size,canonicalKeys.length);
     assert.equal(origin.values.get('hideClockVisible'),'true','Clock stays hidden for the later cold-start test.');
@@ -339,7 +340,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.equal(importEnv.reads.length,0);assert.equal(importEnv.writes.length,0,'Settings restore neither reads nor writes media databases.');
     assert.deepEqual(await storeSnapshot(importEnv),destinationStores);
     for(const [key,value] of Object.entries(destinationMedia)) assert.equal(importEnv.storage.getItem(key),value,'Destination media reference remains unchanged: '+key);
-    for(const [key,value] of sourceCanonical) assert.equal(importEnv.storage.getItem(key),value,'All 16 canonical keys survive serialized production restore: '+key);
+    for(const [key,value] of sourceCanonical) assert.equal(importEnv.storage.getItem(key),value,'All '+canonicalKeys.length+' canonical keys survive serialized production restore: '+key);
     assert.deepEqual(componentCore.snapshot(importEnv.storage),sourceVisibility,'Visibility cache and legacy values also roundtrip exactly.');
     assert.deepEqual(layoutProfiles.validate(JSON.parse(importEnv.storage.getItem(layoutProfiles.KEY)),normalizeLayout),profileState,'Restored real profile key still passes production validation.');
     const todoRestored=await dataAdapter.execute('mynt_todos_get',{}, {storage:importEnv.storage,crypto:webcrypto});
@@ -377,7 +378,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.deepEqual(layoutProfiles.validate(JSON.parse(cold.values.get(layoutProfiles.KEY)),normalizeLayout),profileState);
     for(const [key,value] of Object.entries(destinationMedia)) assert.equal(cold.values.get(key),value);
     assert.deepEqual(JSON.parse(cold.values.get('myntEventCountdownsV1')).events,eventState.events);
-    console.log('COMPONENT_BACKUP_ROUNDTRIP_OK: all 16 canonical visibility keys and caches survive real settings export/serialization/validation/restore/cold-start; real late clock initialization and cross-tab mode/hour/search sync; exact layout/note/todo/event preservation; distinct destination media references and blobs untouched; zero real browser/profile/permission/confirmation operations.');
+    console.log('COMPONENT_BACKUP_ROUNDTRIP_OK: all '+componentCore.definitions.length+' canonical visibility keys and caches survive real settings export/serialization/validation/restore/cold-start; real late clock initialization and cross-tab mode/hour/search sync; exact layout/note/todo/event preservation; distinct destination media references and blobs untouched; zero real browser/profile/permission/confirmation operations.');
 
     console.log('BACKUP_SCOPE_OK: explicit full/settings scope; oversized and blocked media escape route; pre-encoding total and boundary estimates; Unicode/base64 accounting; omitted media/preferences preserved; v1/v2/v3 compatibility; malformed scopes fail before writes; file scope wins over export UI; imported active timer states stay paused; confirmation/cancellation; local read/write rollback and recovery errors. Isolated fixtures only.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

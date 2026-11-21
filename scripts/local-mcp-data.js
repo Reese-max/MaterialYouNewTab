@@ -301,6 +301,14 @@ function validateBackupStorage(saved) {
   let custom;try{custom=JSON.parse(saved.aiToolsCustom);}catch{fail('invalid_storage','Malformed stored JSON preserved unchanged');}
   icons.customOverrides(custom,true);
  }
+ // User-added AI tools (name, website, optional icon) share the 1 MiB icon cap and are validated before any write.
+ if(Object.hasOwn(saved,'aiToolsUserTools')) {
+  const icons=root.MyntQuicklinkIcons||(node&&require('./quicklink-icons.js'));
+  if(!icons?.userAITools)fail('invalid_storage','AI tool validator unavailable');
+  if(typeof saved.aiToolsUserTools!=='string'||saved.aiToolsUserTools.length>1024*1024)fail('data_too_large','Custom AI tools too large');
+  let tools;try{tools=JSON.parse(saved.aiToolsUserTools);}catch{fail('invalid_storage','Malformed stored JSON preserved unchanged');}
+  try{icons.userAITools(tools,true);}catch{fail('invalid_storage','Invalid custom AI tools');}
+ }
 
  // Other structured settings have tolerant on-device normalizers. At the
  // import boundary malformed JSON must never become a silent default/reset.

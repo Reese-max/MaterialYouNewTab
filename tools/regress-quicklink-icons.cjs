@@ -179,12 +179,172 @@ for (const value of ['mynt-icon:book', 'mynt-emoji:😀', 'mynt-text:考:#c7e4c7
 }
 console.log('PASS real AI overrides / safe labels / URL rejection / save normalization / reset / sync watch');
 
+// User-added AI tools: strict/lenient validation and slot ordering.
+const userTool = (extra = {}) => ({ id: 'uabcdef12', label: 'Gemini', url: 'gemini.google.com', ...extra });
+assert.deepEqual(icons.userAITools({ version: 1, tools: [userTool()], order: ['chatGPT', 'uabcdef12', 'claude', 'youtube'] }, true),
+    { version: 1, tools: [{ id: 'uabcdef12', label: 'Gemini', url: 'https://gemini.google.com/', visible: true }], order: ['chatGPT', 'uabcdef12', 'claude', 'youtube'], removed: [] });
+assert.deepEqual(icons.userAITools({ version: 1, tools: [], removed: ['youtube'] }, true).removed, ['youtube']);
+for (const bad of [
+    { version: 2, tools: [] }, { version: 1, tools: {} }, { version: 1, tools: [], extra: true },
+    { version: 1, tools: [userTool({ id: 'x' })] }, { version: 1, tools: [userTool({ label: 'a'.repeat(41) })] },
+    { version: 1, tools: [userTool({ label: 'bad\nlabel' })] }, { version: 1, tools: [userTool({ url: 'javascript:alert(1)' })] },
+    { version: 1, tools: [userTool({ icon: 'mynt-other:x' })] }, { version: 1, tools: [userTool({ visible: 'yes' })] },
+    { version: 1, tools: [userTool({ owner: 'x' })] }, { version: 1, tools: [userTool(), userTool()] },
+    { version: 1, tools: [userTool()], order: ['unknown'] },
+    { version: 1, tools: [], removed: 'youtube' }, { version: 1, tools: [], removed: ['unknown'] }, { version: 1, tools: [], removed: ['youtube', 'youtube'] },
+    { version: 1, tools: Array.from({ length: 13 }, (_, i) => userTool({ id: 'utool' + String(i).padStart(4, '0') })) }
+]) {
+    assert.throws(() => icons.userAITools(bad, true), JSON.stringify(bad).slice(0, 80));
+    assert.doesNotThrow(() => icons.userAITools(bad), 'Lenient reads never throw');
+}
+assert.equal(icons.userAITools({ version: 1, tools: [userTool({ url: 'javascript:alert(1)' }), userTool({ id: 'uok00001' })] }).tools.length, 1, 'Lenient reads skip only invalid tools');
+const slots = { tools: [{ id: 'uabcdef12', visible: true }], order: ['chatGPT', 'uabcdef12', 'claude', 'youtube'] };
+assert.deepEqual(icons.aiToolOrder([{ id: 'youtube', visible: true }, { id: 'chatGPT', visible: false }, { id: 'claude', visible: true }], slots).map(entry => entry.id),
+    ['youtube', 'uabcdef12', 'chatGPT', 'claude'], 'Built-in reorders (for example through MCP) fill slots without moving user tools');
+assert.deepEqual(icons.aiToolOrder([{ id: 'chatGPT', visible: true }], { tools: [{ id: 'uabcdef12', visible: false }], order: [] }),
+    [{ id: 'chatGPT', visible: true }, { id: 'uabcdef12', visible: false, custom: true }], 'Unplaced user tools follow the built-ins');
+
+// Real editor: add, require fields, save, render, delete, preserve unreadable records.
+vm.runInContext('closeAIToolsSettings()', ctx);
+storage.removeItem('aiToolsCustom'); storage.removeItem('aiToolsUserTools');
+vm.runInContext('showAIToolsSettings()', ctx);
+const addButton = aiDoc.getElementById('aiToolsAddButton');
+assert(addButton && !addButton.disabled, 'The editor offers an add button');
+addButton.click();
+let userRow = aiDoc.querySelector('.ai-tool-user');
+assert(userRow, 'Adding creates an editable user row');
+assert.equal(userRow.querySelector('.aiToolCustomFields').hidden, false, 'A new row opens its fields');
+assert.equal(aiDoc.activeElement, userRow.querySelector('.aiToolName'), 'Focus moves to the new name field');
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.equal(storage.getItem('aiToolsUserTools'), null, 'An empty row is never saved');
+assert(userRow.querySelector('.aiToolCustomError').textContent, 'Missing name/URL is explained');
+assert.equal(aiDoc.activeElement, userRow.querySelector('.aiToolName'));
+userRow.querySelector('.aiToolName').value = '<img src=x onerror=alert(1)>';
+userRow.querySelector('.aiToolUrl').value = 'javascript:alert(1)';
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.equal(storage.getItem('aiToolsUserTools'), null, 'Unsafe URLs are rejected before any write');
+assert.equal(aiDoc.activeElement, userRow.querySelector('.aiToolUrl'));
+userRow.querySelector('.aiToolUrl').value = 'example.org/ai';
+aiDoc.getElementById('saveAISettingsBtn').click();
+const savedUser = JSON.parse(storage.getItem('aiToolsUserTools'));
+assert.equal(savedUser.version, 1); assert.equal(savedUser.tools.length, 1);
+assert.equal(savedUser.tools[0].url, 'https://example.org/ai'); assert.equal(savedUser.tools[0].visible, true);
+assert.match(savedUser.tools[0].id, /^u[a-z0-9]{6,24}$/);
+assert.deepEqual(savedUser.order, ['chatGPT', 'claude', 'youtube', savedUser.tools[0].id], 'New tools are saved after the existing ones');
+assert.equal(JSON.parse(storage.getItem('aiToolsSettings')).length, 3, 'aiToolsSettings keeps exactly the three built-ins for MCP and older versions');
+let userLink = aiDoc.getElementById('toolsCont').children.find(node => node.dataset.aiUserTool === savedUser.tools[0].id);
+assert(userLink, 'The saved tool appears with the other AI tools');
+assert.equal(userLink.href, 'https://example.org/ai');
+assert.equal(userLink.querySelector('.tLabel').textContent, '<img src=x onerror=alert(1)>'); assert.equal(userLink.querySelector('.tLabel').innerHTML, '');
+assert.equal(aiDoc.getElementById('toolsCont').children.indexOf(userLink), 3);
+// Built-in-only writes (as local MCP does) keep the user tool in its slot.
+storage.setItem('aiToolsSettings', JSON.stringify(['youtube', 'claude', 'chatGPT']));
+vm.runInContext('applyAIToolsSettings()', ctx);
+assert.deepEqual([...aiDoc.getElementById('toolsCont').children.map(node => node.dataset.aiUserTool || node.querySelector('.tLabel').id)], ['youtube', 'claude', 'chatGPT', savedUser.tools[0].id]);
+// Hide, then delete.
+vm.runInContext('showAIToolsSettings()', ctx);
+userRow = aiDoc.querySelector('.ai-tool-user');
+aiDoc.getElementById('setting_' + savedUser.tools[0].id).checked = false;
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.equal(JSON.parse(storage.getItem('aiToolsUserTools')).tools[0].visible, false);
+assert.equal(userLink.style.display, 'none', 'Unchecking hides without deleting');
+vm.runInContext('showAIToolsSettings()', ctx);
+userRow = aiDoc.querySelector('.ai-tool-user');
+userRow.querySelector('.aiToolDelete').click();
+assert.equal(aiDoc.querySelector('.ai-tool-user'), null, 'Delete removes the draft row');
+assert(aiDoc.getElementById('aiToolsStatus').textContent, 'Deletion is announced');
+assert(storage.getItem('aiToolsUserTools'), 'Deletion waits for Save');
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.equal(storage.getItem('aiToolsUserTools'), null, 'Deleting the last user tool removes the record');
+assert(!aiDoc.getElementById('toolsCont').children.some(node => node.dataset.aiUserTool), 'The deleted tool leaves the homepage row');
+// The add button stops at the limit.
+vm.runInContext('showAIToolsSettings()', ctx);
+for (let i = 0; i < 12; i++) addButton.click();
+assert.equal(aiDoc.querySelectorAll('.ai-tool-user').length, 12); assert.equal(addButton.disabled, true);
+addButton.click(); assert.equal(aiDoc.querySelectorAll('.ai-tool-user').length, 12);
+vm.runInContext('closeAIToolsSettings()', ctx);
+// An unreadable record is preserved and never overwritten by a built-in save.
+storage.setItem('aiToolsUserTools', '{broken');
+vm.runInContext('generateAIToolsForm(loadAIToolsSettings())', ctx);
+assert.equal(addButton.disabled, true); assert(aiDoc.getElementById('aiToolsStatus').textContent);
+assert.equal(aiDoc.querySelector('.ai-tool-user'), null);
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.equal(storage.getItem('aiToolsUserTools'), '{broken', 'Malformed user tools stay untouched');
+storage.removeItem('aiToolsUserTools');
+assert(watchers.some(w => w.keys.includes('aiToolsUserTools')), 'Other tabs refresh user tools');
+// The shortcut editor points to the AI tools editor.
+const shortcutPanel = aiDoc.createElement('div'), shortcutList = aiDoc.createElement('div');
+shortcutList.id = 'shortcutList'; shortcutPanel.appendChild(shortcutList); aiDoc.body.appendChild(shortcutPanel);
+vm.runInContext('mountAIToolsShortcutCard()', ctx);
+const card = aiDoc.getElementById('aiToolsShortcutCard');
+assert(card && shortcutPanel.children.indexOf(card) === shortcutPanel.children.indexOf(shortcutList) + 1, 'The AI tools card follows the shortcut list');
+assert(card.querySelector('button').textContent);
+modal.open = false; card.querySelector('button').click();
+assert.equal(modal.open, true, 'The card opens the AI tools editor');
+vm.runInContext('closeAIToolsSettings()', ctx);
+// Built-in tools can be deleted too, then added back or reset.
+storage.removeItem('aiToolsUserTools'); storage.setItem('aiToolsSettings', JSON.stringify(['chatGPT', 'claude', 'youtube']));
+vm.runInContext('applyAIToolsSettings()', ctx);
+vm.runInContext('showAIToolsSettings()', ctx);
+const builtinRow = id => aiDoc.querySelectorAll('.ai-tool-option').find(option => option.dataset.toolId === id);
+assert(builtinRow('youtube').querySelector('.aiToolDelete'), 'Built-in tools offer Delete');
+assert.equal(aiDoc.getElementById('aiToolsRestore').hidden, true, 'Nothing to add back yet');
+builtinRow('youtube').querySelector('.aiToolDelete').click();
+assert.equal(builtinRow('youtube'), undefined);
+assert.equal(aiDoc.getElementById('aiToolsRestore').hidden, false, 'A deleted built-in can be added back');
+assert(aiDoc.getElementById('aiToolsStatus').textContent);
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsSettings')), ['chatGPT', 'claude', { youtube: false }], 'aiToolsSettings still lists all three built-ins for MCP');
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsUserTools')).removed, ['youtube']);
+assert.equal(aiDoc.getElementById('youtube').parentElement.style.display, 'none', 'The deleted built-in leaves the homepage row');
+assert.doesNotThrow(() => require(path.join(root, 'scripts/local-mcp-data.js')).validateBackupStorage({ aiToolsUserTools: storage.getItem('aiToolsUserTools') }), 'Deleted built-ins survive backup validation');
+vm.runInContext('showAIToolsSettings()', ctx);
+assert.equal(builtinRow('youtube'), undefined, 'A deleted built-in stays out of the editor');
+const restoreButton = aiDoc.getElementById('aiToolsRestore').querySelector('.ai-restore-button');
+assert.equal(restoreButton.dataset.toolId, 'youtube'); assert(restoreButton.textContent);
+restoreButton.click();
+assert(builtinRow('youtube'), 'Add back restores the row'); assert.equal(aiDoc.getElementById('setting_youtube').checked, true);
+assert.equal(aiDoc.getElementById('aiToolsRestore').hidden, true);
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.equal(storage.getItem('aiToolsUserTools'), null, 'Adding back the last deleted built-in clears the record');
+assert.equal(aiDoc.getElementById('youtube').parentElement.style.display, 'flex');
+// Delete all three, then Reset brings them back.
+vm.runInContext('showAIToolsSettings()', ctx);
+for (const id of ['chatGPT', 'claude', 'youtube']) builtinRow(id).querySelector('.aiToolDelete').click();
+assert.equal(aiDoc.querySelectorAll('.ai-tool-option').length, 0);
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsSettings')), [{ chatGPT: false }, { claude: false }, { youtube: false }]);
+vm.runInContext('showAIToolsSettings()', ctx);
+assert.equal(aiDoc.querySelectorAll('.ai-tool-option').length, 0);
+aiDoc.getElementById('resetAISettingsBtn').click();
+assert.equal(aiDoc.querySelectorAll('.ai-tool-option').length, 3, 'Reset lists the built-ins again');
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsSettings')), ['chatGPT', 'claude', 'youtube']);
+assert.equal(storage.getItem('aiToolsUserTools'), null);
+// Anything that shows a deleted built-in again (MCP, an older version) lists it again.
+storage.setItem('aiToolsUserTools', JSON.stringify({ version: 1, tools: [], order: [], removed: ['claude'] }));
+storage.setItem('aiToolsSettings', JSON.stringify(['chatGPT', 'claude', 'youtube']));
+vm.runInContext('generateAIToolsForm(loadAIToolsSettings())', ctx);
+assert(builtinRow('claude'), 'A visible built-in is never hidden by a stale deletion record');
+// Built-ins cannot be deleted while the record is unreadable, since the deletion could not be saved.
+storage.setItem('aiToolsUserTools', '{broken');
+vm.runInContext('generateAIToolsForm(loadAIToolsSettings())', ctx);
+assert.equal(builtinRow('claude').querySelector('.aiToolDelete'), null);
+storage.removeItem('aiToolsUserTools');
+vm.runInContext('closeAIToolsSettings()', ctx);
+console.log('PASS user AI tools add / required fields / unsafe URL / save / render / MCP slots / hide / delete / limit / malformed preservation / shortcut card');
+console.log('PASS built-in AI tools delete / add back / reset / MCP-visible override / unreadable record guard');
+
 const preferences = read('scripts/local-mcp-preferences.js');
 assert.match(preferences, /ai:\[[^\]]*'aiToolsSettings'[^\]]*'aiToolsCustom'/);
 assert.match(read('scripts/local-mcp-data.js'), /'aiToolsSettings','aiToolsCustom'/);
 const adapter = require(path.join(root, 'scripts/local-mcp-data.js'));
 assert.doesNotThrow(() => adapter.validateBackupStorage({ aiToolsCustom: JSON.stringify({ chatGPT: { icon: 'mynt-icon:book' } }) }));
 assert.throws(() => adapter.validateBackupStorage({ aiToolsCustom: '{broken' }));
+assert.doesNotThrow(() => adapter.validateBackupStorage({ aiToolsUserTools: JSON.stringify({ version: 1, tools: [{ id: 'uabcdef12', label: 'Gemini', url: 'https://gemini.google.com/', visible: true }], order: ['uabcdef12', 'chatGPT', 'claude', 'youtube'] }) }));
+for (const bad of ['{broken', JSON.stringify({ version: 2, tools: [] }), JSON.stringify({ version: 1, tools: [{ id: 'uabcdef12', label: 'x', url: 'javascript:alert(1)' }] }), 'x'.repeat(1024 * 1024 + 1)]) {
+    assert.throws(() => adapter.validateBackupStorage({ aiToolsUserTools: bad }), 'Restores reject invalid user AI tools before writing');
+}
 // Three ~136 KB uploaded icons (~408 KB JSON) must still back up; the shared 200 KB read cap must not apply here.
 const bigIcon = 'data:image/png;base64,iVBORw0KGgo' + 'A'.repeat(136000);
 assert.doesNotThrow(() => adapter.validateBackupStorage({ aiToolsCustom: JSON.stringify({ chatGPT: { icon: bigIcon }, claude: { icon: bigIcon }, youtube: { icon: bigIcon } }) }));

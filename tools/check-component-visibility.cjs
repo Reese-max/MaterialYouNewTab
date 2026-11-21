@@ -18,7 +18,7 @@ function apply(store, plan) { plan.writes.forEach(({ key, value }) => store.data
 function item(store, id) { return core.read(store).find(value => value.id === id); }
 function throwsCode(fn, code) { assert.throws(fn, error => error.code === code); }
 
-const ids = ['clock', 'weather', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry'];
+const ids = ['clock', 'weather', 'search', 'searchProvider', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry', 'serviceStatus'];
 assert.deepEqual(core.definitions.map(value => value.id), ids);
 assert.equal(new Set(core.definitions.map(value => value.key)).size, ids.length);
 assert.deepEqual(core.definitions.find(value => value.id === 'clock').selectors, ['#analogClock', '#digitalClock', '#date']);
@@ -26,11 +26,11 @@ assert.deepEqual(core.definitions.find(value => value.id === 'countdowns').panel
 assert.ok(Object.isFrozen(core.definitions));
 assert.ok(Object.isFrozen(core.storageKeys));
 assert.ok(core.definitions.every(value => Object.isFrozen(value) && Object.isFrozen(value.keys) && Object.isFrozen(value.selectors)));
-assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value => value.key), ['myntSearchVisible', 'myntHomeWidgetsVisible', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible']);
+assert.deepEqual(core.definitions.filter(value => value.newPreference).map(value => value.key), ['myntSearchVisible', 'myntHomeWidgetsVisible', 'myntGalleryEntryVisible', 'myntProfilesEntryVisible', 'myntAdaptiveEntryVisible', 'myntServiceStatusPillVisible']);
 assert.ok(core.definitions.filter(value => value.newPreference).every(value => !value.key.startsWith('myntWallpaper')),
     'New entry preferences must survive settings-only backup media filtering.');
 const empty = storage();
-const defaultsOn = new Set(['clock', 'weather', 'search', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
+const defaultsOn = new Set(['clock', 'weather', 'search', 'searchProvider', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry', 'serviceStatus']);
 for (const value of core.read(empty)) {
     assert.equal(value.valid, true, value.id);
     assert.equal(value.visible, defaultsOn.has(value.id), value.id);
@@ -58,6 +58,20 @@ for (const id of ['clock', 'weather']) {
     const plan = core.plan(storage(), id, false);
     assert.equal(plan.writes[0].value, 'true', 'Legacy hidden booleans are inverted.');
 }
+// The provider row reuses the existing "Hide Search Provider Row" preference (true = hidden).
+const providerRow = core.definitions.find(value => value.id === 'searchProvider');
+assert.equal(providerRow.key, 'showShortcutSwitch');
+assert.equal(providerRow.checkboxId, 'shortcut_switchcheckbox');
+assert.deepEqual(providerRow.selectors, [], 'search.js owns the provider row visibility so it never overrides a hidden search bar.');
+assert.deepEqual(core.plan(storage(), 'searchProvider', false).writes, [{ key: 'showShortcutSwitch', value: 'true' }]);
+assert.equal(item(storage({ showShortcutSwitch: 'true' }), 'searchProvider').visible, false, 'Existing hidden rows stay hidden.');
+assert.equal(item(storage({ showShortcutSwitch: 'false' }), 'searchProvider').visible, true);
+// The service alert only hides the homepage pill; the Control Center status list stays available.
+const serviceAlert = core.definitions.find(value => value.id === 'serviceStatus');
+assert.deepEqual(serviceAlert.selectors, ['#serviceStatusPill']);
+assert.deepEqual(serviceAlert.panelSelectors, [], 'Control Center service status remains reachable while the alert is hidden.');
+assert.deepEqual(core.plan(storage(), 'serviceStatus', false).writes, [{ key: 'myntServiceStatusPillVisible', value: 'false' }]);
+assert.ok(!core.storageKeys.includes('myntServiceStatus'), 'Hiding the alert never touches recorded service results.');
 assert.deepEqual(core.plan(storage(), 'shortcuts', true).writes, [
     { key: 'shortcutsCheckboxState', value: 'checked' },
     { key: 'shortcutsDisplayStatus', value: 'flex' },

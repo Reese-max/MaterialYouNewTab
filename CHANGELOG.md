@@ -4,6 +4,8 @@
 
 - Improve manual layout editing with explicit edit mode, large move/resize handles, optional alignment/grid snapping, undo/redo, keyboard adjustments, cancel, and save-and-lock.
 - Add on-device wallpaper palette, contrast, and opacity controls with stable manual positions and image/video fallback. No new permissions or remote analysis.
+- Add your own AI tools (name, website and optional icon) in the AI tools editor and delete any AI tool, built-in ones included (deleted built-ins can be added back or reset); the shortcut editor now links to it, since AI tools share the shortcut row.
+- Add "Search provider row" and "Service status alert" to Settings → Manage components, plus a Control Center switch, so the provider row and the bottom-right service issue / offline alert can be hidden. The Control Center status list keeps working.
 
 
 All notable changes to this project will be documented in this file.

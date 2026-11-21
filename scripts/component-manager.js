@@ -44,6 +44,10 @@
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
             }
             if (item.id === 'exam') { const node = document.getElementById('examDaily'); if (node) node.hidden = !item.visible; }
+            // 搜尋服務列沿用 search.js 的顯示邏輯（含搜尋列圖示切換），只套用、不寫入。
+            if (item.id === 'searchProvider') root.myntSearchPreferences?.setProviderRowVisible?.(item.visible);
+            // 重新顯示時依目前服務狀態決定是否需要提示；不重建控制中心清單。
+            if (item.id === 'serviceStatus') root.myntDashboard?.refreshServiceAlert?.();
         }
         // A previously CSS-hidden, never-positioned clock can start above the viewport.
         // Apply the editor's existing bounds clamp only to that newly visible clock;
