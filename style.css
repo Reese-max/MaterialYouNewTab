@@ -280,21 +280,6 @@ body[data-workspace-background="video"] .leftDiv {
 
 body[data-workspace-background="video"] .leftDiv .clock { display: none !important; }
 
-body[data-workspace-background="video"] .ttteexxtt {
-	top: auto;
-	display: flex;
-	flex-direction: column-reverse;
-	align-items: flex-start;
-	gap: 3px;
-	width: fit-content;
-	max-width: 100%;
-	padding: 10px 14px;
-	border-radius: 16px;
-	background: color-mix(in srgb, var(--accentLightTint-blue) 90%, transparent);
-	box-shadow: 0 10px 30px rgba(13, 39, 71, 0.12);
-}
-
-body[data-workspace-background="video"] #userText,
 body[data-workspace-background="video"] #date {
 	max-width: 100%;
 	min-height: 0;
@@ -305,21 +290,12 @@ body[data-workspace-background="video"] #date {
 	overflow: visible;
 }
 
-body[data-workspace-background="video"] #userText {
-	font-size: clamp(1.15rem, 2vw, 1.35rem);
-	font-weight: 650;
-}
-
 body[data-workspace-background="video"] #date {
 	font-size: 0.9rem;
 	font-weight: 600;
 	opacity: 0.78;
 }
 
-#userText:focus-visible {
-	outline: 2px solid var(--darkColor-blue);
-	outline-offset: 3px;
-}
 body[data-workspace-background="video"] #hideWeather { display: none; }
 body[data-workspace-background="video"] .searchWithCont { display: none !important; }
 body[data-workspace-background="video"] .bookmark-button { display: flex !important; }
@@ -465,75 +441,9 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 
 /* -------------------------------------- */
 
-/* Search suggestions box */
-.resultBox {
-	max-height: 222px;
-	overflow-y: auto;
-	position: absolute;
-	inset-inline-start: 0;
-	width: 100%;
-	border-radius: 25px;
-	margin-top: 10px;
-	padding: 5px 10px;
-	scrollbar-width: none;
-	/* Initially hidden */
-	opacity: 0;
-	z-index: -100;
-	transform: translateY(-70px);
-	transition:
-		opacity 0.5s ease,
-		transform 0.5s ease,
-		z-index 0.5s ease;
-	pointer-events: none;
-	backdrop-filter: blur(4px);
-}
-
-.searchbar:has(:placeholder-shown) ~ .resultBox.show {
-	opacity: 0;
-	z-index: -1000;
-	transform: translateY(-70px);
-	visibility: hidden;
-	pointer-events: none;
-}
-
-.centerDiv:has(.resultBox.show) ~ #shortcuts-section,
 .centerDiv:has(.dropdown-content[style="display: block;"])
 	~ #shortcuts-section {
 	z-index: -1;
-}
-
-@media screen and (max-height: 700px) {
-	.resultBox {
-		max-height: 180px;
-	}
-}
-
-.resultBox::-webkit-scrollbar {
-	display: none;
-	/* For Chrome, Safari, and Edge */
-}
-
-/* Visible state: when you want the result box to appear */
-.resultBox.show:has(:first-child) {
-	opacity: 1;
-	visibility: visible;
-	transform: translateY(0);
-	z-index: 100;
-	pointer-events: all;
-}
-
-.resultItem {
-	padding: 8px;
-	cursor: pointer;
-	font-size: 1.1rem;
-	color: var(--textColorDark-blue);
-}
-
-.resultItem.active,
-.resultItem:hover {
-	background-color: var(--darkColor-blue);
-	border-radius: 15px;
-	color: var(--whitishColor-blue);
 }
 
 /* ----------------- Google App Menu CSS Setup ----------------- */
@@ -1336,7 +1246,11 @@ body #bookmarkButton.bookmark-button.rotate {
 
 /* Modal Styling */
 #editBookmarkModal {
-	display: none;
+	/* <dialog>: closed state is hidden by the browser; an author display here would hide it when open too. */
+	box-sizing: border-box;
+	margin: 0;
+	border: 0;
+	max-width: calc(100vw - 32px);
 	position: fixed;
 	z-index: 5;
 	left: 50%;
@@ -2131,32 +2045,6 @@ body #bookmarkButton.bookmark-button.rotate {
 	opacity: 1;
 }
 
-.todolistitem .todoDaidaiBtn {
-	position: absolute;
-	inset-inline-end: 84px;
-	top: 50%;
-	width: 25px;
-	height: 25px;
-	transform: translateY(-50%);
-	border: 1px solid color-mix(in srgb, var(--whitishColor-blue) 38%, transparent);
-	border-radius: 999px;
-	background: color-mix(in srgb, var(--whitishColor-blue) 18%, transparent);
-	color: inherit;
-	font: inherit;
-	font-size: 10px;
-	font-weight: 700;
-	line-height: 1;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.todolistitem .todoDaidaiBtn:hover,
-.todolistitem .todoDaidaiBtn:focus-visible {
-	background: color-mix(in srgb, var(--whitishColor-blue) 32%, transparent);
-	outline: 2px solid color-mix(in srgb, var(--whitishColor-blue) 58%, transparent);
-	outline-offset: 1px;
-}
-
 .todolistitem.pinned .todopinbtn {
 	background-image: url("./svgs/todo-pin-fill.svg");
 }
@@ -2279,49 +2167,6 @@ body #bookmarkButton.bookmark-button.rotate {
 	border-radius: 100%;
 }
 
-/* ---------------------- */
-.ttteexxtt {
-	position: relative;
-	top: 1.6rem;
-}
-
-#digitalClock[style="display: block;"] + .ttteexxtt {
-	top: 1rem;
-}
-
-#userText {
-	font-family: var(--main-font-family);
-	font-size: 1.36rem;
-	display: block;
-	word-wrap: break-word;
-	max-width: 18.75rem;
-	max-height: 4.3rem;
-	min-height: 2.5rem;
-	min-width: 2.5rem;
-	overflow-x: clip;
-	overflow-y: scroll;
-	text-overflow: ellipsis;
-	scrollbar-width: none;
-	margin-bottom: 10px;
-	background-color: var(--bg-color-blue);
-	padding: 3px 10px;
-	width: fit-content;
-	border-radius: 10px;
-}
-
-/* When wallpaper is active */
-body[data-bg="wallpaper"] #userText {
-	background-color: color-mix(
-		in srgb,
-		var(--accentLightTint-blue) var(--transparency),
-		transparent
-	);
-}
-
-#userText::-webkit-scrollbar {
-	display: none;
-}
-
 #date {
 	font-size: 1.36rem;
 	background-color: var(--bg-color-blue);
@@ -2382,9 +2227,7 @@ html[lang="ta"] .digiclock {
 }
 
 .clockOptions,
-.proxyOptions,
-.weatherOptions,
-.quotesOptions {
+.weatherOptions {
 	overflow: hidden;
 	max-height: 800px;
 	opacity: 1;
@@ -2397,10 +2240,6 @@ html[lang="ta"] .digiclock {
 	max-height: 0;
 	opacity: 0;
 	pointer-events: none;
-}
-
-.quotesOptions:not(:last-child) .ttcont:last-child {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .clock-hidden-left {
@@ -2527,7 +2366,8 @@ body[data-bg="wallpaper"] .opacityBarControl {
 	opacity: 1;
 	transform: translateY(0);
 	pointer-events: auto;
-	max-height: 150px;
+	/* Room for the adaptive-opacity row that adaptive-background.js adds; 150px clipped the slider. */
+	max-height: 320px;
 	overflow: hidden;
 	margin-top: 20px;
 	border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -2625,8 +2465,29 @@ body[data-bg="wallpaper"] .humidityBar .thinLine {
 }
 
 #opacityTextContainer {
+	flex-wrap: wrap;
 	border-bottom: 0;
 	padding: 8px 4px 6px;
+}
+
+/* Same row as the adaptive panel's checkboxes: box and text on one line (not the .ttcont text-input style). */
+#opacityTextContainer > label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding-top: 8px;
+	color: var(--textColorDark-blue);
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+#opacityTextContainer > label > input {
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--darkColor-blue);
 }
 /* End of _____________________- */
 
@@ -3096,104 +2957,6 @@ body[data-bg="wallpaper"] .searchWithCont .hint:hover {
 		border 0.2s ease;
 }
 
-/* ----------- Quotes ------------ */
-.quotesCont {
-	margin-top: var(--gap);
-	position: relative;
-	display: flex;
-	font-size: 1rem;
-	direction: ltr; /* Remove when multilingual quote is supported */
-	unicode-bidi: isolate;
-}
-
-.quotesContainer {
-	position: relative;
-	background-color: var(--accentLightTint-blue);
-	height: 100px;
-	width: 100%;
-	border-radius: 20px;
-	padding: 20px;
-	line-height: 28px;
-}
-
-.authorWrapper {
-	position: absolute;
-	bottom: 0;
-	inset-inline-end: 0;
-	display: flex;
-	align-items: flex-end;
-	background: var(--bg-color-blue);
-	border-start-start-radius: 20px;
-	border-end-end-radius: 20px;
-}
-
-.authorName {
-	position: relative;
-	padding: 6px 16px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 40px;
-	width: 40px;
-	border-start-start-radius: 20px;
-	border-end-end-radius: 20px;
-	white-space: nowrap;
-	overflow: hidden;
-	transition: width 0.4s var(--md-motion-ease);
-	box-sizing: border-box;
-}
-
-.authorName span {
-	display: inline-block;
-	padding: 0;
-}
-
-.qtRounder {
-	position: absolute;
-	width: 20px;
-	height: 20px;
-	inset-inline-start: -20px;
-	transform: rotate(90deg);
-}
-
-.qtRounder2 {
-	position: absolute;
-	width: 20px;
-	height: 20px;
-	inset-inline-end: 0;
-	top: -20px;
-	transform: rotate(90deg);
-}
-
-body[data-bg="wallpaper"] .quotesContainer {
-	background-color: color-mix(
-		in srgb,
-		var(--accentLightTint-blue) var(--transparency),
-		transparent
-	);
-	text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
-}
-
-.black-theme body[data-bg="wallpaper"] .quotesContainer {
-	text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
-}
-
-body[data-bg="wallpaper"] .authorWrapper {
-	background-color: color-mix(
-		in srgb,
-		var(--bg-color-blue) calc(var(--transparency) * 1.5),
-		transparent
-	);
-}
-
-html[lang="ur"] .qtRounder {
-	left: -18.5px;
-}
-
-html[lang="ur"] .qtRounder2 {
-	right: -1.5px;
-}
-
 /* ----------Shortcuts----------------- */
 
 #shortcuts-section {
@@ -3646,7 +3409,16 @@ body[data-bg="wallpaper"] .aiToolsCont .toolsCont a {
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 	z-index: 1001;
 	width: 380px;
+	max-width: calc(100vw - 24px);
+	max-height: calc(100dvh - 24px);
+	margin: 0;
+	border: none;
+	overflow: auto;
 }
+
+.ai-settings-modal::backdrop { background: rgba(0, 0, 0, 0.45); }
+.ai-settings-modal .ai-close-button { background: transparent; border: none; padding: 6px; display: flex; }
+.ai-settings-modal button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .ai-settings-modal .ai-modal-header {
 	display: flex;
@@ -4363,10 +4135,6 @@ input:checked + .toggle:before {
 	border-bottom: 1px solid #ffffff1a;
 }
 
-.black-theme .sectionInner .quotesOptions:not(:last-child) .ttcont:last-child {
-	border-bottom: 1px solid #ffffff1a;
-}
-
 .black-theme body[data-bg="wallpaper"] .opacityBarControl {
 	border-top: 1px solid #ffffff1a;
 }
@@ -4534,11 +4302,24 @@ input:checked + .toggle:before {
 }
 
 .shortcutSettingsEntry input {
-	width: 100%;
+	box-sizing: border-box;
+	/* Inline padding gives focus a rounded box; the negative margin keeps the text where it was. */
+	width: calc(100% + 6px);
+	padding: 2px 6px;
+	margin-inline-start: -6px;
+	border-radius: 6px;
 	background: none;
 	border: none;
 	color: var(--textColorDark-blue);
 	text-overflow: ellipsis;
+}
+
+.shortcutSettingsEntry input:focus-visible {
+	/* Theme blue darkened toward the text color: >=3:1 against the card (3.6:1 on the blue theme). */
+	outline: 2px solid color-mix(in srgb, var(--darkColor-blue) 70%, var(--textColorDark-blue));
+	/* Inset so the ring stays clear of the globe icon and the icon picker. */
+	outline-offset: -2px;
+	background: rgba(255, 255, 255, 0.55);
 }
 
 .shortcutSettingsEntry input:hover {
@@ -4556,8 +4337,8 @@ input:checked + .toggle:before {
 }
 
 .shortcutSettingsEntry .URL {
+	min-height: 24px;
 	font-size: 0.76rem;
-	opacity: 0.9;
 }
 
 .shortcutSettingsEntry .iconURL {
@@ -4567,13 +4348,13 @@ input:checked + .toggle:before {
 
 .shortcutSettingsEntry input::placeholder {
 	color: var(--textColorDark-blue);
-	opacity: 0.6;
+	opacity: 0.75;
 }
 
 .shortcutInputRow {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 8px;
 }
 
 .shortcutInputRow:last-child {
@@ -4590,6 +4371,108 @@ input:checked + .toggle:before {
 .shortcutInputRow input {
 	flex: 1;
 	min-width: 0;
+}
+
+.shortcutFieldMessage {
+	margin-top: 2px;
+	font-size: 0.72rem;
+	line-height: 1.3;
+	color: var(--textColorDark-blue);
+	opacity: 0.85;
+	overflow-wrap: anywhere;
+}
+
+.shortcutFieldMessage[hidden] {
+	display: none;
+}
+
+.shortcutSettingsEntry input[aria-invalid="true"] {
+	outline: 1px solid #d32f2f;
+	outline-offset: 1px;
+	border-radius: 2px;
+}
+
+/* The icon picker is a quiet tonal chip in the row actions' surface, not an outlined button. */
+.shortcutSettingsEntry .quicklinkChooseIcon {
+	/* Name and URL are one group; the icon picker starts the next, clear of the URL focus ring. */
+	margin-top: 8px;
+	border-color: transparent;
+	border-radius: 12px;
+	padding: 8px 12px 8px 10px;
+	background: rgba(255, 255, 255, 0.4);
+	transition: 0.3s background;
+}
+
+.shortcutSettingsEntry .quicklinkChooseIcon:hover {
+	background: rgba(255, 255, 255, 0.7);
+}
+
+/* A draft without a URL has no icon yet: show an empty slot instead of a gap. */
+.shortcutSettingsEntry .quicklinkChoosePreview:empty {
+	box-sizing: border-box;
+	border: 1.5px dashed currentColor;
+	border-radius: 50%;
+	opacity: 0.5;
+}
+
+/* A hairline under the sticky top bar so scrolled rows read as passing beneath it, not cut in half. */
+#shortcutEditPage .topBar {
+	box-shadow: 0 1px 0 color-mix(in srgb, var(--textColorDark-blue) 12%, transparent);
+}
+
+/* The italic hint's last glyph overhangs its box; keep the ink inside so the sticky top bar covers it when scrolled. */
+#editShortcutsListInfo {
+	padding-inline-end: 4px;
+}
+
+/* Undo sits apart from the list in the rows' tonal language, with body-text contrast. */
+#shortcutEditPage .myntRecoveryControl {
+	margin-block: 8px 16px;
+}
+
+#shortcutEditPage .myntRecoveryUndo {
+	min-height: 40px;
+	padding: 8px 14px;
+	border-color: transparent;
+	border-radius: 12px;
+	background: var(--bg-color-blue);
+	color: var(--textColorDark-blue);
+	transition: 0.3s background, 0.3s color;
+}
+
+#shortcutEditPage .myntRecoveryUndo:not(:disabled):hover {
+	background: var(--darkColor-blue);
+	color: white;
+}
+
+.black-theme #shortcutEditPage .myntRecoveryUndo {
+	background: #232221;
+}
+
+.black-theme #shortcutEditPage .myntRecoveryUndo:not(:disabled):hover {
+	background: #404040;
+}
+
+@media (forced-colors: active) {
+	.shortcutSettingsEntry .quicklinkChooseIcon,
+	#shortcutEditPage .myntRecoveryUndo {
+		border-color: ButtonText;
+	}
+}
+
+/* Below ~360px the name column shrinks to ~110px: move the actions under the content so the URL stays readable. */
+@media (max-width: 360px) {
+	.shortcutSettingsEntry {
+		flex-wrap: wrap;
+	}
+
+	.shortcutSettingsEntry .shortcutActions {
+		flex-basis: 100%;
+		grid-template-columns: repeat(4, 44px);
+		justify-content: start;
+		/* Line up with the name and icon picker: grip column (32px) + input group margin (5px). */
+		margin: 8px 0 0 37px;
+	}
 }
 
 /* Drag and drop styles */
@@ -4640,12 +4523,41 @@ input:checked + .toggle:before {
 	transform: none;
 }
 
+/* Four row actions share one size and surface in a 2x2 grid, leaving width for the name and URL. */
 .shortcutActions {
-	display: flex;
-	align-items: center;
-	gap: 8px;
+	display: grid;
+	grid-template-columns: repeat(2, 44px);
+	gap: 4px;
+	flex: none;
 	margin-inline-start: 8px;
 }
+
+.shortcutDelete {
+	display: flex;
+}
+
+.shortcutActions svg {
+	width: 20px;
+	height: 20px;
+}
+
+.shortcutMoveUp, .shortcutMoveDown {
+	width: 44px;
+	height: 44px;
+	border: none;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.4);
+	color: var(--textColorDark-blue);
+	font: inherit;
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	transition: 0.3s all;
+}
+.shortcutMoveUp:not(:disabled):hover, .shortcutMoveDown:not(:disabled):hover { color: white; background: var(--darkColor-blue); }
+/* Disabled keeps its container so the slot stays visible (also on the dark theme); only the glyph fades. */
+.shortcutMoveUp:disabled, .shortcutMoveDown:disabled { color: color-mix(in srgb, var(--textColorDark-blue) 45%, transparent); cursor: default; }
+.shortcutActions button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .shortcutDelete button,
 .uploadCustomIconButton {
@@ -4653,11 +4565,11 @@ input:checked + .toggle:before {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 42px;
-	height: 42px;
+	width: 44px;
+	height: 44px;
 	background: rgba(255, 255, 255, 0.4);
 	border: none;
-	border-radius: 7px;
+	border-radius: 12px;
 	cursor: pointer;
 	transition: 0.3s all;
 }
@@ -4977,8 +4889,56 @@ option:checked {
 /* Upload/Clear Buttons */
 .uploadClearContainer {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 10px;
+}
+
+/* Labels stay on one line: the row wraps instead of squeezing "Stop using background" into a column. */
+.uploadClearContainer .uploadButton {
+	flex: 1 1 auto;
+	width: auto;
+	min-width: 0;
+	white-space: nowrap;
+}
+
+/* Upload is the one filled action. --darkerColor-blue keeps white text >=4.5:1 (#4382ec gave 3.7:1). */
+.uploadClearContainer .uploadButton {
+	color: var(--whitishColor-blue);
+	background-color: var(--darkerColor-blue);
+}
+
+.uploadClearContainer .uploadButton:hover {
+	color: var(--whitishColor-blue);
+	background-color: color-mix(in srgb, var(--darkerColor-blue) 82%, black);
+}
+
+.uploadClearContainer .randomButton {
+	color: var(--darkerColor-blue);
+}
+
+/* Upload is the primary action; clearing the background is secondary, in the random button's white style. */
+.uploadClearContainer .clearButton {
+	flex: 1 0 auto;
+	white-space: nowrap;
+	color: var(--darkerColor-blue);
+	background-color: var(--whitishColor-blue);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.uploadClearContainer .clearButton:hover {
+	color: var(--whitishColor-blue);
+	background-color: var(--darkerColor-blue);
+}
+
+/* The unfilled track was white on the near-white panel; tint it so the slider's range reads (light theme only). */
+:root:not(.black-theme) .opacityBar .thinLine {
+	background-color: color-mix(in srgb, var(--textColorDark-blue) 22%, var(--whitishColor-blue));
+}
+
+/* The percentage sits on the slider fill: the darker blue keeps it readable. */
+:root:not(.black-theme) #opacitySlider {
+	background-color: var(--darkerColor-blue);
 }
 
 .uploadButton {
@@ -5462,19 +5422,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 		/* background-color: rgba(0, 0, 255, 0.159); */
 	}
 
-	.ttteexxtt {
-		position: absolute;
-		/* background-color: yellow; */
-		height: fit-content;
-		width: fit-content;
-		bottom: 0;
-		top: 0;
-		inset-inline-start: 300px;
-		/*Because Clock width is 300px*/
-		margin-block: auto;
-		margin-inline-start: var(--gap);
-		margin-inline-end: auto;
-	}
 	.shortcutsContainer {
 		row-gap: 2rem;
 	}
@@ -5567,9 +5514,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	}
 	.rightDiv {
 		scale: 0.75;
-	}
-	.ttteexxtt {
-		display: none;
 	}
 }
 
@@ -5725,17 +5669,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	.toggleTextsCont .ttcont:has(#shortcut_switchcheckbox) {
 		display: none;
 	}
-	.toggleTextsCont .ttcont:has(#motivationalQuotesCheckbox) {
-		display: none;
-	}
-	.quotesOptions,
-	.toggleTextsCont .ttcont:has(#newQuoteOnRefreshCheckbox) {
-		display: none;
-	}
-	.quotesContainer,
-	.authorWrapper {
-		display: none;
-	}
 	.searchbar .searchIcon:nth-of-type(1) {
 		display: none !important;
 	}
@@ -5757,22 +5690,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 		position: relative;
 		margin-bottom: 6rem;
 		padding-top: 0;
-	}
-	.resultBox {
-		scale: 1.5;
-		width: calc(94vw / 0.75);
-		margin-left: calc(320px - 94vw);
-		transform-origin: top left;
-		&:dir(rtl) {
-			margin-right: calc(320px - 31vw);
-		}
-	}
-	.resultBox {
-		top: 120px;
-		bottom: unset;
-	}
-	.resultBox.show {
-		transform: translateY(36px);
 	}
 	.searchWithCont {
 		display: none !important;
@@ -5820,12 +5737,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	}
 	#prompt-modal-container {
 		width: 86% !important;
-	}
-}
-
-@media screen and (max-width: 425px) and (max-height: 700px) {
-	.resultBox {
-		bottom: -32px;
 	}
 }
 
@@ -5977,6 +5888,10 @@ body[data-bg="wallpaper"] .dropdown-content {
 
 .black-theme .clearButton {
 	color: var(--textColorDark-dark);
+}
+
+.black-theme .uploadClearContainer .clearButton {
+	background-color: var(--darkColor-blue);
 }
 
 .black-theme .clearButton:hover {
@@ -6166,10 +6081,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	fill: #b1b1b1;
 }
 
-.black-theme .resultItem.active {
-	background-color: var(--darkColor-dark);
-}
-
 .black-theme .location-suggestion-box {
 	background-color: #272727;
 }
@@ -6182,10 +6093,20 @@ body[data-bg="wallpaper"] .dropdown-content {
 	background-color: var(--bg-color-dark);
 }
 
+.black-theme .shortcutSettingsEntry .quicklinkChooseIcon {
+	background: #232221;
+}
+
+.black-theme .shortcutSettingsEntry .quicklinkChooseIcon:hover {
+	background: #404040;
+}
+
 .black-theme #resetButton,
 .black-theme #newShortcutButton,
 .black-theme .shortcutDelete button,
-.black-theme .uploadCustomIconButton {
+.black-theme .uploadCustomIconButton,
+.black-theme .shortcutMoveUp,
+.black-theme .shortcutMoveDown {
 	background: #232221;
 }
 
@@ -6196,7 +6117,9 @@ body[data-bg="wallpaper"] .dropdown-content {
 }
 
 .black-theme .uploadCustomIconButton:hover,
-.black-theme .shortcutDelete button:hover {
+.black-theme .shortcutDelete button:hover,
+.black-theme .shortcutMoveUp:not(:disabled):hover,
+.black-theme .shortcutMoveDown:not(:disabled):hover {
 	background: #404040;
 }
 
@@ -6222,17 +6145,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	outline: 2px solid black;
 }
 
-.black-theme .tips {
-	background-color: var(--darkColor-dark);
-}
-
-.black-theme #dontShowTips {
-	background-color: var(--bg-color-dark);
-}
-
-.black-theme #dontShowTips:hover {
-	background-color: var(--accentLightTint-dark);
-}
 /* ---------------- End of Dark(Black) theme ---------------- */
 
 /* Alert & Confirm Modal */
@@ -6330,86 +6242,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 	outline-offset: 3px;
 }
 /* ---------------- End of Alert & Confirm Modal ---------------- */
-
-.tips {
-	margin-top: 30px;
-	display: grid;
-	gap: 12px;
-	max-height: 900px;
-	overflow: hidden;
-	background-color: var(--bg-color-blue);
-	background-color: color-mix(
-		in srgb,
-		var(--accentLightTint-blue) 40%,
-		var(--bg-color-blue)
-	);
-	padding: 18px 20px;
-	border-radius: 20px;
-	opacity: 1;
-	transition:
-		max-height 0.35s var(--md-motion-decelerate),
-		padding 0.35s ease,
-		margin 0.35s ease,
-		opacity 0.25s ease;
-}
-
-.tips.tips-hidden {
-	margin-top: 0;
-	max-height: 0;
-	padding-top: 0;
-	padding-bottom: 0;
-	opacity: 0;
-	pointer-events: none;
-}
-
-#dontShowTips {
-	position: relative;
-	overflow: hidden;
-	border: none;
-	display: block;
-	padding: 6px 10px;
-	background-color: var(--darkColor-blue);
-	color: white;
-	border-radius: 16px;
-	margin-top: 5px;
-}
-
-#dontShowTips::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.25),
-		transparent
-	);
-	transform: translateX(-100%);
-	animation: dontShowTipsShine 3s infinite;
-	pointer-events: none;
-}
-
-.tips.tips-hidden #dontShowTips::before {
-	animation: none;
-}
-
-#dontShowTips:hover {
-	background-color: var(--darkerColor-blue);
-}
-
-@keyframes dontShowTipsShine {
-	100% {
-		transform: translateX(100%);
-	}
-}
-
-.tips .ttcont .texts .bigText {
-	font-size: 1rem;
-}
-
-.tips .ttcont .texts .infoText {
-	font-size: 0.8rem;
-}
 
 /* ----------------- Toast ----------------- */
 #chromeFooterToast {
@@ -6572,234 +6404,6 @@ body[data-bg="wallpaper"] .dropdown-content {
 }
 /* ------------ End of Toast---------- */
 
-/* ------------ BongoCat Widget ------------ */
-#bongoCatWidget {
-	position: fixed;
-	bottom: 10px;
-	left: 10px;
-	z-index: 2;
-	pointer-events: none;
-	display: none;
-}
-
-#bongoCatContainer {
-	position: relative;
-	width: 200px;
-	height: 101px;
-}
-
-#bongoCatContainer > div {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: 0 0;
-}
-
-#bongoCatHead {
-	background-image: url(./images/bongocat/base.png);
-	z-index: 10;
-}
-
-#bongoCatPawLeft {
-	background-image: url(./images/bongocat/left-up.png);
-	z-index: 20;
-}
-
-#bongoCatPawRight {
-	background-image: url(./images/bongocat/right-up.png);
-	z-index: 20;
-}
-
-/* Costume color filters */
-#bongoCatContainer.bongo-outfit-dark {
-	filter: invert(1) hue-rotate(180deg);
-}
-
-#bongoCatContainer.bongo-outfit-sakura {
-	filter: sepia(0.3) saturate(1.8) hue-rotate(300deg) brightness(1.05);
-}
-
-#bongoCatContainer.bongo-outfit-ocean {
-	filter: sepia(0.2) saturate(2) hue-rotate(190deg);
-}
-
-#bongoCatContainer.bongo-outfit-sunset {
-	filter: sepia(0.4) saturate(2.5) hue-rotate(340deg) brightness(1.05);
-}
-
-#bongoCatContainer.bongo-outfit-forest {
-	filter: sepia(0.2) saturate(1.8) hue-rotate(90deg) brightness(1.05);
-}
-
-#bongoCatContainer.bongo-outfit-lavender {
-	filter: sepia(0.3) saturate(2) hue-rotate(250deg) brightness(1.05);
-}
-
-/* Costume grid */
-.bongoCostumeGrid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-	gap: 8px;
-	width: 100%;
-	padding: 4px 0;
-}
-
-.bongoCostumeThumb {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 4px;
-	padding: 6px;
-	border: 2px solid transparent;
-	border-radius: 12px;
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-	transition: border-color 0.2s, background-color 0.2s;
-}
-
-.bongoCostumeThumb:hover {
-	background-color: rgba(255, 255, 255, 0.08);
-}
-
-.bongoCostumeThumb.active {
-	border-color: var(--darkColor-blue);
-}
-
-.bongoCostumePreview {
-	width: 60px;
-	height: 31px;
-	background-image: url(./images/bongocat/base.png);
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center;
-	border-radius: 6px;
-}
-
-/* Preview filter variants */
-.bongoCostumePreview.preview-dark {
-	filter: invert(1) hue-rotate(180deg);
-}
-
-.bongoCostumePreview.preview-sakura {
-	filter: sepia(0.3) saturate(1.8) hue-rotate(300deg) brightness(1.05);
-}
-
-.bongoCostumePreview.preview-ocean {
-	filter: sepia(0.2) saturate(2) hue-rotate(190deg);
-}
-
-.bongoCostumePreview.preview-sunset {
-	filter: sepia(0.4) saturate(2.5) hue-rotate(340deg) brightness(1.05);
-}
-
-.bongoCostumePreview.preview-forest {
-	filter: sepia(0.2) saturate(1.8) hue-rotate(90deg) brightness(1.05);
-}
-
-.bongoCostumePreview.preview-lavender {
-	filter: sepia(0.3) saturate(2) hue-rotate(250deg) brightness(1.05);
-}
-
-.bongoCostumeLabel {
-	font-size: 0.72rem;
-	opacity: 0.8;
-	white-space: nowrap;
-}
-
-.bongoCostumeHidden {
-	display: none !important;
-}
-
-/* Cute style — use cat.png (800x900) for head, hide paw divs, bounce on keypress */
-/* cat.png content at x=440..679, y=12..208 of 800x900; 200% + 90% centers the cat */
-#bongoCatContainer.bongo-style-cute {
-	background: rgba(255, 255, 255, 0.35);
-	border-radius: 12px;
-}
-
-#bongoCatContainer.bongo-style-cute > #bongoCatHead {
-	background-image: url(./images/bongocat/cat.png);
-	background-size: 200% auto;
-	background-position: 90% 0%;
-}
-
-#bongoCatContainer.bongo-style-cute > #bongoCatPawLeft,
-#bongoCatContainer.bongo-style-cute > #bongoCatPawRight {
-	background-image: none !important;
-}
-
-/* Bounce animation for cute style */
-@keyframes bongoBounceLeft {
-	0%   { transform: rotate(0deg) translateY(0); }
-	30%  { transform: rotate(-6deg) translateY(-5px); }
-	100% { transform: rotate(0deg) translateY(0); }
-}
-
-@keyframes bongoBounceRight {
-	0%   { transform: rotate(0deg) translateY(0); }
-	30%  { transform: rotate(6deg) translateY(-5px); }
-	100% { transform: rotate(0deg) translateY(0); }
-}
-
-#bongoCatHead.bongo-bounce-left {
-	animation: bongoBounceLeft 0.2s ease-out;
-}
-
-#bongoCatHead.bongo-bounce-right {
-	animation: bongoBounceRight 0.2s ease-out;
-}
-
-/* Style preview — cute */
-.bongoCostumePreview.preview-style-cute {
-	background-image: url(./images/bongocat/cat.png);
-	background-size: 200% auto;
-	background-position: 90% 0%;
-}
-
-/* Drag handle */
-#bongoCatDragHandle {
-	position: absolute;
-	top: -6px;
-	right: -6px;
-	width: 22px;
-	height: 22px;
-	border-radius: 50%;
-	background: rgba(128, 128, 128, 0.3);
-	cursor: grab;
-	touch-action: none;
-	pointer-events: auto;
-	opacity: 0.15;
-	transition: opacity 0.2s;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 30;
-}
-
-#bongoCatDragHandle::before {
-	content: "⠿";
-	font-size: 14px;
-	color: rgba(0, 0, 0, 0.5);
-	line-height: 1;
-}
-
-#bongoCatDragHandle.bongo-drag-near {
-	opacity: 1;
-}
-
-#bongoCatDragHandle:active {
-	cursor: grabbing;
-	background: rgba(128, 128, 128, 0.5);
-}
-
-/* ------------ End of BongoCat ------------ */
-
 /* ------------ Command & Control Center ------------ */
 :root {
 	--mynt-font-scale: 1;
@@ -6834,8 +6438,7 @@ html {
 }
 
 .settingsActionBtn,
-.permissionControls button,
-.habitForm button {
+.permissionControls button {
 	border: 0;
 	border-radius: 999px;
 	padding: 8px 16px;
@@ -6847,33 +6450,8 @@ html {
 }
 
 .settingsActionBtn:hover,
-.permissionControls button:hover,
-.habitForm button:hover {
+.permissionControls button:hover {
 	background: color-mix(in srgb, var(--darkerColor-blue) 84%, black);
-}
-
-.habitForm input::placeholder {
-	color: color-mix(in srgb, var(--textColorDark-blue) 82%, var(--whitishColor-blue));
-}
-
-.pomodoroFocusSummary {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 5px;
-	margin-top: 5px;
-	font-size: 11px;
-	color: rgba(255, 255, 255, 0.72);
-}
-
-.pomodoroFocusSummary button {
-	border: 0;
-	border-radius: 999px;
-	padding: 2px 7px;
-	background: rgba(255, 255, 255, 0.18);
-	color: white;
-	cursor: pointer;
-	font: inherit;
 }
 
 #serviceStatusPill {
@@ -7171,82 +6749,6 @@ html {
 	color: var(--darkColor-blue);
 }
 
-.focusStatGrid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 12px;
-}
-
-.focusStatCard {
-	display: flex;
-	flex-direction: column;
-	padding: 16px;
-	border-radius: 18px;
-	background: color-mix(in srgb, var(--bg-color-blue) 80%, var(--whitishColor-blue));
-	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 14%, transparent);
-	transition: transform 0.2s var(--md-motion-ease), box-shadow 0.2s ease;
-}
-
-.focusStatCard:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.focusStatCard strong {
-	font-size: 1.75rem;
-	font-weight: 700;
-	font-variant-numeric: tabular-nums;
-	line-height: 1.2;
-}
-
-.focusStatCard span {
-	margin-top: 4px;
-	font-size: 0.72rem;
-	font-weight: 600;
-	opacity: 0.75;
-}
-
-.focusWeekChart {
-	display: grid;
-	grid-template-columns: repeat(7, 1fr);
-	align-items: end;
-	gap: 8px;
-	height: 136px;
-	margin-top: 16px;
-	padding: 14px 12px 6px;
-	border-radius: 18px;
-	background: color-mix(in srgb, var(--bg-color-blue) 48%, transparent);
-	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 12%, transparent);
-}
-
-.focusDay {
-	display: grid;
-	grid-template-rows: 1fr auto;
-	align-items: end;
-	justify-items: center;
-	height: 100%;
-	gap: 6px;
-}
-
-.focusDayBar {
-	width: min(28px, 72%);
-	min-height: 5px;
-	border-radius: 8px 8px 3px 3px;
-	background: var(--darkColor-blue);
-	transition: height 0.4s var(--md-motion-ease), transform 0.2s ease, opacity 0.2s ease;
-}
-
-.focusDay:hover .focusDayBar {
-	transform: scaleY(1.05);
-	opacity: 0.9;
-}
-
-.focusDay span {
-	font-size: 0.68rem;
-	font-weight: 600;
-	opacity: 0.75;
-}
-
 .workspacePresetGrid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -7443,111 +6945,6 @@ html {
 
 .workspaceEditorActions .workspaceDangerBtn:hover {
 	background: color-mix(in srgb, #a82d2d 12%, transparent);
-}
-
-.habitForm {
-	display: flex;
-	gap: 10px;
-	margin-bottom: 12px;
-}
-
-.habitForm input {
-	flex: 1;
-	min-width: 0;
-	height: 44px;
-	padding: 0 14px;
-	border: 1px solid color-mix(in srgb, var(--textColorDark-blue) 18%, transparent);
-	border-radius: 14px;
-	background: var(--whitishColor-blue);
-	color: var(--textColorDark-blue);
-	font: inherit;
-	user-select: text;
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.habitForm input:focus {
-	outline: none;
-	border-color: var(--darkColor-blue);
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--darkColor-blue) 25%, transparent);
-}
-
-.habitForm button {
-	padding: 0 18px;
-	border: 0;
-	border-radius: 14px;
-	background: var(--darkColor-blue);
-	color: var(--onActionColor-blue);
-	font: inherit;
-	font-weight: 600;
-	cursor: pointer;
-	transition: opacity 0.2s ease, transform 0.15s ease;
-}
-
-.habitForm button:hover {
-	opacity: 0.9;
-	transform: translateY(-1px);
-}
-
-.habitList {
-	list-style: none;
-}
-
-.habitRow {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	min-height: 46px;
-	padding: 8px 6px;
-	border-bottom: 1px solid color-mix(in srgb, var(--textColorDark-blue) 10%, transparent);
-	transition: background-color 0.15s ease;
-}
-
-.habitRow:last-child {
-	border-bottom: 0;
-}
-
-.habitRow input {
-	width: 20px;
-	height: 20px;
-	accent-color: var(--darkColor-blue);
-}
-
-.habitRow label {
-	flex: 1;
-	cursor: pointer;
-	font-size: 0.86rem;
-}
-
-.habitRow.done label {
-	text-decoration: line-through;
-	opacity: 0.6;
-}
-
-.habitAutoBadge {
-	padding: 3px 8px;
-	border-radius: 999px;
-	background: var(--bg-color-blue);
-	font-size: 0.66rem;
-	font-weight: 600;
-}
-
-.habitDeleteBtn {
-	width: 32px;
-	height: 32px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	border: 0;
-	border-radius: 50%;
-	background: transparent;
-	color: inherit;
-	font-size: 1.2rem;
-	cursor: pointer;
-	transition: background-color 0.2s ease;
-}
-
-.habitDeleteBtn:hover {
-	background: color-mix(in srgb, var(--bg-color-blue) 75%, transparent);
 }
 
 .controlSettingRow,
@@ -7768,21 +7165,6 @@ body[data-workspace-background="wallpaper"] {
 	color: #a8c7fa;
 }
 
-.black-theme .focusStatCard {
-	background: #1f1e1d;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	color: #ffffff;
-}
-
-.black-theme .focusWeekChart {
-	background: #1f1e1d;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.black-theme .focusDayBar {
-	background: #a8c7fa;
-}
-
 .black-theme .workspacePresetCard {
 	background: #1f1e1d;
 	border-color: rgba(255, 255, 255, 0.1);
@@ -7803,16 +7185,14 @@ body[data-workspace-background="wallpaper"] {
 }
 
 .black-theme .workspaceEditorField input,
-.black-theme .workspaceEditorField select,
-.black-theme .habitForm input {
+.black-theme .workspaceEditorField select {
 	background: rgba(255, 255, 255, 0.08);
 	color: #ffffff;
 	border-color: rgba(255, 255, 255, 0.15);
 }
 
 .black-theme .workspaceEditorField input:focus,
-.black-theme .workspaceEditorField select:focus,
-.black-theme .habitForm input:focus {
+.black-theme .workspaceEditorField select:focus {
 	border-color: #a8c7fa;
 	box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.25);
 }
@@ -7830,24 +7210,6 @@ body[data-workspace-background="wallpaper"] {
 .black-theme .workspaceEditorActions .settingsActionBtn {
 	background: #a8c7fa;
 	color: #171615;
-}
-
-.black-theme .habitForm button {
-	background: #a8c7fa;
-	color: #171615;
-}
-
-.black-theme .habitRow {
-	border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-.black-theme .habitAutoBadge {
-	background: rgba(255, 255, 255, 0.12);
-	color: #e3e3e3;
-}
-
-.black-theme .habitDeleteBtn:hover {
-	background: rgba(255, 255, 255, 0.15);
 }
 
 .black-theme .controlSettingRow,
@@ -7958,137 +7320,6 @@ html.myntHighContrast button {
 	}
 }
 
-.daidaiConnectionStatus {
-	flex: 0 0 auto;
-	padding: 5px 10px;
-	border-radius: 999px;
-	background: color-mix(in srgb, var(--textColorDark-blue) 8%, transparent);
-	font-size: 0.72rem;
-	font-weight: 700;
-}
-
-.daidaiConnectionStatus[data-state="connected"] {
-	background: color-mix(in srgb, #2e7d32 14%, transparent);
-	color: #176328;
-}
-
-.daidaiConnectionStatus[data-state="error"] {
-	background: color-mix(in srgb, #b3261e 12%, transparent);
-	color: #9b1c17;
-}
-
-.daidaiConnectRow {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
-}
-
-.daidaiConnectRow > span {
-	min-width: 0;
-}
-
-.daidaiConnectRow small {
-	display: block;
-	margin-top: 4px;
-	font-size: 0.78rem;
-	line-height: 1.4;
-	opacity: 0.75;
-}
-
-.daidaiDisclosureList {
-	padding-inline-end: 6px;
-}
-
-.daidaiActionDialog {
-	width: min(620px, calc(100vw - 32px));
-}
-
-.daidaiActionContent {
-	padding: 24px 26px 18px;
-}
-
-.daidaiActionContent h3 {
-	margin: 0 0 16px;
-	font-size: 1.05rem;
-}
-
-.daidaiActionDiff {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 12px;
-}
-
-.daidaiActionDiff > div {
-	min-width: 0;
-	padding: 14px;
-	border: 1px solid color-mix(in srgb, var(--darkColor-blue) 14%, transparent);
-	border-radius: 16px;
-	background: color-mix(in srgb, var(--whitishColor-blue) 70%, transparent);
-}
-
-.daidaiActionDiff span {
-	display: block;
-	margin-bottom: 8px;
-	font-size: 0.72rem;
-	font-weight: 700;
-	opacity: 0.7;
-}
-
-.daidaiActionDiff pre {
-	max-height: 180px;
-	margin: 0;
-	overflow: auto;
-	white-space: pre-wrap;
-	word-break: break-word;
-	font: inherit;
-	font-size: 0.88rem;
-	user-select: text;
-}
-
-#daidaiActionWarning,
-.daidaiActionStale {
-	margin: 16px 0 0;
-	font-size: 0.8rem;
-	line-height: 1.5;
-	opacity: 0.76;
-}
-
-.daidaiActionStale {
-	color: #9b1c17;
-	font-weight: 600;
-	opacity: 1;
-}
-
-.daidaiActionFooter {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-	padding: 16px 26px 22px;
-	border-top: 1px solid color-mix(in srgb, var(--textColorDark-blue) 10%, transparent);
-}
-
-.daidaiActionFooter button {
-	min-height: 40px;
-	padding: 8px 16px;
-	border: 0;
-	border-radius: 999px;
-	font: inherit;
-	font-weight: 650;
-	cursor: pointer;
-}
-
-.daidaiActionFooter button:not(.settingsActionBtn) {
-	background: color-mix(in srgb, var(--textColorDark-blue) 9%, transparent);
-	color: inherit;
-}
-
-.daidaiActionFooter button:disabled,
-#daidaiConnectBtn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
 @media screen and (max-width: 620px) {
 	#serviceStatusPill {
 		inset-inline: 16px auto;
@@ -8115,21 +7346,8 @@ html.myntHighContrast button {
 		padding: 15px;
 	}
 
-	.focusStatGrid,
 	.workspacePresetGrid {
 		grid-template-columns: 1fr;
-	}
-
-	.focusStatGrid {
-		grid-template-columns: repeat(3, 1fr);
-	}
-
-	.focusStatCard {
-		padding: 10px;
-	}
-
-	.focusStatCard strong {
-		font-size: 1.3rem;
 	}
 
 	.controlSettingRow,
@@ -8141,15 +7359,6 @@ html.myntHighContrast button {
 	.permissionControls {
 		width: 100%;
 		justify-content: space-between;
-	}
-
-	.daidaiConnectRow {
-		align-items: stretch;
-		flex-direction: column;
-	}
-
-	.daidaiActionDiff {
-		grid-template-columns: 1fr;
 	}
 }
 
@@ -8200,15 +7409,6 @@ html.myntHighContrast button {
 		margin: 0 0 14px;
 		scale: 1;
 		transform: none;
-	}
-
-	body[data-workspace-background="video"] .ttteexxtt {
-		position: static;
-		inset: auto;
-		display: flex;
-		width: fit-content;
-		height: auto;
-		margin: 0;
 	}
 
 	body[data-workspace-background="video"] .rightDiv {
@@ -8306,72 +7506,14 @@ html.myntHighContrast button {
 		display: none;
 	}
 }
-/* ------------ End Command & Control Center ------------ */
-
-/* ------------ Reese daily focus and compact settings ------------ */
-.dailyFocusActions {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	width: fit-content;
-	max-width: 100%;
-	margin: 0 0 10px;
-	font-size: 0.76rem;
-}
-
-#dailyFocusStatus {
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	opacity: 0.78;
-}
-
-#dailyFocusToggle {
-	flex: 0 0 auto;
-	min-height: 30px;
-	padding: 4px 11px;
-	border: 0;
-	border-radius: 999px;
-	background: var(--darkColor-blue);
-	color: var(--onActionColor-blue);
-	font: inherit;
-	font-weight: 700;
-	cursor: pointer;
-}
-
-#dailyFocusToggle:disabled {
-	opacity: 0.45;
-	cursor: not-allowed;
-}
-
-#dailyFocusToggle:focus-visible,
 .settingsGroupTabs button:focus-visible,
-#aiToolsMoreButton:focus-visible,
-.daidaiActionToast button:focus-visible {
+#aiToolsMoreButton:focus-visible {
 	outline: 2px solid var(--darkColor-blue);
 	outline-offset: 2px;
 }
 
-#userText.is-complete {
-	text-decoration: line-through;
-	opacity: 0.68;
-}
-
-body[data-workspace-background="video"] .ttteexxtt {
-	flex-direction: column;
-}
-
 body[data-workspace-background="video"] #date {
 	order: -2;
-}
-
-body[data-workspace-background="video"] #userText {
-	order: -1;
-}
-
-body[data-workspace-background="video"] .dailyFocusActions {
-	margin: 5px 0 0;
 }
 
 .settingsGroupTabs {
@@ -8499,38 +7641,6 @@ html:has(body[data-workspace-background="video"]) {
 	fill: currentColor;
 }
 
-.daidaiActionToast {
-	position: fixed;
-	inset-inline-end: 22px;
-	bottom: 82px;
-	z-index: 1100;
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	max-width: min(420px, calc(100vw - 32px));
-	padding: 12px 14px 12px 18px;
-	border-radius: 16px;
-	background: var(--textColorDark-blue);
-	color: var(--whitishColor-blue);
-	box-shadow: 0 12px 30px rgba(13, 39, 71, 0.24);
-}
-
-.daidaiActionToast[hidden] {
-	display: none;
-}
-
-.daidaiActionToast button {
-	min-height: 34px;
-	padding: 5px 12px;
-	border: 0;
-	border-radius: 999px;
-	background: var(--accentLightTint-blue);
-	color: var(--textColorDark-blue);
-	font: inherit;
-	font-weight: 700;
-	cursor: pointer;
-}
-
 @media screen and (max-width: 500px) {
 	body[data-workspace-background="video"] .aiToolsCont {
 		overflow: visible;
@@ -8567,194 +7677,6 @@ html:has(body[data-workspace-background="video"]) {
 		white-space: nowrap;
 		font-size: 0.7rem;
 	}
-
-	.daidaiActionToast {
-		inset-inline: 16px;
-		bottom: 16px;
-		max-width: none;
-	}
-}
-
-/* ------------ Quick Scratchpad Widget ------------ */
-.scratchpadCont {
-	position: fixed;
-	top: calc(var(--gap) + 10px);
-	inset-inline-start: calc(var(--gap) + 70px);
-	z-index: 10;
-	cursor: pointer;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 52px;
-	height: 52px;
-	border-radius: 50%;
-	border: 1px solid rgba(255, 255, 255, 0.18);
-	background: color-mix(in srgb, var(--containerColor, rgba(255, 255, 255, 0.65)) 88%, transparent);
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-	transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.scratchpadCont:hover {
-	transform: scale(1.08);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-}
-
-.scratchpadCont:active {
-	transform: scale(0.96);
-}
-
-.scratchpadCont .dot-icon {
-	width: 26px;
-	height: 26px;
-	fill: var(--accentColor, #0b57d0);
-}
-
-.scratchpadCont .tooltip-text {
-	position: absolute;
-	left: 54px;
-	top: 50%;
-	transform: translateY(-50%);
-	background: var(--containerColor, #303030);
-	color: var(--fontColor, #ffffff);
-	padding: 4px 10px;
-	border-radius: 8px;
-	font-size: 12px;
-	font-weight: 500;
-	white-space: nowrap;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 0.2s ease, transform 0.2s ease;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.scratchpadCont:hover .tooltip-text {
-	opacity: 1;
-	transform: translateY(-50%) translateX(4px);
-}
-
-.scratchpad-container {
-	position: fixed;
-	top: 130px;
-	left: 20px;
-	width: 320px;
-	max-width: calc(100vw - 40px);
-	z-index: 100;
-	background: color-mix(in srgb, var(--containerColor, rgba(255, 255, 255, 0.85)) 92%, transparent);
-	backdrop-filter: blur(24px) saturate(1.2);
-	-webkit-backdrop-filter: blur(24px) saturate(1.2);
-	border: 1px solid rgba(255, 255, 255, 0.22);
-	border-radius: 20px;
-	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
-	padding: 16px;
-	box-sizing: border-box;
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	animation: panelScaleIn 180ms cubic-bezier(0.2, 0, 0, 1) forwards;
-}
-
-.scratchpadHeader {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-}
-
-.scratchpadHeader h2 {
-	margin: 0;
-	font-size: 15px;
-	font-weight: 600;
-	color: var(--fontColor, #1f1f1f);
-}
-
-.scratchpadHeaderActions {
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	flex-wrap: wrap;
-	gap: 6px;
-}
-
-.scratchpadActionBtn {
-	flex: 0 0 auto;
-	appearance: none;
-	border: 1px solid rgba(128, 128, 128, 0.2);
-	background: color-mix(in srgb, var(--accentColor, #0b57d0) 12%, transparent);
-	color: var(--accentColor, #0b57d0);
-	font-size: 11px;
-	font-weight: 600;
-	padding: 3px 8px;
-	border-radius: 999px;
-	white-space: nowrap;
-	cursor: pointer;
-	transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.scratchpadActionBtn:hover {
-	background: color-mix(in srgb, var(--accentColor, #0b57d0) 22%, transparent);
-	transform: scale(1.04);
-}
-
-.scratchpadActionBtn:active {
-	transform: scale(0.96);
-}
-
-.scratchpadClearBtn {
-	background: transparent;
-	border-color: transparent;
-	font-size: 16px;
-	padding: 0 4px;
-	line-height: 1;
-	color: #888;
-}
-
-.scratchpadClearBtn:hover {
-	background: rgba(255, 0, 0, 0.1);
-	color: #d32f2f;
-}
-
-@media screen and (max-width: 500px) {
-	.scratchpadHeader {
-		align-items: flex-start;
-		flex-direction: column;
-	}
-
-	.scratchpadHeaderActions {
-		width: 100%;
-		justify-content: flex-start;
-	}
-}
-
-#scratchpadInput {
-	width: 100%;
-	box-sizing: border-box;
-	min-height: 140px;
-	max-height: 360px;
-	resize: vertical;
-	border: 1px solid rgba(128, 128, 128, 0.18);
-	border-radius: 12px;
-	background: color-mix(in srgb, var(--containerColor, #ffffff) 60%, transparent);
-	color: var(--fontColor, #1f1f1f);
-	font-family: inherit;
-	font-size: 13px;
-	line-height: 1.5;
-	padding: 10px;
-	outline: none;
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-#scratchpadInput:focus {
-	border-color: var(--accentColor, #0b57d0);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--accentColor, #0b57d0) 25%, transparent);
-}
-
-.scratchpadFooter {
-	display: flex;
-	justify-content: flex-end;
-	font-size: 11px;
-	color: color-mix(in srgb, var(--fontColor, #666) 65%, transparent);
 }
 
 /* ------------ Workspace Launch Button ------------ */
@@ -8786,6 +7708,7 @@ html:has(body[data-workspace-background="video"]) {
 /* ------------ Pomodoro Ambient Sound Controller ------------ */
 .pomodoroAmbientRow {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
 	gap: 8px;
@@ -8795,6 +7718,14 @@ html:has(body[data-workspace-background="video"]) {
 	border-radius: 999px;
 	backdrop-filter: blur(10px);
 }
+
+#pomodoroAmbientStatus {
+	flex-basis: 100%;
+	order: 1;
+	overflow-wrap: anywhere;
+}
+
+#pomodoroAmbientStatus:empty { display: none; }
 
 .pomodoroAmbientToggleBtn {
 	appearance: none;
@@ -8835,48 +7766,6 @@ html:has(body[data-workspace-background="video"]) {
 	height: 4px;
 	cursor: pointer;
 	accent-color: var(--accentColor, #a8c7fa);
-}
-
-/* ------------ Dark Mode (.black-theme) Overrides ------------ */
-.black-theme .scratchpadCont {
-	background: rgba(30, 31, 35, 0.75);
-	border-color: rgba(255, 255, 255, 0.1);
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-}
-
-.black-theme .scratchpadCont .dot-icon {
-	fill: #a8c7fa;
-}
-
-.black-theme .scratchpad-container {
-	background: rgba(28, 29, 34, 0.92);
-	border-color: rgba(255, 255, 255, 0.12);
-	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-}
-
-.black-theme .scratchpadHeader h2 {
-	color: #e3e3e3;
-}
-
-.black-theme #scratchpadInput {
-	background: rgba(18, 19, 23, 0.85);
-	color: #e3e3e3;
-	border-color: rgba(255, 255, 255, 0.1);
-}
-
-.black-theme #scratchpadInput:focus {
-	border-color: #a8c7fa;
-	box-shadow: 0 0 0 2px rgba(168, 199, 250, 0.25);
-}
-
-.black-theme .scratchpadActionBtn {
-	background: rgba(168, 199, 250, 0.16);
-	color: #a8c7fa;
-	border-color: rgba(168, 199, 250, 0.3);
-}
-
-.black-theme .scratchpadFooter {
-	color: #999;
 }
 
 .black-theme .workspaceLaunchBtn {
@@ -9107,10 +7996,14 @@ body[data-bg="color"] .studyQuote { color: var(--darkerColor-blue, #333); text-s
 @media (max-width: 900px) { .studyQuote { max-width: 70vw; bottom: 74px; } }
 @media (prefers-reduced-motion: reduce) { .studyQuoteText { transition: none; } }
 
-/* === Study quotes: one calm line, ellipsis when long (full text on hover) === */
+/* === Study quotes: one calm line that may wrap to two (longer ones are skipped; full text on hover) === */
 .studyQuote { max-width: min(640px, 56vw); }
 .studyQuoteText { display: flex; gap: 8px; align-items: baseline; min-width: 0; max-width: 100%; }
-.studyQuoteBody { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studyQuoteBody {
+	min-width: 0; overflow: hidden; white-space: normal; overflow-wrap: anywhere; line-height: 1.45;
+	display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+}
+.studyQuote[data-lines="2"] .studyQuoteText { align-items: last baseline; }
 .studyQuoteSource { flex: none; font-size: 11.5px; opacity: 0.75; white-space: nowrap; }
 @media (max-width: 900px) { .studyQuote { max-width: 80vw; } .studyQuoteSource { display: none; } }
 
@@ -9124,13 +8017,9 @@ body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayo
 #menuCont #menuCloseButton { position:static; width:44px; height:44px; min-width:44px; max-width:44px; flex:0 0 44px; margin:0; padding:0; border:0; justify-content:center; }
 #menuCont #menuCloseButton::after { display:none; }
 #menuCont #menuCloseButton .icon { position:static; transform:none; }
-#menuCont #menuCloseButton:focus-visible, #settingsHelp > summary:focus-visible { outline:2px solid var(--darkColor-blue); outline-offset:3px; }
-#settingsHelp { margin-top:20px; border-top:1px solid color-mix(in srgb,var(--textColorDark-blue) 15%,transparent); color:var(--textColorDark-blue); }
-#settingsHelp > summary { min-height:44px; box-sizing:border-box; padding:12px 4px; font-size:.875rem; line-height:1.4; cursor:pointer; }
-#settingsHelp .tips { margin-top:12px; }
+#menuCont #menuCloseButton:focus-visible { outline:2px solid var(--darkColor-blue); outline-offset:3px; }
 @media (prefers-reduced-motion: reduce) { #menuBar, #menuCont, #optCont { transition:none; } }
 
-#settingsHelp:has(.tips-hidden) { display:none; }
 
 #menuBar #menuCont { max-width:100%; }
 @media (max-width:500px) { #menuBar { --gap:16px; } #menuCont > .topDiv { padding-inline:16px; } }

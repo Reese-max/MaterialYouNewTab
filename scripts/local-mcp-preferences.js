@@ -7,8 +7,8 @@ const IDS=['chatGPT','claude','youtube'];
 const PALETTES=['red','yellow','green','cyan','blue','pink','purple','orange','brown','silver','peach','dark'];
 const LOCALES=['en','pt','ne','es','hi','hu','zh','zh_TW','cs','it','tr','bn','vi','ru','uz','ja','ko','idn','mr','fr','az','sl','ur','de','fa','ar_SA','el','ta','th','pl','uk','sv'];
 const definitions=[
- ['mynt_clock_get','Read clock mode, 12-hour format, greeting and visibility.','clock'],
- ['mynt_clock_update','Change only local clock presentation and greeting; no timezone or location access.','clock',{mode:en(['analog','digital']),hour12:bool,greeting:bool,name:str(120),hidden:bool}],
+ ['mynt_clock_get','Read clock mode, 12-hour format and visibility.','clock'],
+ ['mynt_clock_update','Change only local clock presentation; no timezone or location access.','clock',{mode:en(['analog','digital']),hour12:bool,hidden:bool}],
  ['mynt_search_settings_get','Read fixed Google provider and local search controls; no search is performed.','search'],
  ['mynt_search_settings_update','Change local search-controls visibility. The default engine is fixed to Google; existing bang aliases are unchanged.','search',{engine:en(['google','bing','duckduckgo','brave']),providerRowHidden:bool,aiModeVisible:bool}],
  ['mynt_ai_settings_get','Read built-in AI tool order and visibility, never account data.','ai'],
@@ -19,7 +19,7 @@ const definitions=[
  ['mynt_language_update','Preview language change requirements; cannot reload or refetch quotes through MCP.','language',{language:en(LOCALES)}]
 ];
 const tools=definitions.map(([name,description,domain,patch])=>({name,description,readOnly:!patch,annotations:{readOnlyHint:!patch,destructiveHint:false,openWorldHint:false},inputSchema:obj(patch?{...patch,expectedRevision:{type:'string',pattern:'^[a-f0-9]{64}$',maxLength:64},requestId:str(100)}:{},patch?['expectedRevision']:[])}));
-const KEY={clock:['clocktype','hourformat','greetingEnabled','myntGreetingName','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField','greetingField'],search:['showShortcutSwitch','aiModeIconVisible','motivationalQuotesVisible'],ai:['aiToolsSettings','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
+const KEY={clock:['clocktype','hourformat','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField'],search:['showShortcutSwitch','aiModeIconVisible'],ai:['aiToolsSettings','aiToolsCustom','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v)&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
 function fail(code,message){const error=Error(message);error.code=code;throw error;}
 function validate(v,s,path='args'){
@@ -37,11 +37,10 @@ function aiSettings(raw){
 }
 function get(domain,raw){
  if(domain==='clock'){
-  value(raw.digitalCheckboxState,['checked','unchecked'],null);value(raw.hourcheckboxState,['checked','unchecked'],null);value(raw.timeformatField,['active','inactive'],null);value(raw.greetingField,['active','inactive'],null);
-  if(raw.myntGreetingName!==null&&(Array.from(raw.myntGreetingName).length>30||/[\u0000-\u001f]/u.test(raw.myntGreetingName)))fail('INVALID_STORAGE','Invalid greeting name preserved');
-  return{mode:value(raw.clocktype,['analog','digital'],'analog'),hour12:boolean(raw.hourformat),greeting:boolean(raw.greetingEnabled,true),name:raw.myntGreetingName||'',hidden:boolean(raw.hideClockVisible)};
+  value(raw.digitalCheckboxState,['checked','unchecked'],null);value(raw.hourcheckboxState,['checked','unchecked'],null);value(raw.timeformatField,['active','inactive'],null);
+  return{mode:value(raw.clocktype,['analog','digital'],'analog'),hour12:boolean(raw.hourformat),hidden:boolean(raw.hideClockVisible)};
  }
- if(domain==='search')return{engine:'google',supportedDefaultEngines:['google'],bangAliases:['!yt','!youtube','!gh','!github','!gpt','!chat','!claude','!maps','!npm','!b','!trans','!mail','!drive'],directUrlNavigationAvailableInBrowser:true,providerRowHidden:boolean(raw.showShortcutSwitch),aiModeVisible:boolean(raw.aiModeIconVisible,true),cachedQuotesPreserved:true};
+ if(domain==='search')return{engine:'google',supportedDefaultEngines:['google'],bangAliases:['!yt','!youtube','!gh','!github','!gpt','!chat','!claude','!maps','!npm','!b','!trans','!mail','!drive'],directUrlNavigationAvailableInBrowser:true,providerRowHidden:boolean(raw.showShortcutSwitch),aiModeVisible:boolean(raw.aiModeIconVisible,true)};
  if(domain==='ai'){value(raw.aiToolsDisplayStatus,['flex','none'],null);return{tools:aiSettings(raw.aiToolsSettings),visible:value(raw.aiToolsCheckboxState,['checked','unchecked'],'unchecked')==='checked'};}
  if(domain==='theme'){
   const palette=value(raw.selectedTheme,PALETTES,'blue'),customColor=raw.customThemeColor;
@@ -54,7 +53,8 @@ async function execute(name,args={},context={}){
  try{
   const def=definitions.find(v=>v[0]===name),tool=tools.find(v=>v.name===name);if(!def)fail('UNKNOWN_TOOL','Unknown preferences tool');validate(args,tool.inputSchema);
   const domain=def[2],storage=context.storage||root.localStorage;if(!storage)fail('UNAVAILABLE','Local storage unavailable');
-  const expected=KEY[domain].map(key=>({key,value:storage.getItem(key)}));if(expected.some(v=>v.value!==null&&v.value.length>4096))fail('INVALID_STORAGE','Oversized preference preserved');
+  // Three 100 KiB SVG uploads can expand to about 900 KiB after URL encoding.
+  const expected=KEY[domain].map(key=>({key,value:storage.getItem(key)}));if(expected.some(v=>v.value!==null&&v.value.length>(v.key==='aiToolsCustom'?1024*1024:4096)))fail('INVALID_STORAGE','Oversized preference preserved');
   const raw=Object.fromEntries(expected.map(v=>[v.key,v.value])),current=get(domain,raw),rev=await revision(expected,context);
   context.assertAccess?.();if(tool.readOnly)return{ok:true,revision:rev,data:current};
   if(args.expectedRevision!==rev)fail('CONFLICT','Preferences changed; read them again');
@@ -63,11 +63,9 @@ async function execute(name,args={},context={}){
   if(domain==='search'&&args.engine&&args.engine!=='google')fail('ACTION_REQUIRED','This fork uses Google for ordinary searches and has no alternate default-engine selector or persistence; browser bang shortcuts such as !b remain available. No provider was changed and no search was performed.');
   const next={...raw};
   if(domain==='clock'){
-   if(args.mode!==undefined){next.clocktype=args.mode;next.digitalCheckboxState=args.mode==='digital'?'checked':'unchecked';next.timeformatField=next.greetingField=args.mode==='digital'?'active':'inactive';}
+   if(args.mode!==undefined){next.clocktype=args.mode;next.digitalCheckboxState=args.mode==='digital'?'checked':'unchecked';next.timeformatField=args.mode==='digital'?'active':'inactive';}
    if(args.hour12!==undefined){next.hourformat=String(args.hour12);next.hourcheckboxState=args.hour12?'checked':'unchecked';}
-   if(args.greeting!==undefined)next.greetingEnabled=String(args.greeting);
    if(args.hidden!==undefined)next.hideClockVisible=String(args.hidden);
-   if(args.name!==undefined){const normalize=root.myntNormalizeGreetingName||(typeof module==='object'&&module.exports?require('./dashboard-tools.js').myntNormalizeGreetingName:null);if(!normalize)fail('UNAVAILABLE','Greeting validator unavailable');if(Array.from(args.name.trim().replace(/\s+/gu,' ')).length>30||/[\u0000-\u001f]/u.test(args.name))fail('INVALID_ARGUMENT','Greeting name must be at most 30 characters');next.myntGreetingName=normalize(args.name)||null;}
   }else if(domain==='search'){
    if(args.providerRowHidden!==undefined)next.showShortcutSwitch=String(args.providerRowHidden);
    if(args.aiModeVisible!==undefined)next.aiModeIconVisible=String(args.aiModeVisible);
@@ -80,7 +78,7 @@ async function execute(name,args={},context={}){
    else{next.customThemeColor=args.customColor;next.selectedTheme=null;}
   }
   const writes=expected.filter(v=>next[v.key]!==v.value).map(v=>({key:v.key,value:next[v.key]})),after=expected.map(v=>({key:v.key,value:next[v.key]}));
-  const result={ok:true,revision:await revision(after,context),data:get(domain,next),...(domain==='theme'?{derivedCacheRefreshDeferred:true}:{}),...(domain==='search'?{quoteFetchDeferred:true}:{})};
+  const result={ok:true,revision:await revision(after,context),data:get(domain,next),...(domain==='theme'?{derivedCacheRefreshDeferred:true}:{})};
   if(!writes.length)return{...result,unchanged:true};
   if(domain==='clock' && root.document && !root.myntClockPreferences?.reload)fail('ACTION_REQUIRED','The clock was not initialized because it was hidden at page startup. Enable it once in the ordinary browser clock settings before remote changes. No preferences were changed.');
   if(typeof context.commit!=='function')fail('UNAVAILABLE','Coordinated preference commit unavailable');context.assertAccess?.();

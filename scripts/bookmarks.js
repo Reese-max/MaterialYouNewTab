@@ -106,6 +106,11 @@ function getFavoriteIds() {
 }
 
 function getExpandedFolderIds() {
+    // Until the user toggles a folder, the first browser root (the bookmarks bar) starts open.
+    if (readBookmarkSetting(BOOKMARK_FOLDERS_KEY) === null) {
+        const first = bookmarkTree.flatMap(root => root.children || []).find(node => node.children?.length);
+        return new Set(first ? [String(first.id)] : []);
+    }
     return new Set(readStoredArray(BOOKMARK_FOLDERS_KEY));
 }
 
@@ -413,11 +418,12 @@ function renderBookmarks() {
         return;
     }
     const favorites = getFavoriteIds().map(id => bookmarkNodeMap.get(id)).filter(Boolean);
-    const roots = bookmarkTree.flatMap(root => root.children || []);
+    // Browser root folders keep the browser's own order (bookmarks bar first); empty ones are hidden.
+    const roots = bookmarkTree.flatMap(root => root.children || []).filter(node => node.url || node.children?.length);
     bookmarkList.append(
         createBookmarkSection("bookmarkSectionFavorites", favorites, "bookmarkSectionFavoritesEmpty", true),
         createBookmarkSection("bookmarkSectionRecent", recentBookmarks, "bookmarkSectionRecentEmpty", true),
-        createBookmarkSection("bookmarkSectionFolders", sortBookmarkNodes(roots), "bookmarkSectionFoldersEmpty", true)
+        createBookmarkSection("bookmarkSectionFolders", roots, "bookmarkSectionFoldersEmpty", true)
     );
     showBookmarkContent();
 }
@@ -425,6 +431,7 @@ function renderBookmarks() {
 function createBookmarkSection(titleKey, nodes, emptyKey, keepOrder = false) {
     const section = document.createElement("li");
     section.className = "bookmark-section";
+    section.dataset.section = titleKey;
     const header = document.createElement("div");
     header.className = "bookmark-section-header";
     const heading = document.createElement("h3");
@@ -557,7 +564,10 @@ function createBookmarkItem(node) {
     const title = document.createElement("strong");
     title.textContent = node.title || safeHostname(node.url);
     const url = document.createElement("small");
-    url.textContent = safeHostname(node.url);
+    // Search results also name the folder, so same-named bookmarks can be told apart.
+    const parent = bookmarkSearch.value.trim() ? bookmarkNodeMap.get(String(node.parentId)) : null;
+    const folder = parent && !bookmarkTree.some(root => String(root.id) === String(parent.id)) ? parent.title || bookmarkText("bookmarkUntitledFolder") : "";
+    url.textContent = folder ? `${safeHostname(node.url)} · ${folder}` : safeHostname(node.url);
     copy.append(title, url);
     link.append(favicon, copy);
     item.append(link, createBookmarkActions(node));
@@ -847,7 +857,8 @@ function updateBookmarkUI(enabled) {
 function trapBookmarkFocus(event) {
     if (event.key !== "Tab" || !bookmarkSidebar.classList.contains("open") || editBookmarkModal.open) return;
     const focusable = [...bookmarkSidebar.querySelectorAll("button:not([disabled]):not([hidden]), input:not([disabled]), summary, a[href]")]
-        .filter(element => !element.closest("[hidden]") && element.getClientRects().length);
+        // Buttons inside a collapsed action menu still report boxes in Chromium; they cannot take focus.
+        .filter(element => !element.closest("[hidden]") && !element.closest("details:not([open]) > :not(summary)") && element.getClientRects().length);
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable.at(-1);
@@ -871,9 +882,11 @@ bookmarkSearch.addEventListener("input", () => {
     bookmarkSearchTimer = setTimeout(renderBookmarks, 120);
 });
 bookmarkViewGrid.addEventListener("click", () => {
+    try { localStorage.setItem("myntBookmarkView", "grid"); } catch { /* the view still switches for this page */ }
     if (!bookmarkGridCheckbox.checked) bookmarkGridCheckbox.click();
 });
 bookmarkViewList.addEventListener("click", () => {
+    try { localStorage.setItem("myntBookmarkView", "list"); } catch { /* the view still switches for this page */ }
     if (bookmarkGridCheckbox.checked) bookmarkGridCheckbox.click();
 });
 sortAlphabetical.addEventListener("click", () => {
@@ -946,21 +959,23 @@ bookmarkSidebar.addEventListener("keydown", event => {
 
 document.addEventListener("keydown", event => {
     trapBookmarkFocus(event);
-    if (event.key === "Escape" && bookmarkSidebar.classList.contains("open") && !editBookmarkModal.open) {
+    // A pending mutation means the delete confirmation owns Escape; cancelling it must not close the sidebar.
+    if (event.key === "Escape" && bookmarkSidebar.classList.contains("open") && !editBookmarkModal.open && !bookmarkMutationPending) {
         event.preventDefault();
         closeBookmarkSidebar();
         return;
     }
     const menu = document.getElementById("menuBar");
     const menuOpen = menu && menu.style.display !== "none" && menu.style.display !== "";
-    if (event.key === "ArrowRight" && !event.repeat && !menuOpen && bookmarksCheckbox.checked &&
+    if (event.key === "ArrowRight" && !event.repeat && !menuOpen && bookmarksCheckbox.checked && !bookmarkMutationPending &&
         !["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName) && !event.target.isContentEditable) {
         event.preventDefault();
         toggleBookmarkSidebar();
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+// Lazy-loaded by lazy-loader.js after DOMContentLoaded, so run as soon as the DOM is ready.
+(fn => (document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn()))(() => {
     bookmarksCheckbox.addEventListener("change", () => updateBookmarkUI(bookmarksCheckbox.checked));
     bookmarkGridCheckbox.addEventListener("change", () => {
         saveCheckboxState("bookmarkGridCheckboxState", bookmarkGridCheckbox);
@@ -969,6 +984,11 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCheckboxState("bookmarksCheckboxState", bookmarksCheckbox);
     loadDisplayStatus("bookmarksDisplayStatus", bookmarkButton);
     loadCheckboxState("bookmarkGridCheckboxState", bookmarkGridCheckbox);
+    // The grid used to be switched on automatically and saved as if chosen; only a grid picked in
+    // display options (myntBookmarkView) is kept. Re-checked on every load, so restores and failed writes settle.
+    try {
+        if (bookmarkGridCheckbox.checked && localStorage.getItem("myntBookmarkView") !== "grid") bookmarkGridCheckbox.click();
+    } catch { /* Storage blocked: keep the current view. */ }
     if (bookmarksCheckbox.checked) bookmarkButton.style.display = "flex";
     updateSortButtons();
     updateViewButtons();

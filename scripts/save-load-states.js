@@ -20,7 +20,7 @@ function loadCheckboxState(key, checkbox) {
     checkbox.checked = savedState === "checked";
     if (key === "bookmarkGridCheckboxState") {
         if (!savedState) {
-            bookmarkGridCheckbox.click();
+            // Reese-max: bookmarks open as a list by default (upstream switched the grid on here).
         } else {
             bookmarkGridCheckbox.click();
             bookmarkGridCheckbox.click();

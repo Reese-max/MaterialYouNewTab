@@ -4,92 +4,9 @@
  * Licensed under the GNU General Public License v3.0 (GPL-3.0)
  */
 
-// Strict storage boundary shared with local recovery. Invalid data is preserved,
-// never normalized into a silently destructive replacement.
-function myntValidateHabits(value) {
-    if (!Array.isArray(value) || value.length > 14) throw Error("Invalid habits");
-    const ids = new Set(), systemSources = { "system-pomodoro": "pomodoro", "system-todo": "todo" };
-    const validDate = date => {
-        if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
-        const [year, month, day] = date.split("-").map(Number);
-        const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-        const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        return month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1];
-    };
-    const clean = value.map(item => {
-        if (!item || typeof item !== "object" || Array.isArray(item) ||
-            Object.keys(item).some(key => !["id", "name", "source", "doneDates"].includes(key)) ||
-            typeof item.id !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(item.id) || ids.has(item.id) ||
-            typeof item.name !== "string" || item.name.length > 60 || ![null, "todo", "pomodoro"].includes(item.source) ||
-            (item.source === null && !item.name.trim()) ||
-            (Object.hasOwn(systemSources, item.id) ? item.source !== systemSources[item.id] : item.source !== null) ||
-            !Array.isArray(item.doneDates) || item.doneDates.length > 400 || item.doneDates.some(date => !validDate(date)) ||
-            new Set(item.doneDates).size !== item.doneDates.length) throw Error("Invalid habit");
-        ids.add(item.id);
-        return { id: item.id, name: item.name, source: item.source, doneDates: [...item.doneDates] };
-    });
-    if (clean.filter(item => item.source === null).length > 12) throw Error("Excess custom habits");
-    return clean;
-}
-
-function myntDateKey(date = new Date()) {
-    return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-        String(date.getDate()).padStart(2, "0")
-    ].join("-");
-}
-
-function myntShiftDate(date, days) {
-    const shifted = new Date(date);
-    shifted.setHours(12, 0, 0, 0);
-    shifted.setDate(shifted.getDate() + days);
-    return shifted;
-}
-
-function myntFocusStreak(history, now = new Date()) {
-    let cursor = new Date(now);
-    const sessionsFor = date => Number(history?.[myntDateKey(date)]?.sessions) || 0;
-
-    if (sessionsFor(cursor) === 0) cursor = myntShiftDate(cursor, -1);
-
-    let streak = 0;
-    while (sessionsFor(cursor) > 0) {
-        streak += 1;
-        cursor = myntShiftDate(cursor, -1);
-    }
-    return streak;
-}
-
-function myntSevenDayStats(history, now = new Date()) {
-    return Array.from({ length: 7 }, (_, index) => {
-        const date = myntShiftDate(now, index - 6);
-        const saved = history?.[myntDateKey(date)] || {};
-        return {
-            date,
-            key: myntDateKey(date),
-            sessions: Math.max(0, Number(saved.sessions) || 0),
-            minutes: Math.max(0, Number(saved.minutes) || 0)
-        };
-    });
-}
-
-function myntNormalizeGreetingName(value) {
-    return Array.from(String(value || "").trim().replace(/\s+/gu, " ")).slice(0, 30).join("");
-}
-
-function myntFormatGreeting(greeting, name, template = "{greeting}, {name}") {
-    const normalizedName = myntNormalizeGreetingName(name);
-    if (!normalizedName) return String(greeting || "");
-    const greetingStem = String(greeting || "").trim().replace(/[.!。！?？]+$/u, "");
-    return String(template)
-        .replace("{greeting}", () => greetingStem)
-        .replace("{name}", () => normalizedName);
-}
-
 const MYNT_WORKSPACE_WIDGETS = [
     "shortcutsCheckbox", "bookmarksCheckbox", "todoListCheckbox", "pomodoroCheckbox",
-    "aiToolsCheckbox", "googleAppsCheckbox", "motivationalQuotesCheckbox", "bongoCatCheckbox", "scratchpadCheckbox"
+    "aiToolsCheckbox", "googleAppsCheckbox"
 ];
 
 function myntNormalizeWorkspaces(raw, defaults = []) {
@@ -115,8 +32,7 @@ function myntNormalizeWorkspaces(raw, defaults = []) {
 
 if (typeof module !== "undefined") {
     module.exports = {
-        myntDateKey, myntFocusStreak, myntSevenDayStats, myntNormalizeGreetingName,
-        myntFormatGreeting, myntNormalizeWorkspaces, myntValidateHabits
+        myntNormalizeWorkspaces
     };
 }
 
@@ -124,14 +40,11 @@ if (typeof document !== "undefined") {
     (() => {
         const KEYS = {
             accessibility: "myntAccessibility",
-            focusHistory: "myntFocusHistory",
-            habits: "myntHabits",
             serviceStatus: "myntServiceStatus",
+            serviceAlert: "myntServiceStatusPillVisible",
             workspace: "myntWorkspacePreset",
             workspaces: "myntWorkspacePresets"
         };
-        const MAX_CUSTOM_HABITS = 12;
-        const GOOGLE_ORIGIN = "https://www.google.com/*";
         const lang = localStorage.getItem("selectedLanguage") || "zh_TW";
 
         function t(key, fallback = key) {
@@ -159,23 +72,22 @@ if (typeof document !== "undefined") {
         function localizeStaticUI() {
             const sameKeyIds = [
                 "controlCenterText", "controlCenterInfo", "controlCenterEyebrow",
-                "focusStatsTitle", "focusStatsInfo", "focusMinutesLabel",
-                "focusSessionsValueLabel", "focusStreakLabel", "workspaceTitle", "workspaceInfo", "workspaceAddBtn",
+                "workspaceTitle", "workspaceInfo", "workspaceAddBtn",
                 "workspaceNameLabel", "workspaceWidgetsLegend", "workspaceWidgetShortcuts",
                 "workspaceWidgetBookmarks", "workspaceWidgetTodo", "workspaceWidgetPomodoro",
-                "workspaceWidgetAi", "workspaceWidgetGoogle", "workspaceWidgetQuotes",
-                "workspaceWidgetBongo", "workspaceBackgroundLabel", "workspaceBackgroundVideo",
+                "workspaceWidgetAi", "workspaceWidgetGoogle",
+                "workspaceBackgroundLabel", "workspaceBackgroundVideo",
                 "workspaceBackgroundWallpaper", "workspaceBackgroundColor", "workspaceFocusMinutesLabel",
-                "workspaceDeleteBtn", "workspaceCancelBtn", "workspaceSaveBtn", "habitsTitle",
-                "habitsInfo", "habitInputLabel", "habitAddBtn", "accessibilityTitle",
+                "workspaceDeleteBtn", "workspaceCancelBtn", "workspaceSaveBtn", "accessibilityTitle",
                 "accessibilityInfo", "reduceMotionText", "reduceMotionInfo", "highContrastText",
                 "highContrastInfo", "fontScaleText", "fontScaleInfo", "privacyCenterTitle",
                 "privacyCenterInfo", "privacyPolicyLink", "permissionBookmarksTitle",
-                "permissionBookmarksInfo", "permissionSuggestionsTitle", "permissionSuggestionsInfo",
+                "permissionBookmarksInfo",
                 "permissionNotificationsTitle", "permissionNotificationsInfo", "permissionLocationTitle",
                 "permissionLocationInfo", "privacyDisclosureWeather", "privacyDisclosureIp",
-                "privacyDisclosureSearch", "privacyDisclosureLocal", "serviceStatusTitle",
-                "serviceStatusInfo", "commandPaletteTitle", "commandPaletteEmpty"
+                "privacyDisclosureLocal", "serviceStatusTitle",
+                "serviceStatusInfo", "serviceAlertToggleText", "serviceAlertToggleInfo",
+                "commandPaletteTitle", "commandPaletteEmpty"
             ];
             sameKeyIds.forEach(id => {
                 const element = document.getElementById(id);
@@ -184,8 +96,6 @@ if (typeof document !== "undefined") {
 
             document.getElementById("controlCenterTitle").textContent = t("controlCenterText", "Control Center");
             document.getElementById("openControlCenterBtn").textContent = t("openText", "Open");
-            document.getElementById("pomodoroStatsBtn").textContent = t("focusStatsButton", "Stats");
-            document.getElementById("habitInput").placeholder = t("habitPlaceholder", "Add a daily habit...");
             document.getElementById("commandPaletteInput").placeholder = t("commandPalettePlaceholder", "Search commands...");
             document.getElementById("commandPaletteDialog").setAttribute("aria-label", t("commandPaletteTitle", "Command palette"));
             document.getElementById("closeControlCenterBtn").setAttribute("aria-label", t("menuCloseText", "Close"));
@@ -196,9 +106,7 @@ if (typeof document !== "undefined") {
             ["network", "serviceNetwork"],
             ["weather", "serviceWeather"],
             ["location", "serviceLocation"],
-            ["suggestions", "serviceSuggestions"],
-            ["wallpaper", "serviceWallpaper"],
-            ["quotes", "serviceQuotes"]
+            ["wallpaper", "serviceWallpaper"]
         ];
         let serviceState = readJSON(KEYS.serviceStatus, {});
 
@@ -209,12 +117,6 @@ if (typeof document !== "undefined") {
                 if (url.hostname === "api.weatherapi.com") return "weather";
                 if (url.hostname === "ipinfo.io") return "location";
                 if (url.hostname === "picsum.photos") return "wallpaper";
-                if (url.hostname === "prem-k-r.github.io" && url.pathname.includes("multilingual-quotes-api")) return "quotes";
-                if (url.hostname === "www.google.com" && url.pathname.includes("complete/search")) return "suggestions";
-
-                const customProxy = localStorage.getItem("proxy");
-                const proxyHost = customProxy ? new URL(customProxy).hostname : "mynt-proxy.rhythmcorehq.com";
-                if (url.hostname === proxyHost) return "suggestions";
             } catch {
                 return null;
             }
@@ -288,258 +190,43 @@ if (typeof document !== "undefined") {
                 list.appendChild(row);
             });
 
+            updateServiceAlert();
+        }
+
+        function serviceAlertEnabled() {
+            // 只有明確的 "false" 會關閉；缺值或格式異常時維持預設顯示，且不改寫資料。
+            try { return localStorage.getItem(KEYS.serviceAlert) !== "false"; } catch { return true; }
+        }
+
+        // 首頁提示只讀取既有狀態，不重建控制中心清單（避免 aria-live 重複朗讀）。
+        function updateServiceAlert() {
             const pill = document.getElementById("serviceStatusPill");
             const pillText = document.getElementById("serviceStatusPillText");
+            if (!pill || !pillText) return;
             const recentError = Object.values(serviceState).some(saved =>
                 ["error", "offline"].includes(saved?.status) && Date.now() - saved.at < 15 * 60 * 1000
             );
 
-            pill.hidden = navigator.onLine && !recentError;
+            // 使用者可在元件管理或控制中心關閉首頁提示；狀態清單與本機紀錄照常更新。
+            pill.hidden = !serviceAlertEnabled() || (navigator.onLine && !recentError);
             pill.classList.toggle("serviceWarning", navigator.onLine && recentError);
             pillText.textContent = navigator.onLine
                 ? t("serviceIssuePill", "Service issue")
                 : t("serviceOfflineMode", "Offline mode");
         }
 
+        const serviceAlertCheckbox = document.getElementById("serviceStatusPillCheckbox");
+        if (serviceAlertCheckbox) {
+            serviceAlertCheckbox.checked = serviceAlertEnabled();
+            // 元件管理會監聽 document change 事件並同步首頁與設定中的勾選狀態。
+            serviceAlertCheckbox.addEventListener("change", () => {
+                localStorage.setItem(KEYS.serviceAlert, String(serviceAlertCheckbox.checked));
+                updateServiceAlert();
+            });
+        }
+
         window.addEventListener("online", renderServiceStatus);
         window.addEventListener("offline", renderServiceStatus);
-
-        // Focus history and seven-day summary.
-        function normalizeFocusHistory(raw) {
-            if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
-            const clean = {};
-            for (const [key, value] of Object.entries(raw)) {
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !value || typeof value !== "object") continue;
-                clean[key] = {
-                    sessions: Math.max(0, Math.floor(Number(value.sessions) || 0)),
-                    minutes: Math.max(0, Math.floor(Number(value.minutes) || 0))
-                };
-            }
-            return clean;
-        }
-
-        let focusHistory = normalizeFocusHistory(readJSON(KEYS.focusHistory, {}));
-
-        function migratePomodoroToday() {
-            const sessions = Math.max(0, Number(localStorage.getItem("pomodoroSessionsToday")) || 0);
-            if (!sessions || localStorage.getItem("pomodoroSessionsDate") !== new Date().toDateString()) return;
-            const today = myntDateKey();
-            if (focusHistory[today]) return;
-            const workMinutes = Math.max(1, Number(localStorage.getItem("pomodoroWorkMinutes")) || 25);
-            focusHistory[today] = { sessions, minutes: sessions * workMinutes };
-            saveFocusHistory();
-        }
-
-        function saveFocusHistory() {
-            localStorage.setItem(KEYS.focusHistory, JSON.stringify(focusHistory));
-        }
-
-        function renderFocusStats() {
-            const today = myntDateKey();
-            const current = focusHistory[today] || { sessions: 0, minutes: 0 };
-            const streak = myntFocusStreak(focusHistory);
-            document.getElementById("focusMinutesValue").textContent = current.minutes;
-            document.getElementById("focusSessionsValue").textContent = current.sessions;
-            document.getElementById("focusStreakValue").textContent = streak;
-            document.getElementById("pomodoroFocusMinutes").textContent = format("focusMinutesShort", "{count} min", { count: current.minutes });
-            document.getElementById("pomodoroFocusStreak").textContent = format("focusStreakShort", "{count} day streak", { count: streak });
-
-            const chart = document.getElementById("focusWeekChart");
-            const stats = myntSevenDayStats(focusHistory);
-            const maximum = Math.max(1, ...stats.map(day => day.minutes));
-            const dayFormatter = new Intl.DateTimeFormat(lang === "zh_TW" ? "zh-TW" : "en", { weekday: "narrow" });
-            chart.replaceChildren();
-            stats.forEach(day => {
-                const column = document.createElement("div");
-                column.className = "focusDay";
-                const bar = document.createElement("div");
-                bar.className = "focusDayBar";
-                bar.style.height = `${Math.max(4, Math.round(day.minutes / maximum * 86))}px`;
-                const label = dayFormatter.format(day.date);
-                const detail = format("focusDayAria", "{day}: {minutes} minutes, {sessions} sessions", {
-                    day: label,
-                    minutes: day.minutes,
-                    sessions: day.sessions
-                });
-                bar.title = detail;
-                column.setAttribute("role", "img");
-                column.setAttribute("aria-label", detail);
-                const dayLabel = document.createElement("span");
-                dayLabel.textContent = label;
-                column.append(bar, dayLabel);
-                chart.appendChild(column);
-            });
-
-        }
-
-        // Habits. Two built-in habits are completed by Pomodoro and To-do events.
-        function normalizeHabits(raw) {
-            const source = Array.isArray(raw) ? raw : [];
-            const seen = new Set();
-            const clean = [];
-            for (const item of source) {
-                if (!item || typeof item !== "object" || typeof item.id !== "string" || seen.has(item.id)) continue;
-                const habitSource = ["pomodoro", "todo"].includes(item.source) ? item.source : null;
-                const name = String(item.name || "").trim().slice(0, 60);
-                if (!habitSource && !name) continue;
-                const doneDates = Array.isArray(item.doneDates)
-                    ? [...new Set(item.doneDates.filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date)))].slice(-400)
-                    : [];
-                clean.push({ id: item.id, source: habitSource, name, doneDates });
-                seen.add(item.id);
-            }
-
-            for (const system of [
-                { id: "system-pomodoro", source: "pomodoro", name: "" },
-                { id: "system-todo", source: "todo", name: "" }
-            ]) {
-                if (!seen.has(system.id)) clean.unshift({ ...system, doneDates: [] });
-            }
-            return clean.filter((habit, index, all) => habit.source ||
-                all.filter(item => !item.source).indexOf(habit) < MAX_CUSTOM_HABITS);
-        }
-
-        let habitsStorageInvalid = false, habitRecoveryControl;
-        function readHabits() {
-            try {
-                const value = myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
-                habitsStorageInvalid = false;
-                return normalizeHabits(value);
-            } catch (_) {
-                habitsStorageInvalid = true;
-                return [];
-            }
-        }
-        let habits = readHabits();
-
-        function saveHabits() {
-            if (habitsStorageInvalid) return false;
-            try {
-                myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"));
-                myntValidateHabits(habits);
-            } catch (_) { habitsStorageInvalid = true; return false; }
-            localStorage.setItem(KEYS.habits, JSON.stringify(habits));
-            document.dispatchEvent(new CustomEvent("mynt:habits-updated", { detail: { items: habits } }));
-            return true;
-        }
-
-        function markSystemHabit(source) {
-            const habit = habits.find(item => item.source === source);
-            const today = myntDateKey();
-            if (!habit || habit.doneDates.includes(today)) return;
-            habit.doneDates.push(today);
-            habit.doneDates = habit.doneDates.slice(-400);
-            saveHabits();
-            renderHabits();
-        }
-
-        function renderHabits() {
-            const list = document.getElementById("habitList");
-            const today = myntDateKey();
-            list.replaceChildren();
-            document.getElementById("habitInput").disabled = habitsStorageInvalid;
-            document.getElementById("habitAddBtn").disabled = habitsStorageInvalid;
-            habitRecoveryControl?.refresh();
-
-            habits.forEach(habit => {
-                const done = habit.doneDates.includes(today);
-                const row = document.createElement("li");
-                row.className = `habitRow${done ? " done" : ""}`;
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.id = `habit-${habit.id}`;
-                checkbox.checked = done;
-                checkbox.disabled = Boolean(habit.source);
-
-                const label = document.createElement("label");
-                label.htmlFor = checkbox.id;
-                label.textContent = habit.source === "pomodoro"
-                    ? t("habitPomodoroAuto", "Complete one focus session")
-                    : habit.source === "todo"
-                        ? t("habitTodoAuto", "Complete one task")
-                        : habit.name;
-
-                row.append(checkbox, label);
-                if (habit.source) {
-                    const badge = document.createElement("span");
-                    badge.className = "habitAutoBadge";
-                    badge.textContent = t("habitAutoBadge", "Auto");
-                    row.appendChild(badge);
-                } else {
-                    checkbox.addEventListener("change", () => {
-                        habit.doneDates = checkbox.checked
-                            ? [...new Set([...habit.doneDates, today])].slice(-400)
-                            : habit.doneDates.filter(date => date !== today);
-                        saveHabits();
-                        renderHabits();
-                    });
-                    const remove = document.createElement("button");
-                    remove.type = "button";
-                    remove.className = "habitDeleteBtn";
-                    remove.setAttribute("aria-label", format("habitDeleteAria", "Delete {name}", { name: habit.name }));
-                    remove.textContent = "×";
-                    remove.addEventListener("click", async () => {
-                        const message = format("habitDeleteConfirm", "Delete habit ‘{name}’?", { name: habit.name });
-                        if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
-                        habits = habits.filter(item => item.id !== habit.id);
-                        saveHabits();
-                        renderHabits();
-                    });
-                    row.appendChild(remove);
-                }
-                list.appendChild(row);
-            });
-        }
-
-        document.getElementById("habitForm").addEventListener("submit", event => {
-            event.preventDefault();
-            if (habitsStorageInvalid) return;
-            const input = document.getElementById("habitInput");
-            const name = input.value.trim();
-            const customHabits = habits.filter(habit => !habit.source);
-            input.setCustomValidity("");
-            if (!name) return input.reportValidity();
-            if (customHabits.length >= MAX_CUSTOM_HABITS) {
-                input.setCustomValidity(t("habitLimitError", "You can add up to 12 custom habits."));
-                return input.reportValidity();
-            }
-            if (customHabits.some(habit => habit.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-                input.setCustomValidity(t("habitDuplicateError", "This habit already exists."));
-                return input.reportValidity();
-            }
-            const id = globalThis.crypto?.randomUUID?.() || `custom-${Date.now()}`;
-            habits.push({ id, source: null, name: name.slice(0, 60), doneDates: [] });
-            saveHabits();
-            input.value = "";
-            renderHabits();
-        });
-        document.getElementById("habitInput").addEventListener("input", event => event.target.setCustomValidity(""));
-
-        document.addEventListener("mynt:pomodoro-complete", event => {
-            const minutes = Math.max(1, Math.min(120, Math.floor(Number(event.detail?.minutes) || 25)));
-            const today = myntDateKey();
-            const saved = focusHistory[today] || { sessions: 0, minutes: 0 };
-            focusHistory[today] = { sessions: saved.sessions + 1, minutes: saved.minutes + minutes };
-            saveFocusHistory();
-            markSystemHabit("pomodoro");
-            renderFocusStats();
-        });
-        document.addEventListener("mynt:todo-updated", event => {
-            if (Number(event.detail?.completed) > 0) markSystemHabit("todo");
-        });
-        document.addEventListener("DOMContentLoaded", () => {
-            habitRecoveryControl = window.MyntRecoveryControls?.create({
-                domain: "habits", container: document.getElementById("habitsSection"),
-                before: document.getElementById("habitList"), focusTarget: document.getElementById("habitInput"),
-                validateCurrent: () => myntValidateHabits(JSON.parse(localStorage.getItem(KEYS.habits) ?? "[]"))
-            });
-            try {
-                const todos = JSON.parse(localStorage.getItem("todoList") || "{}");
-                if (Object.values(todos).some(todo => todo?.status === "completed")) markSystemHabit("todo");
-            } catch {
-                // The To-do module owns recovery of invalid stored data.
-            }
-        }, { once: true });
 
         // Accessibility settings use native media preferences by default.
         const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
@@ -680,7 +367,7 @@ if (typeof document !== "undefined") {
                 id: "work", name: t("workspaceWork", "Work"), background: "video", focusMinutes: 25, urls: ["https://github.com", "https://mail.google.com"],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: true,
-                    pomodoroCheckbox: true, motivationalQuotesCheckbox: false, bongoCatCheckbox: false,
+                    pomodoroCheckbox: true,
                     aiToolsCheckbox: false, googleAppsCheckbox: false
                 }
             },
@@ -688,7 +375,7 @@ if (typeof document !== "undefined") {
                 id: "study", name: t("workspaceStudy", "Study"), background: "wallpaper", focusMinutes: 45, urls: ["https://scholar.google.com"],
                 widgets: {
                     shortcutsCheckbox: false, bookmarksCheckbox: false, todoListCheckbox: true,
-                    pomodoroCheckbox: true, motivationalQuotesCheckbox: true, bongoCatCheckbox: false,
+                    pomodoroCheckbox: true,
                     aiToolsCheckbox: true, googleAppsCheckbox: false
                 }
             },
@@ -696,12 +383,14 @@ if (typeof document !== "undefined") {
                 id: "relax", name: t("workspaceRelax", "Relax"), background: "color", focusMinutes: 15, urls: [],
                 widgets: {
                     shortcutsCheckbox: true, bookmarksCheckbox: false, todoListCheckbox: false,
-                    pomodoroCheckbox: false, motivationalQuotesCheckbox: true, bongoCatCheckbox: true,
+                    pomodoroCheckbox: false,
                     aiToolsCheckbox: false, googleAppsCheckbox: true
                 }
             }
         ];
         let workspaces = myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null), workspaceDefaults);
+        let workspaceBaseline = localStorage.getItem(KEYS.workspaces);
+        let workspaceEditorBaseline = workspaceBaseline;
         let applyingWorkspace = false;
         const restoredWorkspace = workspaces.find(item => item.id === localStorage.getItem(KEYS.workspace));
         if (restoredWorkspace) {
@@ -710,7 +399,14 @@ if (typeof document !== "undefined") {
         }
 
         function saveWorkspaces() {
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceBaseline) {
+                window.MyntStorageSync.preserve(JSON.stringify(workspaces, null, 2));
+                window.myntDashboard.reloadWorkspaces();
+                return false;
+            }
             localStorage.setItem(KEYS.workspaces, JSON.stringify(workspaces));
+            workspaceBaseline = localStorage.getItem(KEYS.workspaces);
+            return true;
         }
 
         function workspaceBackgroundName(background) {
@@ -789,6 +485,7 @@ if (typeof document !== "undefined") {
         }
 
         function openWorkspaceEditor(preset = null) {
+            workspaceEditorBaseline = localStorage.getItem(KEYS.workspaces);
             const editor = document.getElementById("workspaceEditorForm");
             const current = preset || {
                 id: "",
@@ -844,10 +541,15 @@ if (typeof document !== "undefined") {
             };
             const preset = myntNormalizeWorkspaces([draft])[0];
             if (!preset) return nameInput.reportValidity();
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceEditorBaseline) {
+                window.MyntStorageSync.preserve(JSON.stringify(draft, null, 2));
+                window.myntDashboard.reloadWorkspaces();
+                return;
+            }
             const index = workspaces.findIndex(item => item.id === oldId);
             if (index === -1) workspaces.push(preset);
             else workspaces[index] = preset;
-            saveWorkspaces();
+            if (!saveWorkspaces()) return;
             closeWorkspaceEditor();
             applyWorkspace(preset.id);
         });
@@ -857,8 +559,12 @@ if (typeof document !== "undefined") {
             if (!preset) return;
             const message = format("workspaceDeleteConfirm", "Delete mode ‘{name}’?", { name: preset.name });
             if (!(window.myntDialog ? await window.myntDialog.confirm(message, { danger: true }) : confirm(message))) return;
+            if (localStorage.getItem(KEYS.workspaces) !== workspaceEditorBaseline) {
+                window.myntDashboard.reloadWorkspaces();
+                return;
+            }
             workspaces = workspaces.filter(item => item.id !== id);
-            saveWorkspaces();
+            if (!saveWorkspaces()) return;
             if (localStorage.getItem(KEYS.workspace) === id) localStorage.removeItem(KEYS.workspace);
             closeWorkspaceEditor();
             renderWorkspace();
@@ -901,7 +607,7 @@ if (typeof document !== "undefined") {
             status.className = state;
             button.disabled = !actionable;
             button.dataset.permissionState = state;
-            button.textContent = state === "granted" && ["Bookmarks", "Suggestions"].includes(name)
+            button.textContent = state === "granted" && name === "Bookmarks"
                 ? t("permissionRemove", "Remove")
                 : state === "prompt"
                     ? t("permissionGrant", "Grant")
@@ -911,15 +617,10 @@ if (typeof document !== "undefined") {
         async function renderPermissions() {
             if (permissionApi) {
                 const bookmarkPermissions = isFirefoxPermissionApi ? ["bookmarks"] : ["bookmarks", "favicon"];
-                const [bookmarksGranted, suggestionsGranted] = await Promise.all([
-                    callPermission("contains", { permissions: bookmarkPermissions }),
-                    callPermission("contains", { origins: [GOOGLE_ORIGIN] })
-                ]);
+                const bookmarksGranted = await callPermission("contains", { permissions: bookmarkPermissions });
                 setPermissionRow("Bookmarks", bookmarksGranted ? "granted" : "prompt");
-                setPermissionRow("Suggestions", suggestionsGranted ? "granted" : "prompt");
             } else {
                 setPermissionRow("Bookmarks", "unsupported", false);
-                setPermissionRow("Suggestions", "unsupported", false);
             }
 
             if ("Notification" in window) {
@@ -953,12 +654,6 @@ if (typeof document !== "undefined") {
                         const checkbox = document.getElementById("bookmarksCheckbox");
                         if (checkbox.checked) checkbox.click();
                     }
-                } else if (action === "suggestions") {
-                    await callPermission(state === "granted" ? "remove" : "request", { origins: [GOOGLE_ORIGIN] });
-                    if (state === "granted") {
-                        const checkbox = document.getElementById("searchsuggestionscheckbox");
-                        if (checkbox.checked) checkbox.click();
-                    }
                 } else if (action === "notifications" && Notification.permission === "default") {
                     await Notification.requestPermission();
                 } else if (action === "location") {
@@ -990,8 +685,6 @@ if (typeof document !== "undefined") {
         function openControlCenter(sectionId) {
             if (commandDialog.open) commandDialog.close();
             if (!controlDialog.open) controlDialog.showModal();
-            renderFocusStats();
-            renderHabits();
             renderWorkspace();
             renderServiceStatus();
             renderPermissions();
@@ -1019,14 +712,14 @@ if (typeof document !== "undefined") {
             }
         });
         document.getElementById("closeControlCenterBtn").addEventListener("click", () => controlDialog.close());
-        document.getElementById("pomodoroStatsBtn").addEventListener("click", event => {
-            event.stopPropagation();
-            openControlCenter("focusStatsSection");
-        });
         document.getElementById("serviceStatusPill").addEventListener("click", () => openControlCenter("serviceSection"));
         controlDialog.addEventListener("click", event => {
             if (event.target === controlDialog) controlDialog.close();
         });
+
+        // Commands that would reopen or write into features removed from the homepage (scripts/removed-features.js).
+        const REMOVED_COMMANDS = { todo: ["todo", "quick-create-task"], exam: ["exam-today"] };
+        const hiddenCommandIds = new Set((window.MYNT_REMOVED_COMPONENT_IDS || []).flatMap(id => REMOVED_COMMANDS[id] || []));
 
         function ensureWidget(checkboxId, triggerId, visibleSelector) {
             const checkbox = document.getElementById(checkboxId);
@@ -1042,9 +735,7 @@ if (typeof document !== "undefined") {
             { id: "wallpaperGallery", label: "commandWallpaperGallery", info: "commandWallpaperGalleryInfo", run: () => window.myntWallpaper?.open() },
             { id: "wallpaperRandom", label: "commandWallpaperRandom", info: "commandWallpaperRandomInfo", run: () => window.myntWallpaper?.random() },
             { id: "control", label: "commandOpenControl", info: "commandOpenControlInfo", run: () => openControlCenter() },
-            { id: "focus", label: "commandFocusStats", info: "commandFocusStatsInfo", run: () => openControlCenter("focusStatsSection") },
             { id: "workspaces", label: "commandWorkspaces", info: "commandWorkspacesInfo", run: () => openControlCenter("workspaceSection") },
-            { id: "habits", label: "commandHabits", info: "commandHabitsInfo", run: () => openControlCenter("habitsSection") },
             { id: "privacy", label: "commandPrivacy", info: "commandPrivacyInfo", run: () => openControlCenter("privacySection") },
             { id: "accessibility", label: "commandAccessibility", info: "commandAccessibilityInfo", run: () => openControlCenter("accessibilitySection") },
             { id: "settings", label: "commandSettings", info: "commandSettingsInfo", run: () => {
@@ -1053,20 +744,23 @@ if (typeof document !== "undefined") {
             } },
             { id: "search", label: "commandSearch", info: "commandSearchInfo", run: () => document.getElementById("searchQ").focus() },
             { id: "todo", label: "commandTodo", info: "commandTodoInfo", run: () => ensureWidget("todoListCheckbox", "todoListCont", "#todoContainer") },
+            { id: "exam-today", label: "commandExamToday", info: "commandExamTodayInfo", searchText: "exam 考古題", run: () => window.open(myntExamArchiveUrl(localStorage.getItem("myntExamArchiveUrl")), "_blank", "noopener") },
             { id: "pomodoro", label: "commandPomodoro", info: "commandPomodoroInfo", run: () => ensureWidget("pomodoroCheckbox", "pomodoroCont", "#pomodoroPanel") },
+            { id: "study-quotes", label: "commandStudyQuotes", info: "commandStudyQuotesInfo", searchText: "quotes 鼓勵語 語錄 匯入 標籤", run: () => window.myntStudyQuotesManager?.open() },
             { id: "bookmarks", label: "commandBookmarks", info: "commandBookmarksInfo", run: () => document.getElementById("bookmarkButton").click() },
-            { id: "bongoCat", label: "commandBongoCat", info: "commandBongoCatInfo", run: () => {
-                const cb = document.getElementById("bongoCatCheckbox");
-                if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event("change")); }
-            } },
             { id: "aiTools", label: "commandAiTools", info: "commandAiToolsInfo", run: () => ensureWidget("aiToolsCheckbox", "aiToolsIcon", "#toolsCont") },
-            { id: "scratchpad", label: "commandScratchpad", info: "commandScratchpadInfo", run: () => ensureWidget("scratchpadCheckbox", "scratchpadCont", "#scratchpadContainer") },
                         { id: "ambientAudio", label: "commandAmbientAudio", info: "commandAmbientAudioInfo", run: () => globalThis.myntAmbientAudio?.toggle() },
             { id: "ambientRain", label: "commandAmbientRain", info: "commandAmbientRainInfo", run: () => globalThis.myntAmbientAudio?.play("rain") },
             { id: "ambientOcean", label: "commandAmbientOcean", info: "commandAmbientOceanInfo", run: () => globalThis.myntAmbientAudio?.play("ocean") },
             { id: "ambientWhite", label: "commandAmbientWhite", info: "commandAmbientWhiteInfo", run: () => globalThis.myntAmbientAudio?.play("whitenoise") },
             { id: "ambientFire", label: "commandAmbientFire", info: "commandAmbientFireInfo", run: () => globalThis.myntAmbientAudio?.play("campfire") },
-            { id: "scratchpadCopy", label: "commandScratchpadCopy", info: "commandScratchpadCopyInfo", run: () => document.getElementById("scratchpadCopyBtn")?.click() },
+            { id: "ambientThunder", label: "commandAmbientThunder", info: "commandAmbientThunderInfo", run: () => globalThis.myntAmbientAudio?.play("thunder") },
+            { id: "ambientStream", label: "commandAmbientStream", info: "commandAmbientStreamInfo", run: () => globalThis.myntAmbientAudio?.play("stream") },
+            { id: "ambientWind", label: "commandAmbientWind", info: "commandAmbientWindInfo", run: () => globalThis.myntAmbientAudio?.play("wind") },
+            { id: "ambientForest", label: "commandAmbientForest", info: "commandAmbientForestInfo", run: () => globalThis.myntAmbientAudio?.play("forest") },
+            { id: "ambientNight", label: "commandAmbientNight", info: "commandAmbientNightInfo", run: () => globalThis.myntAmbientAudio?.play("night") },
+            { id: "ambientPink", label: "commandAmbientPink", info: "commandAmbientPinkInfo", run: () => globalThis.myntAmbientAudio?.play("pink") },
+            { id: "ambientBrown", label: "commandAmbientBrown", info: "commandAmbientBrownInfo", run: () => globalThis.myntAmbientAudio?.play("brown") },
             { id: "toggleTheme", label: "commandToggleTheme", info: "commandToggleThemeInfo", run: () => {
                 const darkRadio = document.getElementById("darkTheme");
                 const defaultRadio = document.getElementById("dfChecked");
@@ -1080,6 +774,7 @@ if (typeof document !== "undefined") {
         let filteredCommands = [];
         let activeCommandIndex = 0;
         let commandRenderToken = 0;
+        let commandReadyToken = -1;
 
         function commandLabel(command) {
             return command.labelText || t(command.label, command.id);
@@ -1110,10 +805,15 @@ if (typeof document !== "undefined") {
             }).filter(command => command.labelText && matchesCommand(command, query));
         }
 
-        function bookmarkCommands(query) {
+        async function bookmarkCommands(query) {
             if (!query) return Promise.resolve([]);
+            if (typeof safeBookmarkLink !== "function") {
+                try { await window.myntLazy?.load("bookmarks"); } catch { return []; }
+                if (typeof safeBookmarkLink !== "function") return [];
+            }
             const found = new Map();
             const add = (title, url) => {
+                url = safeBookmarkLink(url);
                 if (!url || found.has(url) || found.size >= 8) return;
                 found.set(url, {
                     id: `bookmark-${found.size}`,
@@ -1145,8 +845,29 @@ if (typeof document !== "undefined") {
             });
         }
 
+        async function shortcutCommands(query) {
+            if (!query) return [];
+            if (typeof safeBookmarkLink !== "function") {
+                try { await window.myntLazy?.load("bookmarks"); } catch { return []; }
+                if (typeof safeBookmarkLink !== "function") return [];
+            }
+            return (window.myntShortcuts?.getItems() || []).flatMap((item, index) => {
+                const url = safeBookmarkLink(item.url);
+                if (!url) return [];
+                const command = {
+                    id: `shortcut-${index}`, labelText: item.name || url, infoText: url,
+                    group: "commandGroupShortcut", searchText: url,
+                    run: () => { window.location.href = url; }
+                };
+                return matchesCommand(command, query) ? [command] : [];
+            });
+        }
+
         async function renderCommands(query = "") {
             const token = ++commandRenderToken;
+            filteredCommands = [];
+            document.getElementById("commandPaletteList").replaceChildren();
+            updateCommandSelection();
             const normalized = query.trim().toLocaleLowerCase();
             const workspaceLaunchCommands = workspaces.filter(p => p.urls && p.urls.length > 0).map(preset => ({
                 id: `launch-workspace-${preset.id}`,
@@ -1178,15 +899,15 @@ if (typeof document !== "undefined") {
             const base = [
                 ...commandDefinitions.filter(command => matchesCommand(command, normalized)),
                 ...createCommand,
-                ...(window.myntFocusCommands?.(normalized) || []),
                 ...workspaceCommands,
                 ...workspaceLaunchCommands,
                 ...collectLinkCommands("#toolsCont a", "commandGroupAi", normalized),
                 ...collectLinkCommands("#iconContainer a", "commandGroupGoogle", normalized)
-            ];
-            const bookmarks = await bookmarkCommands(normalized);
+            ].filter(command => !hiddenCommandIds.has(command.id));
+            const [shortcuts, bookmarks] = await Promise.all([shortcutCommands(normalized), bookmarkCommands(normalized)]);
             if (token !== commandRenderToken) return;
-            filteredCommands = [...base, ...bookmarks].slice(0, 40);
+            filteredCommands = [...base, ...shortcuts, ...bookmarks].slice(0, 40);
+            commandReadyToken = token;
             activeCommandIndex = Math.min(activeCommandIndex, Math.max(0, filteredCommands.length - 1));
             const list = document.getElementById("commandPaletteList");
             list.replaceChildren();
@@ -1212,7 +933,7 @@ if (typeof document !== "undefined") {
                     activeCommandIndex = index;
                     updateCommandSelection();
                 });
-                button.addEventListener("click", () => runCommand(command));
+                button.addEventListener("click", () => { if (token === commandRenderToken) runCommand(command); });
                 list.appendChild(button);
             });
             document.getElementById("commandPaletteEmpty").hidden = filteredCommands.length > 0;
@@ -1257,6 +978,7 @@ if (typeof document !== "undefined") {
             renderCommands(event.target.value);
         });
         document.getElementById("commandPaletteInput").addEventListener("keydown", event => {
+            if (event.isComposing || event.keyCode === 229 || commandReadyToken !== commandRenderToken) return;
             if (event.key === "ArrowDown" && filteredCommands.length) {
                 event.preventDefault();
                 activeCommandIndex = (activeCommandIndex + 1) % filteredCommands.length;
@@ -1289,9 +1011,6 @@ if (typeof document !== "undefined") {
         async function applyWorkspaceRemote(id, gate, assertAccess) {
             const preset=workspaces.find(item=>item.id===id);
             if(!preset || typeof gate!=='function' || typeof assertAccess!=='function')throw Error('INVALID_ARGUMENT');
-            // Quote visibility's existing handler fetches and clears cached content.
-            // Do not silently invoke that unrelated network/data side effect.
-            if(document.getElementById('motivationalQuotesCheckbox')?.checked!==preset.widgets.motivationalQuotesCheckbox)throw Error('ACTION_REQUIRED');
             if(MYNT_WORKSPACE_WIDGETS.some(key=>!document.getElementById(key)))throw Error('UNAVAILABLE');
             const timer=window.myntPomodoro;
             if(!timer?.runRemote)throw Error('UNAVAILABLE');
@@ -1323,21 +1042,17 @@ if (typeof document !== "undefined") {
 
         window.myntDashboard = {
             getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
-            reloadHabits: () => { habits=readHabits(); renderHabits(); },
             getWorkspacePresets: () => JSON.parse(JSON.stringify(workspaces)),
-            reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); renderWorkspace(); },
-            reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); }
+            reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); workspaceBaseline=localStorage.getItem(KEYS.workspaces); renderWorkspace(); },
+            reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); },
+            refreshServiceAlert: updateServiceAlert
         };
-        window.addEventListener("storage", event => {
-            if (event.key === KEYS.habits || event.key === null) window.myntDashboard.reloadHabits();
+        window.MyntStorageSync?.watch([KEYS.workspaces, KEYS.workspace], () => {
+            window.myntDashboard.reloadWorkspaces();
         });
         localizeStaticUI();
-        migratePomodoroToday();
-        saveHabits();
         saveWorkspaces();
         applyAccessibility();
-        renderFocusStats();
-        renderHabits();
         renderWorkspace();
         renderServiceStatus();
         renderPermissions();

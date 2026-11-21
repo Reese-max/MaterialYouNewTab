@@ -11,7 +11,6 @@ let analogIntervalId = null;
 let digitalIntervalId = null;
 let lastDateString = null;
 let lastDigitalDateString = null;
-let lastGreetingString = null;
 
 // ---------------------- Hiding clock func ----------------------
 // Select elements
@@ -189,9 +188,7 @@ function initializeClock() {
 
             const formattedDate = dateDisplay[currentLanguage] || dateDisplay.default;
             if (analogDate.textContent !== formattedDate) analogDate.textContent = formattedDate;
-            const newDateString = document.body.dataset.workspaceBackground === "video"
-                ? getGreeting()
-                : formattedDate;
+            const newDateString = formattedDate;
             // Update date if date actually changed or if it's the first time
             if (newDateString !== lastDateString) {
                 document.getElementById("date").innerText = newDateString;
@@ -253,36 +250,9 @@ function initializeClock() {
         updateDate();
     }
 
-    function getGreeting() {
-        const currentHour = new Date().getHours();
-        let greetingKey;
-
-        // Determine the greeting key based on the current hour
-        if (currentHour < 12) {
-            greetingKey = "morning";
-        } else if (currentHour < 17) {
-            greetingKey = "afternoon";
-        } else {
-            greetingKey = "evening";
-        }
-
-        // Get the user's language setting
-        const currentLanguage = getLanguageStatus("selectedLanguage") || "en"; // Default to English
-
-        const greeting = translations[currentLanguage]?.greeting?.[greetingKey] ?? translations["en"].greeting[greetingKey];
-        const template = translations[currentLanguage]?.greetingWithName
-            ?? translations["en"].greetingWithName
-            ?? "{greeting}, {name}";
-        return myntFormatGreeting(greeting, localStorage.getItem("myntGreetingName"), template);
-    }
-
     function updatedigiClock() {
         const hourformatstored = localStorage.getItem("hourformat");
         let hourformat = hourformatstored === "true"; // Default to false if null
-        const greetingCheckbox = document.getElementById("greetingcheckbox");
-        const isGreetingEnabled = localStorage.getItem("greetingEnabled") !== "false";
-        greetingCheckbox.checked = isGreetingEnabled;
-
         const now = new Date();
         const dayOfWeek = now.getDay(); // Get day of the week (0-6)
         const dayOfMonth = now.getDate(); // Get current day of the month (1-31)
@@ -326,6 +296,9 @@ function initializeClock() {
         };
 
         const newDigitalDateString = dateFormats[currentLanguage] || dateFormats.default;
+        const dateElement = document.getElementById("date");
+        dateElement.style.display = "block";
+        if (dateElement.textContent !== newDigitalDateString) dateElement.textContent = newDigitalDateString;
         // Update date if date actually changed or if it's the first time
         if (newDigitalDateString !== lastDigitalDateString) {
             document.getElementById("digidate").textContent = newDigitalDateString;
@@ -408,18 +381,6 @@ function initializeClock() {
             document.getElementById("amPm").textContent = ""; // Clear AM/PM for 24-hour format
         }
 
-        const clocktype1 = localStorage.getItem("clocktype");
-        const dateElement = document.getElementById("date");
-        if (clocktype1 === "digital" && isGreetingEnabled) {
-            const newGreeting = getGreeting();
-            if (newGreeting !== lastGreetingString) {
-                dateElement.style.display = "block";
-                dateElement.innerText = newGreeting;
-                lastGreetingString = newGreeting;
-            }
-        } else if (clocktype1 === "digital") {
-            dateElement.style.display = "none";  // Hide the greeting
-        }
     }
 
     // Function to start the analog clock
@@ -459,19 +420,14 @@ function initializeClock() {
         const mode = localStorage.getItem('clocktype'), hidden = localStorage.getItem('hideClockVisible');
         if (![null, 'analog', 'digital'].includes(mode) || ![null, 'true', 'false'].includes(hidden)) return false;
         clocktype = mode || 'analog';
-        const digital = clocktype === 'digital', greeting = localStorage.getItem('greetingEnabled') !== 'false';
+        const digital = clocktype === 'digital';
         hideClockCheckbox.checked = hidden !== 'true';
         const digitalBox = document.getElementById('digitalCheckbox');
         const hourBox = document.getElementById('12hourcheckbox');
-        const greetingBox = document.getElementById('greetingcheckbox');
-        const nameInput = document.getElementById('greetingNameInput');
         if (digitalBox) digitalBox.checked = digital;
         if (hourBox) hourBox.checked = localStorage.getItem('hourformat') === 'true';
-        if (greetingBox) { greetingBox.checked = greeting; greetingBox.disabled = !digital; }
-        if (nameInput) nameInput.disabled = !greeting;
-        document.getElementById('greetingNameField')?.classList.toggle('inactive', !greeting);
-        for (const id of ['timeformatField', 'greetingField']) document.getElementById(id)?.classList.toggle('inactive', !digital);
-        lastDateString = lastDigitalDateString = lastGreetingString = null;
+        document.getElementById('timeformatField')?.classList.toggle('inactive', !digital);
+        lastDateString = lastDigitalDateString = null;
         displayClock();
         // Synchronize settings controls and clock content, never sibling layout or storage.
         if (digital) {
@@ -489,15 +445,9 @@ function initializeClock() {
         hideClockCheckbox.checked = !hidden; applyClockState(hidden); toggleHideState(hidden);
         const digitalBox = document.getElementById('digitalCheckbox');
         const hourBox = document.getElementById('12hourcheckbox');
-        const greetingBox = document.getElementById('greetingcheckbox');
-        const nameInput = document.getElementById('greetingNameInput');
         if (digitalBox) digitalBox.checked = digital;
         if (hourBox) hourBox.checked = localStorage.getItem('hourformat') === 'true';
-        const greeting = localStorage.getItem('greetingEnabled') !== 'false';
-        if (greetingBox) { greetingBox.checked = greeting; greetingBox.disabled = !digital; }
-        if (nameInput) { nameInput.value = myntNormalizeGreetingName(localStorage.getItem('myntGreetingName')); nameInput.disabled = !greeting; }
-        document.getElementById('greetingNameField')?.classList.toggle('inactive', !greeting);
-        for (const id of ['timeformatField','greetingField']) document.getElementById(id)?.classList.toggle('inactive', !digital);
+        document.getElementById('timeformatField')?.classList.toggle('inactive', !digital);
         this.refreshVisibility();
     } };
 
@@ -527,7 +477,6 @@ function initializeClock() {
         const dateElement = document.getElementById("date");
         dateElement.style.display = "block";
         dateElement.innerText = "";
-        lastGreetingString = null;
         lastDateString = null;
         updateDate();
     }
@@ -537,32 +486,11 @@ function initializeClock() {
         const timeformatField = document.getElementById("timeformatField");
         const hourcheckbox = document.getElementById("12hourcheckbox");
         const digitalCheckbox = document.getElementById("digitalCheckbox");
-        const greetingCheckbox = document.getElementById("greetingcheckbox");
-        const greetingField = document.getElementById("greetingField");
-        const greetingNameField = document.getElementById("greetingNameField");
-        const greetingNameInput = document.getElementById("greetingNameInput");
-
-        function syncGreetingNameField() {
-            const enabled = greetingCheckbox.checked;
-            greetingNameField.classList.toggle("inactive", !enabled);
-            greetingNameInput.disabled = !enabled;
-        }
-
-        if (localStorage.getItem("greetingEnabled") === null) {
-            localStorage.setItem("greetingEnabled", "true");
-        }
-
-        greetingCheckbox.checked = localStorage.getItem("greetingEnabled") === "true";
-        greetingCheckbox.disabled = localStorage.getItem("clocktype") !== "digital";
-        greetingNameInput.value = myntNormalizeGreetingName(localStorage.getItem("myntGreetingName"));
-        syncGreetingNameField();
 
         digitalCheckbox.addEventListener("change", function () {
             saveCheckboxState("digitalCheckboxState", digitalCheckbox);
             if (digitalCheckbox.checked) {
                 timeformatField.classList.remove("inactive");
-                greetingField.classList.remove("inactive");
-                greetingCheckbox.disabled = false; // Enable greeting toggle
                 localStorage.setItem("clocktype", "digital");
                 clocktype = localStorage.getItem("clocktype");
                 displayClock();
@@ -570,12 +498,8 @@ function initializeClock() {
                 startDigitalClock();
                 updatedigiClock();
                 saveActiveStatus("timeformatField", "active");
-                saveActiveStatus("greetingField", "active");
-                syncGreetingNameField();
             } else {
                 timeformatField.classList.add("inactive");
-                greetingField.classList.add("inactive");
-                greetingCheckbox.disabled = true; // Disable greeting toggle
                 localStorage.setItem("clocktype", "analog");
                 clocktype = localStorage.getItem("clocktype");
                 stopDigitalClock();
@@ -584,8 +508,6 @@ function initializeClock() {
                 displayClock();
                 resetDateDisplay();
                 saveActiveStatus("timeformatField", "inactive");
-                saveActiveStatus("greetingField", "inactive");
-                syncGreetingNameField();
             }
         });
 
@@ -598,30 +520,10 @@ function initializeClock() {
             }
         });
 
-        greetingCheckbox.addEventListener("change", () => {
-            localStorage.setItem("greetingEnabled", greetingCheckbox.checked);
-            syncGreetingNameField();
-            updatedigiClock();
-        });
-
-        greetingNameInput.addEventListener("input", () => {
-            const name = myntNormalizeGreetingName(greetingNameInput.value);
-            if (name) localStorage.setItem("myntGreetingName", name);
-            else localStorage.removeItem("myntGreetingName");
-            lastGreetingString = null;
-            lastDateString = null;
-            if (localStorage.getItem("clocktype") === "digital") updatedigiClock();
-            else updateDate();
-        });
-        greetingNameInput.addEventListener("blur", () => {
-            greetingNameInput.value = myntNormalizeGreetingName(greetingNameInput.value);
-        });
-
         // Canonical preferences win over stale legacy checkbox/display caches.
         digitalCheckbox.checked = clocktype === "digital";
         hourcheckbox.checked = localStorage.getItem("hourformat") === "true";
         timeformatField.classList.toggle("inactive", !digitalCheckbox.checked);
-        greetingField.classList.toggle("inactive", !digitalCheckbox.checked);
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setupClockControls, { once: true });
     else setupClockControls();

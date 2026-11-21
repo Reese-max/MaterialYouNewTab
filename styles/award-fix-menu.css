@@ -164,31 +164,6 @@
 	outline-offset: 3px;
 }
 
-/* ===== 7. 姓名欄沿用現有表面變數；一般深色模式由整頁反相處理 ===== */
-#menuCont #greetingNameInput {
-	min-height: 44px;
-	padding: 8px 12px;
-	border: 1px solid var(--menu-input-border);
-	border-radius: 12px;
-	background-color: var(--menu-input-bg);
-	color: var(--menu-input-text);
-}
-
-#menuCont #greetingNameInput::placeholder {
-	color: var(--award-surface-light-muted);
-	opacity: 1;
-}
-
-html.black-theme #menuCont #greetingNameInput::placeholder {
-	color: var(--award-surface-dark-muted);
-}
-
-#menuCont #greetingNameInput:focus {
-	outline: 2px solid var(--darkerColor-blue);
-	outline-offset: 2px;
-	box-shadow: none;
-}
-
 /* ===== 8. 筆電高度減少留白，長字串仍可換行並隨文字縮放增高 ===== */
 #menuCont > .topDiv {
 	height: 72px;
@@ -265,11 +240,20 @@ html.black-theme #menuCont #greetingNameInput::placeholder {
 #menuCont > .optCont {
 	height: calc(100% - 72px);
 	padding-bottom: 32px;
-	scroll-padding-bottom: 32px;
+	scroll-padding-bottom: 64px;
+	/* 本機背景隨內容捲到底時蓋住底部陰影，不需捲動事件或動畫。
+	   陰影僅繪於抽屜捲動區，留白處可辨識下方仍有設定。 */
+	background-image:
+		linear-gradient(to top, var(--accentLightTint-blue) 40%, transparent),
+		radial-gradient(farthest-side at 50% 100%, rgb(0 0 0 / 22%), transparent);
+	background-position: center bottom;
+	background-size: 100% 48px, 100% 16px;
+	background-repeat: no-repeat;
+	background-attachment: local, scroll;
 }
 
 #menuCont > .optCont > .page {
-	padding-bottom: max(32px, var(--gap));
+	padding-bottom: max(64px, var(--gap));
 }
 
 /* ===== 10. 分頁以字色、表面與陰影共同標示選取，保留文字縮放 ===== */
@@ -383,7 +367,7 @@ html.black-theme #menuCont {
 
 /* 窄螢幕保留文字空間；其他尺寸用縮排與連續細線表示數位時鐘子選項。 */
 @media (min-width: 360px) {
-	#menuCont :is(#timeformatField, #greetingField) {
+	#menuCont #timeformatField {
 		margin-inline-start: 16px;
 		border-inline-start: 2px solid var(--menu-row-divider);
 		padding-inline-start: 12px;

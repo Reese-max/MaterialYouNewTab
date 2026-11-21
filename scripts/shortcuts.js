@@ -4,6 +4,15 @@
  * Licensed under the GNU General Public License v3.0 (GPL-3.0)
  */
 
+function myntShortcutDefault(index) {
+    const [name, url] = [
+        ["YouTube", "youtube.com"], ["Gmail", "mail.google.com"],
+        ["Telegram", "web.telegram.org"], ["WhatsApp", "web.whatsapp.com"],
+        ["Twitter", "x.com"], ["Discord", "discord.com/app"]
+    ][index] || ["新捷徑", "https://github.com/Reese-max/MaterialYouNewTab"];
+    return { name, url, icon: "" };
+}
+
 function myntNormalizeShortcutUrl(url) {
     const trimmed = String(url || "").trim();
     if (!trimmed) return null;
@@ -11,6 +20,9 @@ function myntNormalizeShortcutUrl(url) {
     const candidate = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
     try {
         const parsed = new URL(candidate);
+        // Chromium percent-encodes a space in the host ("not a url") instead of rejecting it;
+        // spaces in the path or query stay valid.
+        if (parsed.hostname.includes("%")) return null;
         return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : null;
     } catch {
         return null;
@@ -38,13 +50,14 @@ function myntPlanShortcutPin(shortcuts, candidate, maxShortcuts = 50) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    Object.assign(module.exports, { myntNormalizeShortcutUrl, myntPlanShortcutPin });
+    Object.assign(module.exports, { myntShortcutDefault, myntNormalizeShortcutUrl, myntPlanShortcutPin });
 }
 
 if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", function () {
     // Constants
     const MAX_SHORTCUTS = 50;
     const MAX_ICON_BYTES = 100 * 1024;
+    const SHORTCUT_RECOVERY_KEY = "myntShortcutRecoveryV1";
     const SUPPORTED_ICON_MIME_TYPES = new Set([
         "image/png",
         "image/jpeg",
@@ -57,11 +70,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         "image/svg+xml",
     ]);
     const PLACEHOLDER = {
-        name: "新捷徑",
+        name: shortcutTranslation("shortcutDefaultName") || "新捷徑",
         url: "https://github.com/Reese-max/MaterialYouNewTab",
-        inputName: "捷徑名稱",
-        inputUrl: "捷徑網址",
-        inputIcon: "自訂圖示：網址或 SVG（選填）"
+        inputName: shortcutTranslation("shortcutInputName") || "捷徑名稱",
+        inputUrl: shortcutTranslation("shortcutInputUrl") || "捷徑網址",
+        inputIcon: shortcutTranslation("shortcutInputIcon") || "自訂圖示：網址或 SVG（選填）"
     };
 
     // DOM Elements
@@ -80,53 +93,43 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     // Preset Data
     const presets = [
         {
-            name: "YouTube",
-            url: "youtube.com",
             domains: ["youtube.com", "m.youtube.com", "youtu.be"],
             svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" class="accentColor shortcutDarkColor"/><g style="transform: scale(0.6); transform-origin: center;"><path class="bgLightTint" id="darkLightTint" fill-rule="evenodd"
                     d="M23.498 6.186a3.02 3.02 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.02 3.02 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.02 3.02 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.02 3.02 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814M9.545 15.568V8.432L15.818 12z"/></g></svg>`
         },
         {
-            name: "Gmail",
-            url: "mail.google.com",
             domains: ["gmail.com", "mail.google.com"],
-            svg: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" class="accentColor shortcutDarkColor"/><g style="transform: scale(0.58); transform-origin: center;"><path class="bgLightTint" id="darkLightTint" 
+            svg: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" class="accentColor shortcutDarkColor"/><g style="transform: scale(0.58); transform-origin: center;"><path class="bgLightTint" id="darkLightTint"
                     d="m8.606 13.6 3.396 2.323 3.274-2.259 7.338 7.24q-.29.095-.614.096H2c-.264 0-.516-.052-.747-.144zM24 7.652V19a2 2 0 0 1-.18.83l-7.193-7.097zM0 7.715l7.25 4.958-7.123 7.03A2.04 2.04 0 0 1 0 19ZM22 3a2 2 0 0 1 2 2v.704l-12.002 8.274L0 5.772V5a2 2 0 0 1 2-2Z"/></g></svg>`
         },
         {
-            name: "Telegram",
-            url: "web.telegram.org",
             domains: ["telegram.org", "t.me", "web.telegram.org"],
             svg: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path class="accentColor shortcutDarkColor"
                     d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0Zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38Z"/></svg>`
         },
         {
-            name: "WhatsApp",
-            url: "web.whatsapp.com",
             domains: ["whatsapp.com", "web.whatsapp.com", "api.whatsapp.com"],
             svg: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path class="accentColor shortcutDarkColor"
                     d="M10 0c5.523 0 10 4.477 10 10s-4.477 10-10 10a9.953 9.953 0 0 1-5.03-1.355L.004 20l1.352-4.968A9.953 9.953 0 0 1 0 10C0 4.477 4.477 0 10 0ZM6.592 5.3l-.2.008a.961.961 0 0 0-.372.1 1.293 1.293 0 0 0-.294.228c-.12.113-.188.211-.261.306a2.73 2.73 0 0 0-.566 1.678c.002.49.13.967.33 1.413.409.902 1.082 1.857 1.97 2.742.214.213.424.427.65.626a9.448 9.448 0 0 0 3.84 2.046l.568.087c.185.01.37-.004.556-.013a1.99 1.99 0 0 0 .833-.231c.131-.067.259-.14.383-.22 0 0 .043-.028.125-.09.135-.1.218-.171.33-.288.083-.086.155-.187.21-.302.078-.163.156-.474.188-.733.024-.198.017-.306.014-.373-.004-.107-.093-.218-.19-.265l-.582-.261s-.87-.379-1.402-.621a.497.497 0 0 0-.176-.041.482.482 0 0 0-.378.127c-.005-.002-.072.055-.795.931a.35.35 0 0 1-.368.13 1.432 1.432 0 0 1-.191-.066c-.124-.052-.167-.072-.252-.108a6.028 6.028 0 0 1-1.575-1.003c-.126-.11-.243-.23-.363-.346a6.298 6.298 0 0 1-1.02-1.268l-.059-.095a.923.923 0 0 1-.102-.205c-.038-.147.061-.265.061-.265s.243-.266.356-.41c.11-.14.203-.276.263-.373.118-.19.155-.385.093-.536-.28-.684-.57-1.365-.868-2.041-.059-.134-.234-.23-.393-.249a4.439 4.439 0 0 0-.162-.016 3.385 3.385 0 0 0-.403.004l.201-.008.001.001Z"/></svg>`
         },
         {
-            name: "Twitter",
-            url: "x.com",
             domains: ["twitter.com", "x.com"],
             svg: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path class="accentColor shortcutDarkColor"
                     d="M10 0c5.529 0 10 4.471 10 10s-4.471 10-10 10S0 15.529 0 10 4.471 0 10 0ZM8.171 15.271c4.429 0 6.858-3.671 6.858-6.857V8.1a4.783 4.783 0 0 0 1.2-1.257c-.429.186-.9.314-1.386.386.5-.3.886-.772 1.057-1.329a5.215 5.215 0 0 1-1.529.586 2.405 2.405 0 0 0-1.757-.757A2.42 2.42 0 0 0 10.2 8.143c0 .186.014.371.071.543-2-.1-3.785-1.057-4.971-2.515-.2.358-.329.772-.329 1.215 0 .828.429 1.571 1.072 2-.4 0-.772-.115-1.086-.3v.028c0 1.172.829 2.143 1.929 2.372a2.3 2.3 0 0 1-.629.085c-.157 0-.3-.014-.457-.042.3.957 1.2 1.657 2.243 1.671a4.883 4.883 0 0 1-3 1.029c-.2 0-.386 0-.572-.029a6.765 6.765 0 0 0 3.686 1.086"/></svg>`
         },
         {
-            name: "Discord",
-            url: "discord.com/app",
             domains: ["discord.com", "discord.gg", "discordapp.com"],
             svg: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" class="accentColor shortcutDarkColor"/><g style="transform: scale(0.75); transform-origin: center;"><path class="bgLightTint" id="darkLightTint"
                     d="M19.303 5.337A17.3 17.3 0 0 0 14.963 4c-.191.329-.403.775-.552 1.125a16.6 16.6 0 0 0-4.808 0C9.454 4.775 9.23 4.329 9.05 4a17 17 0 0 0-4.342 1.337C1.961 9.391 1.218 13.35 1.59 17.255a17.7 17.7 0 0 0 5.318 2.664 13 13 0 0 0 1.136-1.836c-.627-.234-1.22-.52-1.794-.86.149-.106.297-.223.435-.34 3.46 1.582 7.207 1.582 10.624 0 .149.117.287.234.435.34-.573.34-1.167.626-1.793.86a13 13 0 0 0 1.135 1.836 17.6 17.6 0 0 0 5.318-2.664c.457-4.52-.722-8.448-3.1-11.918M8.52 14.846c-1.04 0-1.889-.945-1.889-2.101s.828-2.102 1.89-2.102c1.05 0 1.91.945 1.888 2.102 0 1.156-.838 2.1-1.889 2.1m6.974 0c-1.04 0-1.89-.945-1.89-2.101s.828-2.102 1.89-2.102c1.05 0 1.91.945 1.889 2.102 0 1.156-.828 2.1-1.89 2.1"/></g></svg>`
         }
-    ];
+    ].map((preset, index) => ({ ...preset, ...myntShortcutDefault(index) }));
 
     // Cache for shortcuts data
     let shortcutsCache = [];
+    let shortcutBaseline;
     let recoveryControl;
     let shortcutDragInitialized = false;
+    let shortcutMessageSeq = 0;
 
     // Initialization
     loadSettings();
@@ -144,6 +147,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             loadShortcuts();
             recoveryControl?.refresh();
         }
+    });
+    window.MyntStorageSync?.watch(key => /^shortcut(?:Amount$|Name\d+$|URL\d+$|Icon\d+$)/.test(key), () => {
+        // A focused field keeps its draft until blur performs the stale check.
+        if (dom.shortcutSettingsContainer.contains(document.activeElement)) return;
+        checkShortcutFreshness();
     });
 
     // Loads all settings from localStorage and applies them
@@ -181,6 +189,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
 
     function handleBookmarkShortcut(event) {
+        if (!checkShortcutFreshness()) return;
         const plan = myntPlanShortcutPin(shortcutsCache, event.detail, MAX_SHORTCUTS);
         const name = String(event.detail?.name || "").trim();
         const url = myntNormalizeShortcutUrl(event.detail?.url) || String(event.detail?.url || "");
@@ -216,10 +225,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function handleNewShortcutClick() {
         if (this.classList.contains("inactive")) return;
 
-        const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
-        if (currentAmount >= MAX_SHORTCUTS) return;
-
-        addNewShortcut();
+        if (addNewShortcut() === false) return;
 
         // Scroll to the new shortcut and focus on the URL input
         const allEntries = document.querySelectorAll(".shortcutSettingsEntry");
@@ -238,19 +244,25 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Loads shortcuts from localStorage or uses presets if none exist
     function loadShortcuts() {
-        const amount = localStorage.getItem("shortcutAmount") || presets.length;
-        const deleteInactive = amount <= 1;
+        rememberShortcutStorage();
+        // A stored "0" means the user removed every shortcut; only a missing key falls back to presets.
+        const storedAmount = localStorage.getItem("shortcutAmount");
+        const amount = storedAmount === null
+            ? presets.length
+            : Math.min(Math.max(parseInt(storedAmount, 10) || 0, 0), MAX_SHORTCUTS);
 
         shortcutsCache = [];
 
         for (let i = 0; i < amount; i++) {
-            const name = localStorage.getItem(`shortcutName${i}`) || (presets[i] ? presets[i].name : PLACEHOLDER.name);
-            const url = localStorage.getItem(`shortcutURL${i}`) || (presets[i] ? presets[i].url : PLACEHOLDER.url);
+            const defaults = myntShortcutDefault(i);
+            // ?? keeps a deliberately emptied name instead of reviving the preset name on reload.
+            const name = localStorage.getItem(`shortcutName${i}`) ?? defaults.name;
+            const url = localStorage.getItem(`shortcutURL${i}`) || defaults.url;
             const icon = localStorage.getItem(`shortcutIcon${i}`) || "";
 
             shortcutsCache.push({ name, url, icon });
 
-            const entry = createShortcutEntry(name, url, icon, deleteInactive, i);
+            const entry = createShortcutEntry(name, url, icon, i);
             dom.shortcutSettingsContainer.appendChild(entry);
             renderShortcut(name, url, icon, i);
         }
@@ -259,14 +271,17 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         dom.newShortcutButton.classList.toggle("inactive", amount >= MAX_SHORTCUTS);
 
         setupDragAndDrop();
+        updateShortcutIndices();
     }
 
     // Creates a shortcut entry element for the settings panel
-    function createShortcutEntry(name, url, iconUrl, deleteInactive, index) {
+    function createShortcutEntry(name, url, iconUrl, index) {
         const entry = document.createElement("div");
         entry.className = "shortcutSettingsEntry";
-        entry.draggable = true;
+        // Only the grip is draggable: a draggable row breaks caret placement and text selection in its inputs.
         entry._index = index;
+        // Not the index: a draft row outlives rebuilds of the saved rows, so ids must never repeat.
+        const messageId = `shortcutUrlMessage${shortcutMessageSeq++}`;
 
         entry.innerHTML = `
             <div class="grip-container" draggable="true">
@@ -280,15 +295,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 </svg>
             </div>
             <div class="shortcutInputGroup">
-                <input class="shortcutName" placeholder="${PLACEHOLDER.inputName}" value="${escapeHtml(name)}">
+                <input class="shortcutName" placeholder="${PLACEHOLDER.inputName}" value="">
                 <div class="shortcutInputRow">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39"/></svg>
-                    <input class="URL" placeholder="${PLACEHOLDER.inputUrl}" value="${escapeHtml(url)}">
+                    <input class="URL" placeholder="${PLACEHOLDER.inputUrl}" value="" aria-describedby="${messageId}">
                 </div>
-                <div class="shortcutInputRow">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2M8.5 13.5l2.5 3.01L14.5 12l4.5 6H5z"/></svg>
-                    <input class="iconURL" placeholder="${PLACEHOLDER.inputIcon}" value="${escapeHtml(iconUrl || "")}">
-                </div>
+                <div class="shortcutFieldMessage shortcutUrlMessage" id="${messageId}" role="status" aria-live="polite" hidden></div>
+                <input class="iconURL" type="hidden" value="">
             </div>
             <div class="shortcutActions">
                 <button type="button" class="uploadCustomIconButton">
@@ -298,7 +311,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 </button>
                 <input type="file" class="iconFileInput" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp,image/x-icon,image/vnd.microsoft.icon,image/svg+xml" hidden>
                 <div class="shortcutDelete">
-                    <button class="${deleteInactive ? 'inactive' : ''}">
+                    <button type="button">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                             <path d="M7.8 20.4q-.742 0-1.271-.529Q6 19.343 6 18.6v-12h-.3q-.383 0-.641-.257-.259-.258-.259-.638t.259-.643Q5.317 4.8 5.7 4.8h3.9v-.3q0-.383.259-.641.258-.259.641-.259h3q.383 0 .641.259.259.258.259.641v.3h3.9q.383 0 .641.257.259.257.259.638 0 .38-.259.643-.258.262-.641.262H18v11.99q0 .76-.529 1.285-.529.525-1.271.525Zm8.4-13.8H7.8v12h8.4zm-5.705 10.2q.38 0 .643-.259.262-.259.262-.641V9.3q0-.383-.257-.641-.258-.259-.638-.259t-.643.259Q9.6 8.917 9.6 9.3v6.6q0 .383.257.641.258.259.638.259Zm3 0q.38 0 .643-.259.262-.259.262-.641V9.3q0-.383-.257-.641-.258-.259-.638-.259t-.643.259q-.262.258-.262.641v6.6q0 .383.257.641.258.259.638.259ZM7.8 6.6v12z"/>
                         </svg>
@@ -311,7 +324,53 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const uploadButton = entry.querySelector(".uploadCustomIconButton");
         const fileInput = entry.querySelector(".iconFileInput");
         const iconInput = entry.querySelector(".iconURL");
+        entry.querySelector(".shortcutName").value = String(name || "");
+        entry.querySelector(".URL").value = String(url || "");
+        // The placeholder disappears once a value exists, so the fields keep a programmatic name.
+        entry.querySelector(".shortcutName").setAttribute("aria-label", PLACEHOLDER.inputName);
+        entry.querySelector(".URL").setAttribute("aria-label", PLACEHOLDER.inputUrl);
+        iconInput.value = String(iconUrl || "");
+        iconInput.type = "hidden";
         const deleteBtn = entry.querySelector(".shortcutDelete button");
+        entry.querySelector(".shortcutInputGroup").appendChild(MyntQuicklinkIcons.chooseButton({
+            getValue: () => iconInput.value,
+            getLabel: () => entry.querySelector(".shortcutName").value,
+            getUrl: () => entry.querySelector(".URL").value,
+            // Without a valid URL (a new draft) there is no site to take an icon from yet.
+            automatic: target => myntNormalizeShortcutUrl(entry.querySelector(".URL").value) && appendShortcutLogo(target, entry.querySelector(".shortcutName").value, entry.querySelector(".URL").value, ""),
+            onSelect(value) {
+                iconInput.value = value;
+                // A draft keeps the chosen icon until it has a valid URL.
+                if (isUnfinishedDraft(entry)) return;
+                if (saveShortcut(entry) === false) return false;
+                renderShortcut(entry.querySelector(".shortcutName").value, entry.querySelector(".URL").value, value, entry._index);
+            }
+        }));
+
+        for (const [direction, symbol, offset] of [["Up", "↑", -1], ["Down", "↓", 1]]) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `shortcutMove${direction}`;
+            button.textContent = symbol;
+            const template = translations[currentLanguage]?.[`shortcutMove${direction}`] || translations.en[`shortcutMove${direction}`];
+            button.setAttribute("aria-label", template.replace("{name}", name));
+            button.disabled = offset < 0 ? index === 0 : index === shortcutsCache.length - 1;
+            button.addEventListener("click", () => {
+                const rows = [...dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry:not(.draft)")];
+                const from = rows.indexOf(entry), to = from + offset;
+                if (from < 0 || to < 0 || to >= rows.length) return;
+                const originalOrder = readShortcutOrder();
+                dom.shortcutSettingsContainer.insertBefore(entry, offset < 0 ? rows[to] : rows[to].nextSibling);
+                try { saveShortcutOrder(originalOrder); }
+                finally {
+                    updateShortcutIndices();
+                    const current = dom.shortcutSettingsContainer.contains(entry) ? entry : dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")[from];
+                    const preferred = current?.querySelector(`.shortcutMove${direction}`);
+                    (preferred?.disabled ? current.querySelector(`.shortcutMove${direction === "Up" ? "Down" : "Up"}`) : preferred)?.focus();
+                }
+            });
+            entry.querySelector(".shortcutActions").appendChild(button);
+        }
 
         attachInputListeners(inputs, entry);
 
@@ -343,7 +402,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             function applyIcon(iconValue) {
                 iconInput.value = iconValue;
                 try {
-                    saveShortcut(entry);
+                    if (saveShortcut(entry) === false) return;
                     renderShortcut(
                         entry.querySelector(".shortcutName").value,
                         entry.querySelector(".URL").value,
@@ -403,113 +462,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
     }
 
-    // Escapes HTML to prevent XSS
-    function escapeHtml(unsafe) {
-        return unsafe.replace(/[&<>"']/g, match => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;",
-        }[match]));
-    }
-
-    // Validates custom icon URL
-    function isValidCustomIconUrl(url) {
-        if (typeof url !== "string") return false;
-        const trimmedUrl = url.trim();
-        if (!trimmedUrl || /\s/.test(trimmedUrl)) return false;
-
-        if (/^https?:\/\//i.test(trimmedUrl)) {
-            try {
-                const parsed = new URL(trimmedUrl);
-                return parsed.protocol === "https:" || parsed.protocol === "http:";
-            } catch {
-                return false;
-            }
-        }
-
-        return /^data:image\/(?:png|jpe?g|gif|webp|avif|bmp|x-icon|vnd\.microsoft\.icon|svg\+xml)(?:[;,])/i.test(trimmedUrl);
-    }
-
-    function applyCustomSvgAccentColor(svg) {
-        const color = localStorage.getItem("selectedTheme") === "dark"
-            ? "#bfbfbf"
-            : localStorage.getItem("accentLightTintColor") || "#e2eeff";
-
-        return svg.replace(/\bcurrentColor\b/g, color);
-    }
-
-    // Sanitizes raw SVG code, returns data URL or null if unsafe
-    function sanitizeSvg(raw) {
-        const trimmed = raw.trim();
-        const normalized = trimmed
-            .replace(/^<\?xml[\s\S]*?\?>\s*/i, "")
-            .replace(/^<!doctype[\s\S]*?>\s*/i, "")
-            .replace(/^<!--[\s\S]*?-->\s*/i, "");
-        if (!normalized.toLowerCase().startsWith("<svg")) return null;
-
-        const forbidden = [
-            /<script[\s>]/i,                // <script> tags
-            /\bon\w+\s*=/i,                 // event handlers: onload=, onclick=, onerror=, …
-            /<iframe[\s>]/i,                // iframes
-            /<foreignObject[\s>]/i,         // foreignObject (can embed HTML)
-            /javascript\s*:/i,              // javascript: URIs
-            /data:(?!image\/[a-z]+;base64,)[^"'\s]*/i, // non-image data URIs
-        ];
-
-        for (const pattern of forbidden) {
-            if (pattern.test(normalized)) return null;
-        }
-
-        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(applyCustomSvgAccentColor(normalized));
-    }
-
-    function sanitizeSvgDataUrl(dataUrl) {
-        const separatorIndex = dataUrl.indexOf(",");
-        if (separatorIndex < 0) return null;
-
-        const metadata = dataUrl.slice(0, separatorIndex).toLowerCase();
-        if (!metadata.startsWith("data:image/svg+xml")) return null;
-
-        try {
-            const payload = dataUrl.slice(separatorIndex + 1);
-            const rawSvg = metadata.includes(";base64")
-                ? new TextDecoder("utf-8", { fatal: true }).decode(
-                    Uint8Array.from(atob(payload), character => character.charCodeAt(0))
-                )
-                : decodeURIComponent(payload);
-            return sanitizeSvg(rawSvg);
-        } catch {
-            return null;
-        }
-    }
-
-    // Normalizes icon input and rejects unsupported or unsafe values.
-    function processIconInput(raw) {
-        const trimmed = String(raw || "").trim();
-        if (!trimmed) return { value: "", error: null };
-
-        if (/<svg[\s>]/i.test(trimmed)) {
-            const dataUrl = sanitizeSvg(trimmed);
-            return dataUrl
-                ? { value: dataUrl, error: null }
-                : { value: "", error: "invalidSvg" };
-        }
-
-        if (/^data:image\/svg\+xml/i.test(trimmed)) {
-            const dataUrl = sanitizeSvgDataUrl(trimmed);
-            return dataUrl
-                ? { value: dataUrl, error: null }
-                : { value: "", error: "invalidSvg" };
-        }
-
-        if (!isValidCustomIconUrl(trimmed)) {
-            return { value: "", error: "invalidIcon" };
-        }
-
-        return { value: trimmed, error: null };
-    }
+    // Shared validation preserves uploaded SVG and existing custom image formats.
+    function isValidCustomIconUrl(url) { return MyntQuicklinkIcons.isValidCustomIconUrl(url); }
+    function sanitizeSvg(raw) { return MyntQuicklinkIcons.sanitizeSvg(raw); }
+    function processIconInput(raw) { return MyntQuicklinkIcons.process(raw); }
 
     function validateIconInput(input) {
         const result = processIconInput(input.value);
@@ -533,8 +489,59 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         return myntNormalizeShortcutUrl(url) || PLACEHOLDER.url;
     }
 
+    function shortcutTranslation(key) {
+        return translations[currentLanguage]?.[key] || translations["en"]?.[key] || "";
+    }
+
+    function setShortcutUrlMessage(entry, message) {
+        const element = entry.querySelector(".shortcutUrlMessage");
+        if (!element) return;
+        element.textContent = message || "";
+        element.hidden = !message;
+    }
+
+    // Validates the URL input on blur. Invalid input is not saved: the field is
+    // restored to the last saved URL and marked invalid until a valid save.
+    function commitUrlInput(urlInput, entry) {
+        if (myntNormalizeShortcutUrl(urlInput.value)) {
+            urlInput.removeAttribute("aria-invalid");
+            return true;
+        }
+
+        if (entry.classList.contains("draft")) {
+            // A draft has no saved URL to restore, and one simply left blank is not an error yet.
+            const leftBlank = !urlInput.value.trim();
+            urlInput.value = "";
+            if (leftBlank) urlInput.removeAttribute("aria-invalid");
+            else urlInput.setAttribute("aria-invalid", "true");
+            setShortcutUrlMessage(entry, leftBlank ? "" : shortcutTranslation("invalidShortcutUrlMessage"));
+            return false;
+        }
+
+        const savedUrl = shortcutsCache[entry._index]?.url ?? localStorage.getItem(`shortcutURL${entry._index}`);
+        if (typeof savedUrl === "string") urlInput.value = savedUrl;
+        urlInput.setAttribute("aria-invalid", "true");
+        setShortcutUrlMessage(entry, shortcutTranslation("shortcutInvalidUrlMessage"));
+        return false;
+    }
+
+    // Duplicate URLs are still saved; the inline note is informational only.
+    function updateUrlDuplicateMessage(urlInput, entry) {
+        const normalized = myntNormalizeShortcutUrl(urlInput.value);
+        const duplicate = normalized !== null && shortcutsCache.some(
+            (item, index) => index !== entry._index && myntNormalizeShortcutUrl(item.url) === normalized
+        );
+        setShortcutUrlMessage(entry, duplicate ? shortcutTranslation("shortcutDuplicateUrlMessage") : "");
+    }
+
     function appendShortcutLogo(container, name, url, customIcon) {
         const hostname = new URL(normalizeUrl(url)).hostname.replace(/^www\./iu, "");
+        const parsedIcon = MyntQuicklinkIcons.parse(customIcon);
+        if (["icon", "emoji", "text"].includes(parsedIcon.type)) {
+            MyntQuicklinkIcons.render(container, parsedIcon.value);
+            return;
+        }
+        customIcon = parsedIcon.type === "custom" ? parsedIcon.value : "";
 
         function setIconType(element, type) {
             element.setAttribute("data-icon-type", type);
@@ -596,31 +603,44 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             return customIconImg;
         }
 
-        // GitHub shortcut
-        if (hostname === "github.com") {
+        const browserIcon = document.createElement("img");
+        browserIcon.alt = ""; browserIcon.draggable = false;
+        function automaticFallback() {
+            if (browserIcon.parentElement !== container) return;
+            container.replaceChildren();
+            appendAutomaticFallback();
+        }
+        browserIcon.addEventListener("error", automaticFallback, { once: true });
+        container.appendChild(browserIcon);
+        MyntQuicklinkIcons.websiteIcon(browserIcon, normalizeUrl(url), automaticFallback);
+
+        function appendAutomaticFallback() {
+            // GitHub shortcut
+            if (hostname === "github.com") {
+                const image = document.createElement("img");
+                image.src = "./svgs/github-shortcut.svg";
+                image.alt = "";
+                image.draggable = false;
+                container.appendChild(image);
+                return;
+            }
+
+            const preset = presets.find(p => p.domains.includes(hostname));
+            if (preset) {
+                container.innerHTML = preset.svg;
+                return;
+            }
+
             const image = document.createElement("img");
-            image.src = "./svgs/github-shortcut.svg";
+            image.src = `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${encodeURIComponent(hostname)}&sz=256`;
             image.alt = "";
             image.draggable = false;
+            image.addEventListener("error", () => {
+                image.src = createLetterFallback().src;
+                setIconType(image, "letter");
+            }, { once: true });
             container.appendChild(image);
-            return;
         }
-
-        const preset = presets.find(p => p.domains.includes(hostname));
-        if (preset) {
-            container.innerHTML = preset.svg;
-            return;
-        }
-
-        const image = document.createElement("img");
-        image.src = `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${encodeURIComponent(hostname)}&sz=256`;
-        image.alt = "";
-        image.draggable = false;
-        image.addEventListener("error", () => {
-            image.src = createLetterFallback().src;
-            setIconType(image, "letter");
-        }, { once: true });
-        container.appendChild(image);
     }
 
     function createRenderedShortcut(name, url, customIcon, index) {
@@ -651,7 +671,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                     validateIconInput(input);
                 }
 
-                saveShortcut(entry);
+                if (input.classList.contains("URL") && !commitUrlInput(input, entry)) return;
+
+                if (saveShortcut(entry) === false) return;
+
+                if (input.classList.contains("URL")) updateUrlDuplicateMessage(input, entry);
                 renderShortcut(
                     entry.querySelector(".shortcutName").value,
                     entry.querySelector(".URL").value,
@@ -659,11 +683,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                     entry._index
                 );
             });
-            input.addEventListener("focus", e => e.target.select());
         });
 
         inputs[0].addEventListener("keydown", e => e.key === "Enter" && inputs[1].focus());
-        inputs[1].addEventListener("keydown", e => e.key === "Enter" && inputs[2].focus());
+        inputs[1].addEventListener("keydown", e => {
+            if (e.key !== "Enter") return;
+            if (myntNormalizeShortcutUrl(inputs[1].value)) entry.querySelector(".quicklinkChooseIcon")?.focus();
+            // Validate in place so the note appears and keyboard focus stays in the field.
+            else commitUrlInput(inputs[1], entry);
+        });
         inputs[2].addEventListener("keydown", e => {
             if (e.key !== "Enter") return;
             e.preventDefault();
@@ -878,6 +906,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         dom.shortcutSettingsContainer.addEventListener("dragstart", e => {
             const item = e.target.closest(".shortcutSettingsEntry");
             if (item) {
+                // A draft is not stored yet, so it takes no part in reordering.
+                if (item.classList.contains("draft")) {
+                    e.preventDefault();
+                    return;
+                }
                 isReordering = true;
                 draggedElement = item;
                 originalOrder = readShortcutOrder();
@@ -890,11 +923,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 dom.shortcutSettingsContainer.classList.add("dragging-ongoing");
 
                 // Add CSS classes for styling
+                // Deferred: changing the DOM inside dragstart aborts the drag in Chromium.
                 setTimeout(() => {
                     item.classList.add("dragging");
+                    draftEntry()?.remove();
                 }, 0);
 
                 e.dataTransfer.effectAllowed = "move";
+                // The grip starts the drag, but the preview is still the whole row.
+                e.dataTransfer.setDragImage?.(item, dragOffset.x, dragOffset.y);
             }
         });
 
@@ -925,12 +962,44 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Updates indices of all shortcut entries after reordering
     function updateShortcutIndices() {
-        document.querySelectorAll(".shortcutSettingsEntry").forEach((entry, index) => {
+        const entries = document.querySelectorAll(".shortcutSettingsEntry:not(.draft)");
+        const draft = draftEntry();
+        if (draft) {
+            draft._index = entries.length;
+            draft.querySelectorAll(".shortcutMoveUp, .shortcutMoveDown").forEach(button => { button.disabled = true; });
+        }
+        entries.forEach((entry, index) => {
             entry._index = index;
+            for (const direction of ["Up", "Down"]) {
+                const button = entry.querySelector(`.shortcutMove${direction}`);
+                if (!button) continue;
+                button.disabled = direction === "Up" ? index === 0 : index === entries.length - 1;
+                const template = translations[currentLanguage]?.[`shortcutMove${direction}`] || translations.en[`shortcutMove${direction}`];
+                button.setAttribute("aria-label", template.replace("{name}", entry.querySelector(".shortcutName").value));
+            }
+        });
+        // Icon-only row actions need a name; the draft row included.
+        dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry").forEach(entry => {
+            const name = entry.querySelector(".shortcutName").value;
+            for (const [selector, key] of [[".uploadCustomIconButton", "shortcutUploadIcon"], [".shortcutDelete button", "shortcutDeleteItem"]]) {
+                const button = entry.querySelector(selector);
+                if (!button) continue;
+                const label = shortcutTranslation(key).replace("{name}", name);
+                button.setAttribute("aria-label", label);
+                button.title = label;
+            }
         });
     }
 
-    function readShortcutOrder(entries = dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")) {
+    function draftEntry() {
+        return dom.shortcutSettingsContainer.querySelector(".shortcutSettingsEntry.draft");
+    }
+
+    function isUnfinishedDraft(entry) {
+        return entry.classList.contains("draft") && !myntNormalizeShortcutUrl(entry.querySelector(".URL").value);
+    }
+
+    function readShortcutOrder(entries = dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry:not(.draft)")) {
         return Array.from(entries).map(entry => ({
             name: entry.querySelector(".shortcutName").value,
             url: entry.querySelector(".URL").value,
@@ -957,6 +1026,20 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         return snapshot;
     }
 
+    function rememberShortcutStorage() {
+        if (window.MyntStorageSync) shortcutBaseline = [...snapshotShortcutStorage()];
+    }
+
+    function checkShortcutFreshness() {
+        if (!window.MyntStorageSync || window.MyntStorageSync.equal(shortcutBaseline, [...snapshotShortcutStorage()])) return true;
+        const draft = readShortcutOrder();
+        if (!window.MyntStorageSync.equal(draft, shortcutsCache)) {
+            window.MyntStorageSync.preserve(JSON.stringify(draft, null, 2));
+        }
+        window.myntShortcuts.reload();
+        return false;
+    }
+
     function clearShortcutStorage() {
         localStorage.removeItem("shortcutAmount");
         for (let index = 0; index < MAX_SHORTCUTS; index++) {
@@ -976,24 +1059,28 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             localStorage.setItem(`shortcutURL${index}`, item.url);
             localStorage.setItem(`shortcutIcon${index}`, item.icon || "");
         });
+        rememberShortcutStorage();
     }
 
     function restoreShortcutStorage(snapshot) {
         clearShortcutStorage();
         snapshot.forEach((value, key) => localStorage.setItem(key, value));
+        rememberShortcutStorage();
     }
 
     function rebuildShortcutEditor(order) {
+        const draft = draftEntry();
         dom.shortcutSettingsContainer.innerHTML = "";
         dom.shortcutsContainer.innerHTML = "";
-        const deleteInactive = order.length <= 1;
 
         order.forEach((item, index) => {
             dom.shortcutSettingsContainer.appendChild(
-                createShortcutEntry(item.name, item.url, item.icon || "", deleteInactive, index)
+                createShortcutEntry(item.name, item.url, item.icon || "", index)
             );
             renderShortcut(item.name, item.url, item.icon || "", index);
         });
+        // The unsaved draft survives edits to the saved rows, unless the list just became full.
+        if (draft && order.length < MAX_SHORTCUTS) dom.shortcutSettingsContainer.appendChild(draft);
 
         dom.newShortcutButton.classList.toggle("inactive", order.length >= MAX_SHORTCUTS);
         updateShortcutIndices();
@@ -1001,6 +1088,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Saves the new shortcut order without temporarily duplicating icon data.
     function saveShortcutOrder(originalOrder) {
+        if (!checkShortcutFreshness()) return;
         const newOrder = readShortcutOrder();
         if (!hasOrderChanged(newOrder)) return;
 
@@ -1080,65 +1168,72 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
     }
 
-    // Adds a new shortcut
+    // Adds an unsaved draft row: nothing is stored or shown on the page until it has a valid URL.
     function addNewShortcut() {
-        const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
-        if (currentAmount >= MAX_SHORTCUTS) return;
-
-        const newAmount = currentAmount + 1;
-        localStorage.setItem("shortcutAmount", newAmount.toString());
-
-        if (currentAmount >= 1) {
-            document.querySelectorAll(".shortcutDelete button.inactive").forEach(b => {
-                b.classList.remove("inactive");
-            });
-        }
-
-        if (newAmount === MAX_SHORTCUTS) {
-            dom.newShortcutButton.classList.add("inactive");
-        }
-
-        const entry = createShortcutEntry(PLACEHOLDER.name, PLACEHOLDER.url, "", false, currentAmount);
+        if (!checkShortcutFreshness() || shortcutsCache.length >= MAX_SHORTCUTS) return false;
+        // An unfinished draft is reused instead of stacking empty rows.
+        if (draftEntry()) return true;
+        const entry = createShortcutEntry(PLACEHOLDER.name, "", "", shortcutsCache.length);
+        entry.classList.add("draft");
         dom.shortcutSettingsContainer.appendChild(entry);
-
-        saveShortcut(entry);
-        renderShortcut(PLACEHOLDER.name, PLACEHOLDER.url, "", currentAmount);
+        updateShortcutIndices();
+        return true;
     }
 
-    // Deletes a shortcut
+    // Deletes a shortcut atomically and records it for recovery
     function deleteShortcut(entry) {
-        const currentAmount = parseInt(localStorage.getItem("shortcutAmount")) || shortcutsCache.length;
-        if (currentAmount <= 1) return;
+        if (entry.classList.contains("draft")) {
+            entry.remove();
+            return;
+        }
+        if (!checkShortcutFreshness()) return;
 
         const index = entry._index;
-        entry.remove();
-        dom.shortcutsContainer.removeChild(dom.shortcutsContainer.children[index]);
+        const order = readShortcutOrder();
+        if (index < 0 || index >= order.length) return;
 
-        // Update localStorage
-        localStorage.setItem("shortcutAmount", (currentAmount - 1).toString());
-        for (let i = index; i < currentAmount - 1; i++) {
-            const nextEntry = dom.shortcutSettingsContainer.children[i];
-            nextEntry._index = i;
-            saveShortcut(nextEntry);
+        const nextOrder = [...order.slice(0, index), ...order.slice(index + 1)];
+        const recoveryRecord = {
+            version: 1,
+            index,
+            item: { name: order[index].name, url: order[index].url, icon: order[index].icon || "" }
+        };
+        const previousStorage = snapshotShortcutStorage();
+        const previousRecovery = localStorage.getItem(SHORTCUT_RECOVERY_KEY);
+
+        try {
+            writeShortcutStorage(nextOrder);
+            localStorage.setItem(SHORTCUT_RECOVERY_KEY, JSON.stringify(recoveryRecord));
+        } catch (storageError) {
+            try {
+                restoreShortcutStorage(previousStorage);
+                if (previousRecovery === null) {
+                    localStorage.removeItem(SHORTCUT_RECOVERY_KEY);
+                } else {
+                    localStorage.setItem(SHORTCUT_RECOVERY_KEY, previousRecovery);
+                }
+            } catch (rollbackError) {
+                console.error("Shortcut delete rollback failed:", rollbackError);
+            }
+
+            if (isQuotaExceededError(storageError)) {
+                const iconStorageQuotaMessage = translations[currentLanguage]?.iconStorageQuotaMessage || translations["en"].iconStorageQuotaMessage;
+                alertPrompt(iconStorageQuotaMessage);
+                return;
+            }
+            throw storageError;
         }
-        localStorage.removeItem(`shortcutName${currentAmount - 1}`);
-        localStorage.removeItem(`shortcutURL${currentAmount - 1}`);
-        localStorage.removeItem(`shortcutIcon${currentAmount - 1}`);
-        shortcutsCache.length = currentAmount - 1;
 
-        if (currentAmount - 1 === 1) {
-            document.querySelectorAll(".shortcutDelete button").forEach(b => {
-                b.classList.add("inactive");
-            });
-        }
-
-        dom.newShortcutButton.classList.remove("inactive");
+        shortcutsCache = nextOrder;
+        rebuildShortcutEditor(nextOrder);
+        recoveryControl?.refresh();
     }
 
     // Resets all shortcuts to default
     async function resetShortcuts() {
         if (!(await confirmPrompt(translations[currentLanguage]?.resetShortcutsPrompt || translations["en"].resetShortcutsPrompt)))
             return;
+        if (!checkShortcutFreshness()) return;
 
         // Animation for shortcut elements
         const shortcutEntries = [...dom.shortcutSettingsContainer.querySelectorAll(".shortcutSettingsEntry")];
@@ -1149,12 +1244,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         svg.classList.add("rotate-animation");
 
         // Clear storage
-        for (let i = 0; i < (localStorage.getItem("shortcutAmount") || 0); i++) {
-            localStorage.removeItem(`shortcutName${i}`);
-            localStorage.removeItem(`shortcutURL${i}`);
-            localStorage.removeItem(`shortcutIcon${i}`);
-        }
-        localStorage.removeItem("shortcutAmount");
+        clearShortcutStorage();
 
         // Wait for animations of shortcut elements to complete
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -1171,32 +1261,53 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
     // Saves a single shortcut to localStorage
     function saveShortcut(entry) {
+        if (!checkShortcutFreshness()) return false;
+        if (window.MyntStorageSync && !dom.shortcutSettingsContainer.contains(entry)) return false;
         const index = entry._index;
         const name = entry.querySelector(".shortcutName").value;
         const url = entry.querySelector(".URL").value;
         const iconInput = entry.querySelector(".iconURL");
         const icon = iconInput.value || "";
+        // A row past the saved list is the unsaved draft.
+        const isDraft = index >= shortcutsCache.length;
+        if (isDraft && !myntNormalizeShortcutUrl(url)) {
+            entry.querySelector(".quicklinkChooseIcon")?.refreshIcon();
+            return false;
+        }
 
-        localStorage.setItem(`shortcutName${index}`, name);
-        localStorage.setItem(`shortcutURL${index}`, url);
-
-        // Try to save icon separately to handle quota errors gracefully
+        const previousStorage = snapshotShortcutStorage();
+        // A draft that does not fit keeps its text and drops the icon, the only large part.
+        const previous = isDraft ? { name, url, icon: "" } : shortcutsCache[index];
+        const next = isDraft
+            ? [...shortcutsCache, { name, url, icon }]
+            : shortcutsCache.map((item, i) => i === index ? { name, url, icon } : item);
         try {
-            localStorage.setItem(`shortcutIcon${index}`, icon);
+            writeShortcutStorage(next);
         } catch (iconError) {
+            try { restoreShortcutStorage(previousStorage); }
+            catch (rollbackError) { console.error("Shortcut save rollback failed:", rollbackError); }
+            entry.querySelector(".shortcutName").value = previous.name;
+            entry.querySelector(".URL").value = previous.url;
+            iconInput.value = previous.icon || "";
+            entry.querySelector(".quicklinkChooseIcon")?.refreshIcon();
             if (isQuotaExceededError(iconError)) {
-                // Icon is too large, clear it from input and localStorage
-                iconInput.value = "";
-                localStorage.removeItem(`shortcutIcon${index}`);
-
                 const iconStorageQuotaMessage = translations[currentLanguage]?.iconStorageQuotaMessage || translations["en"].iconStorageQuotaMessage;
                 alertPrompt(iconStorageQuotaMessage);
+                return false;
             } else {
                 throw iconError;
             }
         }
 
+        entry.querySelector(".quicklinkChooseIcon")?.refreshIcon();
         shortcutsCache[index] = { name, url, icon: iconInput.value || "" };
+        rememberShortcutStorage();
+        if (isDraft) {
+            entry.classList.remove("draft");
+            dom.newShortcutButton.classList.toggle("inactive", shortcutsCache.length >= MAX_SHORTCUTS);
+            updateShortcutIndices();
+        }
+        return true;
     }
 
     // Keyboard shortcuts: Alt + 1-9 to open corresponding shortcut

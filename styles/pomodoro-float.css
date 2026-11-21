@@ -78,6 +78,8 @@
 .mynt-pomo-background-label { width: 100%; font-size: var(--pomo-type-small); line-height: 1.4; text-align: center; overflow-wrap: anywhere; }
 .mynt-pomo-image-symbol { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: #f6f8ffdd; color: #17243b; font-size: 18px; }
 .mynt-pomo-image-framing { margin-top: 6px; border-top: 1px solid var(--pomo-border); }
+.mynt-pomo-mode-settings { grid-column: 1 / -1; min-width: 0; }
+.mynt-pomo-mode-settings:not(:has(> :not([hidden]))) { display: none; }
 .mynt-pomo-float {
     margin: 0;
     padding: 8px;
@@ -224,7 +226,7 @@ html.myntHighContrast .mynt-pomo-float :focus-visible { outline-color: Highlight
 .mynt-pomo-float .mynt-pomo-controls { width: min(100%, 320px); flex: 0 0 auto; }
 .mynt-pomo-float .mynt-pomo-options,
 .mynt-pomo-float .mynt-pomo-confirm,
-.mynt-pomo-float .mynt-pomo-card > .mynt-pomo-note { width: min(100%, 380px); flex: 0 0 auto; }
+.mynt-pomo-float .mynt-pomo-card > .mynt-pomo-note { width: min(100%, 23.75rem); flex: 0 0 auto; }
 /* Extra options and very short windows scroll normally instead of clipping controls. */
 .mynt-pomo-float:has(.mynt-pomo-options[open]) .mynt-pomo-card { justify-content: flex-start; }
 @media (max-height: 360px) {
@@ -233,24 +235,99 @@ html.myntHighContrast .mynt-pomo-float :focus-visible { outline-color: Highlight
     .mynt-pomo-float .pomodoroPhaseLabel { margin-bottom: 4px; }
 }
 /* A compact, optically balanced control group at every floating-window size. */
-.mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: clamp(120px, min(68vw, 43vh), 280px); }
+/* Text and controls grow with large floating windows (1rem stays 16px at the default 320x420). */
+/* !important: the window copies the homepage's inline calc(16px * --mynt-font-scale); keep that scale. */
+html.mynt-pomo-float-root { font-size: calc(clamp(16px, min(5vw, 3.5vh), 26px) * var(--mynt-font-scale, 1)) !important; }
+.mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: clamp(120px, min(68vw, 43vh), 420px); }
 .mynt-pomo-float .mynt-pomo-controls {
-    display: grid; width: min(100%, 232px); grid-template-columns: 44px minmax(0, 128px) 44px;
+    display: grid; width: min(100%, 14.5rem); grid-template-columns: 2.75rem minmax(0, 8rem) 2.75rem;
     gap: 8px; margin-bottom: 4px;
 }
 .mynt-pomo-float .mynt-pomo-primary {
-    min-width: 0; width: 100%; height: 44px; min-height: 44px; padding: 8px 12px;
-    gap: 6px; border-radius: 22px; font-size: .875rem; line-height: 1.25;
+    min-width: 0; width: 100%; height: 2.75rem; min-height: 2.75rem; padding: .5rem .75rem;
+    gap: .375rem; border-radius: 1.375rem; font-size: .875rem; line-height: 1.25;
 }
 .mynt-pomo-float .mynt-pomo-reset {
-    width: 44px; height: 44px; min-height: 44px; padding: 12px;
-    justify-self: center; border-radius: 22px;
+    width: 2.75rem; height: 2.75rem; min-height: 2.75rem; padding: .75rem;
+    justify-self: center; border-radius: 1.375rem;
 }
-.mynt-pomo-float button svg { width: 20px; height: 20px; }
+.mynt-pomo-float button svg { width: 1.25rem; height: 1.25rem; }
 .mynt-pomo-float .pomodoroTimeDisplay { font-size: calc(var(--pomo-ring-size) * .22 * var(--mynt-font-scale, 1)); }
 .mynt-pomo-float .mynt-pomo-context { margin: 10px 0 14px; }
-.mynt-pomo-float .mynt-pomo-options summary { min-height: 44px; padding: 8px 12px; font-size: .8125rem; }
+.mynt-pomo-float .mynt-pomo-options summary { min-height: 2.75rem; padding: .5rem .75rem; font-size: .8125rem; }
 @media (max-height: 360px) {
     .mynt-pomo-float .mynt-pomo-card { --pomo-ring-size: 120px; }
     .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
+}
+
+/* Separate transports leave the full available width for track and sound names. */
+.mynt-pomo-audio { display: grid; gap: .375rem; width: min(100%, 26rem); min-width: 0; flex: 0 0 auto; text-align: start; }
+.mynt-pomo-music-row, .mynt-pomo-ambient-row { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.mynt-pomo-ambient-row { position: relative; }
+.mynt-pomo-audio button {
+    display: grid; place-items: center; flex: 0 0 auto; width: max(44px, 2.75rem); height: max(44px, 2.75rem);
+    min-height: 44px; padding: .5rem; border-radius: 50%;
+}
+.mynt-pomo-track { display: flex; align-items: center; gap: .5rem; flex: 1; min-width: 0; }
+.mynt-pomo-track-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8125rem; }
+.mynt-pomo-ambient-select {
+    flex: 1; min-width: 0; max-width: 100%; min-height: max(44px, 2.75rem); border: 1px solid var(--pomo-border);
+    border-radius: .875rem; padding: .375rem .5rem; font: inherit; font-size: .8125rem; background: var(--pomo-surface); color: var(--pomo-fg);
+}
+.mynt-pomo-audio .is-playing .mynt-pomo-audio-toggle { background: var(--pomo-accent); color: var(--pomo-on-accent); border-color: var(--pomo-accent); }
+.mynt-pomo-equalizer { display: flex; align-items: center; gap: .125rem; flex: 0 0 auto; height: 1rem; color: var(--pomo-accent); }
+.mynt-pomo-equalizer i { width: .1875rem; height: 70%; background: currentColor; transform-origin: center; animation: myntPomoEqualizer .9s ease-in-out infinite alternate; }
+.mynt-pomo-ambient-row .mynt-pomo-equalizer { position: absolute; inset-inline-end: 1.75rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.mynt-pomo-ambient-row.is-playing .mynt-pomo-ambient-select { padding-inline-end: 3rem; }
+.mynt-pomo-equalizer i:nth-child(2) { height: 100%; animation-delay: -.3s; }
+.mynt-pomo-equalizer i:nth-child(3) { height: 45%; animation-delay: -.6s; }
+@keyframes myntPomoEqualizer { to { transform: scaleY(.4); } }
+html.mynt-pomo-float-root.myntHighContrast .mynt-pomo-equalizer i { animation: none; }
+@media (prefers-reduced-motion: reduce), (forced-colors: active) { .mynt-pomo-equalizer i { animation: none; } }
+.mynt-pomo-durations { display: grid; gap: 8px; }
+.mynt-pomo-durations label { min-width: 0; }
+.mynt-pomo-durations input { width: 100%; min-width: 0; min-height: 44px; }
+.mynt-pomo-float .pomodoroRoundDisplay { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-height: 480px) {
+    .mynt-pomo-float:has(.mynt-pomo-audio:not([hidden])) .mynt-pomo-card { --pomo-ring-size: min(30vh, 128px); }
+    .mynt-pomo-float:has(.mynt-pomo-audio:not([hidden])) .mynt-pomo-card:has(.mynt-pomo-task-preview:not([hidden])) { --pomo-ring-size: min(24vh, 100px); }
+    .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
+}
+/* Floating window over a photo or video: keep the picture clear and put text only on
+   frosted surfaces — a phase chip, a pill behind the time, and one sheet for the rest. */
+.mynt-pomo-float .mynt-pomo-card {
+    --pomo-glass: color-mix(in srgb, var(--pomo-surface) 76%, transparent);
+    --pomo-ring-size: clamp(120px, min(56vw, 36vh), 340px);
+}
+.mynt-pomo-float .mynt-pomo-card::before { background: none; }
+.mynt-pomo-float :is(.pomodoroPhaseLabel, .pomodoroTimeDisplay, .mynt-pomo-dock, .mynt-pomo-card > .mynt-pomo-note:not(:empty)) {
+    background: var(--pomo-glass);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+    backdrop-filter: blur(14px) saturate(1.15);
+    text-shadow: none;
+}
+.mynt-pomo-float .pomodoroPhaseLabel { margin: auto auto 12px; padding: .25rem .875rem; border-radius: 999px; }
+.mynt-pomo-float .pomodoroTimeDisplay { width: auto; padding: .04em .32em; border-radius: 999px; }
+.mynt-pomo-float .pomodoroRingBg { stroke: color-mix(in srgb, var(--pomo-surface) 55%, transparent); stroke-width: 6; }
+.mynt-pomo-float .pomodoroRingFg { stroke-width: 6; }
+.mynt-pomo-float .mynt-pomo-context { text-shadow: none; }
+.mynt-pomo-dock {
+    display: flex; flex-direction: column; align-items: center; gap: .375rem;
+    width: min(100%, 22rem); min-width: 0; margin-top: 16px; margin-bottom: auto; padding: .75rem .875rem .375rem;
+    border-radius: 1.25rem; box-sizing: border-box;
+}
+.mynt-pomo-dock > * { width: 100%; max-width: none; margin: 0; }
+.mynt-pomo-dock .mynt-pomo-context { margin: 0; }
+.mynt-pomo-dock .mynt-pomo-controls { width: min(100%, 14.5rem); margin: 0; }
+.mynt-pomo-dock .mynt-pomo-options[open] { background: transparent; padding: 0; }
+.mynt-pomo-float .mynt-pomo-card > .mynt-pomo-note:not(:empty) { margin-top: 8px; border-radius: 1rem; }
+@media (max-height: 360px) {
+    .mynt-pomo-dock { margin-top: 8px; padding-top: .5rem; }
+}
+html.myntHighContrast .mynt-pomo-float * {
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+@media (forced-colors: active) {
+    .mynt-pomo-float * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    .mynt-pomo-float :is(.pomodoroPhaseLabel, .mynt-pomo-dock) { border: 1px solid CanvasText; }
 }

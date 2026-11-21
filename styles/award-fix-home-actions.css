@@ -1,59 +1,3 @@
-/* 第 3 輪：首頁焦點卡動作按鈕與搜尋服務 */
-
-/* ===== 焦點卡動作列 =====
-   「完成」按鈕與 ▶ ✦ ⋯ 三個圖示按鈕統一為 32px 高；
-   圖示可點範圍放大到 32×32px、glyph 至少 16px，
-   hover／focus 狀態與主按鈕一致。 */
-
-#dailyFocusToggle {
-    /* 由 30px 改為 32px，與右側圖示按鈕同高 */
-    min-height: 32px;
-    padding: 4px 14px;
-}
-
-#dailyFocusToggle:hover {
-    /* 與圖示按鈕的 hover 回饋等量：輕微提亮，不位移 */
-    filter: brightness(1.08);
-}
-
-#dailyFocusTools {
-    gap: 4px;
-    align-items: center;
-}
-
-#dailyFocusTools .dailyFocusIcon {
-    /* 覆蓋 focus-card.css 的 padding 定位，改為 flex 置中，
-       讓三個圖示按鈕與「完成」等高、且有一致的可點範圍 */
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    /* glyph（▶ ✦ ⋯）至少 16px；原本 0.8rem 只有約 12.8px */
-    font-size: 16px;
-    line-height: 1;
-    opacity: 0.72;
-}
-
-#dailyFocusTools .dailyFocusIcon:hover,
-#dailyFocusTools .dailyFocusIcon:focus-visible,
-#dailyFocusTools .dailyFocusIcon[aria-expanded="true"] {
-    opacity: 1;
-    background: rgba(127, 127, 127, 0.22);
-}
-
-#dailyFocusTools .dailyFocusIcon:active {
-    background: rgba(127, 127, 127, 0.3);
-}
-
-#dailyFocusTools .dailyFocusIcon:focus-visible {
-    /* 與 #dailyFocusToggle 相同的焦點框，四個動作一致 */
-    outline: 2px solid var(--darkColor-blue);
-    outline-offset: 1px;
-}
-
 /* ===== 搜尋服務列 =====
    原本是 100px 高的素色標籤方塊（.hint）加上無外框的 Google 晶片，
    看不出是「目前選用的搜尋引擎」。改為同高的分段控制外觀：
@@ -132,9 +76,14 @@
 /* ===== 右下角「開啟設定」提示對比 =====
    .tooltip-text 的 rgba(255,255,255,0.9) 白字在 --darkColor-blue(#4382ec) 底上
    只有約 3.3:1；改用較深的 --darkerColor-blue 實心底（ID 優先權同時蓋過
-   桌布模式的半透明底色規則）配純白字，對比約 5.5:1（AA ≥ 4.5）。 */
-#settingsHintText {
-    background-color: var(--darkerColor-blue);
+   桌布模式的半透明底色規則）配純白字，對比約 5.5:1（AA ≥ 4.5）。
+   新手期常駐的「書籤」提示與其他角落按鈕的 hover／聚焦提示是同一種膠囊（原本都約 3.3:1），
+   套用同一組顏色。便籤提示原本就是深灰底，不在此列。
+   只限淺色主題：深色主題的 --darkerColor-blue 是淺色，白字會降到約 1.2:1；
+   深色主題沿用 .black-theme 的深灰底白字（約 13:1）。 */
+html:not(.black-theme) :is(#settingsHintText, #bookmarksHover, #todoListHover, #pomodoroHover, #googleAppsHover, #wallpaperGalleryHint) {
+    /* 與黑色混合：黃、橘、蜜桃等淺主題色的 --darkerColor-blue 本身不夠深。 */
+    background-color: color-mix(in srgb, var(--darkerColor-blue) 75%, #000);
     color: #ffffff;
 }
 

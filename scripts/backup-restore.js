@@ -12,7 +12,8 @@ const BACKUP_FORMAT = "material-you-newtab";
 const BACKUP_VERSION = 3;
 const MAX_BACKUP_FILE_SIZE = 32 * 1024 * 1024;
 const SENSITIVE_LOCAL_STORAGE_KEYS = new Set(["weatherApiKey"]);
-const TRANSIENT_LOCAL_STORAGE_KEYS = new Set(["myntPomoMusicOwnerV1"]);
+const RESTORE_JOURNAL_KEY = "myntRestoreJournalV1";
+const TRANSIENT_LOCAL_STORAGE_KEYS = new Set(["myntPomoMusicOwnerV1", RESTORE_JOURNAL_KEY]);
 const MEDIA_LOCAL_STORAGE_KEYS = new Set(["myntPomodoroAppearance.v1", "myntPomoMusicSettingsV1", "myntPomoScenarios"]);
 function isMediaLocalStorageKey(key) { return key.startsWith("myntWallpaper") || MEDIA_LOCAL_STORAGE_KEYS.has(key); }
 const INDEXED_DB_KEYS = new Set(["backgroundImage", "lastUpdateTime", "imageType"]);
@@ -23,13 +24,13 @@ const MEDIA_DATABASES = {
 };
 const BACKUP_WORDS = {
     backupDetailsLabel: ["What does this backup include?", "備份包含哪些內容？"],
-    backupScopeFullShort: ["Settings, layouts, tasks, notes and media.\n32 MiB maximum, including encoded files.", "包含設定、排版、待辦、便籤及媒體。\n含編碼檔案上限 32 MiB。"],
-    backupScopeSettingsShort: ["Settings, layouts, tasks and notes.\nNo media or media-linked preferences. Maximum 32 MiB.", "包含設定、排版、待辦與便籤。\n不含媒體及相關偏好，上限 32 MiB。"],
+    backupScopeFullShort: ["Settings, layouts, tasks and media.\n32 MiB maximum, including encoded files.", "包含設定、排版、待辦及媒體。\n含編碼檔案上限 32 MiB。"],
+    backupScopeSettingsShort: ["Settings, layouts and tasks.\nNo media or media-linked preferences. Maximum 32 MiB.", "包含設定、排版與待辦。\n不含媒體及相關偏好，上限 32 MiB。"],
     backupScopeLabel: ["Export scope", "匯出範圍"],
     backupScopeFull: ["Settings + media", "設定＋媒體"],
     backupScopeSettings: ["Settings only", "僅設定"],
-    backupScopeText: ["Settings + media: settings, layouts, tasks, notes, saved wallpaper, gallery, timer image and music. Limit: 32 MiB including encoded media; nothing is silently omitted. If it is too large, choose Settings only and keep original media separately. WeatherAPI keys, browser bookmarks/permissions and DaiDai pairing are excluded. URL-only wallpapers remain links, not offline copies. Retained task/shortcut/habit deletions and custom shortcut icons are included.", "設定＋媒體：設定、版面、待辦、便籤、已儲存桌布、圖庫、番茄鐘圖片及音樂。含編碼媒體上限 32 MiB，不會默默省略檔案。超過時可選「僅設定」，並另行保留原始媒體。排除 WeatherAPI 金鑰、瀏覽器書籤／權限及呆呆配對。網址型桌布僅保存連結，非離線副本。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。"],
-    backupScopeSettingsText: ["Settings only: general settings, layouts, tasks, notes and timer state (restored paused). Excludes all wallpaper/gallery, timer-image and music files, plus wallpaper preferences, timer appearance, music preferences and saved focus scenarios that can reference those files. Those media and preferences stay unchanged on restore. WeatherAPI keys, browser bookmarks/permissions and DaiDai pairing are excluded. Retained task/shortcut/habit deletions and custom shortcut icons are included. Limit: 32 MiB.", "僅設定：一般設定、版面、待辦、便籤及還原後暫停的計時狀態。不含桌布／圖庫、番茄鐘圖片及音樂檔，也不含可能引用媒體的桌布偏好、計時器外觀、音樂偏好及已儲存專注情境。還原時會保留目的端的這些媒體與偏好。排除 WeatherAPI 金鑰、瀏覽器書籤／權限及呆呆配對。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。上限 32 MiB。"],
+    backupScopeText: ["Settings + media: settings, layouts, tasks, saved wallpaper, gallery, timer image and music. Limit: 32 MiB including encoded media; nothing is silently omitted. If it is too large, choose Settings only and keep original media separately. WeatherAPI keys and browser bookmarks/permissions are excluded. URL-only wallpapers remain links, not offline copies. Retained task/shortcut deletions and custom shortcut icons are included.", "設定＋媒體：設定、版面、待辦、已儲存桌布、圖庫、番茄鐘圖片及音樂。含編碼媒體上限 32 MiB，不會默默省略檔案。超過時可選「僅設定」，並另行保留原始媒體。排除 WeatherAPI 金鑰及瀏覽器書籤／權限。網址型桌布僅保存連結，非離線副本。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。"],
+    backupScopeSettingsText: ["Settings only: general settings, layouts, tasks and timer state (restored paused). Excludes all wallpaper/gallery, timer-image and music files, plus wallpaper preferences, timer appearance, music preferences and saved focus scenarios that can reference those files. Those media and preferences stay unchanged on restore. WeatherAPI keys and browser bookmarks/permissions are excluded. Retained task/shortcut deletions and custom shortcut icons are included. Limit: 32 MiB.", "僅設定：一般設定、版面、待辦及還原後暫停的計時狀態。不含桌布／圖庫、番茄鐘圖片及音樂檔，也不含可能引用媒體的桌布偏好、計時器外觀、音樂偏好及已儲存專注情境。還原時會保留目的端的這些媒體與偏好。排除 WeatherAPI 金鑰及瀏覽器書籤／權限。包含待辦／捷徑／習慣的刪除復原資料及自訂捷徑圖示。上限 32 MiB。"],
     backupWorking: ["Preparing the complete local backup…", "正在準備完整本機備份…"],
     backupReady: ["Complete backup prepared; download requested. Check that the file was saved.", "完整備份已準備好並要求下載，請確認檔案已儲存。"],
     backupSettingsWorking: ["Preparing a settings-only backup without reading media…", "正在準備僅設定備份，不會讀取媒體檔…"],
@@ -38,15 +39,16 @@ const BACKUP_WORDS = {
     backupTooLarge: ["The complete backup exceeds 32 MiB. Nothing was exported or changed. Choose Settings only to export without media, and keep the original media files separately.", "完整備份超過 32 MiB，未匯出或更動任何資料。可選「僅設定」匯出不含媒體的備份，並另行保留原始媒體檔。"],
     backupSettingsTooLarge: ["The settings-only backup exceeds 32 MiB. Nothing was exported or changed.", "僅設定備份超過 32 MiB，未匯出或更動任何資料。"],
     backupFileTooLarge: ["This backup file exceeds the 32 MiB restore limit. No data changed.", "此備份檔超過還原的 32 MiB 上限，未變更任何資料。"],
-    backupRestorePreview: ["Restore this backup? This replaces settings, layouts, tasks, notes and the saved wallpaper. Close other MYNT tabs and pause active timers/music first. The current WeatherAPI key is kept; browser bookmarks and permissions are not changed. Restored timers stay paused and music requires manual playback. A reload follows success.", "要還原此備份嗎？將取代設定、版面、待辦、便籤及已儲存桌布。請先關閉其他 MYNT 分頁並暫停計時／音樂。目前的 WeatherAPI 金鑰會保留，不會變更瀏覽器書籤及權限。還原的計時器會保持暫停，音樂須手動播放。成功後會重新載入。"],
+    backupRestorePreview: ["Restore this backup? This replaces settings, layouts, tasks and the saved wallpaper. Close other MYNT tabs and pause active timers/music first. The current WeatherAPI key is kept; browser bookmarks and permissions are not changed. Restored timers stay paused and music requires manual playback. A reload follows success.", "要還原此備份嗎？將取代設定、版面、待辦及已儲存桌布。請先關閉其他 MYNT 分頁並暫停計時／音樂。目前的 WeatherAPI 金鑰會保留，不會變更瀏覽器書籤及權限。還原的計時器會保持暫停，音樂須手動播放。成功後會重新載入。"],
     backupRestoreFullMedia: ["This v3 backup also replaces the wallpaper gallery, timer image and music library, including empty libraries. Files not present in the backup will be removed from these libraries. Export your current data first if you need to keep it.", "此 v3 備份也會取代桌布圖庫、番茄鐘圖片及音樂庫，包括空的媒體庫。備份未包含的現有媒體將從這些媒體庫移除；如需保留，請先匯出目前資料。"],
     backupRestoreLegacyMedia: ["This older backup contains no complete media libraries. Existing gallery, timer image and music files, and their media-linked preferences, will be kept; missing media cannot be recovered from this file.", "此舊版備份不含完整媒體庫。現有圖庫、番茄鐘圖片、音樂檔及其媒體關聯偏好會保留；無法從此檔案還原未包含的媒體。"],
-    backupRestoreSettingsPreview: ["Restore this settings-only backup? It replaces general settings, layouts, tasks and notes. All existing wallpaper/gallery, timer-image and music files, wallpaper preferences, timer appearance, music preferences and saved focus scenarios stay unchanged. No media can be recovered from this file. Close other MYNT tabs and pause active timers/music first. The current WeatherAPI key is kept; browser bookmarks and permissions are not changed. Restored timers stay paused and music requires manual playback. A reload follows success.", "要還原此僅設定備份嗎？將取代一般設定、版面、待辦及便籤。現有桌布／圖庫、番茄鐘圖片、音樂檔、桌布偏好、計時器外觀、音樂偏好及已儲存專注情境都會保留。無法從此檔案還原媒體。請先關閉其他 MYNT 分頁並暫停計時／音樂。目前的 WeatherAPI 金鑰會保留，不會變更瀏覽器書籤及權限。還原的計時器會保持暫停，音樂須手動播放。成功後會重新載入。"],
+    backupRestoreSettingsPreview: ["Restore this settings-only backup? It replaces general settings, layouts and tasks. All existing wallpaper/gallery, timer-image and music files, wallpaper preferences, timer appearance, music preferences and saved focus scenarios stay unchanged. No media can be recovered from this file. Close other MYNT tabs and pause active timers/music first. The current WeatherAPI key is kept; browser bookmarks and permissions are not changed. Restored timers stay paused and music requires manual playback. A reload follows success.", "要還原此僅設定備份嗎？將取代一般設定、版面及待辦。現有桌布／圖庫、番茄鐘圖片、音樂檔、桌布偏好、計時器外觀、音樂偏好及已儲存專注情境都會保留。無法從此檔案還原媒體。請先關閉其他 MYNT 分頁並暫停計時／音樂。目前的 WeatherAPI 金鑰會保留，不會變更瀏覽器書籤及權限。還原的計時器會保持暫停，音樂須手動播放。成功後會重新載入。"],
     backupSettingsCounts: ["General setting entries to replace: {settings}. Media and media-linked preferences: excluded and kept on this device.", "將取代的一般設定項目：{settings}。媒體及媒體關聯偏好：不在還原範圍內，會保留此裝置現有資料。"],
     backupScopeCounts: ["Setting entries: {settings}; saved wallpaper: {wallpaper}; gallery entries: {gallery}; timer images: {timerImage}; music tracks: {music}.", "設定項目：{settings}；已儲存桌布：{wallpaper}；圖庫項目：{gallery}；番茄鐘圖片：{timerImage}；音樂曲目：{music}。"],
     backupRestoreWorking: ["Restoring local data. Keep this tab open until it finishes.", "正在還原本機資料，完成前請勿關閉此分頁。"],
     backupRestoreCancelled: ["Restore cancelled. No data changed.", "已取消還原，未變更任何資料。"],
     backupRestoreRolledBack: ["Restore failed. The previous local data was restored.", "還原失敗，已恢復原有本機資料。"],
+    backupRestoreConflict: ["Restore stopped. Concurrent changes were kept; unchanged data was recovered.", "還原已停止。已保留其他分頁的新資料，並回復未發生衝突的資料。"],
     backupRollbackFailed: ["Restore and recovery could not finish. Keep this tab open and retain your backup file. Details: ", "還原及回復未能完成。請保留此分頁及備份檔。詳細資訊："]
 };
 
@@ -97,6 +99,7 @@ function isPlainRecord(value) {
 function snapshotLocalStorage({ includeSensitive = true } = {}) {
     const snapshot = Object.create(null);
     Object.keys(localStorage).forEach((key) => {
+        if (key === RESTORE_JOURNAL_KEY) return;
         if (includeSensitive || (!SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key))) {
             snapshot[key] = localStorage.getItem(key);
         }
@@ -300,7 +303,12 @@ function isValidBackupFile(backup) {
     if ("createdAt" in backup && (typeof backup.createdAt !== "string" || Number.isNaN(Date.parse(backup.createdAt)))) return false;
     const settings = Object.entries(backup.localStorage);
     if (settings.length > 1000 || settings.some(([key, value]) => key.length > 512 || typeof value !== "string")) return false;
-    for (const key of ["myntSearchVisible", "myntGalleryEntryVisible", "myntProfilesEntryVisible", "myntAdaptiveEntryVisible"]) {
+    if (Object.prototype.hasOwnProperty.call(backup.localStorage, RESTORE_JOURNAL_KEY)) return false;
+    try {
+        if (typeof MyntMcpData === "undefined" || !MyntMcpData.validateBackupStorage) return false;
+        MyntMcpData.validateBackupStorage(backup.localStorage);
+    } catch (_) { return false; }
+    for (const key of ["myntSearchVisible", "myntGalleryEntryVisible", "myntProfilesEntryVisible", "myntAdaptiveEntryVisible", "myntServiceStatusPillVisible"]) {
         if (Object.prototype.hasOwnProperty.call(backup.localStorage, key) && !["true", "false"].includes(backup.localStorage[key])) return false;
     }
     if (Object.prototype.hasOwnProperty.call(backup.localStorage, "myntComponentsMigrationV1")) {
@@ -313,9 +321,9 @@ function isValidBackupFile(backup) {
             MYNTCountdownCore.validate(JSON.parse(backup.localStorage.myntEventCountdownsV1));
         } catch (_) { return false; }
     }
-    // Recovery records can contain private task text, habit history or shortcut icons. They
+    // Recovery records can contain private task text or shortcut icons. They
     // belong to both local backup scopes, but malformed records never reach a write.
-    for (const [key, validator] of [["myntTodoRecoveryV1", "validateTodoRecovery"], ["myntShortcutRecoveryV1", "validateShortcutRecovery"], ["myntHabitRecoveryV1", "validateHabitRecovery"]]) {
+    for (const [key, validator] of [["myntTodoRecoveryV1", "validateTodoRecovery"], ["myntShortcutRecoveryV1", "validateShortcutRecovery"]]) {
         if (!Object.prototype.hasOwnProperty.call(backup.localStorage, key)) continue;
         try {
             if (typeof MyntMcpData === "undefined" || typeof MyntMcpData[validator] !== "function") return false;
@@ -369,13 +377,13 @@ function prepareBackupForRestore(backup) {
 function replaceLocalStorage(entries) {
     const next = new Map(entries);
     // Do not clear the storage area: preserve unchanged values and minimize writes.
-    Object.keys(localStorage).forEach(key => { if (!next.has(key)) localStorage.removeItem(key); });
+    Object.keys(localStorage).forEach(key => { if (key !== RESTORE_JOURNAL_KEY && !next.has(key)) localStorage.removeItem(key); });
     entries.forEach(([key, value]) => { if (localStorage.getItem(key) !== value) localStorage.setItem(key, value); });
 }
 async function replaceDatabaseEntries(open, storeName, entries, keyPath) {
     const db = await open();
     try {
-        const transaction = db.transaction(storeName, "readwrite");
+        const transaction = restoreWrite(() => db.transaction(storeName, "readwrite"));
         const completion = transactionCompleted(transaction);
         try {
             const store = transaction.objectStore(storeName);
@@ -396,45 +404,115 @@ function replaceMediaEntries(key, entries) {
     return replaceDatabaseEntries(() => openMediaDatabase(config), config.store, entries, config.keyPath);
 }
 
-// Separate IndexedDB databases cannot share an atomic transaction. Snapshot all
-// stores before writing, use atomic per-store transactions, and undo every
-// committed store after an ordinary failure. Closing the tab mid-restore is unsafe.
-async function restoreData(backup) {
-    const prepared = prepareBackupForRestore(backup);
-    const previousLocalStorage = Object.entries(snapshotLocalStorage());
-    // An omitted store is NOT an empty store. Settings-only restore must work
-    // even when a media database is blocked/unavailable, and never touch it.
-    const previousIndexedDB = prepared.indexedDBEntries === null ? null : await readIndexedDBEntries();
-    const previousMedia = Object.create(null);
-    if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) previousMedia[key] = await readMediaEntries(key);
-    const preservedEntries = previousLocalStorage.filter(([key]) => SENSITIVE_LOCAL_STORAGE_KEYS.has(key) || TRANSIENT_LOCAL_STORAGE_KEYS.has(key) ||
-        (prepared.scope !== "full" && isMediaLocalStorageKey(key)));
-    const unownedWallpaper = previousIndexedDB?.filter(([key]) => !INDEXED_DB_KEYS.has(key)) || [];
-    let wallpaperWritten = false;
-    const mediaWritten = [];
-    try {
-        replaceLocalStorage([...prepared.localStorageEntries, ...preservedEntries]);
-        if (prepared.indexedDBEntries !== null) {
-            await replaceIndexedDB([...prepared.indexedDBEntries, ...unownedWallpaper]);
-            wallpaperWritten = true;
+function restoreWrite(fn) { return globalThis.MyntRestoreGuard ? MyntRestoreGuard.allow(fn) : fn(); }
+function restoreLock(fn) { return globalThis.MyntRestoreGuard ? MyntRestoreGuard.lock(fn) : fn(); }
+function saveRestoreJournal(journal) {
+    restoreWrite(() => localStorage.setItem(RESTORE_JOURNAL_KEY, JSON.stringify(journal)));
+    if (globalThis.MyntRestoreGuard) document.documentElement.inert = true;
+}
+function clearRestoreJournal() {
+    restoreWrite(() => localStorage.removeItem(RESTORE_JOURNAL_KEY));
+    if (globalThis.MyntRestoreGuard) document.documentElement.inert = false;
+}
+async function encodedRestoreValue(value) {
+    // Refuse unsupported preimages instead of silently changing their types in JSON.
+    if (estimateBackupBytes(value) > MAX_BACKUP_FILE_SIZE) throw backupSizeError('full');
+    return encodeBackupValue(value, { bytes: 0 });
+}
+function sameRestoreEntries(left, right) {
+    const canonical = value => Array.isArray(value) ? Array.from(value, canonical) : isPlainRecord(value) ?
+        Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+    const sorted = entries => canonical([...entries].sort((a, b) => {
+        const first = JSON.stringify(a[0]), second = JSON.stringify(b[0]);
+        return first < second ? -1 : first > second ? 1 : 0;
+    }));
+    // IndexedDB enumerates by key, independent of the import's insertion order.
+    return JSON.stringify(sorted(left)) === JSON.stringify(sorted(right));
+}
+// A write-ahead journal includes exact preimages (including Blob bytes) and the
+// expected postimages. Persist progress BEFORE each independently atomic store.
+async function recoverInterruptedRestore() {
+    const raw = localStorage.getItem(RESTORE_JOURNAL_KEY);
+    if (raw === null) return false;
+    const journal = JSON.parse(raw);
+    if (journal.version !== 1) throw Error('Invalid restore journal');
+    if (journal.phase === 'snapshot') { clearRestoreJournal(); return false; }
+    if (journal.phase !== 'apply' || !Array.isArray(journal.localBefore) || !Array.isArray(journal.localAfter) || !Array.isArray(journal.stores)) throw Error('Invalid restore journal');
+    const errors = []; let conflict = false;
+    if (journal.localStarted) {
+        const before = new Map(journal.localBefore), after = new Map(journal.localAfter);
+        // Release newly imported/shrunken values before growing old values, so
+        // recovery does not need more quota than the original snapshot did.
+        const keys = [...new Set([...before.keys(), ...after.keys()])].sort((a, b) =>
+            ((before.get(a)?.length || 0) - (localStorage.getItem(a)?.length || 0)) -
+            ((before.get(b)?.length || 0) - (localStorage.getItem(b)?.length || 0)));
+        for (const key of keys) {
+            const current = localStorage.getItem(key), old = before.get(key) ?? null, expected = after.get(key) ?? null;
+            if (current === old) continue;
+            if (current !== expected) { conflict = true; continue; }
+            try { restoreWrite(() => old === null ? localStorage.removeItem(key) : localStorage.setItem(key, old)); } catch (error) { errors.push(error); }
         }
-        if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) {
-            await replaceMediaEntries(key, prepared.media[key]);
-            mediaWritten.push(key);
-        }
-    } catch (restoreError) {
-        const rollbackErrors = [];
-        // Independent recovery attempts: one failed store must not skip the others.
-        try { replaceLocalStorage(previousLocalStorage); } catch (error) { rollbackErrors.push(error); }
-        if (wallpaperWritten) {
-            try { await replaceIndexedDB(previousIndexedDB); } catch (error) { rollbackErrors.push(error); }
-        }
-        for (const key of mediaWritten.reverse()) {
-            try { await replaceMediaEntries(key, previousMedia[key]); } catch (error) { rollbackErrors.push(error); }
-        }
-        if (rollbackErrors.length) throw new Error(getTranslatedText("backupRollbackFailed") + [restoreError, ...rollbackErrors].map(getErrorMessage).join("; "));
-        throw new Error(getTranslatedText("backupRestoreRolledBack") + " " + getErrorMessage(restoreError));
     }
+    for (const item of [...journal.stores].reverse()) {
+        if (!item.started) continue;
+        try {
+            const current = await encodedRestoreValue(item.key === 'wallpaper' ? await readIndexedDBEntries() : await readMediaEntries(item.key));
+            if (sameRestoreEntries(current, item.before)) continue;
+            if (!sameRestoreEntries(current, item.after)) { conflict = true; continue; }
+            const entries = decodeBackupValue(item.before);
+            if (item.key === 'wallpaper') await replaceIndexedDB(entries); else await replaceMediaEntries(item.key, entries);
+        } catch (error) { errors.push(error); }
+    }
+    if (errors.length) throw new Error(getTranslatedText('backupRollbackFailed') + errors.map(getErrorMessage).join('; '));
+    clearRestoreJournal();
+    return conflict;
+}
+async function applyRestore(prepared) {
+    if (localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) throw Error('MYNT_RESTORE_BUSY');
+    saveRestoreJournal({ version: 1, phase: 'snapshot' });
+    try {
+        const previousLocalStorage = Object.entries(snapshotLocalStorage());
+        // An omitted store is NOT an empty store. Settings-only restore must work
+        // even when a media database is blocked/unavailable, and never touch it.
+        const previousIndexedDB = prepared.indexedDBEntries === null ? null : await readIndexedDBEntries();
+        const previousMedia = Object.create(null);
+        if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) previousMedia[key] = await readMediaEntries(key);
+        const preservedEntries = previousLocalStorage.filter(([key]) => SENSITIVE_LOCAL_STORAGE_KEYS.has(key) || TRANSIENT_LOCAL_STORAGE_KEYS.has(key) ||
+            (prepared.scope !== "full" && isMediaLocalStorageKey(key)));
+        const unownedWallpaper = previousIndexedDB?.filter(([key]) => !INDEXED_DB_KEYS.has(key)) || [];
+        const localBefore = previousLocalStorage.filter(([key]) => !preservedEntries.some(([saved]) => saved === key));
+        const journal = { version: 1, phase: 'apply', localBefore, localAfter: prepared.localStorageEntries, localStarted: false, stores: [] };
+        if (prepared.indexedDBEntries !== null) journal.stores.push({ key: 'wallpaper', before: await encodedRestoreValue(previousIndexedDB), after: await encodedRestoreValue([...prepared.indexedDBEntries, ...unownedWallpaper]) });
+        if (prepared.media) for (const key of Object.keys(MEDIA_DATABASES)) journal.stores.push({ key, before: await encodedRestoreValue(previousMedia[key]), after: await encodedRestoreValue(prepared.media[key]) });
+        // Detect an older tab/writer that did not participate in the admission gate.
+        if (JSON.stringify(snapshotLocalStorage()) !== JSON.stringify(Object.fromEntries(previousLocalStorage))) throw Error(getTranslatedText('backupRestoreConflict'));
+        // ponytail: snapshots must fit localStorage quota; use an IDB journal if larger restores are needed.
+        saveRestoreJournal(journal); // Quota failure here leaves all domain data intact.
+        try {
+            journal.localStarted = true; saveRestoreJournal(journal);
+            restoreWrite(() => replaceLocalStorage([...prepared.localStorageEntries, ...preservedEntries]));
+            for (const item of journal.stores) {
+                const current = await encodedRestoreValue(item.key === 'wallpaper' ? await readIndexedDBEntries() : await readMediaEntries(item.key));
+                if (!sameRestoreEntries(current, item.before)) throw Error(getTranslatedText('backupRestoreConflict'));
+                item.started = true; saveRestoreJournal(journal);
+                if (item.key === 'wallpaper') await replaceIndexedDB(decodeBackupValue(item.after));
+                else await replaceMediaEntries(item.key, decodeBackupValue(item.after));
+            }
+        } catch (restoreError) {
+            const conflict = await recoverInterruptedRestore() || getErrorMessage(restoreError) === getTranslatedText('backupRestoreConflict');
+            throw new Error(getTranslatedText(conflict ? 'backupRestoreConflict' : 'backupRestoreRolledBack') + ' ' + getErrorMessage(restoreError));
+        }
+        clearRestoreJournal();
+    } catch (error) {
+        // Snapshot preparation never changes domain data. Failed recovery keeps
+        // the full apply journal, blocking writers until a later startup retries.
+        if (JSON.parse(localStorage.getItem(RESTORE_JOURNAL_KEY) || 'null')?.phase === 'snapshot') clearRestoreJournal();
+        throw error;
+    }
+}
+async function restoreData(backup) {
+    const prepared = prepareBackupForRestore(backup); // Invalid imports make ZERO writes.
+    return restoreLock(() => applyRestore(prepared));
 }
 function backupScopePreview(backup) {
     const counts = { settings: Object.keys(backup.localStorage).filter(key => !SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key) &&
@@ -463,8 +541,14 @@ async function validateAndRestoreData(event) {
         location.reload();
     } catch (error) {
         const message = getTranslatedText("restorefailed") + getErrorMessage(error);
-        setBackupStatus(message); await alertPrompt(message);
-    } finally { setBackupBusy(false); input.value = ""; }
+        setBackupStatus(message);
+        if (globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) {
+            if (typeof alert === 'function') alert(message);
+        } else await alertPrompt(message);
+    } finally {
+        setBackupBusy(Boolean(globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null));
+        input.value = "";
+    }
 }
 
 // Existing reset remains distinct from full restore: timer/gallery media is kept.
@@ -472,7 +556,6 @@ resetButton.addEventListener("click", async () => {
     if (backupOperationBusy || !(await confirmPrompt(getTranslatedText("confirmRestore") + "\n\n" + getTranslatedText("resetKeepsPomodoroMedia")))) return;
     setBackupBusy(true);
     try {
-        await globalThis.myntDaidaiDisconnect?.({ removePermission: true });
         await replaceIndexedDB([]);
         localStorage.clear();
         location.reload();
@@ -481,3 +564,21 @@ resetButton.addEventListener("click", async () => {
         await alertPrompt(getTranslatedText("restorefailed") + getErrorMessage(error));
     }
 });
+
+// An interrupted restore is undone under the same cross-tab owner lock. The
+// early admission guard keeps UI and every normal storage writer closed until
+// recovery succeeds; reload then initializes all domains from recovered data.
+if (globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) {
+    setBackupBusy(true);
+    setBackupStatus(getTranslatedText('backupRestoreWorking'));
+    globalThis.myntRestoreReady = restoreLock(async () => {
+        const conflict = await recoverInterruptedRestore();
+        if (conflict && typeof alert === 'function') alert(getTranslatedText('backupRestoreConflict'));
+        location.reload();
+    }).catch(error => {
+        const message = getTranslatedText('backupRollbackFailed') + getErrorMessage(error);
+        setBackupStatus(message);
+        // Native alert remains accessible while ordinary page controls are inert.
+        if (typeof alert === 'function') alert(message);
+    });
+}

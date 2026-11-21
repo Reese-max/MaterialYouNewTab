@@ -9,7 +9,7 @@
 // Translation data
 const DEFAULT_LANGUAGE = "zh_TW";
 
-const localeSources = {
+function readLocaleSources() { return {
     en: typeof en !== "undefined" ? en : undefined,
     pt: typeof pt !== "undefined" ? pt : undefined,
     ne: typeof ne !== "undefined" ? ne : undefined,
@@ -42,7 +42,8 @@ const localeSources = {
     pl: typeof pl !== "undefined" ? pl : undefined,
     uk: typeof uk !== "undefined" ? uk : undefined,
     sv: typeof sv !== "undefined" ? sv : undefined,
-};
+}; }
+const localeSources = readLocaleSources();
 
 const translations = Object.fromEntries(
     Object.entries(localeSources).filter(([, strings]) => strings).map(([code, strings]) => [
@@ -121,7 +122,6 @@ function applyLanguage(lang) {
 
     // Mapping of text elements and their translation keys
     const translationMap = [
-        "mcpTitle", "mcpInfo", "mcpPrivacy", "mcpWriteLabel", "mcpPrivateLabel", "mcpConnect", "mcpDisconnect",
         "menuTitle",
         "eventCountdownSettingTitle",
         "eventCountdownSettingInfo",
@@ -161,40 +161,13 @@ function applyLanguage(lang) {
         "pomodoroSoundInfo",
         "pomodoroNotifText",
         "pomodoroNotifInfo",
-        "scratchpadHover",
-        "scratchpadHeading",
-        "scratchpadText",
-        "scratchpadInfo",
-        "scratchpadCopyBtn",
-        "scratchpadToTaskBtn",
-        "scratchpadAskDaidaiBtn",
-        "scratchpadOrganizeDaidaiBtn",
-        "scratchpadClearBtn",
-        "scratchpadDownloadBtn",
-        "daidaiIntegrationTitle",
-        "daidaiIntegrationInfo",
-        "daidaiConnectionTitle",
-        "daidaiConnectionInfo",
-        "daidaiConnectBtn",
-        "daidaiDisclosureSummary",
-        "daidaiDisclosurePrivate",
-        "daidaiDisclosureApproval",
-        "daidaiActionEyebrow",
-        "daidaiActionTitle",
-        "daidaiActionBeforeLabel",
-        "daidaiActionAfterLabel",
-        "daidaiActionWarning",
-        "daidaiActionRejectBtn",
-        "daidaiActionConfirmBtn",
         "shortcutsHelpEyebrow",
         "shortcutsHelpTitle",
         "shortcutSearchHelp",
         "shortcutCmdHelp",
-        "shortcutScratchpadHelp",
         "shortcutHelpHelp",
         "shortcutEscHelp",
         "shortcutBangHelp",
-        "workspaceWidgetScratchpad",
         "workspaceUrlsLabel",
         "pomodoroAmbientAutoText",
         "pomodoroAmbientAutoInfo",
@@ -205,20 +178,6 @@ function applyLanguage(lang) {
         "pomodoroResetPosText",
         "pomodoroResetPosInfo",
         "pomodoroSessionsLabel",
-        "bongoCatText",
-        "bongoCatInfo",
-        "bongoCatCostumeText",
-        "bongoCatOutfitDefault",
-        "bongoCatOutfitDark",
-        "bongoCatOutfitSakura",
-        "bongoCatOutfitOcean",
-        "bongoCatOutfitSunset",
-        "bongoCatOutfitForest",
-        "bongoCatOutfitLavender",
-        "bongoCatStyleText",
-        "bongoCatStyleSimple",
-        "bongoCatStyleCute",
-        "bongoCatResetPositionText",
         "fahrenheitCelsiusCheckbox",
         "fahrenheitCelsiusText",
         "minMaxTempText",
@@ -234,29 +193,12 @@ function applyLanguage(lang) {
         "hideSearchWith",
         "hideSearchWithInfo",
         "searchWithHint",
-        "motivationalQuotesText",
-        "motivationalQuotesInfo",
-        "newQuoteOnRefreshText",
-        "newQuoteOnRefreshInfo",
-        "search_suggestions_button",
-        "search_suggestions_text",
         "hideClockBox",
         "hideClockBoxInfo",
         "digitalclocktitle",
         "digitalclockinfo",
         "timeformattitle",
         "timeformatinfo",
-        "greetingtitle",
-        "greetinginfo",
-        "greetingNameTitle",
-        "greetingNameInfo",
-        "userTextTitle",
-        "userTextInfo",
-        "useproxytitletext",
-        "useproxyText",
-        "ProxyText",
-        "ProxySubtext",
-        "HostproxyButton",
         "UserLocText",
         "UserLocSubtext",
         "useGPS",
@@ -304,19 +246,12 @@ function applyLanguage(lang) {
         "lightThemed",
         "darkThemed",
         "systemThemed",
-        "switchSearchModes",
-        "switchSearchModesInfo",
-        "adjustZoom",
-        "changeBrowserTheme",
-        "updateFirefoxHomepage",
-        "dontShowTips",
         "aiSettingsIntro",
         "resetAISettingsBtn",
         "opacityTitle",
         "adjustOpacityDesc",
         "footerToastTitle",
         "footerToastMessage",
-        "settingsHelpTitle",
         "settingsGroupPersonal",
         "settingsGroupWork",
         "settingsGroupAdvanced",
@@ -338,8 +273,7 @@ function applyLanguage(lang) {
         { id: "todoInput", key: "todoPlaceholder" },
         { id: "bookmarkSearch", key: "bookmarkSearch" },
         { id: "editBookmarkName", key: "editBookmarkName" },
-        { id: "editBookmarkURL", key: "editBookmarkURL" },
-        { id: "greetingNameInput", key: "greetingNamePlaceholder" }
+        { id: "editBookmarkURL", key: "editBookmarkURL" }
     ];
 
     // Mapping of elements and their different translation keys
@@ -348,7 +282,6 @@ function applyLanguage(lang) {
         { id: "pomodoroPhaseLabel", key: "pomodoroWork" },
         { id: "googleEngineDD", key: "googleEngine" },
         { id: "bookmarksHover", key: "bookmarksHeading" },
-        { id: "saveproxy", key: "saveAPI" },
         { id: "saveLoc", key: "saveAPI" },
         { id: "saveBookmarkChanges", key: "saveAPI" },
         { id: "cancelBookmarkEdit", key: "cancelText" },
@@ -398,12 +331,26 @@ function applyLanguage(lang) {
         { id: "googleAppsCont", key: "googleAppsMenuText" },
         { id: "aiToolsIcon", key: "ai_tools_button" },
         { id: "micIcon", key: "voiceSearchLabel" },
+        { id: "randomImageTrigger", key: "commandWallpaperRandom", title: true },
         { id: "menuButton", key: "openSettingsLabel" },
         { id: "settingsGroupTabs", key: "settingsGroupLabel" },
         { id: "clearSearchButton", key: "clearBookmarkSearchLabel", title: true },
         { id: "newShortcutButton", key: "addShortcutLabel", title: true },
-        { id: "resetButton", key: "resetShortcutsLabel", title: true }
+        { id: "addQuickLinkButton", key: "addShortcutLabel", title: true },
+        { id: "resetButton", key: "resetShortcutsLabel", title: true },
+        { id: "backButton", key: "shortcutBackLabel", title: true }
     ];
+    // Theme colour swatches are bare radios; name each one after its colour.
+    document.querySelectorAll("input.colorPlate[name=color]").forEach(input => {
+        const key = "themeColor" + input.value.charAt(0).toUpperCase() + input.value.slice(1);
+        const label = translations[lang]?.[key] || translations.en?.[key];
+        if (label) input.setAttribute("aria-label", label);
+    });
+    // Settings switches wrap only a decorative span; name them by their row title.
+    document.querySelectorAll(".ttcont label.switch > input:not([aria-label]):not([aria-labelledby])").forEach(input => {
+        const title = input.closest(".ttcont")?.querySelector(".bigText[id]");
+        if (title) input.setAttribute("aria-labelledby", title.id);
+    });
     accessibleLabelMap.forEach(({ id, key, title }) => {
         const element = document.getElementById(id);
         const label = translations[lang]?.[key] || translations.en?.[key];
@@ -414,17 +361,6 @@ function applyLanguage(lang) {
 
     if (typeof renderBookmarks === "function" && bookmarkNodeMap?.size) renderBookmarks();
 
-    // For userText
-    const userTextDiv = document.getElementById("userText");
-    if (translations[lang]) {
-        const placeholder = translations[lang]?.userText || translations["en"].userText;
-        userTextDiv.dataset.placeholder = placeholder; // Update the placeholder in data attribute
-        // Only set the text content if there's nothing in localStorage
-        if (!localStorage.getItem("userText")) {
-            userTextDiv.innerText = placeholder;
-        }
-    }
-    userTextDiv.setAttribute("aria-label", translations[lang]?.userTextTitle || translations["en"].userTextTitle);
 
     // Update placeholders on already-rendered shortcut inputs
     document.querySelectorAll(".shortcutSettingsEntry .shortcutName")
@@ -457,7 +393,7 @@ function applyLanguage(lang) {
 
     // Apply the direction attribute to specific selectors for RTL languages
     const isRTL = rtlLanguages.includes(lang);
-    const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont", ".resultBox", ".quotesCont",
+    const rtlSelectors = [".topDiv", ".searchbar", ".searchWithCont",
         ".leftDiv", ".shortcutsContainer", ".page", "#prompt-modal-box", ".todo-container",
         ".bookmark-sidebar", ".bookmark-search-container", ".bookmark-controls-container", ".bookmark-state",
         ".bookmark-section", ".bookmark-action-popover", "#editBookmarkModal", ".liquidGlass-toast"];
@@ -475,20 +411,36 @@ function applyLanguage(lang) {
     feelsLikeElement.style.width = isRTL ? "calc(100% - 12px)" : "";
     feelsLikeElement.style.textAlign = isRTL ? "right" : "left";
 
-    const quotesText = document.querySelector(".quotesContainer");
-    // quotesText.style.textAlign = isRTL ? "right" : "left";
-    quotesText.style.fontFamily = commonFontStack;
-
     // Save the selected language in localStorage
     document.documentElement.lang = lang === "zh_TW" ? "zh-TW" : lang.replace("_", "-");
     saveLanguageStatus("selectedLanguage", lang);
     if (typeof refreshBackupScope === "function") refreshBackupScope();
+    document.dispatchEvent(new CustomEvent("mynt:language-changed"));
 }
 
 // Detect language from navigator.language
-document.getElementById("languageSelector").addEventListener("change", (event) => {
-    saveLanguageStatus("selectedLanguage", event.target.value);
-    location.reload();
+let languageRequest = 0;
+const localeLoads = new Map();
+document.getElementById("languageSelector").addEventListener("change", async (event) => {
+    const lang = event.target.value, request = ++languageRequest;
+    if (!Object.hasOwn(localeSources, lang)) return;
+    // Live switching only keeps an open floating timer connected; a reload relabels every main-page module.
+    if (!window.myntPomoFloat?.isOpen()) { saveLanguageStatus("selectedLanguage", lang); location.reload(); return; }
+    try {
+        if (!translations[lang]) {
+            if (!localeLoads.has(lang)) localeLoads.set(lang, new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.src = "locales/" + lang + ".js";
+                script.onload = resolve; script.onerror = reject; document.head.append(script);
+            }).finally(() => localeLoads.delete(lang)));
+            await localeLoads.get(lang);
+            translations[lang] = { ...en, ...readLocaleSources()[lang] };
+        }
+        if (request !== languageRequest) return;
+        currentLanguage = lang;
+        isRTL = rtlLanguages.includes(lang);
+        applyLanguage(lang);
+    } catch (_) { if (request === languageRequest) event.target.value = currentLanguage; }
 });
 
 // Function to apply the language when the page loads

@@ -20,13 +20,6 @@
 	z-index: 2;
 }
 
-/* 名言列維持於捷徑列下方，並確保圖層順序正常 */
-.quotesCont,
-#motivationalQuotesCont {
-	position: relative;
-	z-index: 1;
-}
-
 /* 確保捷徑名稱標籤在深色模式與有桌布時可正確點擊與顯示 */
 .shortcuts .shortcut-name {
 	pointer-events: auto;

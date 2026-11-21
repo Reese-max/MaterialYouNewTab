@@ -184,18 +184,12 @@ function checkAndUpdateImage() {
                 return;
             }
 
-            if (imageType === "upload") {
-                applyBlobBackground(blob);
-                toggleBackgroundType(true);
-                return;
-            }
+            applyBlobBackground(blob);
+            toggleBackgroundType(true);
+            if (imageType === "upload") return;
 
             if (lastUpdate.toDateString() !== now.toDateString()) {
                 applyRandomImage(false);
-            } else {
-                // Reapply the saved random image
-                applyBlobBackground(blob);
-                toggleBackgroundType(true);
             }
         })
         .catch((error) => {

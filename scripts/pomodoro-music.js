@@ -128,7 +128,12 @@
         ui.seek.style.setProperty('--music-progress', `${state.duration ? state.current / state.duration * 100 : 0}%`);
         ui.elapsed.textContent = formatTime(state.current); ui.duration.textContent = formatTime(state.duration);
     }
+    const subscribers = new Set();
+    function playbackState() {
+        return { ...timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback)), selectedId: settings.selectedId, playing: Boolean(audio && !audio.paused), status: ui.status?.dataset.state || 'unavailable' };
+    }
     function updateNowPlaying() {
+        for (const fn of subscribers) { try { fn(playbackState()); } catch (_) { /* isolate observers */ } }
         if (!ui.trackName) return;
         const track = activeTracks().find(item => item.id === settings.selectedId);
         const active = Boolean(track && audio?.dataset.track === track.id && !audio.paused);
@@ -610,7 +615,8 @@
         getSettings: () => normalize(settings),
         async play(id) { await play(id); return this.getPlayback(); },
         async playRemote(beforeMutation) { await play(settings.selectedId, false, beforeMutation); return this.getPlayback(); },
-        getPlayback: () => ({ ...timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback)), playing: Boolean(audio && !audio.paused), status: ui.status?.dataset.state || 'unavailable' }),
+        getPlayback: playbackState,
+        subscribe(fn) { subscribers.add(fn); return () => subscribers.delete(fn); },
         seek(seconds) {
             if (typeof seconds !== 'number' || !Number.isFinite(seconds)) throw new TypeError('Invalid seek');
             const state = timeline(audio, settings.selectedId, Boolean(releaseLock || ownsFallback));

@@ -5,12 +5,15 @@
     'use strict';
     const KEY='myntLayoutProfiles', MAX=20, LIMIT=150000;
     const clone=v=>JSON.parse(JSON.stringify(v));
+    // Blocks of features removed on 2026-11-17; old profiles and backups keep loading without them.
+    const RETIRED_BLOCKS=new Set(['focus','scratchpad']);
     const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
     function validateLayout(v, normalize) {
         if(!plain(v)||v.version!==2||typeof v.snap!=='boolean'||typeof v.locked!=='boolean'||!plain(v.blocks))throw Error('invalid');
         const out=normalize(v);
         for(const [id,b] of Object.entries(v.blocks)){
-            if(!plain(b)||!['x','y','s'].every(k=>Number.isFinite(b[k]))||Math.abs(b.x)>1||Math.abs(b.y)>1||b.s<.5||b.s>2)throw Error('invalid');
+            if(RETIRED_BLOCKS.has(id))continue;
+            if(!plain(b)||!['x','y','s'].every(k=>Number.isFinite(b[k]))||Math.abs(b.x)>1||Math.abs(b.y)>1||b.s<.5||b.s>2||['w','h'].some(k=>k in b&&!(Number.isFinite(b[k])&&b[k]>0&&b[k]<=1)))throw Error('invalid');
             if(!Object.prototype.hasOwnProperty.call(out.blocks,id)&& (b.x||b.y||b.s!==1))throw Error('invalid');
             if(!normalize({version:2,blocks:{[id]:{x:.001,y:0,s:1}}}).blocks[id])throw Error('invalid');
         }
@@ -111,5 +114,5 @@
         }
         return {mount,manage,context:()=>({profile:data.active,size:variant,revision:data.revision,base:expected}),load:()=>clone(current().layouts[variant]),save(layout){const next=clone(data),p=next.profiles.find(p=>p.id===next.active);const candidate=normalize(layout);if(JSON.stringify(candidate)!==JSON.stringify(p.layouts[variant]))p.previous[variant]=clone(p.layouts[variant]);p.layouts[variant]=candidate;write(next);refresh();},finish(){const size=innerWidth<=900?'narrow':'wide';if(size!==variant){variant=size;apply();}},reload};
     }
-    const api={validate,migrate,parseImport,create,KEY};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.MyntLayoutProfiles=api;
+    const api={validate,validateLayout,migrate,parseImport,create,KEY};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.MyntLayoutProfiles=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

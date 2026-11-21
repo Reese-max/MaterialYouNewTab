@@ -25,14 +25,33 @@
         unsupported: ['Floating mode unavailable. Use the ordinary window button (not always on top).', '無法使用置頂模式，請改用一般視窗按鈕（不會保持置頂）。'],
         note: ['Keep the original tab open. Ordinary windows are not always on top.', '請保持原分頁開啟。一般視窗不會保持置頂。'],
         disconnected: ['Original tab closed. Reopen the new tab to continue; this window no longer controls the timer.', '原分頁已關閉。請重新開啟新分頁繼續，此視窗已無法控制計時器。'],
+        audioError: ['Audio could not start. Try Play again on the original tab.', '無法開始播放音訊，請在原分頁再次按下播放。'],
         options: ['Timer options', '計時選項'], task: ['Focus task', '專注任務'], start: ['Start', '開始'], pause: ['Pause', '暫停'], reset: ['Reset', '重設'],
-        extend: ['+5 minutes', '加 5 分鐘'], close: ['Close window', '關閉視窗'], work: ['Focus', '專注'], shortBreak: ['Short break', '短休息'], longBreak: ['Long break', '長休息'],
-        round: ['Round', '回合'], ready: ['Saved on this device only.', '僅儲存在此裝置。'], missing: ['Choose a local image first.', '請先選擇本機圖片。']
+        extend: ['+5 minutes', '＋5 分鐘'], close: ['Close window', '關閉視窗'], work: ['Work', '工作'], shortBreak: ['Short Break', '短休息'], longBreak: ['Long Break', '長休息'],
+        round: ['Rounds', '輪數'], today: ['Today', '今日'],
+        workMinutes: ['Work Duration', '工作時間'], shortBreakMinutes: ['Short Break', '短休息'], longBreakMinutes: ['Long Break', '長休息'],
+        durationError: ['Enter whole minutes: work 1–120; breaks 1–60.', '請輸入整數分鐘：工作 1–120；休息 1–60。'],
+        musicPlay: ['Play music', '播放音樂'], musicPause: ['Pause music', '暫停音樂'], musicNext: ['Next track', '下一首'],
+        ambientPlay: ['Play ambient audio', '播放環境音'], ambientPause: ['Pause ambient audio', '暫停環境音'], ambientType: ['Ambient sound type', '環境音類型'],
+        ambient_nature: ['Nature', '自然'], ambient_noise: ['Noise', '噪音'],
+        ambient_rain: ['Rain', '雨聲'], ambient_thunder: ['Thunderstorm', '雷雨'],
+        ambient_ocean: ['Ocean', '海浪'], ambient_stream: ['Stream', '溪流'],
+        ambient_wind: ['Wind', '風聲'], ambient_forest: ['Forest birds', '森林鳥鳴'],
+        ambient_night: ['Summer night', '夏夜蟲鳴'], ambient_campfire: ['Campfire', '柴火'],
+        ambient_whitenoise: ['White noise', '白噪音'], ambient_pink: ['Pink noise', '粉紅噪音'], ambient_brown: ['Brown noise', '棕色噪音'],
+        ready: ['Saved on this device only.', '僅儲存在此裝置。'], missing: ['Choose a local image first.', '請先選擇本機圖片。']
     };
+    function language() {
+        let saved;
+        try { saved = localStorage.getItem('selectedLanguage'); } catch (_) { /* use the active page language */ }
+        return saved || (typeof currentLanguage !== 'undefined' ? currentLanguage : document.documentElement.lang.replace('-', '_'));
+    }
     function t(key) {
-        const lang = typeof currentLanguage !== 'undefined' ? currentLanguage : document.documentElement.lang;
+        const lang = language();
         const fallback = labels[key]?.[/^zh([_-]TW|[-]Hant)?$/i.test(lang || '') ? 1 : 0] || key;
-        return typeof translations !== 'undefined' && translations[lang]?.['pomoFloat_' + key] || fallback;
+        const shared = { work: 'pomodoroWork', shortBreak: 'pomodoroShortBreak', longBreak: 'pomodoroLongBreak', round: 'pomodoroRoundsText', extend: 'pomoStudioExtend', task: 'pomoStudioTask', today: 'pomodoroSessionsLabel', workMinutes: 'pomodoroWorkText', shortBreakMinutes: 'pomodoroShortBreakText', longBreakMinutes: 'pomodoroLongBreakText', durationError: 'pomoFloat_durationError' };
+        const name = shared[key] || 'pomoFloat_' + key;
+        return typeof translations !== 'undefined' && (translations[lang]?.[name] || translations.en?.[name]) || fallback;
     }
     function validate(value) {
         if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid settings');
@@ -182,7 +201,7 @@
         };
         const place = anchor => {
             const anchored = anchor && ['top', 'left', 'bottom'].every(key => Number.isFinite(anchor[key]));
-            const blocks = anchored ? [] : ['.ttteexxtt', '#rightDiv', '#aiToolsCont'].map(visibleRect).filter(Boolean);
+            const blocks = anchored ? [] : ['#rightDiv', '#aiToolsCont'].map(visibleRect).filter(Boolean);
             const widgets = anchored ? null : visibleRect('#myntHomeWidgets');
             if (!anchored && !avoidingPanelPosition(panel.getBoundingClientRect(), blocks, widgets, viewport)) return;
             // 錨點、避讓與尺寸限制只供本次顯示；拖曳存檔仍由原模組處理。
@@ -219,12 +238,14 @@
     }
     // 匯出供無相依套件的回歸檢查使用，不新增儲存資料。
     if (typeof module !== 'undefined' && module.exports) { module.exports = { createRemoteAppearance, validate, validImage, progressOffset, paletteFor, contrast, rgb, pipOptions, compactWindowSize, isCompactWindow, anchoredPanelPosition, avoidingPanelPosition }; return; }
-    let settings = { ...defaults }, imageUrl = '', floating = null, opening = false, unsubscribe = null;
-    let status, appearanceForm, floatVideo;
+    let settings = { ...defaults }, imageUrl = '', imageStored = false, floating = null, opening = false, unsubscribe = null;
+    let status, appearanceForm, floatVideo, modePanel, modePanelAnchor;
+    // Routine saves are announced to assistive tech only; errors stay visible.
+    function setStatus(text, quiet = false) { status.textContent = text; status.classList.toggle('mynt-pomo-sr-only', quiet); }
     const imageSamples = new Map(), modeChoices = new Map(), settingGroups = new Map(), thumbnailCache = new WeakMap();
     try { settings = validate(JSON.parse(localStorage.getItem(KEY)) || defaults); } catch (_) { /* safe defaults */ }
     function el(doc, tag, text, className) { const node = doc.createElement(tag); if (text) node.textContent = text; if (className) node.className = className; return node; }
-    function button(doc, label, action) { const node = el(doc, 'button', t(label)); node.type = 'button'; node.addEventListener('click', action); return node; }
+    function button(doc, label, action) { const node = el(doc, 'button', t(label)); node.type = 'button'; node.setAttribute('data-pomo-label', label); node.addEventListener('click', action); return node; }
     // Escape belongs to the input method while the user is composing text.
     function isDismissKey(event) { return event.key === 'Escape' && !event.defaultPrevented && !event.isComposing && event.keyCode !== 229; }
     async function imageStore(mode, file) {
@@ -317,6 +338,7 @@
         settings = next; renderAppearance(); syncForm();
         return { ...settings };
     }
+    window.myntPomoFloat = { isOpen: () => Boolean(floating && !floating.closed) };
     window.myntPomoAppearance = { getSettings: () => ({ ...settings }), applySettings,
         ...createRemoteAppearance({ storage: localStorage, getSettings: () => settings, setSettings: value => { settings = value; }, hasImage: () => Boolean(imageUrl), render: () => { renderAppearance({ suppressPlayback: true }); syncForm(); } })
     };
@@ -337,6 +359,8 @@
     function syncForm() {
         if (!appearanceForm) return;
         for (const key of ['color', 'color2', 'fit', 'position']) appearanceForm.elements.namedItem(key).value = settings[key];
+        // A stored image that failed to decode can still be removed.
+        settingGroups.get('image')?.classList.toggle('mynt-pomo-has-image', !!imageUrl || imageStored);
         const home = getComputedStyle(document.body).getPropertyValue('--bg-image').trim();
         const originalPreview = videoThumbnail(document.getElementById('pomodoroPanel')?.querySelector('.pomodoro-bg-video'));
         const previews = {
@@ -359,6 +383,14 @@
             group.hidden = name === 'image' ? settings.mode !== 'image' : name === 'color' ? !['color', 'gradient'].includes(settings.mode)
                 : name === 'color2' ? settings.mode !== 'gradient' : !['image', 'home'].includes(settings.mode);
         }
+        // The selected mode's own settings sit directly under its tile.
+        const anchor = modeChoices.get(settings.mode)?.tile;
+        if (modePanel && anchor && modePanelAnchor !== anchor) {
+            // A move detaches the block; focus inside it (a change from another tab) is put back where it was.
+            const active = document.activeElement, hadFocus = !!active && active !== modePanel && modePanel.contains?.(active);
+            modePanel.remove(); anchor.after(modePanel); modePanelAnchor = anchor;
+            if (hadFocus && document.activeElement !== active) active.focus({ preventScroll: true });
+        }
     }
     function buildSettings(mount) {
         const details = el(document, 'details', '', 'mynt-pomo-appearance'); details.append(el(document, 'summary', t('appearance')));
@@ -376,9 +408,10 @@
             tile.append(input, preview, el(document, 'span', t(mode), 'mynt-pomo-background-label'));
             choices.append(tile); modeChoices.set(mode, { input, tile, preview, fallback });
         }
+        modePanel = el(document, 'div', '', 'mynt-pomo-mode-settings'); modePanelAnchor = null; choices.append(modePanel);
         form.append(choices);
-        for (const key of ['color', 'color2']) { const input = el(document, 'input'); input.type = 'color'; input.name = key; settingGroups.set(key, row(key, input)); }
-        const imageControls = el(document, 'div', '', 'mynt-pomo-image-controls'); form.append(imageControls); settingGroups.set('image', imageControls);
+        for (const key of ['color', 'color2']) { const input = el(document, 'input'); input.type = 'color'; input.name = key; settingGroups.set(key, row(key, input, modePanel)); }
+        const imageControls = el(document, 'div', '', 'mynt-pomo-image-controls'); modePanel.append(imageControls); settingGroups.set('image', imageControls);
         imageControls.append(el(document, 'p', t('localOnly'), 'mynt-pomo-note'));
         const framing = el(document, 'details', '', 'mynt-pomo-image-framing'); framing.append(el(document, 'summary', t('adjustImage')));
         row('fit', select('fit', [['cover', 'cover'], ['contain', 'contain']]), framing);
@@ -386,21 +419,25 @@
         settingGroups.set('framing', framing);
         form.addEventListener('change', event => {
             if (!['mode', 'color', 'color2', 'fit', 'position'].includes(event.target.name)) return;
-            try { applySettings({ ...settings, [event.target.name]: event.target.value }); status.textContent = settings.mode === 'image' && !imageUrl ? t('missing') : t('ready'); }
-            catch (_) { status.textContent = t('error'); syncForm(); }
+            try { applySettings({ ...settings, [event.target.name]: event.target.value }); if (settings.mode === 'image' && !imageUrl) setStatus(t('missing')); else setStatus(t('ready'), true); }
+            catch (_) { setStatus(t('error')); syncForm(); }
         });
         details.addEventListener('keydown', event => { if (isDismissKey(event) && details.open) { event.preventDefault(); event.stopPropagation(); details.open = false; details.querySelector('summary').focus(); } });
         let deletedImage = null;
         const undo = button(document, 'undo', async () => {
             if (!deletedImage) return;
-            undo.disabled = true; input.disabled = true; remove.disabled = true; let url = '';
+            undo.disabled = true; input.disabled = true; remove.disabled = true; let url = '', restored = false;
             try {
                 url = await decodeImage(deletedImage.blob);
-                await imageStore('put', deletedImage.blob);
+                await imageStore('put', deletedImage.blob); imageStored = true;
                 setImage(url); url = ''; applySettings(deletedImage.settings);
-                deletedImage = null; undo.hidden = true; status.textContent = t('ready');
-            } catch (_) { if (url) URL.revokeObjectURL(url); status.textContent = t('error'); }
-            finally { undo.disabled = false; input.disabled = false; remove.disabled = false; }
+                deletedImage = null; undo.hidden = true; setStatus(t('ready'), true); restored = true;
+            } catch (_) { if (url) URL.revokeObjectURL(url); setStatus(t('error')); }
+            finally {
+                undo.disabled = false; input.disabled = false; remove.disabled = false;
+                // Undo hides itself: keyboard focus returns to the delete button the restored image brings back.
+                if (restored) remove.focus();
+            }
         });
         undo.hidden = true;
         const input = el(document, 'input'); input.type = 'file'; input.accept = 'image/png,image/jpeg,image/webp';
@@ -409,24 +446,28 @@
             const file = input.files[0]; if (!file) return; input.disabled = true; remove.disabled = true; undo.disabled = true; let url = '';
             try {
                 url = await decodeImage(file);
-                await imageStore('put', file);
-                setImage(url); url = ''; applySettings({ ...settings, mode: 'image' }); deletedImage = null; undo.hidden = true; status.textContent = t('ready');
-            } catch (_) { if (url) URL.revokeObjectURL(url); status.textContent = t('error'); }
+                await imageStore('put', file); imageStored = true;
+                setImage(url); url = ''; applySettings({ ...settings, mode: 'image' }); deletedImage = null; undo.hidden = true; setStatus(t('ready'), true);
+            } catch (_) { if (url) URL.revokeObjectURL(url); setStatus(t('error')); }
             finally { input.value = ''; input.disabled = false; remove.disabled = false; undo.disabled = false; }
         });
         const remove = button(document, 'remove', async () => {
             if (!window.confirm(t('deleteConfirm'))) return;
-            remove.disabled = true; input.disabled = true; undo.disabled = true;
+            remove.disabled = true; input.disabled = true; undo.disabled = true; let deleted = false;
             try {
                 const blob = await imageStore('get');
-                if (!blob) { status.textContent = t('missing'); return; }
+                if (!blob) { imageStored = false; syncForm(); setStatus(t('missing')); return; }
                 const previous = { blob, settings: { ...settings } };
-                await imageStore('delete'); deletedImage = previous; undo.hidden = false;
-                setImage(''); if (settings.mode === 'image') applySettings({ ...settings, mode: 'home' }); status.textContent = t('deleted');
-            } catch (_) { status.textContent = t('error'); }
-            finally { remove.disabled = false; input.disabled = false; undo.disabled = false; }
+                await imageStore('delete'); imageStored = false; deletedImage = previous; undo.hidden = false;
+                setImage(''); if (settings.mode === 'image') applySettings({ ...settings, mode: 'home' }); setStatus(t('deleted')); deleted = true;
+            } catch (_) { setStatus(t('error')); }
+            finally {
+                remove.disabled = false; input.disabled = false; undo.disabled = false;
+                // The delete button hides with the image: keyboard focus moves to the now-enabled undo.
+                if (deleted) undo.focus();
+            }
         });
-        imageControls.append(remove); form.append(framing, undo);
+        imageControls.append(remove); modePanel.append(framing, undo);
         details.append(form); mount.append(details); syncForm();
     }
     function clearFloat(win) {
@@ -435,7 +476,10 @@
         if (floatVideo) floatVideo.pause(); floatVideo = null; floating = null;
     }
     function constructFloat(win, ordinary) {
-        const doc = win.document; doc.title = t('float'); doc.documentElement.lang = document.documentElement.lang;
+        let disconnected = false;
+        const cleanups = [];
+        const listen = (target, event, fn) => { target.addEventListener(event, fn); cleanups.push(() => target.removeEventListener(event, fn)); };
+        const doc = win.document; doc.title = t('float'); doc.documentElement.lang = document.documentElement.lang; doc.documentElement.classList.add('mynt-pomo-float-root');
         // Copy only this packaged stylesheet, never arbitrary page styles or remote scripts.
         const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = new URL('styles/pomodoro-float.css', document.baseURI).href; doc.head.append(css);
         doc.body.replaceChildren(); doc.body.className = 'mynt-pomo-float';
@@ -462,11 +506,17 @@
         const round = el(doc, 'p', '', 'pomodoroRoundDisplay');
         const taskPreview = el(doc, 'p', '', 'mynt-pomo-task-preview'); taskPreview.hidden = true;
         const context = el(doc, 'div', '', 'mynt-pomo-context'); context.append(taskPreview, round);
-        main.append(phase, circle, context);
+        // One sheet holds everything below the ring, so text never sits directly on the picture.
+        const dock = el(doc, 'div', '', 'mynt-pomo-dock');
+        main.append(phase, circle, dock); dock.append(context);
         const controls = el(doc, 'div', '', 'mynt-pomo-controls');
         const note = el(doc, 'p', '', 'mynt-pomo-note'); note.setAttribute('role', 'status');
-        const setNote = (key, quiet = false) => { note.textContent = t(key); note.classList.toggle('mynt-pomo-sr-only', quiet); };
-        const run = (method, ...args) => Promise.resolve().then(() => window.myntPomodoro[method](...args)).catch(() => { setNote('error'); });
+        let noteKey = '', noteQuiet = false;
+        const setNote = (key, quiet = false) => {
+            if (win.closed || (disconnected && key !== 'disconnected')) return;
+            noteKey = key; noteQuiet = quiet; note.textContent = key ? t(key) : ''; note.classList.toggle('mynt-pomo-sr-only', quiet);
+        };
+        const run = (method, ...args) => Promise.resolve().then(() => { if (!disconnected && !win.closed) return window.myntPomodoro[method](...args); }).catch(() => { setNote('error'); });
         const icon = (path) => {
             const svg = svgNode('svg', { viewBox: '0 0 24 24', width: 24, height: 24, 'aria-hidden': 'true', focusable: 'false' });
             svg.append(svgNode('path', { d: path })); return svg;
@@ -479,7 +529,7 @@
         const reset = button(doc, 'reset', confirmReset); reset.className = 'mynt-pomo-reset';
         reset.title = t('reset'); reset.setAttribute('aria-label', t('reset'));
         reset.replaceChildren(icon('M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 16.22 7.78L13 11h7V4z'));
-        controls.append(toggle, reset); main.append(controls);
+        controls.append(toggle, reset); dock.append(controls);
         let resetPrompt = null;
         function dismissReset() {
             if (!resetPrompt) return;
@@ -499,7 +549,7 @@
         }
         const options = el(doc, 'details', '', 'mynt-pomo-options');
         const summary = el(doc, 'summary', t('options')); options.append(summary);
-        const taskLabel = el(doc, 'label', t('task')); const task = el(doc, 'input'); task.type = 'text'; task.maxLength = 200; task.placeholder = t('task');
+        const taskLabel = el(doc, 'label'); const taskCaption = el(doc, 'span', t('task')); taskLabel.append(taskCaption); const task = el(doc, 'input'); task.type = 'text'; task.maxLength = 200; task.placeholder = t('task');
         taskLabel.append(task); task.addEventListener('change', () => run('setTask', task.value));
         const secondary = el(doc, 'div', '', 'mynt-pomo-secondary');
         const close = button(doc, 'close', () => win.close());
@@ -530,10 +580,130 @@
             });
             compact.className = 'mynt-pomo-compact'; secondary.append(compact);
         }
-        options.append(taskLabel, secondary, el(doc, 'p', t('note'), 'mynt-pomo-note'));
-        main.append(options, note); doc.body.append(main);
+        const durationFields = {};
+        const durationError = el(doc, 'p', '', 'mynt-pomo-note'); durationError.id = 'myntPomoDurationError'; durationError.setAttribute('role', 'alert');
+        const durations = el(doc, 'div', '', 'mynt-pomo-durations');
+        for (const [key, max] of [['workMinutes', 120], ['shortBreakMinutes', 60], ['longBreakMinutes', 60]]) {
+            const label = el(doc, 'label'), caption = el(doc, 'span', t(key)), input = el(doc, 'input');
+            input.type = 'number'; input.min = '1'; input.max = String(max); input.step = '1'; input.required = true;
+            input.setAttribute('aria-describedby', durationError.id);
+            input.addEventListener('change', async () => {
+                const value = Number(input.value);
+                if (!input.value.trim() || !Number.isInteger(value) || value < 1 || value > max) {
+                    input.setAttribute('aria-invalid', 'true'); durationError.textContent = t('durationError'); return;
+                }
+                try {
+                    if (disconnected || win.closed) return;
+                    if (await window.myntPomodoro.setDurations({ [key]: value }) === false) throw Error('Rejected duration');
+                    input.setAttribute('aria-invalid', 'false');
+                    durationError.textContent = Object.values(durationFields).some(({ input }) => input.getAttribute('aria-invalid') === 'true') ? t('durationError') : '';
+                } catch (_) { input.setAttribute('aria-invalid', 'true'); durationError.textContent = t('durationError'); }
+            });
+            label.append(caption, input); durations.append(label); durationFields[key] = { input, caption };
+        }
+        const optionsNote = el(doc, 'p', t('note'), 'mynt-pomo-note');
+        options.append(taskLabel, durations, durationError, secondary, optionsNote);
+        const audioRow = el(doc, 'div', '', 'mynt-pomo-audio');
+        const musicRow = el(doc, 'div', '', 'mynt-pomo-music-row');
+        const ambientRow = el(doc, 'div', '', 'mynt-pomo-ambient-row');
+        const music = window.myntPomoMusic;
+        const ambient = window.myntAmbientAudio;
+        const panelAmbientSelect = document.getElementById('pomodoroAmbientSelect');
+        const ambientTypes = ambient?.types || [];
+        const ambientChoice = () => {
+            let saved;
+            try { saved = localStorage.getItem('myntAmbientType'); } catch (_) { /* use the panel or player */ }
+            // Storage first: another tab may have changed the choice while this tab's panel select went stale.
+            return [saved, panelAmbientSelect?.value, ambient?.getState().type].find(type => ambientTypes.includes(type)) || 'rain';
+        };
+        const audioButton = (className, path, action) => {
+            const node = el(doc, 'button', '', className); node.type = 'button'; node.append(icon(path));
+            listen(node, 'click', action); return node;
+        };
+        const equalizer = () => {
+            const node = el(doc, 'span', '', 'mynt-pomo-equalizer'); node.setAttribute('aria-hidden', 'true');
+            node.append(el(doc, 'i'), el(doc, 'i'), el(doc, 'i')); return node;
+        };
+        let musicBusy = false;
+        async function controlMusic(next = false) {
+            if (musicBusy || disconnected || win.closed) return;
+            musicBusy = true;
+            try {
+                if (!next && music.getPlayback().playing) music.pauseImmediate();
+                else {
+                    const tracks = music.getTracks(), selected = music.getPlayback().selectedId;
+                    const index = tracks.findIndex(track => track.id === selected);
+                    const id = tracks[next ? (index + 1) % tracks.length : Math.max(0, index)]?.id;
+                    const result = id && await music.play(id);
+                    if (!result?.playing || result.selectedId !== id) { setNote('audioError'); return; }
+                }
+                if (noteKey === 'audioError') setNote('');
+            } catch (_) { setNote('audioError'); }
+            finally { musicBusy = false; renderAudio(); }
+        }
+        const musicButton = audioButton('mynt-pomo-audio-toggle', playPath, () => controlMusic());
+        const nextButton = audioButton('mynt-pomo-next', 'M6 18l8.5-6L6 6v12zM16 6v12h2V6z', () => controlMusic(true));
+        const trackText = el(doc, 'div', '', 'mynt-pomo-track');
+        const trackName = el(doc, 'span', '', 'mynt-pomo-track-name'), musicIndicator = equalizer();
+        trackText.append(trackName, musicIndicator); musicRow.append(musicButton, trackText, nextButton);
+        const ambientSelect = el(doc, 'select', '', 'mynt-pomo-ambient-select');
+        for (const kind of ['nature', 'noise']) {
+            const group = el(doc, 'optgroup'); group.setAttribute('data-ambient-group', kind);
+            for (const type of ambientTypes.filter(type => ['whitenoise', 'pink', 'brown'].includes(type) === (kind === 'noise'))) {
+                const option = el(doc, 'option'); option.value = type; group.append(option);
+            }
+            ambientSelect.append(group);
+        }
+        async function controlAmbient(action) {
+            if (disconnected || win.closed) return;
+            try {
+                if (await action() === false) setNote('audioError');
+                else if (noteKey === 'audioError') setNote('');
+            } catch (_) { setNote('audioError'); }
+            finally { renderAudio(); }
+        }
+        const ambientButton = audioButton('mynt-pomo-audio-toggle', playPath, () => controlAmbient(() => ambient.toggle(ambientChoice())));
+        listen(ambientSelect, 'change', () => controlAmbient(() => {
+            const type = ambientSelect.value;
+            if (!ambientTypes.includes(type)) throw Error('Invalid ambient type');
+            localStorage.setItem('myntAmbientType', type);
+            if (panelAmbientSelect) panelAmbientSelect.value = type;
+            if (ambient.getState().playing) return ambient.play(type);
+        }));
+        if (panelAmbientSelect) listen(panelAmbientSelect, 'change', renderAudio);
+        listen(window, 'storage', event => {
+            if (event.key !== 'myntAmbientType' && event.key !== null) return;
+            if (panelAmbientSelect && ambientTypes.includes(event.newValue)) panelAmbientSelect.value = event.newValue;
+            renderAudio();
+        });
+        const ambientIndicator = equalizer(); ambientRow.append(ambientButton, ambientSelect, ambientIndicator);
+        audioRow.append(musicRow, ambientRow);
+        function renderTransport(row, button, indicator, playing, label) {
+            row.classList.toggle('is-playing', !!playing); indicator.hidden = !playing;
+            button.firstChild.firstChild.setAttribute('d', playing ? pausePath : playPath);
+            button.setAttribute('aria-label', label); button.title = label;
+            button.setAttribute('aria-pressed', String(!!playing));
+        }
+        function renderAudio() {
+            if (disconnected || win.closed) return;
+            const state = music?.getPlayback(), tracks = music?.getTracks() || [];
+            const track = tracks.find(item => item.id === state?.selectedId) || tracks[0];
+            musicRow.hidden = !tracks.length; nextButton.hidden = tracks.length < 2;
+            trackName.textContent = (track?.name || '').replace(/\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm)$/i, '');
+            trackName.title = track?.name || '';
+            renderTransport(musicRow, musicButton, musicIndicator, state?.playing, `${t(state?.playing ? 'musicPause' : 'musicPlay')}: ${trackName.textContent}`);
+            nextButton.title = t('musicNext'); nextButton.setAttribute('aria-label', t('musicNext'));
+            ambientRow.hidden = !ambient;
+            const ambientState = ambient?.getState(), type = ambientState?.playing && ambientTypes.includes(ambientState.type) ? ambientState.type : ambientChoice();
+            if (panelAmbientSelect) panelAmbientSelect.value = type;
+            ambientSelect.value = type; ambientSelect.setAttribute('aria-label', t('ambientType'));
+            relabelAmbient(ambientSelect);
+            renderTransport(ambientRow, ambientButton, ambientIndicator, ambientState?.playing, `${t(ambientState?.playing ? 'ambientPause' : 'ambientPlay')}: ${t('ambient_' + type)}`);
+            audioRow.hidden = musicRow.hidden && ambientRow.hidden;
+        }
+        dock.append(audioRow, options); main.append(note); doc.body.append(main);
         const render = state => {
-            if (!state || win.closed) return;
+            if (!state || win.closed || disconnected) return;
             const seconds = Math.max(0, Math.ceil(state.timeRemaining));
             timer.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
             phase.textContent = t(state.phase);
@@ -542,16 +712,45 @@
             progress.classList.toggle('running', !!state.isRunning);
             progress.style.strokeDashoffset = String(progressOffset(state.timeRemaining, state.totalTime));
             const rounds = state.durations?.roundsBeforeLong;
-            round.textContent = `${t('round')} ${state.currentRound}${rounds ? ` / ${rounds}` : ''}`;
+            const count = window.myntPomodoro.getContext?.().sessionsToday ?? 0;
+            round.textContent = `${t('round')} ${state.currentRound}${rounds ? ` / ${rounds}` : ''} · ${t('today')} ${count}`; round.title = round.textContent;
+            for (const [key, { input }] of Object.entries(durationFields)) if (doc.activeElement !== input && input.getAttribute('aria-invalid') !== 'true') input.value = state.durations?.[key] ?? '';
             if (doc.activeElement !== task) task.value = state.task || '';
             taskPreview.textContent = state.task || ''; taskPreview.hidden = !state.task; taskPreview.title = state.task || '';
             const label = t(state.isRunning ? 'pause' : 'start');
             toggleLabel.textContent = label; toggle.setAttribute('aria-label', label); toggle.title = label;
             toggleIcon.firstChild.setAttribute('d', state.isRunning ? pausePath : playPath);
         };
-        render(window.myntPomodoro.getState()); unsubscribe = window.myntPomodoro.subscribe(render);
+        const refresh = () => { render(window.myntPomodoro.getState()); renderAudio(); };
+        function relabel() {
+            if (disconnected || win.closed) return;
+            relabelAmbient(panelAmbientSelect);
+            doc.documentElement.lang = document.documentElement.lang; doc.documentElement.dir = document.documentElement.dir;
+            doc.title = heading.textContent = t('float'); summary.textContent = t('options'); taskCaption.textContent = task.placeholder = t('task');
+            for (const button of main.querySelectorAll('button')) {
+                const key = button.getAttribute('data-pomo-label');
+                if (button === toggle || button === musicButton || button === ambientButton || button === nextButton) continue;
+                if (button === reset) { button.title = t('reset'); button.setAttribute('aria-label', t('reset')); }
+                else if (key) button.textContent = t(key);
+            }
+            for (const [key, { caption }] of Object.entries(durationFields)) caption.textContent = t(key);
+            if (durationError.textContent) durationError.textContent = t('durationError');
+            if (resetPrompt) { resetPrompt.setAttribute('aria-label', t('resetConfirm')); resetPrompt.querySelector('p').textContent = t('resetConfirm'); }
+            optionsNote.textContent = t('note');
+            if (noteKey) setNote(noteKey, noteQuiet);
+            refresh();
+        }
+        refresh();
+        cleanups.push(window.myntPomodoro.subscribe(render));
+        if (music?.subscribe) cleanups.push(music.subscribe(renderAudio));
+        for (const event of ['mynt:ambient-state', 'mynt:pomodoro-complete']) listen(document, event, refresh);
+        listen(document, 'mynt:language-changed', relabel);
+        const languageObserver = new MutationObserver(relabel); languageObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir'] });
+        cleanups.push(() => languageObserver.disconnect());
+        const cleanup = () => { disconnected = true; for (const fn of cleanups.splice(0)) fn(); };
+        unsubscribe = cleanup;
         win.addEventListener('pagehide', () => clearFloat(win), { once: true });
-        doc.addEventListener('keydown', event => {
+        listen(doc, 'keydown', event => {
             if (!isDismissKey(event)) return;
             event.preventDefault();
             // The inline prompt remains dismissible after tabbing to another control.
@@ -559,35 +758,41 @@
             else if (options.open) { options.open = false; summary.focus(); }
             else win.close();
         });
-        doc.addEventListener('visibilitychange', syncFloatVideo);
+        listen(doc, 'visibilitychange', syncFloatVideo);
         const disconnect = () => {
+            cleanup();
             if (!win.closed && ordinary) {
                 setNote('disconnected');
-                for (const field of main.querySelectorAll('button,input')) if (field !== close) field.disabled = true;
+                for (const field of main.querySelectorAll('button,input,select')) if (field !== close) field.disabled = true;
                 if (floatVideo) floatVideo.pause();
             }
         };
-        window.addEventListener('pagehide', disconnect, { once: true });
-        win.addEventListener('pagehide', () => window.removeEventListener('pagehide', disconnect), { once: true });
+        listen(window, 'pagehide', disconnect);
         renderAppearance();
     }
     async function openFloat(ordinary) {
         if (opening) return;
         if (floating && !floating.closed) { floating.focus(); return; }
-        if (!window.myntPomodoro) { status.textContent = t('unsupported'); return; }
-        if (!ordinary && !window.documentPictureInPicture?.requestWindow) { status.textContent = t('unsupported'); return; }
+        if (!window.myntPomodoro) { setStatus(t('unsupported')); return; }
+        if (!ordinary && !window.documentPictureInPicture?.requestWindow) { setStatus(t('unsupported')); return; }
         if (unsubscribe) { unsubscribe(); unsubscribe = null; }
         opening = true;
         try {
             // Initial placement is a supported hint, not a guarantee: browsers may clamp size.
             // https://developer.chrome.com/docs/web-platform/document-picture-in-picture
             const win = ordinary ? window.open('', 'myntPomodoroFloat', 'popup,width=320,height=420') : await window.documentPictureInPicture.requestWindow(pipOptions());
-            if (!win) { status.textContent = t('blocked'); return; }
-            floating = win; constructFloat(win, ordinary); status.textContent = ordinary ? t('note') : '';
-        } catch (_) { if (floating) { floating.close(); clearFloat(floating); } status.textContent = t('unsupported'); }
+            if (!win) { setStatus(t('blocked')); return; }
+            floating = win; constructFloat(win, ordinary); setStatus(ordinary ? t('note') : '');
+        } catch (_) { if (floating) { floating.close(); clearFloat(floating); } setStatus(t('unsupported')); }
         finally { opening = false; }
     }
+    function relabelAmbient(select) {
+        if (!select) return;
+        for (const option of select.querySelectorAll('option')) option.textContent = t('ambient_' + option.value);
+        for (const group of select.querySelectorAll('optgroup')) group.label = t('ambient_' + group.getAttribute('data-ambient-group'));
+    }
     function init() {
+        relabelAmbient(document.getElementById('pomodoroAmbientSelect'));
         const connectAnchor = () => installPanelAnchor(window.myntPomodoro, document.getElementById('pomodoroPanel'), document.getElementById('pomodoroCont'), window);
         // defer 腳本可能早於計時器的 DOMContentLoaded 初始化執行。
         if (window.myntPomodoro?.open) connectAnchor();
@@ -604,7 +809,7 @@
         const observer = new MutationObserver(renderAppearance);
         for (const target of [document.body, document.documentElement]) observer.observe(target, { attributes: true, attributeFilter: ['style', 'class'] });
         for (const query of ['(prefers-reduced-motion: reduce)', '(forced-colors: active)']) window.matchMedia?.(query).addEventListener('change', renderAppearance);
-        imageStore('get').then(async blob => { if (blob) setImage(await decodeImage(blob)); }).catch(() => { if (settings.mode === 'image') status.textContent = t('missing'); });
+        imageStore('get').then(async blob => { imageStored = !!blob; syncForm(); if (blob) setImage(await decodeImage(blob)); }).catch(() => { if (settings.mode === 'image') setStatus(t('missing')); });
         window.addEventListener('storage', event => { if (event.key === KEY) { try { settings = validate(JSON.parse(event.newValue) || defaults); renderAppearance(); syncForm(); } catch (_) { /* ignore corrupt input */ } } });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true }); else init();

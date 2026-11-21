@@ -6,7 +6,7 @@ const tools=[
  {name:'mynt_workspace_get',description:'Read workspace application state without opening URLs.',inputSchema:obj({})},
  {name:'mynt_workspace_apply',description:'Apply saved workspace visibility and future timer settings without URLs or video playback. Quote-visibility changes require browser action.',inputSchema:obj({id:{type:'string',maxLength:64}}),write:true},
  {name:'mynt_ambient_get',description:'Read actual ambient audio type, playback and volume.',inputSchema:obj({})},
- {name:'mynt_ambient_control',description:'Control generated local ambient sound; browser autoplay may require action.',inputSchema:obj({action:{type:'string',enum:['play','stop','volume']},type:{type:'string',enum:['rain','ocean','whitenoise','campfire']},volume:{type:'number',minimum:0,maximum:1}}),write:true},
+ {name:'mynt_ambient_control',description:'Control generated local ambient sound; browser autoplay may require action.',inputSchema:obj({action:{type:'string',enum:['play','stop','volume']},type:{type:'string',enum:root.myntAmbientAudio?.types||['rain','thunder','ocean','stream','wind','forest','night','campfire','whitenoise','pink','brown']},volume:{type:'number',minimum:0,maximum:1}}),write:true},
  {name:'mynt_appearance_get',description:'Read automatic palette/contrast/opacity options. No automatic positioning exists.',inputSchema:obj({})},
  {name:'mynt_appearance_update',description:'Update only palette, contrast and opacity booleans, never positions.',inputSchema:obj({color:{type:'boolean'},contrast:{type:'boolean'},opacity:{type:'boolean'}}),write:true},
  {name:'mynt_study_quote_get',description:'Read the current bundled public study quote.',inputSchema:obj({})},

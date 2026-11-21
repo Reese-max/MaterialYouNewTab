@@ -19,10 +19,12 @@ function setSliderPosition(percentage) {
     opacityLevel.textContent = `${localizeNumbers(Math.round(posPercent).toString(), currentLanguage)}%`;
     document.documentElement.style.setProperty("--transparency", `${Math.round(posPercent)}%`);
     localStorage.setItem("bgOpacity", posPercent);
+    opacityBar.setAttribute("aria-valuenow", String(Math.round(posPercent)));
 }
 
 // Handle drag or click interaction on opacity bar
 function handleDrag(e) {
+    document.dispatchEvent(new CustomEvent("mynt:manual-opacity"));
     const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
     const rect = opacityBar.getBoundingClientRect();
     let newPos = isRTL
@@ -57,3 +59,17 @@ function startDrag() {
 // Initialize with saved opacity value or default to 90%
 const savedOpacity = localStorage.getItem("bgOpacity") || 90;
 setSliderPosition(Number(savedOpacity));
+
+opacityBar.tabIndex = 0;
+opacityBar.setAttribute("role", "slider");
+opacityBar.setAttribute("aria-labelledby", "opacityTitle");
+opacityBar.setAttribute("aria-valuemin", "20");
+opacityBar.setAttribute("aria-valuemax", "100");
+opacityBar.addEventListener("keydown", event => {
+    const value = Number(localStorage.getItem("bgOpacity") || 90);
+    const next = { ArrowLeft: value - 1, ArrowDown: value - 1, ArrowRight: value + 1, ArrowUp: value + 1, Home: 20, End: 100 }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    document.dispatchEvent(new CustomEvent("mynt:manual-opacity"));
+    setSliderPosition(next);
+});

@@ -45,11 +45,11 @@
         return new Promise((resolve, reject) => {
             const transaction = d.transaction(STORE, mode);
             const store = transaction.objectStore(STORE);
-            let result;
-            Promise.resolve(fn(store)).then(r => { result = r; });
+            let result, failure;
+            Promise.resolve().then(() => fn(store)).then(r => { result = r; }, error => { failure = error; transaction.abort(); });
             transaction.oncomplete = () => resolve(result);
-            transaction.onerror = () => reject(transaction.error);
-            transaction.onabort = () => reject(transaction.error);
+            transaction.onerror = () => reject(failure || transaction.error);
+            transaction.onabort = () => reject(failure || transaction.error);
         });
     }
     const reqP = req => new Promise((resolve, reject) => { req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); });
@@ -58,6 +58,14 @@
     async function allItems(includeRemoved = false) {
         const items = await tx("readonly", store => reqP(store.getAll()));
         return (items || []).filter(item => includeRemoved || !item.removedAt).sort((a, b) => a.added - b.added);
+    }
+    async function updateItems(items, change) {
+        return tx("readwrite", store => Promise.all(items.map(async snapshot => {
+            const latest = await reqP(store.get(snapshot.id));
+            if (!latest || latest.source !== snapshot.source) throw Error("Wallpaper changed");
+            const updated = change({ ...latest }, snapshot);
+            store.put(updated);
+        })));
     }
     // Items that take part in next/random/rotate (hidden built-ins excluded).
     async function listItems() {
@@ -173,6 +181,9 @@
     async function applyItem(item, { persist = true, beforeMutation } = {}) {
         if (beforeMutation) beforeMutation();
         if (!item || item.removedAt) return false;
+        try { await validateMedia(item); }
+        catch (error) { setStatus(t("wallpaperDecodeError", "This media could not be loaded. Your previous background is unchanged.")); return false; }
+        if (beforeMutation) beforeMutation();
         if (item.type === "video") {
             const v = ensureVideo();
             const src = item.blob ? URL.createObjectURL(item.blob) : item.src;
@@ -226,6 +237,31 @@
     }
 
     // ---------- Add items ----------
+    async function validateMedia(item) {
+        const url = item.blob ? URL.createObjectURL(item.blob) : item.src;
+        if (!url) throw Error("Missing media");
+        const media = item.type === "video" ? document.createElement("video") : new Image();
+        let timeout;
+        try {
+            await new Promise((resolve, reject) => {
+                timeout = setTimeout(() => reject(Error("Media timeout")), 8000);
+                media.onerror = () => reject(Error("Media decode failed"));
+                if (item.type === "video") {
+                    media.muted = true; media.preload = "auto";
+                    media.onloadeddata = () => media.videoWidth && media.videoHeight ? resolve() : reject(Error("Empty video"));
+                    media.src = url;
+                } else {
+                    media.src = url;
+                    media.decode().then(() => media.naturalWidth && media.naturalHeight ? resolve() : reject(Error("Empty image")), reject);
+                }
+            });
+        } finally {
+            clearTimeout(timeout);
+            media.onerror = media.onloadeddata = null;
+            if (item.type === "video") { media.pause(); media.removeAttribute("src"); media.load(); }
+            if (item.blob) URL.revokeObjectURL(url);
+        }
+    }
     function videoThumb(blobOrSrc) {
         return new Promise(resolve => {
             const v = document.createElement("video");
@@ -258,6 +294,7 @@
             if (!ok) return null;
         }
         const item = { id: newId(), type: isVideo ? "video" : "image", source: "upload", blob, name: name || "", added: Date.now() };
+        await validateMedia(item);
         if (isVideo) item.thumb = await videoThumb(blob);
         await putItem(item);
         return item;
@@ -266,32 +303,39 @@
     async function addFiles(fileList) {
         const files = Array.from(fileList || []);
         let last = null;
+        let added = 0, failed = 0;
         for (const file of files) {
-            try { last = (await addBlob(file, file.name)) || last; } catch (e) { console.warn("MYNT wallpaper add failed", e); }
+            try {
+                const item = await addBlob(file, file.name);
+                if (item) { last = item; added++; } else failed++;
+            } catch (e) { failed++; console.warn("MYNT wallpaper add failed", e); }
         }
         await renderGallery();
         if (last) await applyItem(last);
-        setStatus(t("wallpaperAdded", "Added") + " " + files.length);
+        setStatus(t("wallpaperAdded", "Added") + " " + added + (failed ? " · " + t("wallpaperImportFailed", "Could not add {count} file(s). Please retry.").replace("{count}", failed) : ""));
     }
 
     async function addUrl(url) {
         url = (url || "").trim();
         if (!/^https?:\/\//i.test(url)) { setStatus(t("wallpaperInvalidUrl", "Enter an http(s) URL")); return; }
         const looksVideo = /\.(mp4|webm)(\?|#|$)/i.test(url);
-        let item = null;
+        let item = null, blob;
         try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(String(res.status));
-            const blob = await res.blob();
-            item = await addBlob(blob, url.split("/").pop());
-        } catch (e) {
-            // CORS or network failure: keep a URL reference instead of a stored copy.
-            item = { id: newId(), type: looksVideo ? "video" : "image", source: "url", src: url, name: url, added: Date.now() };
-            if (looksVideo) item.thumb = await videoThumb(url);
-            await putItem(item);
-        }
-        await renderGallery();
-        if (item) await applyItem(item);
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(String(res.status));
+                blob = await res.blob();
+            } catch (e) { /* A cross-origin reference still has to decode before it is saved. */ }
+            if (blob) item = await addBlob(blob, url.split("/").pop());
+            else {
+                item = { id: newId(), type: looksVideo ? "video" : "image", source: "url", src: url, name: url, added: Date.now() };
+                await validateMedia(item);
+                if (looksVideo) item.thumb = await videoThumb(url);
+                await putItem(item);
+            }
+            await renderGallery();
+            if (item) await applyItem(item);
+        } catch (error) { setStatus(t("wallpaperDecodeError", "This media could not be loaded. Your previous background is unchanged.")); }
     }
 
     // ---------- Gallery UI ----------
@@ -322,8 +366,9 @@
                 if (!ok) return;
                 // Keep the original blobs in the same local database. No permanent
                 // deletion or time-limited recovery; no schema upgrade is needed.
-                await tx("readwrite", store => {
-                    for (const item of custom) store.put({ ...item, removedAt: Date.now() });
+                await updateItems(custom, item => {
+                    if (item.removedAt) throw Error("Wallpaper already removed");
+                    return { ...item, removedAt: Date.now() };
                 });
             }
             const bundled = items.filter(item => item.source === "bundled");
@@ -361,10 +406,10 @@
         try {
             const removed = (await allItems(true)).filter(item => item.removedAt && (!onlyId || item.id === onlyId));
             const restoredIds = new Set([...removed, ...undoItems].map(item => item.id));
-            await tx("readwrite", store => {
-                for (const item of removed) {
-                    const restored = { ...item }; delete restored.removedAt; store.put(restored);
-                }
+            await updateItems(removed, (item, snapshot) => {
+                if (item.removedAt !== snapshot.removedAt) throw Error("Wallpaper changed");
+                delete item.removedAt;
+                return item;
             });
             if (!onlyId && undoItems.length) {
                 const hidden = hiddenIds();
@@ -385,9 +430,14 @@
         const message = t("wallpaperRenamePrompt", "Wallpaper name");
         const name = window.myntDialog ? await window.myntDialog.prompt(message, item.name || "", { maxLength: 60 }) : window.prompt(message, item.name || "");
         if (name === null) return;
-        item.name = name.trim().slice(0, 60);
-        await putItem(item);
-        await renderGallery();
+        try {
+            await updateItems([item], (latest, snapshot) => {
+                if (latest.name !== snapshot.name || latest.removedAt !== snapshot.removedAt) throw Error("Wallpaper changed");
+                latest.name = name.trim().slice(0, 60);
+                return latest;
+            });
+            await renderGallery();
+        } catch (error) { setStatus(t("wallpaperActionError", "The change could not be completed. Your stored media have not been permanently deleted. Please try again.")); }
     }
 
     function updateSelectUi() {

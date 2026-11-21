@@ -3,7 +3,7 @@
     "use strict";
     const WORDS = {
         en: {
-            todos: "Undo task deletion", shortcuts: "Undo shortcut deletion", habits: "Undo habit deletion", busy: "Restoring…",
+            todos: "Undo task deletion", shortcuts: "Undo shortcut deletion", busy: "Restoring…",
             restored: "Restored.", invalid: "Saved or recovery data is invalid. The original data has been kept.",
             unavailable: "Undo is unavailable here. Reload this page and try again.",
             conflict: "The saved data changed. Check the current list before trying again.",
@@ -12,7 +12,7 @@
             rollback: "Undo and recovery could not finish. Keep this page open and check your saved data."
         },
         zh_TW: {
-            todos: "復原待辦刪除", shortcuts: "復原捷徑刪除", habits: "復原習慣刪除", busy: "正在復原…",
+            todos: "復原待辦刪除", shortcuts: "復原捷徑刪除", busy: "正在復原…",
             restored: "已復原。", invalid: "已儲存或復原資料格式有誤，原始資料已保留。",
             unavailable: "目前無法復原，請重新載入此頁後再試。",
             conflict: "已儲存的資料有變更，請先確認目前清單再試。",
@@ -23,8 +23,7 @@
     };
     const SETTINGS = {
         todos: { key: "myntTodoRecoveryV1", validator: "validateTodoRecovery" },
-        shortcuts: { key: "myntShortcutRecoveryV1", validator: "validateShortcutRecovery" },
-        habits: { key: "myntHabitRecoveryV1", currentKey: "myntHabits", validator: "validateHabitRecovery" }
+        shortcuts: { key: "myntShortcutRecoveryV1", validator: "validateShortcutRecovery" }
     };
 
     function create({ domain, container, before = null, focusTarget = null, validateCurrent = null }) {

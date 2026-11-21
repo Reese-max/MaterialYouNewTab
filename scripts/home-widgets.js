@@ -2,6 +2,7 @@
 (function () {
     'use strict';
     function init() {
+        if (document.documentElement.classList.contains('mynt-removed-features')) return;
         const host = document.getElementById('myntHomeWidgets');
         if (!host) return;
         const t = key => {

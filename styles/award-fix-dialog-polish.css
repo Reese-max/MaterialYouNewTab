@@ -39,19 +39,6 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
 }
 
 /* ==========================================================================
-   3. 便籤標題不換行
-   評審：窄面板時「便籤」被擠成直排「便／籤」。
-   標題設 nowrap + flex-shrink:0，縮放空間全讓給右側
-   .scratchpadHeaderActions（本身 flex-wrap:wrap，會自動折行）；
-   父層的 space-between + align-items:center 不變，維持與工具列對齊。
-   ========================================================================== */
-.scratchpadHeader h2,
-#scratchpadHeading {
-	white-space: nowrap;
-	flex-shrink: 0;
-}
-
-/* ==========================================================================
    4. 已完成待辦：刪除線＋略淡文字
    補回 text-decoration: line-through。actions 檔只對 ::before 與四枚
    操作鈕設 none（絕對定位不吃文字裝飾傳遞），不影響項目文字；

@@ -3,7 +3,7 @@
     'use strict';
     const node = typeof module === 'object' && module.exports;
     const componentCore = () => root.MYNTComponentVisibilityCore || (node && require('./component-visibility-core.js'));
-    const IDS = Object.freeze(['clock', 'weather', 'focus', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'bongo', 'scratchpad', 'studyQuote', 'motivationalQuotes', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
+    const IDS = Object.freeze(['clock', 'weather', 'search', 'searchProvider', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry', 'serviceStatus']);
     const object = (properties, required = []) => ({ type: 'object', properties, required, additionalProperties: false });
     const tools = [
         {
@@ -59,7 +59,6 @@
     }
     function enableBoundary(id) {
         if (id === 'weather') return 'Weather enablement requires the ordinary browser control because initialization may reload, request location or contact a weather service.';
-        if (id === 'motivationalQuotes') return 'External quote enablement requires the ordinary browser control because quote initialization may fetch remote content.';
         if (id === 'exam') return 'Exam enablement requires the ordinary browser control because pending question warm-up may fetch remote content.';
         if (id === 'clock' && root.document && typeof root.myntClockPreferences?.reload !== 'function') return 'The clock was not initialized at page startup. Enable it once using the ordinary browser clock control.';
         return null;

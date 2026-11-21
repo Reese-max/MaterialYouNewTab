@@ -1,0 +1,9 @@
+/* The root class is set synchronously in the document head, before first paint. */
+html.mynt-removed-features body :is(
+    #todoListCont, #todoContainer,
+    #examDaily, #examDailyPanel,
+    #myntProfilesPanel, #myntAdaptivePanel, .ttcont:has(#todoListCheckbox), .ttcont:has(#examDailyCheckbox),
+    [data-workspace-widget="todoListCheckbox"]) {
+    display: none !important;
+}
+

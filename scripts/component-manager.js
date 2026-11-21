@@ -3,11 +3,12 @@
     'use strict';
     const core = root.MYNTComponentVisibilityCore;
     if (!core || typeof document === 'undefined') return;
+    const removed = new Set(root.MYNT_REMOVED_COMPONENT_IDS || []);
     const text = (zh, en) => { try { return (localStorage.getItem('selectedLanguage') || 'zh_TW') === 'zh_TW' ? zh : en; } catch (_) { return zh; } };
     const translated = (key, zh, en) => { try { return (typeof translations !== 'undefined' && translations[localStorage.getItem('selectedLanguage') || 'zh_TW']?.[key]) || text(zh, en); } catch (_) { return text(zh, en); } };
     let panel, status, queued = false;
     const controls = new Map();
-    const clockRefreshKeys = ['clocktype', 'hideClockVisible', 'hourformat', 'greetingEnabled'];
+    const clockRefreshKeys = ['clocktype', 'hideClockVisible', 'hourformat'];
     function refresh() {
         let items;
         try { items = core.read(localStorage); } catch (_) { if (status) status.textContent = text('無法讀取設定，未變更任何資料。', 'Settings unavailable. No data was changed.'); return; }
@@ -23,12 +24,14 @@
                 : item.id === 'aiTools' ? ['aiToolsEditField'] : [];
             for (const id of settingsRows) document.getElementById(id)?.classList.toggle('inactive', !item.visible);
             for (const selector of item.selectors) for (const node of document.querySelectorAll(selector)) {
-                node.toggleAttribute('data-mynt-component-hidden', !item.visible);
-                if (item.display) { node.setAttribute('data-mynt-component-display', item.display); node.style.setProperty('--mynt-component-display', item.display); }
+                const isRemoved = removed.has(item.id);
+                node.toggleAttribute('data-mynt-component-hidden', isRemoved || !item.visible);
+                const display = isRemoved ? 'none' : item.display;
+                if (display) { node.setAttribute('data-mynt-component-display', display); node.style.setProperty('--mynt-component-display', display); }
             }
             for (const selector of item.panelSelectors) for (const node of document.querySelectorAll(selector)) node.toggleAttribute('data-mynt-component-hidden', !item.visible);
             if (item.id === 'clock') {
-                // Hide only the clock, not the sibling focus card; never rewrite layout coordinates.
+                // Hide only the clock; never rewrite layout coordinates.
                 document.getElementById('leftDiv')?.classList.remove('clock-hidden-left');
                 const digital = localStorage.getItem('clocktype') === 'digital';
                 for (const [id, show] of [['analogClock', !digital], ['digitalClock', digital]]) {
@@ -40,16 +43,11 @@
                 const node = document.getElementById('hideWeather');
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
             }
-            if (item.id === 'motivationalQuotes') {
-                const node = document.getElementById('motivationalQuotesCont');
-                if (node) node.toggleAttribute('data-mynt-component-hidden', !item.visible || localStorage.getItem('showShortcutSwitch') !== 'true');
-            }
-            if (item.id === 'focus' && item.visible) {
-                const heading = document.getElementById('userText'), actions = document.getElementById('dailyFocusActions');
-                if (heading) heading.style.display = 'block';
-                if (actions) actions.style.display = 'flex';
-            }
             if (item.id === 'exam') { const node = document.getElementById('examDaily'); if (node) node.hidden = !item.visible; }
+            // 搜尋服務列沿用 search.js 的顯示邏輯（含搜尋列圖示切換），只套用、不寫入。
+            if (item.id === 'searchProvider') root.myntSearchPreferences?.setProviderRowVisible?.(item.visible);
+            // 重新顯示時依目前服務狀態決定是否需要提示；不重建控制中心清單。
+            if (item.id === 'serviceStatus') root.myntDashboard?.refreshServiceAlert?.();
         }
         // A previously CSS-hidden, never-positioned clock can start above the viewport.
         // Apply the editor's existing bounds clamp only to that newly visible clock;
@@ -98,7 +96,7 @@
         if (id === 'studyQuote') root.myntStudy?.render();
         if (id === 'clock') refreshClock();
         refresh();
-        const hint = visible && ['weather', 'motivationalQuotes'].includes(id)
+        const hint = visible && id === 'weather'
             ? text('已顯示；如尚無內容，請到該功能設定完成啟用。', 'Shown. If empty, finish setup in that feature’s settings.')
             : text('已儲存。隱藏不會刪除資料或改變已儲存位置。', 'Saved. Hiding preserves data and saved positions.');
         status.textContent = hint;
@@ -111,7 +109,7 @@
         const summary = document.createElement('summary'); summary.textContent = translated('componentsTitle', '元件管理', 'Manage components'); panel.append(summary);
         const note = document.createElement('p'); note.textContent = text('勾選加入首頁，取消即可隱藏。資料、計時與排版會保留；設定入口永遠可用。', 'Check to show on your home page. Hiding keeps data, timers and layouts. Settings always remains available.'); panel.append(note);
         const list = document.createElement('div'); list.className = 'mynt-component-list';
-        for (const item of core.definitions) {
+        for (const item of core.definitions.filter(item => !removed.has(item.id))) {
             const label = document.createElement('label'), input = document.createElement('input'), name = document.createElement('span');
             input.type = 'checkbox'; input.id = `myntComponent-${item.id}`; name.textContent = item.id === 'homeWidgets' ? translated('homeWidgetsSetting', item.labelZh, item.labelEn) : text(item.labelZh, item.labelEn);
             input.addEventListener('change', () => { try { change(item.id, input.checked); } catch (error) { status.textContent = error.rollbackFailed ? text('瀏覽器儲存空間無法使用，部分顯示設定可能尚未回復。請勿清除資料，重新開啟後檢查。', 'Storage is unavailable; some visibility settings may not have rolled back. Do not clear data. Reopen and check.') : text('儲存失敗或資料格式異常，原有資料已保留。請重試或檢查備份。', 'Could not save, or stored data is invalid. Existing data was preserved. Retry or check your backup.'); refresh(); } });

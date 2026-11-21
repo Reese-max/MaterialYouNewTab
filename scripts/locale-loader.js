@@ -1,7 +1,7 @@
 /*
  * MYNT locale loader: load only English (fallback) + the saved language,
- * instead of all locale files on every new tab. Changing language saves the
- * choice and reloads the page, which then loads the new locale file.
+ * instead of all locale files on every new tab. languages.js loads additional
+ * packaged locales on demand when the user changes language.
  */
 (function () {
     var MYNT_LOCALE_CODES = ["en","pt","ne","es","hi","hu","zh","zh_TW","cs","it","tr","bn","vi","ru","uz","ja","ko","idn","mr","fr","az","sl","ur","de","fa","ar_SA","el","ta","th","pl","uk","sv"];

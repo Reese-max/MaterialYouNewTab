@@ -5,20 +5,21 @@
  */
 const MYNT_LAYOUT_BLOCKS = [
     ["clock", "#analogClock, #digitalClock", "layoutBlockClock", "Clock"],
-    ["focus", ".ttteexxtt", "layoutBlockFocus", "Today’s focus"],
     ["search", "#rightDiv", "layoutBlockSearch", "Search bar"],
+    ["searchWith", "#search-with-container", "layoutBlockSearchWith", "Search services"],
     ["aiTools", "#aiToolsCont", "layoutBlockAiTools", "AI tools"],
-    ["shortcuts", "#shortcutsContainer", "layoutBlockShortcuts", "Shortcuts"],
+    ["shortcuts", "#shortcutsContainer", "layoutBlockShortcuts", "Quick links"],
     ["quote", "#studyQuote", "layoutBlockQuote", "Quote"],
     ["countdowns", "#eventCountdownCard", "layoutBlockCountdowns", "Countdowns"],
     ["exam", "#examDaily", "layoutBlockExam", "Daily exam"],
     ["pomodoro", "#pomodoroCont", "layoutBlockPomodoro", "Pomodoro"],
-    ["scratchpad", "#scratchpadCont", "layoutBlockScratchpad", "Scratchpad"],
     ["homeWidgets", "#myntHomeWidgets", "layoutBlockHomeWidgets", "Today widgets"],
     ["bookmarks", "#bookmarkButton", "layoutBlockBookmarks", "Bookmarks"],
     ["wallpaper", "#wallpaperQuickActions", "layoutBlockWallpaper", "Wallpaper"],
     ["menu", "#menuButton", "layoutBlockMenu", "Settings"]
 ];
+const MYNT_REMOVED_LAYOUT_IDS = new Set(globalThis.MYNT_REMOVED_COMPONENT_IDS || []);
+const MYNT_ICON_LAYOUT_IDS = new Set(["pomodoro", "bookmarks", "wallpaper", "menu"]);
 const MYNT_LAYOUT_LIMITS = { minScale: 0.5, maxScale: 2, grid: 16, snapDistance: 8 };
 
 function myntNormalizeLayout(raw) {
@@ -35,7 +36,9 @@ function myntNormalizeLayout(raw) {
             y: num(value.y, -1, 1, 0),
             s: num(value.s, MYNT_LAYOUT_LIMITS.minScale, MYNT_LAYOUT_LIMITS.maxScale, 1)
         };
-        if (block.x || block.y || block.s !== 1) out.blocks[id] = block;
+        // Optional width/height as viewport fractions; applyBlock never lets them clip content.
+        for (const key of ["w", "h"]) if (Number.isFinite(value[key]) && value[key] > 0) block[key] = num(value[key], 0.01, 1, 1);
+        if (block.x || block.y || block.s !== 1 || block.w || block.h) out.blocks[id] = block;
     }
     return out;
 }
@@ -53,17 +56,6 @@ function myntOverlapRatio(rect, other) {
     const area = Math.max(0, Math.min(rect.right, other.right) - Math.max(rect.left, other.left))
         * Math.max(0, Math.min(rect.bottom, other.bottom) - Math.max(rect.top, other.top));
     return rect.width * rect.height > 0 ? area / (rect.width * rect.height) : 0;
-}
-
-// 只回傳顯示用偏移；原始儲存區塊不變，拖曳沿用 currentBlock 的畫面座標。
-function myntClockFallback(block, clock, focus, obstacles, controls, vw, vh) {
-    if (!focus || !obstacles.some(rect => myntOverlapRatio(clock, rect) > .2)) return { ...block };
-    let left = focus.left + (focus.width - clock.width) / 2, top = focus.top - clock.height - 16;
-    const above = { left, top, right: left + clock.width, bottom: top + clock.height, width: clock.width, height: clock.height };
-    if (top < 8 || controls.some(rect => myntOverlapRatio(above, rect) > 0)) {
-        left = focus.right + 16; top = focus.top + (focus.height - clock.height) / 2;
-    }
-    return { ...block, x: block.x + (left - clock.left) / vw, y: block.y + (top - clock.top) / vh };
 }
 
 function myntClockDatePosition(clock, width, height, obstacles, vw) {
@@ -124,7 +116,7 @@ function myntLayoutHistory(initial, limit = 100) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { MYNT_LAYOUT_BLOCKS, MYNT_LAYOUT_LIMITS, myntNormalizeLayout, myntClampOffset, myntSnapMove, myntLayoutHistory, myntOverlapRatio, myntClockFallback, myntClockDatePosition };
+    module.exports = { MYNT_LAYOUT_BLOCKS, MYNT_LAYOUT_LIMITS, myntNormalizeLayout, myntClampOffset, myntSnapMove, myntLayoutHistory, myntOverlapRatio, myntClockDatePosition };
 }
 
 if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", () => {
@@ -146,6 +138,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     let guideLayer = null, resizeObserver = null, frame = null;
     let preciseFields = null, warnings = null;
     const overlays = new Map();
+    // In-memory only: the toolbar keeps its place and size for this tab without writing storage.
+    const toolbarUi = { x: null, y: null, collapsed: false };
+    let minimizeButton = null, moreBox = null;
     let draft=null,editScope=null;
     try { if(typeof MyntLayoutDraft!=='undefined')draft=MyntLayoutDraft.create(sessionStorage,myntNormalizeLayout); } catch {}
     function checkpoint(){
@@ -235,12 +230,20 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         setting?.setAttribute("aria-describedby", "layoutEditInfo myntLayoutSaveStatus");
         announce(t("layoutDragGuard", "Drag handles are available only in edit mode"));
     }
-    const elementsFor = selector => [...document.querySelectorAll(selector)];
+    // Centered home fixes the search bar and the whole pill row; their wrappers have no usable box.
+    const elementsFor = selector => {
+        if (selector === "#rightDiv" && document.getElementById("searchbar")) selector = "#searchbar";
+        if (document.getElementById("quickLinksRow")) {
+            if (selector === "#shortcutsContainer") selector = "#quickLinksRow";
+            else if (selector === "#aiToolsCont") return [];
+        }
+        return [...document.querySelectorAll(selector)];
+    };
     const visible = el => {
         const style = getComputedStyle(el), rect = el.getBoundingClientRect();
         return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
     };
-    const elementFor = id => elementsFor(MYNT_LAYOUT_BLOCKS.find(item => item[0] === id)[1]).find(visible);
+    const elementFor = id => MYNT_REMOVED_LAYOUT_IDS.has(id) ? null : elementsFor(MYNT_LAYOUT_BLOCKS.find(item => item[0] === id)[1]).find(visible);
     function currentBlock(id, el) {
         const saved = layout.blocks[id] || { x: 0, y: 0, s: 1 };
         const pixels = (el.style.translate || "0 0").split(/\s+/).map(parseFloat);
@@ -249,6 +252,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function applyBlock(id, settle = true) {
         const entry = MYNT_LAYOUT_BLOCKS.find(item => item[0] === id), block = layout.blocks[id];
         for (const el of elementsFor(entry[1])) {
+            clearSize(el);
             if (!block) {
                 el.style.removeProperty("translate"); el.style.removeProperty("scale"); el.style.removeProperty("transform-origin");
                 delete el.dataset.myntLayout; delete el.dataset.myntLayoutConstrained;
@@ -257,6 +261,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             el.dataset.myntLayout = id;
             el.style.transformOrigin = "0 0";
             el.style.scale = "1";
+            applySize(el, block);
             const natural = el.getBoundingClientRect();
             const fit = Math.min(block.s, (innerWidth - 32) / Math.max(1, natural.width), (innerHeight - 120) / Math.max(1, natural.height));
             el.style.scale = String(Math.max(0.1, fit));
@@ -270,6 +275,47 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
         if (settle) settleClock();
     }
+    const SIZE_PROPS = ["box-sizing", "width", "min-width", "max-width", "height", "min-height", "max-height"];
+    const savedSize = new WeakMap();
+    function clearSize(el) {
+        const saved = savedSize.get(el);
+        if (!saved) return;
+        for (const prop of SIZE_PROPS) el.style.setProperty(prop, saved[prop].value, saved[prop].priority);
+        savedSize.delete(el);
+    }
+    function applySize(el, block) {
+        if (!block.w && !block.h) return;
+        const saved = {};
+        for (const prop of SIZE_PROPS) saved[prop] = { value: el.style.getPropertyValue(prop), priority: el.style.getPropertyPriority(prop) };
+        savedSize.set(el, saved);
+        const set = (prop, value) => el.style.setProperty(prop, value, "important");
+        set("box-sizing", "border-box");
+        // A smaller saved size only trims empty space: the width floor is the content on its
+        // current lines (inputs keep their width), and height stays auto so new content still fits.
+        if (block.w) {
+            const natural = el.offsetWidth;
+            // shortcut: text fields may shrink to a fixed 120px; make it per-field if a block needs wider inputs.
+            const fields = [...el.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea")].filter(field => field.offsetWidth);
+            const fieldSlack = fields.reduce((sum, field) => sum + Math.max(0, field.offsetWidth - 120), 0);
+            set("min-width", "0"); set("max-width", "none");
+            set("width", "max-content"); const oneLine = el.offsetWidth;
+            set("width", "min-content");
+            const floor = Math.max(el.offsetWidth, Math.min(oneLine, natural), fields.length ? natural - fieldSlack : 0);
+            set("width", `${Math.max(floor, block.w * innerWidth)}px`);
+        }
+        if (block.h) { set("max-height", "none"); set("height", "auto"); set("min-height", `${block.h * innerHeight}px`); }
+    }
+    // Drag/keys change one side only: the opposite edge stays put, measured from the gesture start.
+    function resizeAxis(id, el, axis, px, base = currentBlock(id, el), start = el.getBoundingClientRect()) {
+        const viewport = axis === "w" ? innerWidth : innerHeight;
+        layout.blocks[id] = { ...base, [axis]: Math.min(1, Math.max(1, px) / viewport) };
+        applyBlock(id);
+        const r = el.getBoundingClientRect(), b = layout.blocks[id];
+        if (axis === "w") b.x = Math.max(-1, Math.min(1, base.x + (start.left - r.left) / innerWidth));
+        else b.y = Math.max(-1, Math.min(1, base.y + (start.top - r.top) / innerHeight));
+        b[axis] = Math.min(1, (axis === "w" ? el.offsetWidth : el.offsetHeight) / viewport);
+        applyBlock(id);
+    }
     function settleClock() {
         // 同一輪先定位所有遮擋區塊，再以存檔位置判斷；不把回退寫入 layout。
         applyBlock("clock", false);
@@ -282,13 +328,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
         const clock = elementFor("clock");
         if (!clock) return;
-        const peers = ["focus", "search", "aiTools"].map(elementFor).filter(Boolean).map(el => el.getBoundingClientRect());
-        const focus = elementFor("focus"), block = layout.blocks.clock;
-        if (block) {
-            const controls = elementsFor("#pomodoroCont, #scratchpadCont, #myntProfilesPanel").filter(visible).map(el => el.getBoundingClientRect());
-            const display = myntClockFallback(currentBlock("clock", clock), clock.getBoundingClientRect(), focus?.getBoundingClientRect(), peers, controls, innerWidth, innerHeight);
-            clock.style.translate = `${display.x * innerWidth}px ${display.y * innerHeight}px`;
-        }
+        const peers = ["search", "aiTools"].map(elementFor).filter(Boolean).map(el => el.getBoundingClientRect());
         const date = clock.querySelector(".mynt-clock-date");
         if (!date) return;
         const rect = clock.getBoundingClientRect(), scale = rect.width / clock.offsetWidth;
@@ -344,6 +384,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const sx = event.clientX, sy = event.clientY, pointerId = event.pointerId;
         const peers = MYNT_LAYOUT_BLOCKS.filter(item => item[0] !== id).map(item => elementFor(item[0])).filter(Boolean).map(item => item.getBoundingClientRect());
         let moved = false;
+        const unscaled = { w: el.offsetWidth, h: el.offsetHeight }, visualScale = rect.width / Math.max(1, el.offsetWidth);
         const move = e => {
             if (e.pointerId !== pointerId) return;
             const dx = e.clientX - sx, dy = e.clientY - sy;
@@ -355,6 +396,10 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 const clamped = myntClampOffset(shifted, result.dx, result.dy, innerWidth, innerHeight);
                 layout.blocks[id] = { ...base, x: (base.x * innerWidth + clamped.x) / innerWidth, y: (base.y * innerHeight + clamped.y) / innerHeight };
                 showGuides(result.guides.filter(g => g.axis === "x" ? Math.abs(clamped.x - result.dx) < 0.5 : Math.abs(clamped.y - result.dy) < 0.5));
+            } else if (mode === "width" || mode === "height") {
+                const axis = mode === "width" ? "w" : "h";
+                resizeAxis(id, el, axis, unscaled[axis] + (axis === "w" ? dx : dy) / visualScale, base, rect);
+                placeOverlays(); return;
             } else {
                 const ratio = Math.max((rect.width + dx) / rect.width, (rect.height + dy) / rect.height);
                 const scale = Math.min(MYNT_LAYOUT_LIMITS.maxScale, Math.max(MYNT_LAYOUT_LIMITS.minScale, base.s * ratio));
@@ -394,6 +439,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function buildOverlays() {
         for (const entry of MYNT_LAYOUT_BLOCKS) {
             const [id] = entry, name = blockName(entry), overlay = document.createElement("div");
+            if (MYNT_REMOVED_LAYOUT_IDS.has(id) || (id === "aiTools" && document.getElementById("quickLinksRow"))) continue;
             overlay.className = "myntLayoutOverlay"; overlay.dataset.block = id;
             overlay.setAttribute("role", "group"); overlay.setAttribute("aria-label", name);
             const handle = button("", `⠿ ${name}`);
@@ -409,14 +455,35 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             resize.addEventListener("pointerdown", e => startDrag(e, id, "resize"));
             resize.addEventListener("focus", () => select(id));
             overlay.addEventListener("keydown", e => {
-                if (editing && !layout.locked && !activeDrag && ["+", "=", "-", "_"].includes(e.key)) {
+                const axis = e.target?.dataset?.axis, keys = axis === "w" ? ["ArrowLeft", "ArrowRight"] : ["ArrowUp", "ArrowDown"];
+                if (axis && editing && !layout.locked && !activeDrag && keys.includes(e.key)) {
+                    e.preventDefault(); e.stopPropagation(); select(id);
+                    const el = elementFor(id); if (!el) return;
+                    const step = (e.shiftKey ? 10 : 1) * (e.key === keys[1] ? 1 : -1);
+                    resizeAxis(id, el, axis, (axis === "w" ? el.offsetWidth : el.offsetHeight) + step);
+                    placeOverlays(); recordChange();
+                } else if (editing && !layout.locked && !activeDrag && ["+", "=", "-", "_"].includes(e.key)) {
                     e.preventDefault(); e.stopPropagation(); select(id);
                     const b = { ...(layout.blocks[id] || { x: 0, y: 0, s: 1 }) };
                     b.s = Math.round(Math.min(2, Math.max(0.5, b.s + (["-", "_"].includes(e.key) ? -0.05 : 0.05))) * 100) / 100;
                     layout.blocks[id] = b; applyBlock(id); placeOverlays(); recordChange();
                 } else nudge(e, id);
             });
-            overlay.append(handle, resize); document.body.append(overlay); overlays.set(id, overlay);
+            overlay.append(handle, resize);
+            // Icon-sized controls have no empty space to trim; only content blocks get side handles.
+            if (!MYNT_ICON_LAYOUT_IDS.has(id)) for (const [axis, mode, glyph, key, fallback] of [
+                ["w", "width", "↔", "layoutWidthAria", "Change width of {name}; Left/Right arrows 1px, Shift 10px"],
+                ["h", "height", "↕", "layoutHeightAria", "Change height of {name}; Up/Down arrows 1px, Shift 10px"]
+            ]) {
+                const side = button("", glyph);
+                side.removeAttribute("id"); side.className = `myntLayoutResize myntLayoutResize-${axis}`; side.dataset.axis = axis;
+                side.setAttribute("aria-label", t(key, fallback, { name }));
+                side.title = t("layoutSideHint", "Drag to change only this direction; content is never cut off");
+                side.addEventListener("pointerdown", e => startDrag(e, id, mode));
+                side.addEventListener("focus", () => select(id));
+                overlay.append(side);
+            }
+            document.body.append(overlay); overlays.set(id, overlay);
         }
     }
     function changeHistory(direction) {
@@ -449,23 +516,25 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             layout.blocks[selected]={...b,s:scale};applyBlock(selected);
             r=el.getBoundingClientRect();b=currentBlock(selected,el);x=(innerWidth-r.width)/2;
         }
-        layout.blocks[selected]={x:Math.max(-1,Math.min(1,b.x+(x-r.left)/innerWidth)),y:Math.max(-1,Math.min(1,b.y+(y-r.top)/innerHeight)),s:scale};
+        layout.blocks[selected]={...b,x:Math.max(-1,Math.min(1,b.x+(x-r.left)/innerWidth)),y:Math.max(-1,Math.min(1,b.y+(y-r.top)/innerHeight)),s:scale};
         applyBlock(selected);placeOverlays();recordChange();
     }
     function buildToolbar() {
         toolbar = document.createElement("section"); toolbar.id = "myntLayoutToolbar";
         toolbar.setAttribute("aria-label", t("layoutToolbarLabel", "Layout editing tools"));
-        toolbar.dataset.dock = "bottom";
+        toolbar.dataset.dock = toolbarUi.x === null ? "corner" : "free";
         const top = document.createElement("div"); top.className = "myntLayoutToolbarRow";
         const title = document.createElement("strong"); title.textContent = t("layoutEditSetting", "Edit layout");
-        const dockToggle = button("myntLayoutDockToggle", t("layoutDockTop", "Dock at top"), () => {
-            const atTop = toolbar.dataset.dock !== "top";
-            toolbar.dataset.dock = atTop ? "top" : "bottom";
-            dockToggle.textContent = atTop ? t("layoutDockBottom", "Dock at bottom") : t("layoutDockTop", "Dock at top");
-            dockToggle.setAttribute("aria-pressed", String(atTop));
+        // Laptop screens leave no free margin beside centred blocks, so the toolbar stays small, collapsible and movable.
+        const grip = button("myntLayoutToolbarGrip", "⠿");
+        grip.setAttribute("aria-label", t("layoutToolbarMove", "Move toolbar; arrow keys move it, Shift moves faster"));
+        grip.title = t("layoutToolbarMoveHint", "Drag to move the toolbar; blocks stay in place");
+        grip.addEventListener("pointerdown", startToolbarDrag);
+        grip.addEventListener("keydown", e => {
+            const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (!d) return;
+            e.preventDefault(); e.stopPropagation(); const step = e.shiftKey ? 40 : 10; moveToolbar(d[0] * step, d[1] * step);
         });
-        dockToggle.setAttribute("aria-pressed", "false");
-        dockToggle.title = t("layoutDockHint", "Move the toolbar to reveal covered handles; workspace blocks stay in place.");
+        minimizeButton = button("myntLayoutMinimize", "", () => setToolbarCollapsed(!toolbarUi.collapsed));
         undoButton = button("myntLayoutUndo", t("layoutUndo", "↶ Undo"), () => changeHistory("undo"));
         redoButton = button("myntLayoutRedo", t("layoutRedo", "↷ Redo"), () => changeHistory("redo"));
         undoButton.setAttribute("aria-keyshortcuts", "Control+z Meta+z"); redoButton.setAttribute("aria-keyshortcuts", "Control+Shift+z Meta+Shift+z Control+y");
@@ -475,7 +544,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         snapLabel.append(snapBox, document.createTextNode(t("layoutSnapAlignment", "Align / 16px grid")));
         const cancel = button("myntLayoutCancel", t("dialogCancel", "Cancel"), cancelEditing);
         const done = button("myntLayoutSave", t("layoutSaveLock", "Save and lock"), () => { activeDrag?.finish(); save(); }); done.className = "primary";
-        top.append(title, dockToggle, undoButton, redoButton, snapLabel, cancel, done);
+        top.append(grip, title, minimizeButton);
+        const actions = document.createElement("div"); actions.className = "myntLayoutToolbarRow myntLayoutActions";
+        actions.append(undoButton, redoButton, cancel, done);
         const bottom = document.createElement("div"); bottom.className = "myntLayoutToolbarRow myntLayoutHelp";
         selectedLabel = document.createElement("span");
         resetSelectedButton = button("myntLayoutResetSelected", t("layoutResetSelected", "Reset selected"), () => {
@@ -483,7 +554,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             delete layout.blocks[selected]; applyBlock(selected); placeOverlays(); recordChange();
         });
         const reset = button("myntLayoutReset", t("layoutResetAll", "Reset all"), async () => {
-            const message = t("layoutResetDraftConfirm", "Reset all block positions? You can undo or cancel before saving. Notes and tasks will not be deleted.");
+            const message = t("layoutResetDraftConfirm", "Reset all block positions? You can undo or cancel before saving. Tasks will not be deleted.");
             if (!(window.myntDialog ? await window.myntDialog.confirm(message) : window.confirm(message))) return;
             if (!editing) return;
             layout.blocks = {}; applyAll(); recordChange();
@@ -500,7 +571,36 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         }
         row.append(button('myntLayoutPreciseApply',t('layoutApplyNumbers','Apply values'),()=>preciseChange()),button('myntLayoutAlignLeft',t('layoutAlignLeft','Align left'),()=>preciseChange('left')),button('myntLayoutAlignCenter',t('layoutAlignCenter','Center horizontally'),()=>preciseChange('center')));
         warnings=document.createElement('p');warnings.id='myntLayoutWarnings';warnings.setAttribute('role','status');precise.append(row,warnings);
-        toolbar.append(top, bottom, precise, status); document.body.append(toolbar);
+        moreBox = document.createElement("details"); moreBox.className = "myntLayoutMore";
+        const moreSummary = document.createElement("summary"); moreSummary.textContent = t("layoutMoreOptions", "More options");
+        moreBox.append(moreSummary, snapLabel, bottom, precise);
+        moreBox.addEventListener("toggle", clampToolbar); // keep an expanded panel inside the viewport
+        toolbar.append(top, actions, status, moreBox); document.body.append(toolbar);
+        setToolbarCollapsed(toolbarUi.collapsed);
+        if (toolbarUi.x !== null) placeToolbar(toolbarUi.x, toolbarUi.y);
+    }
+    function placeToolbar(x, y) {
+        if (!toolbar) return;
+        const w = toolbar.offsetWidth || 0, h = toolbar.offsetHeight || 0;
+        toolbarUi.x = Math.max(8, Math.min(innerWidth - w - 8, x)); toolbarUi.y = Math.max(8, Math.min(innerHeight - h - 8, y));
+        toolbar.dataset.dock = "free"; toolbar.style.left = toolbarUi.x + "px"; toolbar.style.top = toolbarUi.y + "px";
+    }
+    function moveToolbar(dx, dy) { const r = toolbar.getBoundingClientRect(); placeToolbar(r.left + dx, r.top + dy); }
+    function clampToolbar() { if (toolbarUi.x !== null) placeToolbar(toolbarUi.x, toolbarUi.y); }
+    function startToolbarDrag(e) {
+        if (e.button !== 0 || !toolbar) return;
+        e.preventDefault(); const r = toolbar.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top;
+        const move = ev => placeToolbar(ev.clientX - ox, ev.clientY - oy);
+        const end = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", end); removeEventListener("pointercancel", end); };
+        addEventListener("pointermove", move); addEventListener("pointerup", end); addEventListener("pointercancel", end);
+    }
+    function setToolbarCollapsed(on) {
+        toolbarUi.collapsed = on; toolbar.dataset.collapsed = String(on);
+        minimizeButton.textContent = on ? "▢" : "–";
+        minimizeButton.setAttribute("aria-expanded", String(!on));
+        const label = on ? t("layoutToolbarExpand", "Expand toolbar") : t("layoutToolbarCollapse", "Collapse toolbar");
+        minimizeButton.setAttribute("aria-label", label); minimizeButton.title = label;
+        clampToolbar();
     }
     function closeEditor() {
         activeDrag?.cancel();
@@ -512,7 +612,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         toolbar?.remove(); toolbar = null; guideLayer?.remove(); guideLayer = null;
         resizeObserver?.disconnect(); resizeObserver = null;
         if (frame !== null) cancelAnimationFrame(frame); frame = null;
-        removeEventListener("scroll", scheduleOverlays, true); removeEventListener("resize", scheduleOverlays);
+        removeEventListener("scroll", scheduleOverlays, true); removeEventListener("resize", scheduleOverlays); removeEventListener("resize", clampToolbar);
         editButton.setAttribute("aria-expanded", "false"); dock.hidden = true;
         (document.getElementById("layoutEditInfo")?.parentElement || dock).append(status);
         lockStatus.textContent = layout.locked ? t("layoutPositionsLocked", "Positions locked") : t("layoutEditOff", "Edit mode off");
@@ -546,8 +646,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const help=document.createElement('p');help.textContent=t('layoutGuideText','Drag the handles, use arrows for 1px steps (Shift: 10px), or hold Alt while dragging to bypass snapping. Undo and Cancel are safe; Save and lock commits your layout.');
         let seen=false;try{seen=localStorage.getItem('myntLayoutGuideSeen')==='1';}catch{}guide.open=!seen;
         const dismiss=button('myntGuideDismiss',t('layoutGuideDismiss','Got it'),()=>{guide.open=false;try{localStorage.setItem('myntLayoutGuideSeen','1');}catch{}});
-        guide.append(heading,help,dismiss);toolbar.append(guide);
-        addEventListener("scroll", scheduleOverlays, true); addEventListener("resize", scheduleOverlays);
+        guide.append(heading,help,dismiss);moreBox.append(guide);
+        addEventListener("scroll", scheduleOverlays, true); addEventListener("resize", scheduleOverlays); addEventListener("resize", clampToolbar);
         if (typeof ResizeObserver !== "undefined") {
             resizeObserver = new ResizeObserver(scheduleOverlays);
             MYNT_LAYOUT_BLOCKS.forEach(([, selector]) => elementsFor(selector).forEach(el => resizeObserver.observe(el)));

@@ -8,8 +8,8 @@
 
 
 // Get the current language from localStorage
-const currentLanguage = localStorage.getItem("selectedLanguage") || "en";
-const isRTL = rtlLanguages.includes(currentLanguage);
+let currentLanguage = localStorage.getItem("selectedLanguage") || "en";
+let isRTL = rtlLanguages.includes(currentLanguage);
 
 // ------------Showing & Hiding Menu-bar ---------------
 const menuButton = document.getElementById("menuButton");
@@ -204,8 +204,11 @@ document.addEventListener("click", event => {
 /* ------ Shortcut Page Transitions & Animations ------ */
 
 // When clicked, open new page by sliding it in from the right.
+// Short laptop screens scroll the overview, so the editor would otherwise open mid-list.
+let overviewScrollTop = 0;
 shortcutEditButton.onclick = () => {
     menuRevision++;
+    overviewScrollTop = optCont.scrollTop;
     queueMenu(() => {
         shortcutEditPage.style.display = "block"
     });
@@ -215,6 +218,7 @@ shortcutEditButton.onclick = () => {
     });
     queueMenu(() => {
         frameMenu(() => {
+            optCont.scrollTop = 0;
             shortcutEditPage.style.transform = "translateX(0)"
             shortcutEditPage.style.opacity = "1"
         });
@@ -237,6 +241,7 @@ backButton.onclick = () => {
     });
     queueMenu(() => {
         frameMenu(() => {
+            optCont.scrollTop = overviewScrollTop;
             overviewPage.style.transform = "translateX(0)";
             overviewPage.style.opacity = "1";
         });
