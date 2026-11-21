@@ -746,6 +746,7 @@ if (typeof document !== "undefined") {
             { id: "todo", label: "commandTodo", info: "commandTodoInfo", run: () => ensureWidget("todoListCheckbox", "todoListCont", "#todoContainer") },
             { id: "exam-today", label: "commandExamToday", info: "commandExamTodayInfo", searchText: "exam 考古題", run: () => window.open(myntExamArchiveUrl(localStorage.getItem("myntExamArchiveUrl")), "_blank", "noopener") },
             { id: "pomodoro", label: "commandPomodoro", info: "commandPomodoroInfo", run: () => ensureWidget("pomodoroCheckbox", "pomodoroCont", "#pomodoroPanel") },
+            { id: "study-quotes", label: "commandStudyQuotes", info: "commandStudyQuotesInfo", searchText: "quotes 鼓勵語 語錄 匯入 標籤", run: () => window.myntStudyQuotesManager?.open() },
             { id: "bookmarks", label: "commandBookmarks", info: "commandBookmarksInfo", run: () => document.getElementById("bookmarkButton").click() },
             { id: "aiTools", label: "commandAiTools", info: "commandAiToolsInfo", run: () => ensureWidget("aiToolsCheckbox", "aiToolsIcon", "#toolsCont") },
                         { id: "ambientAudio", label: "commandAmbientAudio", info: "commandAmbientAudioInfo", run: () => globalThis.myntAmbientAudio?.toggle() },
