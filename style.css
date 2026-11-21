@@ -5827,6 +5827,11 @@ body[data-bg="wallpaper"] .dropdown-content {
 	fill: #bbb;
 }
 
+/* High contrast paints the bar Canvas; keep the magnifier on the system link colour like every other accent icon. */
+html.myntHighContrast.black-theme #searchIconDark {
+	fill: LinkText;
+}
+
 .black-theme .dropdown-item.selected:not(*[data-default]):before {
 	background-color: #707070;
 }

@@ -3,6 +3,11 @@ body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) .searchbar, 
 body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #date, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchQ, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchQ::placeholder, body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #studyQuoteText { color:var(--adaptive-text,#213851); }
 body[data-adaptive-color="on"] #enterBtn { background:var(--adaptive-accent,#3569ac);color:var(--adaptive-accent-text,#fff); }
 body[data-adaptive-color="on"] .accentColor { fill:var(--adaptive-accent,#3569ac); }
+/* The black theme greys its magnifier (#bbb) for its own dark bar. Once the adaptive surface replaces that bar it is
+   often near-white, where #bbb fell to about 1.7:1, so pair the icon with the surface it actually sits on:
+   the validated adaptive accent when automatic colour is on, otherwise the adaptive text colour. */
+html.black-theme body:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchIconDark { fill:var(--adaptive-text,#213851); }
+html.black-theme body[data-adaptive-color="on"]:is([data-adaptive-contrast="on"],[data-adaptive-opacity="on"]) #searchIconDark { fill:var(--adaptive-accent,#3569ac); }
 body[data-adaptive-color="on"] .micIcon, body[data-adaptive-color="on"] .aiModeIcon { color:var(--adaptive-accent,#3569ac); }
 #myntAdaptivePanel { position:fixed; z-index:2147483003; right:24px; top:100px; font:13px/1.5 system-ui; color:#213851; max-width:calc(100vw - 32px); }
 #myntAdaptivePanel summary { cursor:pointer; background:#eef5ff; border:1px solid #fff; border-radius:14px; padding:9px 14px; width:max-content; margin-left:auto; box-shadow:0 4px 20px #243c561a; }
