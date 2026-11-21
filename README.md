@@ -127,6 +127,20 @@ zen.urlbar.replace-newtab
 
 and set it to `false`.
 
+### Tablets and phones (web version) / 平板與手機（網頁版）
+
+Browser extensions cannot be installed in Chrome or Safari on iPad, or in Chrome on Android tablets. Use the web version instead; the **Deploy web preview** workflow publishes it from `main` to:
+
+```text
+https://reese-max.github.io/MaterialYouNewTab/
+```
+
+The repository owner enables this once: **Settings → Pages → Build and deployment → Source: GitHub Actions**, then re-run **Deploy web preview** in Actions.
+
+On the tablet, open the address and either set it as the browser home page or use **Share → Add to Home Screen** (Safari) / **Add to home screen** (Chrome). Search, shortcuts, AI tools, Pomodoro, encouragement lines, wallpapers, themes, weather, countdowns and backup/restore work as on the desktop. A web page cannot replace the browser's New Tab page, read browser bookmarks or fetch site icons through the extension's favicon permission. Data stays in that browser only; to move your setup, use **Backup** on the desktop and **Restore** on the tablet.
+
+平板（iPad 的 Chrome／Safari、Android 平板的 Chrome）不能安裝擴充功能，請改用上方網址的網頁版：設成瀏覽器首頁，或用「分享 → 加入主畫面」。網頁版無法取代新分頁、讀取瀏覽器書籤或自動抓網站圖示；資料只存在該瀏覽器，可用電腦上的「備份」再到平板「還原」搬過去。
+
 ## Upstream store builds
 
 If you prefer the upstream stable release instead of this customized fork, use the official upstream listings below:

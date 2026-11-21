@@ -89,20 +89,23 @@
         collapseButton.setAttribute("aria-label", "收合或展開預覽狀態");
         collapseButton.setAttribute("aria-expanded", "true");
         collapseButton.textContent = "—";
+        const setCollapsed = collapsed => {
+            badge.classList.toggle("is-collapsed", collapsed);
+            collapseButton.setAttribute("aria-expanded", String(!collapsed));
+            collapseButton.textContent = collapsed ? "+" : "—";
+        };
+        // Remember the choice so a page used every day is not covered again on each visit.
         collapseButton.addEventListener("click", () => {
-            badge.classList.toggle("is-collapsed");
-            const expanded = !badge.classList.contains("is-collapsed");
-            collapseButton.setAttribute("aria-expanded", String(expanded));
-            collapseButton.textContent = expanded ? "—" : "+";
+            const collapsed = !badge.classList.contains("is-collapsed");
+            setCollapsed(collapsed);
+            try { localStorage.setItem("myntWebPreviewBadgeCollapsed", collapsed ? "1" : "0"); } catch { /* per-visit only */ }
         });
 
         badge.append(dot, copy, verifyLink, collapseButton);
         document.body.appendChild(badge);
-        if (matchMedia("(max-width: 640px)").matches) {
-            badge.classList.add("is-collapsed");
-            collapseButton.setAttribute("aria-expanded", "false");
-            collapseButton.textContent = "+";
-        }
+        let saved = null;
+        try { saved = localStorage.getItem("myntWebPreviewBadgeCollapsed"); } catch { /* storage may be blocked */ }
+        setCollapsed(saved === null ? matchMedia("(max-width: 640px)").matches : saved === "1");
         return badge;
     }
 

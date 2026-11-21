@@ -2,11 +2,13 @@
     color-scheme: light dark;
 }
 
+/* Top center: the corners hold the pomodoro, bookmarks, Google Apps, gallery and settings buttons. */
 #mynt-web-preview-badge {
     position: fixed;
     z-index: 2147483647;
-    top: 12px;
-    right: 12px;
+    top: max(12px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 8px;
