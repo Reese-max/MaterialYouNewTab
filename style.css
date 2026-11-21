@@ -7190,14 +7190,16 @@ body[data-workspace-background="wallpaper"] {
 }
 
 .black-theme .workspaceEditorField input,
-.black-theme .workspaceEditorField select {
+.black-theme .workspaceEditorField select,
+.black-theme .workspaceEditorField textarea {
 	background: rgba(255, 255, 255, 0.08);
 	color: #ffffff;
 	border-color: rgba(255, 255, 255, 0.15);
 }
 
 .black-theme .workspaceEditorField input:focus,
-.black-theme .workspaceEditorField select:focus {
+.black-theme .workspaceEditorField select:focus,
+.black-theme .workspaceEditorField textarea:focus {
 	border-color: #a8c7fa;
 	box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.25);
 }
@@ -7286,6 +7288,17 @@ html.myntHighContrast .sectionOuter {
 html.myntHighContrast button {
 	background: ButtonFace !important;
 	color: ButtonText !important;
+}
+
+/* Black-theme surfaces must not leak into high contrast: they left white fields on Canvas and black text on
+   dark service rows in the control center. Fields and rows follow the system colours like everything else. */
+html.myntHighContrast.black-theme :is(.controlSettingRow select, .workspaceEditorField input, .workspaceEditorField select, .workspaceEditorField textarea, .serviceRow) {
+	background: Canvas;
+	color: CanvasText;
+}
+
+html.myntHighContrast.black-theme :is(.controlSectionHeading a, .sectionStatus) {
+	color: LinkText;
 }
 
 @media (pointer: coarse) {
