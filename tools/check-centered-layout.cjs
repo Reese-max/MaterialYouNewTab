@@ -53,6 +53,10 @@ for (const [, selectors, declarations] of pomodoroRules) {
     assert.doesNotMatch(fixedColors, /background(?:-color)?\s*:[^;}]*#f7f7f7/i, `Pomodoro panel surfaces must use --mynt-pomo-panel-bg, not a fixed light color: ${selectors.trim()}`);
 }
 assert.match(centeredCss, /html\.black-theme\.mynt-removed-features body \{[^}]*--mynt-pomo-panel-bg:\s*#1b1f27;/, 'Black theme needs a dark pomodoro panel base.');
+// The search bar is fixed to the optical center; the provider row must be anchored with it, or it drifts onto
+// the bar on tall screens (an upright iPad). Manual layouts and the editor still position it themselves.
+assert.match(centeredCss, /html\.mynt-removed-features body:not\(\.mynt-layout-editing\):not\(:has\(\[data-mynt-layout\]\)\) #search-with-container \{[^}]*position: fixed !important;[^}]*inset: calc\(50vh - 30px\) auto auto 50% !important;/, 'Provider row sits in the gap under the fixed search bar.');
+assert.match(centeredCss, /html\.mynt-removed-features body #searchbar \{ scale: none !important; \}/, 'The legacy phone 2x scale must not enlarge the centered search bar.');
 assert.match(centeredCss, /body:is\(\[data-adaptive-contrast="on"\], \[data-adaptive-opacity="on"\]\) :is\(#pomodoroCont, #googleAppsCont, #bookmarkButton, #wallpaperGalleryBtn, #menuButton\) \{[^}]*--mynt-fab-ink: var\(--mynt-ink\)/, 'Corner icons on adaptive surfaces must use the paired adaptive ink.');
 const full = storage({ [api.KEY]: JSON.stringify(fresh()) }); const originalSet = full.setItem; full.setItem = (key, value) => { if (key === api.KEY) throw Error('QuotaExceededError'); originalSet.call(full, key, value); };
 assert.equal(api.migrate(full), false); assert.equal(full.getItem(api.FLAG), null, 'A failed profile write must leave the migration pending.');
