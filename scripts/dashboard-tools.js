@@ -41,6 +41,7 @@ if (typeof document !== "undefined") {
         const KEYS = {
             accessibility: "myntAccessibility",
             serviceStatus: "myntServiceStatus",
+            serviceAlert: "myntServiceStatusPillVisible",
             workspace: "myntWorkspacePreset",
             workspaces: "myntWorkspacePresets"
         };
@@ -85,7 +86,8 @@ if (typeof document !== "undefined") {
                 "permissionNotificationsTitle", "permissionNotificationsInfo", "permissionLocationTitle",
                 "permissionLocationInfo", "privacyDisclosureWeather", "privacyDisclosureIp",
                 "privacyDisclosureLocal", "serviceStatusTitle",
-                "serviceStatusInfo", "commandPaletteTitle", "commandPaletteEmpty"
+                "serviceStatusInfo", "serviceAlertToggleText", "serviceAlertToggleInfo",
+                "commandPaletteTitle", "commandPaletteEmpty"
             ];
             sameKeyIds.forEach(id => {
                 const element = document.getElementById(id);
@@ -188,17 +190,39 @@ if (typeof document !== "undefined") {
                 list.appendChild(row);
             });
 
+            updateServiceAlert();
+        }
+
+        function serviceAlertEnabled() {
+            // 只有明確的 "false" 會關閉；缺值或格式異常時維持預設顯示，且不改寫資料。
+            try { return localStorage.getItem(KEYS.serviceAlert) !== "false"; } catch { return true; }
+        }
+
+        // 首頁提示只讀取既有狀態，不重建控制中心清單（避免 aria-live 重複朗讀）。
+        function updateServiceAlert() {
             const pill = document.getElementById("serviceStatusPill");
             const pillText = document.getElementById("serviceStatusPillText");
+            if (!pill || !pillText) return;
             const recentError = Object.values(serviceState).some(saved =>
                 ["error", "offline"].includes(saved?.status) && Date.now() - saved.at < 15 * 60 * 1000
             );
 
-            pill.hidden = navigator.onLine && !recentError;
+            // 使用者可在元件管理或控制中心關閉首頁提示；狀態清單與本機紀錄照常更新。
+            pill.hidden = !serviceAlertEnabled() || (navigator.onLine && !recentError);
             pill.classList.toggle("serviceWarning", navigator.onLine && recentError);
             pillText.textContent = navigator.onLine
                 ? t("serviceIssuePill", "Service issue")
                 : t("serviceOfflineMode", "Offline mode");
+        }
+
+        const serviceAlertCheckbox = document.getElementById("serviceStatusPillCheckbox");
+        if (serviceAlertCheckbox) {
+            serviceAlertCheckbox.checked = serviceAlertEnabled();
+            // 元件管理會監聽 document change 事件並同步首頁與設定中的勾選狀態。
+            serviceAlertCheckbox.addEventListener("change", () => {
+                localStorage.setItem(KEYS.serviceAlert, String(serviceAlertCheckbox.checked));
+                updateServiceAlert();
+            });
         }
 
         window.addEventListener("online", renderServiceStatus);
@@ -1019,7 +1043,8 @@ if (typeof document !== "undefined") {
             getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
             getWorkspacePresets: () => JSON.parse(JSON.stringify(workspaces)),
             reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); workspaceBaseline=localStorage.getItem(KEYS.workspaces); renderWorkspace(); },
-            reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); }
+            reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); },
+            refreshServiceAlert: updateServiceAlert
         };
         window.MyntStorageSync?.watch([KEYS.workspaces, KEYS.workspace], () => {
             window.myntDashboard.reloadWorkspaces();

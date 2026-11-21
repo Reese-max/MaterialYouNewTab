@@ -18,6 +18,9 @@
         entry('clock', '時鐘', 'Clock', 'hideClockVisible', 'inverse', true, 'hideClock', ['#analogClock', '#digitalClock', '#date']),
         entry('weather', '天氣', 'Weather', 'hideWeatherVisible', 'inverse', true, 'hideWeatherCheckbox', ['#hideWeather']),
         entry('search', '搜尋列', 'Search bar', 'myntSearchVisible', 'boolean', true, null, ['#searchbar', '#search-with-container'], { newPreference: true }),
+        // 沿用設定「隱藏搜尋服務列」的既有偏好；列本身由 search.js 以 visibility 隱藏，
+        // 保留版面位置，因此這裡不登錄 selector，避免與「搜尋列」的 display 隱藏互相覆寫。
+        entry('searchProvider', '搜尋服務列', 'Search provider row', 'showShortcutSwitch', 'inverse', true, 'shortcut_switchcheckbox', []),
         entry('shortcuts', '網站捷徑', 'Site shortcuts', 'shortcutsCheckboxState', 'checked', false, 'shortcutsCheckbox', ['#shortcuts-section'], {
             display: 'flex', caches: [cache('shortcutsDisplayStatus'), cache('shortcutEditField', 'active', 'inactive'), cache('adaptiveIconField', 'active', 'inactive')]
         }),
@@ -46,7 +49,9 @@
         }),
         entry('galleryEntry', '桌布圖庫入口', 'Wallpaper gallery entry', 'myntGalleryEntryVisible', 'boolean', true, null, ['#wallpaperQuickActions'], { newPreference: true }),
         entry('profilesEntry', '排版設定檔入口', 'Layout profiles entry', 'myntProfilesEntryVisible', 'boolean', true, null, ['#myntProfilesPanel'], { newPreference: true }),
-        entry('adaptiveEntry', '自動外觀入口', 'Adaptive appearance entry', 'myntAdaptiveEntryVisible', 'boolean', true, null, ['#myntAdaptivePanel'], { newPreference: true })
+        entry('adaptiveEntry', '自動外觀入口', 'Adaptive appearance entry', 'myntAdaptiveEntryVisible', 'boolean', true, null, ['#myntAdaptivePanel'], { newPreference: true }),
+        // 只隱藏首頁右下角的提示；控制中心的服務狀態清單與本機紀錄不受影響。
+        entry('serviceStatus', '服務狀態提示', 'Service status alert', 'myntServiceStatusPillVisible', 'boolean', true, 'serviceStatusPillCheckbox', ['#serviceStatusPill'], { newPreference: true })
     ];
     for (const item of definitions) {
         item.keys = [item.key, ...item.caches.map(value => value.key), ...(item.legacyKeys || [])];

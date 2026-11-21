@@ -33,6 +33,7 @@
             "clock",
             "weather",
             "search",
+            "searchProvider",
             "shortcuts",
             "aiTools",
             "googleApps",
@@ -45,7 +46,8 @@
             "countdowns",
             "galleryEntry",
             "profilesEntry",
-            "adaptiveEntry"
+            "adaptiveEntry",
+            "serviceStatus"
           ],
           "maxLength": 40
         },

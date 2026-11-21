@@ -313,6 +313,8 @@ const en = {
     "serviceOnline": "Online",
     "serviceOfflineMode": "Offline mode",
     "serviceIssuePill": "Service issue",
+    "serviceAlertToggleText": "Show service alerts on the home page",
+    "serviceAlertToggleInfo": "Turn off to hide the bottom-right service issue / offline alert. Status here keeps updating.",
     "commandPaletteTitle": "Command palette",
     "commandPalettePlaceholder": "Search commands, bookmarks, tools, settings, or modes...",
     "commandPaletteEmpty": "No matching items",

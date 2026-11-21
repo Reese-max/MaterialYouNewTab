@@ -308,7 +308,7 @@ function isValidBackupFile(backup) {
         if (typeof MyntMcpData === "undefined" || !MyntMcpData.validateBackupStorage) return false;
         MyntMcpData.validateBackupStorage(backup.localStorage);
     } catch (_) { return false; }
-    for (const key of ["myntSearchVisible", "myntGalleryEntryVisible", "myntProfilesEntryVisible", "myntAdaptiveEntryVisible"]) {
+    for (const key of ["myntSearchVisible", "myntGalleryEntryVisible", "myntProfilesEntryVisible", "myntAdaptiveEntryVisible", "myntServiceStatusPillVisible"]) {
         if (Object.prototype.hasOwnProperty.call(backup.localStorage, key) && !["true", "false"].includes(backup.localStorage[key])) return false;
     }
     if (Object.prototype.hasOwnProperty.call(backup.localStorage, "myntComponentsMigrationV1")) {

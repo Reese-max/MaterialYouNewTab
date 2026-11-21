@@ -313,6 +313,8 @@ const zh_TW = {
     "serviceOnline": "線上",
     "serviceOfflineMode": "離線模式",
     "serviceIssuePill": "服務異常",
+    "serviceAlertToggleText": "在首頁顯示服務異常提示",
+    "serviceAlertToggleInfo": "關閉後不再於右下角顯示「服務異常／離線模式」提示，此處狀態仍會照常更新。",
     "commandPaletteTitle": "指令面板",
     "commandPalettePlaceholder": "搜尋指令、書籤、工具、設定或模式...",
     "commandPaletteEmpty": "找不到相符項目",

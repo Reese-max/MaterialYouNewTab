@@ -3,7 +3,7 @@
     'use strict';
     const node = typeof module === 'object' && module.exports;
     const componentCore = () => root.MYNTComponentVisibilityCore || (node && require('./component-visibility-core.js'));
-    const IDS = Object.freeze(['clock', 'weather', 'search', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry']);
+    const IDS = Object.freeze(['clock', 'weather', 'search', 'searchProvider', 'shortcuts', 'aiTools', 'googleApps', 'bookmarks', 'todo', 'pomodoro', 'homeWidgets', 'studyQuote', 'exam', 'countdowns', 'galleryEntry', 'profilesEntry', 'adaptiveEntry', 'serviceStatus']);
     const object = (properties, required = []) => ({ type: 'object', properties, required, additionalProperties: false });
     const tools = [
         {
