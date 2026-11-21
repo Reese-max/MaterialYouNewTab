@@ -81,6 +81,12 @@ const en = {
     "wallpaperDeleteConfirm": "Remove {name} from the gallery? You can restore removed items, including after reload. Your original files are unchanged.",
     "wallpaperRecoverableCount": "{count} removed; recoverable media still use local storage.",
     "wallpaperActionError": "The change could not be completed. Your stored media have not been permanently deleted. Please try again.",
+    "wallpaperDeleteForever": "Delete permanently",
+    "wallpaperDeleteForeverConfirm": "Permanently delete “{name}”? It is removed from this browser and cannot be restored. The original file on your device is not affected.",
+    "wallpaperDeleteForeverConfirmMany": "Permanently delete {count} wallpapers? They are removed from this browser and cannot be restored. The original files on your device are not affected.",
+    "wallpaperDeleteForeverHint": "Deletes permanently after confirmation",
+    "wallpaperDeleteBuiltinHint": "Built-in: moves to Recovery",
+    "wallpaperRemovedCount": "{count} in Recovery. Restore them here or from Recovery below.",
 
     "resetKeepsPomodoroMedia": "Resetting settings keeps your imported Pomodoro music and timer images on this browser. You can reuse them afterward or remove them individually from the music/background controls.",
     "pomoStudioDeleted": "Scenario deleted. Undo is available until reload.",

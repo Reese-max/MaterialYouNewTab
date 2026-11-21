@@ -597,3 +597,60 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 		}
 	}
 }
+
+/* ==========================================================================
+   5. 桌布圖庫（#wallpaperGalleryDialog）在深色表面上的控制項
+   黑色主題的 --whitishColor-blue（#ccc）與深色模式的白色按鈕底，搭配被調亮的文字只剩 1.0–1.4:1
+   （加入網址、網址輸入、模式、上一張／下一張、取消套用、多選、回收區復原）；刪除鈕的錯誤色
+   #b3261e 在深色卡片上僅 2.5:1。以下改為深色控制項與深色版錯誤色（#ffb4ab）。
+   ========================================================================== */
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+) #wallpaperGalleryDialog {
+	& :is(#wallpaperAddUrlBtn, #wallpaperUrlInput, #wallpaperModeSelect, #wallpaperMinutesSelect, .wallpaperNavigation button, .wallpaperToolbar button, .wallpaperRecoveryRow button:not(.wallpaperDangerBtn)) {
+		background: #2a303c;
+		color: #eef2f7;
+		border-color: rgba(255, 255, 255, 0.16);
+	}
+	& :is(#wallpaperAddUrlBtn, .wallpaperNavigation button, .wallpaperToolbar button, .wallpaperRecoveryRow button:not(.wallpaperDangerBtn)):hover {
+		background: #343b49;
+	}
+	& .wallpaperNavigation {
+		background: #2a303c;
+	}
+	& #wallpaperUrlInput::placeholder {
+		color: #abb5c2;
+		opacity: 1;
+	}
+	& :is(.wallpaperCard .wallpaperCardDelete, .wallpaperRecoveryRow .wallpaperDangerBtn) {
+		color: #ffb4ab;
+		background: rgb(255 180 171 / 0.12);
+	}
+	& :is(.wallpaperCard .wallpaperCardDelete, .wallpaperRecoveryRow .wallpaperDangerBtn):hover {
+		background: rgb(255 180 171 / 0.2);
+	}
+}
+
+/* 深色模式的設定對話框標題列（桌布、控制中心、快捷鍵說明共用）原為淺藍底配白字（1.24:1）。
+   黑色主題已有自己的深色標題列，維持不變。 */
+:is(
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+):not(.black-theme) dialog.myntDialog > .controlCenterHeader {
+	background: #232833;
+	border-bottom-color: rgba(255, 255, 255, 0.1);
+	color: #eef2f7;
+	& .controlCenterEyebrow {
+		color: #a8c7fa;
+	}
+}
