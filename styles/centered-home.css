@@ -134,6 +134,15 @@ html.mynt-removed-features body:not(.mynt-layout-editing):not(:has([data-mynt-la
     position: fixed !important; inset: calc(50vh - 30px) auto auto 50% !important; transform: translateX(-50%) !important;
     width: min(720px, calc(100vw - 32px)) !important; max-width: none !important; margin: 0 !important; z-index: 2;
 }
+/* Same cause for the weather card: in the page flow it slid under the fixed search bar on screens up to about
+   1000px tall (64-78px of its second row hidden on 1440x900 and 1280x720). Anchor its bottom 12px above the bar
+   (bar top = 50vh - 96px), keeping its workspace width. Phones and saved manual layouts keep their own placement. */
+@media (min-width: 501px) {
+    html.mynt-removed-features body:not(.mynt-layout-editing):not(:has([data-mynt-layout])) #rightDiv > #hideWeather {
+        position: fixed !important; inset: auto auto calc(50vh + 108px) 50% !important; transform: translateX(-50%) !important;
+        width: var(--workspace-width, min(720px, calc(100vw - 32px))) !important; margin: 0 !important; z-index: 1;
+    }
+}
 /* The legacy phone rule doubles the search bar (scale: 2) for the old flow layout; the centered bar is already sized. */
 html.mynt-removed-features body #searchbar { scale: none !important; }
 html.mynt-removed-features body #pomodoroCont#pomodoroCont {
