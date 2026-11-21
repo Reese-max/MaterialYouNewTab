@@ -488,6 +488,191 @@ async function main() {
         })()`);
     }
 
+    // Encouragement-line manager in the installed extension: the real dialog, extension CSP, storage, home-page pool,
+    // file import, export, keyboard close and backup validation. Only this disposable profile's data is touched.
+    async function waitForValue(expression, message, timeoutMs = 3_000) {
+        const deadline = Date.now() + timeoutMs;
+        let value;
+        while (Date.now() < deadline) {
+            value = await evaluate(expression);
+            if (value) return value;
+            await delay(50);
+        }
+        throw new Error(`${message}: ${JSON.stringify(value)}`);
+    }
+    const quoteKey = "myntStudyQuotesV1";
+    const sqDialog = `document.getElementById('studyQuotesDialog')`;
+    const sqStored = `JSON.parse(localStorage.getItem('${quoteKey}'))`;
+    const sqOpenBulk = `${sqDialog}.querySelector('.sqActions > button:nth-of-type(2)').click()`;
+    const sqBulkReady = `(() => { const f=${sqDialog}.querySelector('.sqBulk'); return !f.hidden && !!f.querySelector('.sqPreviewSummary') && !f.querySelector('button[type=submit]').disabled; })()`;
+    const sqKeyEvent = async (key, code, keyCode) => {
+        // Keys without text are sent as rawKeyDown, as Chrome's own automation does.
+        for (const type of ["rawKeyDown", "keyUp"]) await pageClient.send("Input.dispatchKeyEvent", { type, key, code, windowsVirtualKeyCode: keyCode });
+    };
+    let studyQuotes;
+    const previousPomodoroForQuotes = await evaluate(`MYNTComponentVisibilityCore.definitions.find(item=>item.id==='pomodoro').keys.map(key=>[key,localStorage.getItem(key)])`);
+    try {
+        assert.equal(await evaluate(`localStorage.getItem('${quoteKey}')`), null, "Fresh profile must start without saved encouragement lines");
+        const builtinPool = await evaluate("myntStudy.count()");
+        assert.ok(builtinPool > 0, "Built-in encouragement lines did not load");
+        await evaluate(`document.getElementById('studyQuotesManageButton').click()`);
+        await waitForValue(`${sqDialog}?.open`, "Quote manager did not open from its settings button");
+
+        // Add through the editor, then reject a near-duplicate (spacing and punctuation differ).
+        await evaluate(`(() => {
+            const d=${sqDialog}; d.querySelector('.sqActions > .sqPrimary').click();
+            const form=d.querySelector('.sqEditor'), [text,author,,tags]=form.querySelectorAll('.sqInput');
+            text.value='每天進步一點點，就是很大的進步。'; author.value='我自己'; tags.value='考試, 早起';
+            form.dispatchEvent(new Event('input',{bubbles:true})); form.querySelector('button[type=submit]').click();
+        })()`);
+        let saved = await evaluate(sqStored);
+        assert.equal(saved?.quotes?.length, 1, "Editor did not save the new line");
+        assert.deepEqual(saved.quotes[0].tags, ["考試", "早起"], "Comma-separated tags were not split");
+        assert.equal(saved.quotes[0].author, "我自己");
+        const duplicate = await evaluate(`(() => {
+            const d=${sqDialog}; d.querySelector('.sqActions > .sqPrimary').click();
+            const form=d.querySelector('.sqEditor'); form.querySelector('textarea').value='每天 進步一點點！就是很大的進步';
+            form.dispatchEvent(new Event('input',{bubbles:true})); form.querySelector('button[type=submit]').click();
+            const error=form.querySelector('.sqError').textContent; form.querySelector('.sqEditorButtons .sqSecondary').click();
+            return {error, count:${sqStored}.quotes.length, editorHidden:form.hidden};
+        })()`);
+        assert.ok(duplicate.error, "Near-duplicate line was not reported");
+        assert.equal(duplicate.count, 1, "Near-duplicate line was saved");
+        assert.equal(duplicate.editorHidden, true);
+
+        // Bulk paste: one valid tagged line, one duplicate, one over the length limit, one plain line.
+        await evaluate(`(() => {
+            ${sqOpenBulk};
+            const form=${sqDialog}.querySelector('.sqBulk'), [text,tags]=form.querySelectorAll('.sqInput');
+            tags.value='匯入';
+            text.value=['人恆過，然後能改。— 孟子《孟子·告子下》 #自省','每天 進步一點點！就是很大的進步','x'.repeat(201),'慢慢來比較快。'].join('\\n');
+            text.dispatchEvent(new Event('input',{bubbles:true}));
+        })()`);
+        await waitForValue(sqBulkReady, "Bulk paste preview did not become ready");
+        const pasteErrors = await evaluate(`${sqDialog}.querySelectorAll('.sqPreviewErrors li').length`);
+        assert.equal(pasteErrors, 1, "The over-long pasted line should be listed as an error");
+        await evaluate(`${sqDialog}.querySelector('.sqBulk button[type=submit]').click()`);
+        saved = await evaluate(sqStored);
+        assert.equal(saved.quotes.length, 3, "Bulk paste should add exactly the two new valid lines");
+        const mencius = saved.quotes.find(quote => quote.author === "孟子");
+        assert.equal(mencius?.work, "孟子·告子下", "Inline 《source》 was not parsed");
+        assert.deepEqual(mencius.tags, ["自省", "匯入"], "Inline #tag and the shared import tag were not combined");
+
+        // Real File through the file input (CSV with a header row), read under the extension CSP.
+        await evaluate(`(() => {
+            ${sqOpenBulk};
+            const input=${sqDialog}.querySelector('.sqBulk input[type=file]'), files=new DataTransfer();
+            files.items.add(new File(['句子,作者,出處,標籤\\n"天下難事，必作於易",老子,道德經,"考試,自省"\\n,,,\\n'],'quotes.csv',{type:'text/csv'}));
+            input.files=files.files; input.dispatchEvent(new Event('change',{bubbles:true}));
+        })()`);
+        await waitForValue(sqBulkReady, "CSV import preview did not become ready");
+        await evaluate(`${sqDialog}.querySelector('.sqBulk button[type=submit]').click()`);
+        saved = await evaluate(sqStored);
+        assert.equal(saved.quotes.length, 4, "CSV import did not add its one row");
+        assert.deepEqual(saved.quotes.find(quote => quote.author === "老子")?.tags, ["考試", "自省"], "CSV tags column was not split");
+
+        // Home-page categories: none selected falls back with a warning; only #考試 narrows the live pool.
+        await evaluate(`${sqDialog}.querySelector('.sqChip[data-key="*"] input').click()`);
+        assert.deepEqual((await evaluate(sqStored)).show, [], "Clearing All did not save an empty selection");
+        assert.equal(await evaluate(`!${sqDialog}.querySelector('.sqWarning').hidden`), true, "Empty selection did not warn about the fallback");
+        await evaluate(`${sqDialog}.querySelector('.sqChip[data-key="考試"] input').click()`);
+        assert.deepEqual((await evaluate(sqStored)).show, ["考試"]);
+        await waitForValue("myntStudy.count() === 2", "Home page pool did not narrow to the two #考試 lines");
+
+        // Delete with undo, and hide/show a built-in line (built-ins cannot be deleted).
+        await evaluate(`[...${sqDialog}.querySelectorAll('.sqList .sqRow')].find(row => row.querySelector('.sqText').textContent === '慢慢來比較快。').querySelector('.sqDanger').click()`);
+        assert.equal((await evaluate(sqStored)).quotes.length, 3, "Delete did not remove the line");
+        await evaluate(`${sqDialog}.querySelector('.sqUndo').click()`);
+        assert.equal((await evaluate(sqStored)).quotes.length, 4, "Undo did not restore the deleted line");
+        const builtinToggle = await evaluate(`(() => {
+            const d=${sqDialog}; d.querySelector('#studyQuotesTab-builtin').click();
+            const row=d.querySelector('.sqList .sqRow'), hide=row.querySelector('.sqSwitch input');
+            const deletable=Boolean(row.querySelector('.sqDanger'));
+            hide.click(); const hidden=${sqStored}.hiddenBuiltins.length;
+            d.querySelector('.sqList .sqRow .sqSwitch input').click(); const shown=${sqStored}.hiddenBuiltins.length;
+            d.querySelector('#studyQuotesTab-mine').click();
+            return {deletable, hidden, shown};
+        })()`);
+        assert.deepEqual(builtinToggle, { deletable: false, hidden: 1, shown: 0 }, "Built-in lines must be hide-only");
+
+        // Export JSON (blob captured instead of downloaded), then re-import it: every line is a duplicate.
+        const exported = await evaluate(`(async () => {
+            const original=HTMLAnchorElement.prototype.click; let href='', name='';
+            HTMLAnchorElement.prototype.click=function(){ href=this.href; name=this.download; };
+            try { ${sqDialog}.querySelector('.sqMenu > button:nth-child(1)').click(); }
+            finally { HTMLAnchorElement.prototype.click=original; }
+            return {name, text: href ? await (await fetch(href)).text() : ''};
+        })()`);
+        assert.match(exported.name, /^mynt-study-quotes-\d{4}-\d{2}-\d{2}\.json$/u);
+        const exportedData = JSON.parse(exported.text);
+        assert.equal(exportedData.format, "mynt-study-quotes");
+        assert.equal(exportedData.quotes.length, 4, "Export did not include every line");
+        await evaluate(`(() => {
+            ${sqOpenBulk};
+            const input=${sqDialog}.querySelector('.sqBulk input[type=file]'), files=new DataTransfer();
+            files.items.add(new File([${JSON.stringify(exported.text)}],'export.json',{type:'application/json'}));
+            input.files=files.files; input.dispatchEvent(new Event('change',{bubbles:true}));
+        })()`);
+        await waitForValue(`${sqDialog}.querySelector('.sqFileName').textContent.includes('export.json') && !!${sqDialog}.querySelector('.sqBulk .sqPreviewSummary')`, "Re-import preview did not render");
+        assert.equal(await evaluate(`${sqDialog}.querySelector('.sqBulk button[type=submit]').disabled`), true, "Re-importing an export must add nothing");
+
+        // Replace asks for confirmation and can be undone.
+        await evaluate(`(() => {
+            const form=${sqDialog}.querySelector('.sqBulk'), text=form.querySelector('.sqBulkText');
+            text.value='只剩這一句。'; form.querySelector('.sqMode input[value=replace]').click();
+            text.dispatchEvent(new Event('input',{bubbles:true}));
+        })()`);
+        // Pasting over a loaded export.json must stop parsing the new text as JSON.
+        await waitForValue(sqBulkReady, "Replace preview did not become ready after pasting over a loaded file");
+        assert.equal(await evaluate(`${sqDialog}.querySelector('.sqFileName').textContent`), "", "Replaced text still claimed to be the loaded file");
+        await evaluate(`${sqDialog}.querySelector('.sqBulk button[type=submit]').click()`);
+        await waitForValue(`document.querySelector('dialog.myntAppDialog')?.open`, "Replace did not ask for confirmation");
+        assert.equal((await evaluate(sqStored)).quotes.length, 4, "Replace changed data before confirmation");
+        await evaluate(`document.querySelector('dialog.myntAppDialog .myntAppDialogOk').click()`);
+        await waitForValue(`${sqStored}.quotes.length === 1`, "Confirmed replace did not apply");
+        await evaluate(`${sqDialog}.querySelector('.sqUndo').click()`);
+        assert.equal((await evaluate(sqStored)).quotes.length, 4, "Undo did not restore the replaced lines");
+
+        // Real Escape keys with the Pomodoro panel open underneath: the first closes a dirty editor and keeps the
+        // dialog, the second closes the dialog, and only the third reaches the Pomodoro panel.
+        const pomodoroExpanded = `document.getElementById('pomodoroCont').getAttribute('aria-expanded')==='true'`;
+        await evaluate(`(() => {
+            myntPomodoro.open();
+            const d=${sqDialog}; d.querySelector('.sqActions > .sqPrimary').click();
+            const text=d.querySelector('.sqEditor textarea'); text.value='草稿'; text.dispatchEvent(new Event('input',{bubbles:true})); text.focus();
+        })()`);
+        await sqKeyEvent("Escape", "Escape", 27);
+        await waitForValue(`${sqDialog}.querySelector('.sqEditor').hidden`, "Escape did not close the dirty editor first");
+        assert.equal(await evaluate(`${sqDialog}.open`), true, "Escape on a dirty editor closed the whole dialog");
+        await sqKeyEvent("Escape", "Escape", 27);
+        await waitForValue(`!${sqDialog}.open`, "Second Escape did not close the dialog");
+        assert.equal(await evaluate(pomodoroExpanded), true, "Escape inside a modal dialog closed the Pomodoro panel underneath");
+        await sqKeyEvent("Escape", "Escape", 27);
+        await waitForValue(`!(${pomodoroExpanded})`, "Escape with no dialog open did not close the Pomodoro panel");
+
+        // Backups carry the lines; a tampered entry is rejected by restore validation.
+        const backup = await evaluate(`(async () => {
+            const packed=await createBackup('settings'), data=JSON.parse(packed.serialized);
+            const tampered=JSON.parse(packed.serialized);
+            tampered.localStorage['${quoteKey}']=JSON.stringify({version:1,revision:0,quotes:[{id:'bad',text:'x',enabled:true}],hiddenBuiltins:[],show:null});
+            return {included:data.localStorage['${quoteKey}']===localStorage.getItem('${quoteKey}'), valid:isValidBackupFile(data), tamperedValid:isValidBackupFile(tampered)};
+        })()`);
+        assert.deepEqual(backup, { included: true, valid: true, tamperedValid: false }, "Backup did not include or validate encouragement lines");
+
+        await reloadAndWait();
+        assert.equal((await evaluate(sqStored)).quotes.length, 4, "Encouragement lines did not persist across reload");
+        await waitForValue("myntStudy.count() === 2", "Category choice did not persist across reload");
+        studyQuotes = { builtinPool, added: 4, duplicateRejected: true, csvImported: true, categoryPool: 2, undo: true, exportRoundTrip: true, pasteOverFileDropsFormat: true, replaceConfirmed: true, escapeOrderOverPomodoro: true, backupValidated: true };
+    } finally {
+        await evaluate(`(() => {
+            ${sqDialog}?.close();
+            for (const key of ['${quoteKey}','myntQuoteBag']) localStorage.removeItem(key);
+            document.dispatchEvent(new CustomEvent('mynt:study-quotes-changed'));
+            for (const [key,value] of ${JSON.stringify(previousPomodoroForQuotes)}){if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}
+            window.myntComponents.refresh();
+        })()`);
+    }
+
     const initial = await evaluate(`(() => ({
         url: location.href,
         extensionId: globalThis.chrome?.runtime?.id || "",
@@ -575,6 +760,7 @@ async function main() {
         defaultShortcuts: initial.shortcutCount,
         pomodoroTimerReload: true,
         pomodoroPanelGeometry: pomoGeometry,
+        studyQuotesManager: studyQuotes,
         wallpaperVisibilityCycles: 3,
         hiddenInitializedWallpaperStarts: true,
         reviewRegressions: review,
