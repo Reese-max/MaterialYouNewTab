@@ -28,6 +28,7 @@ for (const checkbox of ['todoListCheckbox', 'examDailyCheckbox']) {
     assert.ok(css.includes(`:has(#${checkbox})`), `settings toggle row remains visible: ${checkbox}`);
 }
 assert.ok(css.includes('[data-workspace-widget="todoListCheckbox"]'));
+assert.ok(css.includes('label:has(> [data-workspace-widget="todoListCheckbox"])'), 'The workspace editor hides the whole To-Do choice, not only its checkbox');
 const displayRule = css.slice(0, css.indexOf('\n}'));
 assert.match(displayRule, /display:\s*none\s*!important/);
 for (const selector of ['#todoListCont', '#examDaily', '#myntProfilesPanel', '#myntAdaptivePanel']) assert.ok(displayRule.includes(selector), `other removed feature must retain display:none: ${selector}`);

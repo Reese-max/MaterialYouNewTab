@@ -654,3 +654,129 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 		color: #a8c7fa;
 	}
 }
+
+/* ==========================================================================
+   6. 控制中心內容（#controlCenterDialog）在深色模式下
+   對話框位於 top layer、不受頁面反相影響；外框已是深色，但區塊、工作模式卡片、編輯器、權限按鈕與
+   服務狀態列仍使用淺色主題變數，文字卻被調亮，只剩 1.05–1.5:1（74 項中 54 項不合格）。
+   比照黑色主題既有的同一組規則，改用深色對話框的冷色系；黑色主題維持原本的暖灰配色，
+   高對比模式沿用系統色。
+   ========================================================================== */
+:is(
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+):not(.black-theme, .myntHighContrast) #controlCenterDialog {
+	& .controlSection {
+		background: #232833;
+		border-color: rgba(255, 255, 255, 0.08);
+		box-shadow: none;
+	}
+	& .controlSection:hover {
+		border-color: rgba(255, 255, 255, 0.16);
+	}
+	& :is(.controlSectionHeading a, .sectionStatus) {
+		color: #a8c7fa;
+	}
+	& :is(.controlSettingRow, .permissionRow) {
+		border-bottom-color: rgba(255, 255, 255, 0.08);
+	}
+	& :is(.controlSettingRow select, .workspaceEditorField input, .workspaceEditorField select, .workspaceEditorField textarea) {
+		background: #2a303c;
+		color: #eef2f7;
+		border-color: rgba(255, 255, 255, 0.16);
+	}
+	& :is(.controlSettingRow select, .workspaceEditorField input, .workspaceEditorField select, .workspaceEditorField textarea):focus {
+		border-color: #a8c7fa;
+		box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.25);
+	}
+	& :is(.controlSettingRow input[type="checkbox"], .workspaceWidgetChoices input) {
+		accent-color: #a8c7fa;
+	}
+	& .permissionControls button {
+		background: rgba(255, 255, 255, 0.12);
+		color: #eef2f7;
+		border-color: rgba(255, 255, 255, 0.16);
+	}
+	& .permissionControls button:hover:not(:disabled) {
+		background: #a8c7fa;
+		color: #171615;
+	}
+	& .workspacePresetCard {
+		background: #1b1f27;
+		border-color: rgba(255, 255, 255, 0.1);
+		box-shadow: none;
+	}
+	& .workspacePresetCard.active {
+		border-color: #a8c7fa;
+		box-shadow: 0 4px 14px rgba(168, 199, 250, 0.25);
+	}
+	& .workspacePresetCard .workspaceApplyBtn {
+		color: #eef2f7;
+	}
+	& .workspacePresetCard .workspaceEditBtn {
+		background: rgba(255, 255, 255, 0.12);
+		color: #eef2f7;
+	}
+	& .workspacePresetCard .workspaceEditBtn:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+	& .workspaceLaunchBtn {
+		border-color: rgba(168, 199, 250, 0.35);
+		background: rgba(168, 199, 250, 0.14);
+		color: #a8c7fa;
+	}
+	& .workspaceLaunchBtn:hover {
+		background: #a8c7fa;
+		color: #121316;
+	}
+	& .workspaceEditor {
+		border-top-color: rgba(255, 255, 255, 0.1);
+	}
+	& .workspaceWidgetChoices {
+		background: rgba(255, 255, 255, 0.04);
+		border-color: rgba(255, 255, 255, 0.1);
+	}
+	& .workspaceEditorActions button {
+		background: rgba(255, 255, 255, 0.12);
+		color: #eef2f7;
+	}
+	& .workspaceEditorActions .settingsActionBtn {
+		background: #a8c7fa;
+		color: #171615;
+	}
+	& .serviceRow {
+		background: #1b1f27;
+		border-color: rgba(255, 255, 255, 0.08);
+	}
+}
+
+/* 狀態文字原為淺色底用的 #18733c／#a82d2d，在深色區塊上只有 2.2–4.1:1；黑色主題同樣適用（高對比除外，其底色為 Canvas）。 */
+:is(
+	html.black-theme,
+	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="color"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
+	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
+	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
+):not(.myntHighContrast) #controlCenterDialog {
+	& :is(.permissionControls em.granted, .serviceState.ok) {
+		color: #81c995;
+	}
+	& :is(.permissionControls em.denied, .serviceState.error, .serviceState.offline) {
+		color: #f28b82;
+	}
+	/* 工作模式「刪除」原本被深色按鈕規則蓋成白字，失去危險操作的紅色提示。 */
+	& .workspaceEditorActions .workspaceDangerBtn {
+		background: transparent;
+		color: #f28b82;
+		border: 1px solid rgba(242, 139, 130, 0.4);
+	}
+	& .workspaceEditorActions .workspaceDangerBtn:hover {
+		background: rgba(242, 139, 130, 0.12);
+	}
+}

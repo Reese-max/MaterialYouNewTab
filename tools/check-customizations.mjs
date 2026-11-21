@@ -347,6 +347,7 @@ execFileSync(process.execPath, [resolve(root, "tools/check-component-manager.cjs
 execFileSync(process.execPath, [resolve(root, "tools/check-clock-lifecycle.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-manual-editor.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-adaptive-settings.cjs")], {stdio:"inherit"});
+execFileSync(process.execPath, [resolve(root, "tools/check-dialog-contrast.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/check-component-visibility.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-components.cjs")], {stdio:"inherit"});
 execFileSync(process.execPath, [resolve(root, "tools/regress-local-mcp-preferences.cjs")], {stdio:"inherit"});
