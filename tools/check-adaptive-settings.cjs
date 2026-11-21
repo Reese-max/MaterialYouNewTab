@@ -70,6 +70,10 @@ assert.match(css,/@media \(prefers-reduced-motion: reduce\)/);
 const highContrast=css.match(/html\.myntHighContrast body\s*\{([^}]*)\}/)?.[1]||'';
 for(const [key,value] of [['surface','Canvas'],['text','CanvasText'],['accent','LinkText'],['accent-text','Canvas']])assert.match(highContrast,new RegExp(`--adaptive-${key}: ${value} !important`),'High contrast must override sampled inline custom properties');
 assert.match(css,/html\.myntHighContrast #myntAdaptivePanel \.adaptiveContent\s*\{[^}]*background: Canvas !important; color: CanvasText !important;/);
+// The black theme's #bbb magnifier is only readable on its own dark bar; on the adaptive surface it must follow that surface.
+assert.match(css,/html\.black-theme body:is\(\[data-adaptive-contrast="on"\],\[data-adaptive-opacity="on"\]\) #searchIconDark \{ fill:var\(--adaptive-text,#213851\); \}/,'Black-theme magnifier follows the adaptive text colour on the adaptive surface');
+assert.match(css,/html\.black-theme body\[data-adaptive-color="on"\]:is\(\[data-adaptive-contrast="on"\],\[data-adaptive-opacity="on"\]\) #searchIconDark \{ fill:var\(--adaptive-accent,#3569ac\); \}/,'Black-theme magnifier uses the validated adaptive accent when automatic colour is on');
+assert.match(fs.readFileSync('style.css','utf8'),/html\.myntHighContrast\.black-theme #searchIconDark \{\s*fill: LinkText;\s*\}/,'High contrast keeps the black-theme magnifier on the system link colour');
 console.log(`ADAPTIVE_APPEARANCE_OK: ${combinations} palette/toggle combinations, actual-surface contrast, manual slider, smooth updates, and accessibility CSS`);
 // Execute panel-local Escape listener and root observer rather than just matching source.
 let escape;const panel={open:true,addEventListener(type,fn){escape=fn}};let stopped=0,focused=0;
