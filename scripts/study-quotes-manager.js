@@ -21,6 +21,7 @@
     const view = { tab: "mine", query: "", tag: "", status: "all", limit: PAGE, selected: new Set() };
     let state = core.defaultState(), intact = true, baseline = null;
     let undoSnapshot = null, editing = null, editorDirty = false;
+    let bulkName = "", bulkTimer = null, bulkPlan = null;
 
     // ----- Storage: validated writes with a freshness check against other tabs -----
     function load() {
@@ -165,7 +166,14 @@
             if (!state.hiddenBuiltins.length) return;
             commit(core.setBuiltinHidden(state, [...state.hiddenBuiltins], false), t("studyQuotesRestoredAll", "All built-in lines are shown again."));
         });
-        ui.actions.append(ui.add, ui.restoreAll);
+        ui.bulkOpen = button("sqSecondary", "", openBulk);
+        ui.exportMenu = el("details", "sqExport");
+        ui.exportSummary = el("summary", "sqSecondary");
+        ui.exportJson = button("sqMenuItem", "", () => exportAs("json"));
+        ui.exportTxt = button("sqMenuItem", "", () => exportAs("txt"));
+        const exportItems = el("div", "sqMenu"); exportItems.append(ui.exportJson, ui.exportTxt);
+        ui.exportMenu.append(ui.exportSummary, exportItems);
+        ui.actions.append(ui.add, ui.bulkOpen, ui.exportMenu, ui.restoreAll);
 
         // Editor
         ui.editor = el("form", "sqEditor"); ui.editor.hidden = true; ui.editor.noValidate = true;
@@ -210,7 +218,8 @@
         ui.list = el("ul", "sqList");
         ui.empty = el("p", "sqEmpty"); ui.empty.hidden = true;
         ui.more = button("sqSecondary sqMore", "", () => { view.limit += PAGE; renderList(); });
-        ui.panel.append(toolbar, ui.actions, ui.editor, ui.batch, listHeader, ui.list, ui.empty, ui.more);
+        ui.bulk = buildBulk();
+        ui.panel.append(toolbar, ui.actions, ui.editor, ui.bulk, ui.batch, listHeader, ui.list, ui.empty, ui.more);
 
         body.append(ui.show, ui.tabs, ui.panel);
         const footer = el("div", "sqFooter");
@@ -223,9 +232,11 @@
         // Esc closes an open editor first so a draft is not lost by accident.
         dialog.addEventListener("cancel", event => {
             if (!ui.editor.hidden && editorDirty) { event.preventDefault(); closeEditor(); }
+            else if (!ui.bulk.hidden && ui.bulkText.value.trim()) { event.preventDefault(); closeBulk(); }
         });
         dialog.addEventListener("close", () => {
             closeEditor(false);
+            closeBulk(false);
             if (opener?.isConnected) opener.focus();
             opener = null;
         });
@@ -244,6 +255,11 @@
         ui.statusFilter.setAttribute("aria-label", t("studyQuotesStatusFilter", "Filter by status"));
         ui.add.textContent = "＋ " + t("studyQuotesAdd", "Add a line");
         ui.restoreAll.textContent = t("studyQuotesRestoreAll", "Show all built-in lines");
+        ui.bulkOpen.textContent = t("studyQuotesBulk", "Paste or import");
+        ui.exportSummary.textContent = t("studyQuotesExport", "Export");
+        ui.exportJson.textContent = t("studyQuotesExportJson", "JSON (can be imported again)");
+        ui.exportTxt.textContent = t("studyQuotesExportTxt", "TXT (one line each)");
+        localizeBulk();
         const labels = { studyQuotesFieldText: "Encouragement line", studyQuotesFieldAuthor: "Author (optional)", studyQuotesFieldWork: "Source (optional)", studyQuotesFieldTags: "Tags (optional, separate with commas)" };
         for (const label of ui.fields) label.querySelector(".sqFieldLabel").textContent = t(label.dataset.key, labels[label.dataset.key]);
         ui.enabledText.textContent = t("studyQuotesFieldEnabled", "Show on the home page");
@@ -264,6 +280,8 @@
         for (const [tab, active] of [[ui.tabMine, mine], [ui.tabBuiltin, !mine]]) { tab.setAttribute("aria-selected", String(active)); tab.tabIndex = active ? 0 : -1; }
         ui.panel.setAttribute("aria-labelledby", mine ? ui.tabMine.id : ui.tabBuiltin.id);
         ui.add.hidden = !mine; ui.add.disabled = !intact || state.quotes.length >= core.LIMITS.quotes;
+        ui.bulkOpen.hidden = !mine; ui.bulkOpen.disabled = !intact;
+        ui.exportMenu.hidden = !mine || !state.quotes.length;
         ui.restoreAll.hidden = mine; ui.restoreAll.disabled = !state.hiddenBuiltins.length || !intact;
         // Filters depend on the tab.
         const tags = core.categories(state).slice(2).map(item => item.key);
@@ -470,6 +488,7 @@
 
     function openEditor(quote) {
         if (!intact) return;
+        closeBulk(false);
         editing = quote ? quote.id : null;
         ui.editorTitle.textContent = quote ? t("studyQuotesEditTitle", "Edit line") : t("studyQuotesAddTitle", "Add a line");
         ui.text.value = quote?.text || "";
@@ -519,7 +538,192 @@
         if (view.tab === tab) return;
         view.tab = tab; view.status = "all"; view.tag = ""; view.limit = PAGE; view.selected.clear();
         closeEditor(false);
+        closeBulk(false);
         render();
+    }
+
+    // ----- Bulk paste, file import and export -----
+    function buildBulk() {
+        const form = el("form", "sqBulk"); form.hidden = true; form.noValidate = true;
+        ui.bulkTitle = el("h3", "sqSectionTitle"); ui.bulkTitle.id = "studyQuotesBulkTitle";
+        form.setAttribute("aria-labelledby", "studyQuotesBulkTitle");
+        ui.bulkHint = el("p", "sqHint"); ui.bulkHint.id = "studyQuotesBulkHint";
+        ui.bulkText = el("textarea", "sqInput sqBulkText"); ui.bulkText.rows = 8; ui.bulkText.spellcheck = false;
+        ui.bulkText.setAttribute("aria-describedby", "studyQuotesBulkHint");
+        ui.bulkTextLabel = el("label", "sqField"); ui.bulkTextLabelText = el("span", "sqFieldLabel");
+        ui.bulkTextLabel.append(ui.bulkTextLabelText, ui.bulkText);
+        ui.bulkFile = el("input"); ui.bulkFile.type = "file"; ui.bulkFile.hidden = true;
+        ui.bulkFile.accept = ".txt,.csv,.tsv,.json,text/plain,text/csv,text/tab-separated-values,application/json";
+        ui.bulkFileButton = button("sqSecondary", "", () => ui.bulkFile.click());
+        ui.bulkFileName = el("span", "sqHint sqFileName");
+        const fileRow = el("div", "sqFileRow"); fileRow.append(ui.bulkFileButton, ui.bulkFileName, ui.bulkFile);
+        ui.bulkTags = el("input", "sqInput"); ui.bulkTags.setAttribute("list", "studyQuotesTagList");
+        ui.bulkTagsLabel = el("label", "sqField"); ui.bulkTagsLabelText = el("span", "sqFieldLabel");
+        ui.bulkTagsLabel.append(ui.bulkTagsLabelText, ui.bulkTags);
+        ui.bulkMode = el("fieldset", "sqMode"); ui.bulkModeLegend = el("legend", "sqFieldLabel");
+        const radio = value => { const label = el("label", "sqCheck"); const input = el("input"); input.type = "radio"; input.name = "studyQuotesBulkMode"; input.value = value; input.checked = value === "append"; const text = el("span"); label.append(input, text); return { label, input, text }; };
+        ui.bulkAppend = radio("append"); ui.bulkReplace = radio("replace");
+        ui.bulkMode.append(ui.bulkModeLegend, ui.bulkAppend.label, ui.bulkReplace.label);
+        ui.bulkPreview = el("div", "sqPreview"); ui.bulkPreview.setAttribute("aria-live", "polite");
+        const buttons = el("div", "sqEditorButtons");
+        ui.bulkCancel = button("sqSecondary", "", () => closeBulk());
+        ui.bulkSubmit = el("button", "sqPrimary"); ui.bulkSubmit.type = "submit";
+        buttons.append(ui.bulkCancel, ui.bulkSubmit);
+        form.append(ui.bulkTitle, ui.bulkHint, ui.bulkTextLabel, fileRow, ui.bulkTagsLabel, ui.bulkMode, ui.bulkPreview, buttons);
+        form.addEventListener("input", event => {
+            if (event.target === ui.bulkText && !ui.bulkText.value.trim()) { bulkName = ""; ui.bulkFileName.textContent = ""; }
+            scheduleBulkPreview();
+        });
+        form.addEventListener("change", event => { if (event.target.type === "radio") updateBulkPreview(); });
+        form.addEventListener("submit", event => { event.preventDefault(); importBulk(); });
+        ui.bulkFile.addEventListener("change", async () => {
+            const file = ui.bulkFile.files?.[0];
+            ui.bulkFile.value = "";
+            if (!file) return;
+            if (file.size > core.LIMITS.importBytes) { ui.bulkFileName.textContent = importErrorText("tooLarge"); return; }
+            try {
+                ui.bulkText.value = await file.text();
+                bulkName = file.name;
+                ui.bulkFileName.textContent = fill(t("studyQuotesBulkFileLoaded", "Loaded {name}."), { name: file.name });
+            } catch { ui.bulkFileName.textContent = importErrorText("invalid"); }
+            updateBulkPreview();
+            ui.bulkText.focus();
+        });
+        return form;
+    }
+
+    function localizeBulk() {
+        ui.bulkTitle.textContent = t("studyQuotesBulkTitle", "Add many lines");
+        ui.bulkHint.textContent = t("studyQuotesBulkHint", "One line each, optionally as \u201ctext — author《source》 #tag\u201d. You can also paste columns copied from Excel or Google Sheets (text, author, source, tags), or choose a .txt, .csv or .json file.");
+        ui.bulkTextLabelText.textContent = t("studyQuotesBulkTextLabel", "Lines to add");
+        ui.bulkText.placeholder = t("studyQuotesBulkPlaceholder", "Every day counts. — Me #exam\nSlow is smooth, smooth is fast.");
+        ui.bulkFileButton.textContent = t("studyQuotesBulkFile", "Choose a file");
+        ui.bulkTagsLabelText.textContent = t("studyQuotesBulkTags", "Add tags to this batch (optional)");
+        ui.bulkModeLegend.textContent = t("studyQuotesBulkModeLabel", "How to import");
+        ui.bulkAppend.text.textContent = t("studyQuotesBulkAppend", "Add to my lines");
+        ui.bulkReplace.text.textContent = t("studyQuotesBulkReplace", "Replace all my lines");
+        ui.bulkCancel.textContent = t("studyQuotesCancel", "Cancel");
+    }
+
+    function importErrorText(code) {
+        const messages = {
+            invalid: t("studyQuotesErrorInvalid", "Not a recognizable line."),
+            invalidJson: t("studyQuotesErrorInvalidJson", "The JSON file could not be read."),
+            unsupported: t("studyQuotesErrorUnsupported", "This JSON is not an encouragement-line export."),
+            tooLarge: t("studyQuotesErrorImportTooLarge", "The file is too large (limit 2 MB)."),
+            tooManyLines: fill(t("studyQuotesErrorTooManyLines", "Too many lines at once (limit {max})."), { max: core.LIMITS.importLines })
+        };
+        return messages[code] || errorText(code);
+    }
+
+    function openBulk() {
+        if (!intact) return;
+        closeEditor(false);
+        ui.bulk.hidden = false;
+        updateBulkPreview();
+        ui.bulk.scrollIntoView?.({ block: "nearest" });
+        ui.bulkText.focus();
+    }
+
+    function closeBulk(restoreFocus = true) {
+        if (!ui.bulk || ui.bulk.hidden) return;
+        clearTimeout(bulkTimer);
+        ui.bulk.hidden = true;
+        ui.bulkText.value = ""; ui.bulkTags.value = ""; bulkName = ""; bulkPlan = null;
+        ui.bulkFileName.textContent = "";
+        ui.bulkAppend.input.checked = true;
+        if (restoreFocus) ui.bulkOpen.focus();
+    }
+
+    function scheduleBulkPreview() {
+        clearTimeout(bulkTimer);
+        bulkTimer = setTimeout(updateBulkPreview, 200);
+    }
+
+    // A dry run of the import: nothing is written until the import button is pressed.
+    function updateBulkPreview() {
+        clearTimeout(bulkTimer);
+        bulkPlan = null;
+        const replace = ui.bulkReplace.input.checked;
+        const preview = [];
+        let canImport = false, addCount = 0;
+        if (!ui.bulkText.value.trim()) {
+            preview.push(el("p", "sqHint", t("studyQuotesBulkEmpty", "Paste lines or choose a file to see a preview.")));
+        } else {
+            try {
+                const parsed = core.parseImport(ui.bulkText.value, { name: bulkName });
+                const plan = core.planImport(state, parsed.items, { mode: replace ? "replace" : "append", tags: core.splitTags(ui.bulkTags.value) });
+                bulkPlan = { ...plan, errors: parsed.errors, replace };
+                addCount = plan.added;
+                canImport = plan.added > 0 || (replace && state.quotes.length > 0 && parsed.items.length > 0);
+                preview.push(el("p", "sqPreviewSummary", fill(t("studyQuotesBulkSummary", "{added} to add · {duplicates} duplicate(s) skipped · {errors} with problems"), { added: plan.added, duplicates: plan.duplicates, errors: parsed.errors.length })));
+                if (plan.overLimit) preview.push(el("p", "sqWarning", fill(t("studyQuotesBulkOverLimit", "{count} line(s) exceed the {max}-line limit and will not be added."), { count: plan.overLimit, max: core.LIMITS.quotes })));
+                if (replace && state.quotes.length) preview.push(el("p", "sqWarning", fill(t("studyQuotesBulkReplaceNote", "Replaces your {count} current line(s). You can undo right after."), { count: state.quotes.length })));
+                const fresh = plan.state.quotes.slice(replace ? 0 : state.quotes.length);
+                if (fresh.length) {
+                    const list = el("ul", "sqPreviewList");
+                    list.setAttribute("aria-label", t("studyQuotesBulkPreview", "Preview"));
+                    for (const quote of fresh.slice(0, 5)) {
+                        const item = el("li", "", quote.text);
+                        const meta = [sourceText(quote), ...quote.tags.map(tag => "#" + tag)].filter(Boolean).join(" ");
+                        if (meta) item.append(el("span", "sqPreviewMeta", " " + meta));
+                        list.append(item);
+                    }
+                    if (fresh.length > 5) list.append(el("li", "sqHint", fill(t("studyQuotesBulkMorePreview", "…and {count} more"), { count: fresh.length - 5 })));
+                    preview.push(list);
+                }
+                if (parsed.errors.length) {
+                    const errors = el("ul", "sqPreviewErrors");
+                    for (const error of parsed.errors.slice(0, 10)) errors.append(el("li", "", fill(t("studyQuotesBulkLineError", "Line {line}: {reason}"), { line: error.line, reason: importErrorText(error.code) })));
+                    if (parsed.errors.length > 10) errors.append(el("li", "", fill(t("studyQuotesBulkMoreErrors", "…and {count} more problem(s)"), { count: parsed.errors.length - 10 })));
+                    preview.push(errors);
+                }
+            } catch (error) {
+                preview.push(el("p", "sqError", importErrorText(error.code)));
+            }
+        }
+        ui.bulkPreview.replaceChildren(...preview);
+        ui.bulkSubmit.textContent = fill(t("studyQuotesBulkImport", "Import {count}"), { count: addCount });
+        ui.bulkSubmit.disabled = !canImport || !intact;
+    }
+
+    async function importBulk() {
+        updateBulkPreview();
+        const plan = bulkPlan;
+        if (!plan || ui.bulkSubmit.disabled) return;
+        if (plan.replace && state.quotes.length) {
+            const confirmReplace = window.myntDialog?.confirm;
+            const ok = confirmReplace
+                ? await confirmReplace(fill(t("studyQuotesBulkConfirmReplace", "Replace your {count} current line(s) with {added} new one(s)? You can undo right after."), { count: state.quotes.length, added: plan.added }), { danger: true, okText: t("studyQuotesBulkConfirmOk", "Replace") })
+                : false;
+            if (!ok) return;
+            updateBulkPreview();
+            if (!bulkPlan) return;
+        }
+        const message = fill(t("studyQuotesBulkDone", "Imported {added} line(s); skipped {duplicates} duplicate(s)."), { added: bulkPlan.added, duplicates: bulkPlan.duplicates });
+        if (commit(bulkPlan.state, message)) {
+            closeBulk(false);
+            view.query = ""; ui.search.value = ""; view.tag = ""; view.status = "all";
+            render();
+            ui.bulkOpen.focus();
+        }
+    }
+
+    function exportAs(kind) {
+        ui.exportMenu.open = false;
+        if (!state.quotes.length) return;
+        const json = kind === "json";
+        const blob = new Blob([json ? core.exportJSON(state) : core.exportText(state)], { type: json ? "application/json" : "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = el("a");
+        link.href = url;
+        link.download = `mynt-study-quotes-${new Date().toISOString().slice(0, 10)}.${json ? "json" : "txt"}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setStatus(fill(t("studyQuotesExported", "Exported {count} line(s). Check your downloads."), { count: state.quotes.length }));
+        ui.exportSummary.focus();
     }
 
     // ----- Public entry -----

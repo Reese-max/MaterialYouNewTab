@@ -42,6 +42,30 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 .sqError:empty { display: none; }
 .sqEditorButtons { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 
+/* Bulk paste / import and the export menu */
+.sqBulk { display: grid; gap: 10px; margin: 4px 0 12px; padding: 14px; border-radius: 16px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.sqBulk[hidden] { display: none; }
+.sqBulkText { min-height: 150px; font-family: inherit; white-space: pre; overflow-wrap: normal; overflow-x: auto; }
+.sqFileRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sqFileName { margin: 0; overflow-wrap: anywhere; }
+.sqMode { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; border: 0; }
+.sqMode legend { padding: 0; margin-bottom: 4px; font-size: .88rem; }
+.sqPreview { display: grid; gap: 6px; font-size: .88rem; }
+.sqPreview .sqHint, .sqPreview .sqWarning, .sqPreview .sqError { margin: 0; }
+.sqPreviewSummary { margin: 0; font-weight: 600; }
+.sqPreviewList, .sqPreviewErrors { display: grid; gap: 4px; margin: 0; padding-inline-start: 1.2em; overflow-wrap: anywhere; }
+.sqPreviewMeta { opacity: .72; font-size: .82rem; }
+.sqPreviewErrors { color: #a3261c; }
+.sqExport { position: relative; }
+.sqExport[hidden] { display: none; }
+.sqExport > summary { display: inline-flex; align-items: center; list-style: none; }
+.sqExport > summary::-webkit-details-marker { display: none; }
+.sqExport > summary::after { content: "▾"; margin-inline-start: 6px; font-size: .8em; }
+.sqMenu { position: absolute; z-index: 2; inset-inline-start: 0; top: calc(100% + 6px); display: grid; min-width: 220px; padding: 6px; border-radius: 14px; background: color-mix(in srgb, var(--accentLightTint-blue) 96%, var(--whitishColor-blue)); border: 1px solid color-mix(in srgb, currentColor 16%, transparent); box-shadow: 0 10px 30px rgb(0 0 0 / .18); }
+.sqMenuItem { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.sqMenuItem:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+.sqExport > summary:focus-visible { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
+
 .sqBatch { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--darkerColor-blue) 16%, var(--accentLightTint-blue)); }
 .sqBatch[hidden] { display: none; }
 .sqBatchCount { font-weight: 600; margin-inline-end: 4px; }
@@ -89,7 +113,8 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 
 .black-theme .studyQuotesDialog :is(.sqSearch, .sqFilter, .sqInput) { background: rgb(0 0 0 / .25); }
 .black-theme .studyQuotesDialog .sqRow { background: rgb(255 255 255 / .04); }
-.black-theme .studyQuotesDialog :is(.sqDanger, .sqError, .sqCounter.is-over) { color: #f2b8b5; }
+.black-theme .studyQuotesDialog :is(.sqDanger, .sqError, .sqCounter.is-over, .sqPreviewErrors) { color: #f2b8b5; }
+.black-theme .studyQuotesDialog .sqMenu { background: #262d38; }
 .black-theme .studyQuotesDialog .sqWarning { color: #f5d08a; background: rgb(245 208 138 / .12); }
 .black-theme .studyQuotesDialog .sqBatch { background: rgb(255 255 255 / .08); }
 /* The black theme's accent is light; keep the switch knob visible on it. */
@@ -101,6 +126,6 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 html.myntReducedMotion .sqSwitchTrack, html.myntReducedMotion .sqSwitchTrack::after { transition: none; }
 
 @media (forced-colors: active) {
-    .sqChip, .sqRow, .sqIconButton, .sqSecondary, .sqSwitchTrack, .sqEditor { border: 1px solid CanvasText; }
+    .sqChip, .sqRow, .sqIconButton, .sqSecondary, .sqSwitchTrack, .sqEditor, .sqBulk, .sqMenu { border: 1px solid CanvasText; }
     .sqSwitch input:checked + .sqSwitchTrack { background: Highlight; }
 }
