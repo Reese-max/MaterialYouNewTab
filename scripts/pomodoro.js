@@ -531,9 +531,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Escape closes the panel and returns focus to its corner button.
+    // Escape closes the panel and returns focus to its corner button. A modal dialog opened on top
+    // (settings dialogs, encouragement lines, AI tools…) owns Escape; preventing it here kept that dialog open.
     document.addEventListener("keydown", function (e) {
         if (e.key !== "Escape" || !panelOpen || e.defaultPrevented) return;
+        if (document.querySelector("dialog:modal")) return;
         e.preventDefault();
         const focusInside = pomodoroPanel.contains(document.activeElement);
         closePanel();
