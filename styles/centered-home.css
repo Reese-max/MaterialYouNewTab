@@ -126,6 +126,16 @@ html.mynt-removed-features body #date#date#date { display: none !important; }
    and give every corner control the same circular 48px (42px on phones) shape; pomodoro mirrors the top-right toolbar. */
 html.mynt-removed-features body #searchbar { inset-block-start: calc(50vh - 96px) !important; }
 html.mynt-removed-features body #quickLinksRow { inset-block-start: calc(50vh + 12px) !important; }
+/* The search bar is fixed to the optical center, so the provider row must be too: in the page flow it drifted
+   onto the bar on tall screens (an upright iPad, a 1000px-tall window). It sits in the 52px gap between the bar
+   (ends at 50vh - 36px) and the quick links (start at 50vh + 16px), left-aligned with the bar. Saved manual
+   layouts and the layout editor keep positioning it themselves. */
+html.mynt-removed-features body:not(.mynt-layout-editing):not(:has([data-mynt-layout])) #search-with-container {
+    position: fixed !important; inset: calc(50vh - 30px) auto auto 50% !important; transform: translateX(-50%) !important;
+    width: min(720px, calc(100vw - 32px)) !important; max-width: none !important; margin: 0 !important; z-index: 2;
+}
+/* The legacy phone rule doubles the search bar (scale: 2) for the old flow layout; the centered bar is already sized. */
+html.mynt-removed-features body #searchbar { scale: none !important; }
 html.mynt-removed-features body #pomodoroCont#pomodoroCont {
     position: fixed !important; inset: 16px auto auto 20px !important; transform: none !important;
     width: 48px !important; height: 48px !important; margin: 0 !important; border-radius: 50% !important;
