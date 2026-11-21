@@ -182,7 +182,8 @@ console.log('PASS real AI overrides / safe labels / URL rejection / save normali
 // User-added AI tools: strict/lenient validation and slot ordering.
 const userTool = (extra = {}) => ({ id: 'uabcdef12', label: 'Gemini', url: 'gemini.google.com', ...extra });
 assert.deepEqual(icons.userAITools({ version: 1, tools: [userTool()], order: ['chatGPT', 'uabcdef12', 'claude', 'youtube'] }, true),
-    { version: 1, tools: [{ id: 'uabcdef12', label: 'Gemini', url: 'https://gemini.google.com/', visible: true }], order: ['chatGPT', 'uabcdef12', 'claude', 'youtube'] });
+    { version: 1, tools: [{ id: 'uabcdef12', label: 'Gemini', url: 'https://gemini.google.com/', visible: true }], order: ['chatGPT', 'uabcdef12', 'claude', 'youtube'], removed: [] });
+assert.deepEqual(icons.userAITools({ version: 1, tools: [], removed: ['youtube'] }, true).removed, ['youtube']);
 for (const bad of [
     { version: 2, tools: [] }, { version: 1, tools: {} }, { version: 1, tools: [], extra: true },
     { version: 1, tools: [userTool({ id: 'x' })] }, { version: 1, tools: [userTool({ label: 'a'.repeat(41) })] },
@@ -190,6 +191,7 @@ for (const bad of [
     { version: 1, tools: [userTool({ icon: 'mynt-other:x' })] }, { version: 1, tools: [userTool({ visible: 'yes' })] },
     { version: 1, tools: [userTool({ owner: 'x' })] }, { version: 1, tools: [userTool(), userTool()] },
     { version: 1, tools: [userTool()], order: ['unknown'] },
+    { version: 1, tools: [], removed: 'youtube' }, { version: 1, tools: [], removed: ['unknown'] }, { version: 1, tools: [], removed: ['youtube', 'youtube'] },
     { version: 1, tools: Array.from({ length: 13 }, (_, i) => userTool({ id: 'utool' + String(i).padStart(4, '0') })) }
 ]) {
     assert.throws(() => icons.userAITools(bad, true), JSON.stringify(bad).slice(0, 80));
@@ -280,7 +282,58 @@ assert(card.querySelector('button').textContent);
 modal.open = false; card.querySelector('button').click();
 assert.equal(modal.open, true, 'The card opens the AI tools editor');
 vm.runInContext('closeAIToolsSettings()', ctx);
+// Built-in tools can be deleted too, then added back or reset.
+storage.removeItem('aiToolsUserTools'); storage.setItem('aiToolsSettings', JSON.stringify(['chatGPT', 'claude', 'youtube']));
+vm.runInContext('applyAIToolsSettings()', ctx);
+vm.runInContext('showAIToolsSettings()', ctx);
+const builtinRow = id => aiDoc.querySelectorAll('.ai-tool-option').find(option => option.dataset.toolId === id);
+assert(builtinRow('youtube').querySelector('.aiToolDelete'), 'Built-in tools offer Delete');
+assert.equal(aiDoc.getElementById('aiToolsRestore').hidden, true, 'Nothing to add back yet');
+builtinRow('youtube').querySelector('.aiToolDelete').click();
+assert.equal(builtinRow('youtube'), undefined);
+assert.equal(aiDoc.getElementById('aiToolsRestore').hidden, false, 'A deleted built-in can be added back');
+assert(aiDoc.getElementById('aiToolsStatus').textContent);
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsSettings')), ['chatGPT', 'claude', { youtube: false }], 'aiToolsSettings still lists all three built-ins for MCP');
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsUserTools')).removed, ['youtube']);
+assert.equal(aiDoc.getElementById('youtube').parentElement.style.display, 'none', 'The deleted built-in leaves the homepage row');
+assert.doesNotThrow(() => require(path.join(root, 'scripts/local-mcp-data.js')).validateBackupStorage({ aiToolsUserTools: storage.getItem('aiToolsUserTools') }), 'Deleted built-ins survive backup validation');
+vm.runInContext('showAIToolsSettings()', ctx);
+assert.equal(builtinRow('youtube'), undefined, 'A deleted built-in stays out of the editor');
+const restoreButton = aiDoc.getElementById('aiToolsRestore').querySelector('.ai-restore-button');
+assert.equal(restoreButton.dataset.toolId, 'youtube'); assert(restoreButton.textContent);
+restoreButton.click();
+assert(builtinRow('youtube'), 'Add back restores the row'); assert.equal(aiDoc.getElementById('setting_youtube').checked, true);
+assert.equal(aiDoc.getElementById('aiToolsRestore').hidden, true);
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.equal(storage.getItem('aiToolsUserTools'), null, 'Adding back the last deleted built-in clears the record');
+assert.equal(aiDoc.getElementById('youtube').parentElement.style.display, 'flex');
+// Delete all three, then Reset brings them back.
+vm.runInContext('showAIToolsSettings()', ctx);
+for (const id of ['chatGPT', 'claude', 'youtube']) builtinRow(id).querySelector('.aiToolDelete').click();
+assert.equal(aiDoc.querySelectorAll('.ai-tool-option').length, 0);
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsSettings')), [{ chatGPT: false }, { claude: false }, { youtube: false }]);
+vm.runInContext('showAIToolsSettings()', ctx);
+assert.equal(aiDoc.querySelectorAll('.ai-tool-option').length, 0);
+aiDoc.getElementById('resetAISettingsBtn').click();
+assert.equal(aiDoc.querySelectorAll('.ai-tool-option').length, 3, 'Reset lists the built-ins again');
+aiDoc.getElementById('saveAISettingsBtn').click();
+assert.deepEqual(JSON.parse(storage.getItem('aiToolsSettings')), ['chatGPT', 'claude', 'youtube']);
+assert.equal(storage.getItem('aiToolsUserTools'), null);
+// Anything that shows a deleted built-in again (MCP, an older version) lists it again.
+storage.setItem('aiToolsUserTools', JSON.stringify({ version: 1, tools: [], order: [], removed: ['claude'] }));
+storage.setItem('aiToolsSettings', JSON.stringify(['chatGPT', 'claude', 'youtube']));
+vm.runInContext('generateAIToolsForm(loadAIToolsSettings())', ctx);
+assert(builtinRow('claude'), 'A visible built-in is never hidden by a stale deletion record');
+// Built-ins cannot be deleted while the record is unreadable, since the deletion could not be saved.
+storage.setItem('aiToolsUserTools', '{broken');
+vm.runInContext('generateAIToolsForm(loadAIToolsSettings())', ctx);
+assert.equal(builtinRow('claude').querySelector('.aiToolDelete'), null);
+storage.removeItem('aiToolsUserTools');
+vm.runInContext('closeAIToolsSettings()', ctx);
 console.log('PASS user AI tools add / required fields / unsafe URL / save / render / MCP slots / hide / delete / limit / malformed preservation / shortcut card');
+console.log('PASS built-in AI tools delete / add back / reset / MCP-visible override / unreadable record guard');
 
 const preferences = read('scripts/local-mcp-preferences.js');
 assert.match(preferences, /ai:\[[^\]]*'aiToolsSettings'[^\]]*'aiToolsCustom'/);

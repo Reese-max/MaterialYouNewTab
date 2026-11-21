@@ -130,15 +130,16 @@
         return result;
     }
     // User-added AI tools (aiToolsUserTools, version 1). Built-in tools keep aiToolsSettings and
-    // aiToolsCustom unchanged; "order" only records where user tools sit between built-in slots.
+    // aiToolsCustom unchanged; "order" only records where user tools sit between built-in slots, and
+    // "removed" lists built-ins deleted in the editor (they stay hidden in aiToolsSettings).
     // Lenient reads skip invalid entries without rewriting storage; strict mode (imports, saves) throws.
     function userAITools(value, strict = false) {
         const reject = () => { if (strict) throw Error('Invalid custom AI tools'); };
-        const result = { version: 1, tools: [], order: [] };
+        const result = { version: 1, tools: [], order: [], removed: [] };
         if (value === null || value === undefined) return result;
         if (!plainObject(value) || value.version !== 1 || !Array.isArray(value.tools) ||
-            (value.order !== undefined && !Array.isArray(value.order)) ||
-            Object.keys(value).some(key => !['version', 'tools', 'order'].includes(key))) { reject(); return result; }
+            (value.order !== undefined && !Array.isArray(value.order)) || (value.removed !== undefined && !Array.isArray(value.removed)) ||
+            Object.keys(value).some(key => !['version', 'tools', 'order', 'removed'].includes(key))) { reject(); return result; }
         if (value.tools.length > AI_USER_TOOLS_MAX) reject();
         const ids = new Set();
         for (const item of value.tools.slice(0, AI_USER_TOOLS_MAX)) {
@@ -155,6 +156,10 @@
         for (const id of value.order || []) {
             if (typeof id !== 'string' || seen.has(id) || !(BUILTIN_AI_TOOL_IDS.includes(id) || ids.has(id))) { reject(); continue; }
             seen.add(id); result.order.push(id);
+        }
+        for (const id of value.removed || []) {
+            if (!BUILTIN_AI_TOOL_IDS.includes(id) || result.removed.includes(id)) { reject(); continue; }
+            result.removed.push(id);
         }
         return result;
     }

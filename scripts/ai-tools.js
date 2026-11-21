@@ -80,7 +80,7 @@ function aiText(key, fallback) {
 
 // A malformed or newer record is shown without its tools and never overwritten by this editor.
 function loadAIUserTools() {
-    const empty = intact => ({ version: 1, tools: [], order: [], intact });
+    const empty = intact => ({ version: 1, tools: [], order: [], removed: [], intact });
     let raw;
     try { raw = localStorage.getItem(AI_USER_TOOLS_KEY); } catch { return empty(false); }
     if (raw === null) return empty(true);
@@ -304,7 +304,7 @@ function applyAIToolsSettings(settingsOverride) {
     layoutAIToolsForViewport();
 }
 
-// Add/delete controls for user tools sit under the list; status messages are announced politely.
+// Add, add-back and delete controls sit under the list; status messages are announced politely.
 let aiToolsEditorUserIntact = true;
 const aiToolsAddButton = document.createElement("button");
 aiToolsAddButton.type = "button";
@@ -314,10 +314,51 @@ const aiToolsStatus = document.createElement("p");
 aiToolsStatus.id = "aiToolsStatus";
 aiToolsStatus.className = "ai-tools-status";
 aiToolsStatus.setAttribute("role", "status");
-aiToolsForm.parentElement?.append(aiToolsAddButton, aiToolsStatus);
+const aiToolsRestore = document.createElement("div");
+aiToolsRestore.id = "aiToolsRestore";
+aiToolsRestore.className = "ai-tools-restore";
+aiToolsRestore.hidden = true;
+aiToolsForm.parentElement?.append(aiToolsAddButton, aiToolsRestore, aiToolsStatus);
 
 function setAIToolsStatus(message) {
     aiToolsStatus.textContent = message || "";
+}
+
+function builtinAIToolLabel(toolId) {
+    return translations[currentLanguage]?.[toolId] || translations.en?.[toolId] || toolId;
+}
+
+// Built-ins deleted in this draft, i.e. not listed in the editor.
+function missingBuiltinAITools() {
+    const present = new Set([...aiToolsForm.querySelectorAll(".ai-tool-option")].map(option => option.dataset.toolId));
+    return MyntQuicklinkIcons.BUILTIN_AI_TOOL_IDS.filter(toolId => !present.has(toolId));
+}
+
+// Deleted built-ins can be added back here (or with Reset) instead of being gone for good.
+function updateAIToolsRestore() {
+    const missing = missingBuiltinAITools();
+    aiToolsRestore.replaceChildren();
+    aiToolsRestore.hidden = !missing.length;
+    if (!missing.length) return;
+    const label = document.createElement("span");
+    label.className = "ai-tools-restore-label";
+    label.textContent = aiText("aiToolsRestoreLabel", "Deleted built-in tools:");
+    aiToolsRestore.appendChild(label);
+    for (const toolId of missing) {
+        const name = builtinAIToolLabel(toolId);
+        const button = document.createElement("button");
+        button.type = "button"; button.className = "ai-restore-button"; button.dataset.toolId = toolId;
+        button.textContent = aiText("aiToolsRestore", "Add back {name}").replace("{name}", name);
+        button.addEventListener("click", () => {
+            if (document.getElementById(`setting_${toolId}`)) return;
+            aiToolsForm.appendChild(buildBuiltinAIToolOption(toolId, true, loadAIToolsCustom()));
+            updateReorderButtonStates();
+            updateAIToolsRestore();
+            setAIToolsStatus(aiText("aiToolsRestoredDraft", "“{name}” is back. Select Save to apply.").replace("{name}", name));
+            document.getElementById(`setting_${toolId}`)?.focus();
+        });
+        aiToolsRestore.appendChild(button);
+    }
 }
 
 function aiUserToolOptions() {
@@ -340,7 +381,7 @@ function newAIUserToolId() {
 }
 
 // One row of the editor. Built-in rows edit optional overrides; user rows hold the tool itself.
-function buildAIToolOption({ toolId, label, visible, custom, nameValue, namePlaceholder, urlValue, urlPlaceholder, iconValue, automaticIcon, open = false }) {
+function buildAIToolOption({ toolId, label, visible, custom, deletable = custom, nameValue, namePlaceholder, urlValue, urlPlaceholder, iconValue, automaticIcon, open = false }) {
     const toolOption = document.createElement("div");
     toolOption.className = custom ? "ai-tool-option ai-tool-user" : "ai-tool-option";
     toolOption.dataset.toolId = toolId;
@@ -367,7 +408,7 @@ function buildAIToolOption({ toolId, label, visible, custom, nameValue, namePlac
     const currentIcon = document.createElement("span"); currentIcon.className = "aiToolCurrentIcon";
     currentIcon.setAttribute("aria-hidden", "true");
     controls.appendChild(currentIcon); toolOption.appendChild(edit);
-    const deleteButton = custom ? document.createElement("button") : null;
+    const deleteButton = deletable ? document.createElement("button") : null;
     if (deleteButton) {
         deleteButton.type = "button"; deleteButton.className = "aiToolDelete";
         deleteButton.textContent = aiText("aiToolsDelete", "Delete");
@@ -421,18 +462,22 @@ function buildAIToolOption({ toolId, label, visible, custom, nameValue, namePlac
         });
         urlInput.addEventListener("change", refreshAutomaticPreviews);
         for (const input of [nameInput, urlInput]) input.addEventListener("input", () => { if (error.textContent) { error.textContent = ""; input.removeAttribute("aria-invalid"); } });
-        deleteButton.addEventListener("click", () => {
-            const name = labelElement.textContent;
-            const siblings = [...aiToolsForm.children];
-            const index = siblings.indexOf(toolOption);
-            const next = siblings[index + 1] || siblings[index - 1] || null;
-            toolOption.remove();
-            updateReorderButtonStates();
-            updateAIToolsAddButton();
-            setAIToolsStatus(aiText("aiToolsDeletedDraft", "Removed “{name}”. Select Save to apply.").replace("{name}", name));
-            (next ? document.getElementById(`setting_${next.dataset.toolId}`) : aiToolsAddButton)?.focus();
-        });
     }
+    // Deleting only changes the draft; Save applies it and a deleted built-in can be added back.
+    deleteButton?.addEventListener("click", () => {
+        const name = labelElement.textContent;
+        const siblings = [...aiToolsForm.children];
+        const index = siblings.indexOf(toolOption);
+        const next = siblings[index + 1] || siblings[index - 1] || null;
+        toolOption.remove();
+        updateReorderButtonStates();
+        updateAIToolsAddButton();
+        updateAIToolsRestore();
+        setAIToolsStatus((custom
+            ? aiText("aiToolsDeletedDraft", "Removed “{name}”. Select Save to apply.")
+            : aiText("aiToolsDeletedBuiltinDraft", "Removed “{name}”. Select Save to apply, or add it back below.")).replace("{name}", name));
+        (next ? document.getElementById(`setting_${next.dataset.toolId}`) : aiToolsAddButton)?.focus();
+    });
     return toolOption;
 }
 
@@ -442,7 +487,8 @@ function buildBuiltinAIToolOption(toolId, visible, custom) {
     const overrides = custom[toolId] || {};
     const toolLink = document.getElementById(toolId)?.parentElement;
     return buildAIToolOption({
-        toolId, visible, custom: false,
+        // Deleting a built-in is recorded in aiToolsUserTools, so it needs a readable record.
+        toolId, visible, custom: false, deletable: aiToolsEditorUserIntact,
         label: overrides.label || toolLabel,
         nameValue: overrides.label, namePlaceholder: toolLabel,
         urlValue: overrides.url, urlPlaceholder: toolLink?._myntDefault?.url || toolLink?.href,
@@ -473,7 +519,10 @@ function generateAIToolsForm(settings, user = loadAIUserTools()) {
     const userById = new Map(user.tools.map(tool => [tool.id, tool]));
     // An unreadable record keeps its saved user tools untouched; only built-ins are editable then.
     const editableUser = aiToolsEditorUserIntact ? user : { tools: [], order: user.order };
+    // A deleted built-in stays hidden in aiToolsSettings; if anything shows it again it is listed again.
+    const removed = new Set(aiToolsEditorUserIntact ? user.removed : []);
     MyntQuicklinkIcons.aiToolOrder(builtins, editableUser).forEach(entry => {
+        if (!entry.custom && removed.has(entry.id) && !entry.visible) return;
         aiToolsForm.appendChild(entry.custom
             ? buildUserAIToolOption(userById.get(entry.id), entry.visible)
             : buildBuiltinAIToolOption(entry.id, entry.visible, custom));
@@ -485,6 +534,7 @@ function generateAIToolsForm(settings, user = loadAIUserTools()) {
         ? aiText("aiToolsUnreadable", "Saved custom AI tools could not be read and were left unchanged. Built-in tools can still be edited.")
         : hidden ? aiText("aiToolsHiddenNote", "AI tools are hidden on the home page. Turn them on in Settings → Manage components.") : "");
     updateAIToolsAddButton();
+    updateAIToolsRestore();
     updateReorderButtonStates();
 }
 
@@ -808,13 +858,21 @@ document.addEventListener("DOMContentLoaded", function () {
             order.push(toolId);
         }
 
+        // Deleted built-ins stay in aiToolsSettings (hidden) so it always lists all three.
+        const removed = aiToolsEditorUserIntact ? missingBuiltinAITools() : [];
+        removed.forEach(toolId => newSettings.push({ [toolId]: false }));
+
         // Roll back every key if storage fails partway through saving.
         const writes = [
             ["aiToolsSettings", JSON.stringify(newSettings)],
             ["aiToolsCustom", Object.keys(custom).length ? JSON.stringify(custom) : null]
         ];
         // An unreadable user-tools record is preserved exactly as stored.
-        if (aiToolsEditorUserIntact) writes.push([AI_USER_TOOLS_KEY, userTools.length ? JSON.stringify({ version: 1, tools: userTools, order }) : null]);
+        if (aiToolsEditorUserIntact) {
+            writes.push([AI_USER_TOOLS_KEY, userTools.length || removed.length
+                ? JSON.stringify({ version: 1, tools: userTools, order, ...(removed.length ? { removed } : {}) })
+                : null]);
+        }
         const previous = writes.map(([key]) => [key, localStorage.getItem(key)]);
         const put = ([key, value]) => { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); };
         try {

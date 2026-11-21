@@ -49,6 +49,10 @@
 #aiToolsSettingsModal .ai-add-button { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: calc(100% - 4px); min-height: 44px; margin-block-start: 10px; padding: 8px 12px; border: 1px dashed currentColor; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 #aiToolsSettingsModal .ai-add-button:disabled { opacity: .55; cursor: not-allowed; }
 #aiToolsSettingsModal .ai-tools-status { margin: 8px 0 0; font-size: .85rem; overflow-wrap: anywhere; }
+#aiToolsSettingsModal .ai-tools-restore { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-block-start: 10px; font-size: .88rem; }
+#aiToolsSettingsModal .ai-tools-restore[hidden] { display: none; }
+#aiToolsSettingsModal .ai-restore-button { min-height: 44px; padding: 8px 14px; border: 1px solid currentColor; border-radius: 999px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+#aiToolsSettingsModal .ai-restore-button:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
 #aiToolsSettingsModal .ai-tools-status:empty { display: none; }
 .aiToolDelete:focus-visible, #aiToolsSettingsModal .ai-add-button:focus-visible, #aiToolsShortcutManage:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
 .aiToolsShortcutCard { box-sizing: border-box; margin: 16px 0 8px; padding: 14px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); background: color-mix(in srgb, currentColor 6%, transparent); overflow-wrap: anywhere; }
@@ -61,14 +65,14 @@
 .black-theme .quicklinkIcon-icon { color: var(--textColorDark-dark, #d6d6d6); }
 @media (max-width: 500px) {
     #aiToolsSettingsModal { padding: 16px; }
-    /* User rows carry a fourth button; give the name its own line instead of breaking it mid-word. */
-    #aiToolsForm .ai-tool-user .ai-tool-controls { flex-basis: 100%; }
-    #aiToolsForm .ai-tool-user .ai-tool-reorder { margin-inline-start: auto; }
+    /* Rows with a delete button carry four buttons; give the name its own line instead of breaking it mid-word. */
+    #aiToolsForm .ai-tool-option:has(.aiToolDelete) .ai-tool-controls { flex-basis: 100%; }
+    #aiToolsForm .ai-tool-option:has(.aiToolDelete) .ai-tool-reorder { margin-inline-start: auto; }
     .quicklinkIconDialog { padding: 16px; }
     .quicklinkIconTabs button { flex: 1 0 auto; }
 }
 @media (forced-colors: active) {
-    .quicklinkIconDialog, .quicklinkIconDialog button, .quicklinkChooseIcon, .aiToolCustomFields input, .aiToolDelete, #aiToolsSettingsModal .ai-add-button, #aiToolsShortcutManage { border: 1px solid ButtonText; }
+    .quicklinkIconDialog, .quicklinkIconDialog button, .quicklinkChooseIcon, .aiToolCustomFields input, .aiToolDelete, #aiToolsSettingsModal .ai-add-button, #aiToolsSettingsModal .ai-restore-button, #aiToolsShortcutManage { border: 1px solid ButtonText; }
     .quicklinkIconTabs [aria-selected="true"], .quicklinkIconGrid [aria-pressed="true"] { outline: 2px solid Highlight; }
     .quicklinkIcon-text { background: Canvas !important; color: CanvasText !important; border: 1px solid CanvasText; }
     .quicklinkIcon-icon { color: CanvasText; }
