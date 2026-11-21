@@ -21,7 +21,9 @@
     const view = { tab: "mine", query: "", tag: "", status: "all", limit: PAGE, selected: new Set() };
     let state = core.defaultState(), intact = true, baseline = null;
     let undoSnapshot = null, editing = null, editorDirty = false;
-    let bulkName = "", bulkTimer = null, bulkPlan = null;
+    let bulkName = "", bulkHead = "", bulkTimer = null, bulkPlan = null;
+    // A loaded file's name decides its format only while the text still starts like that file.
+    const firstLine = text => text.trimStart().split("\n", 1)[0];
 
     // ----- Storage: validated writes with a freshness check against other tabs -----
     function load() {
@@ -571,7 +573,7 @@
         buttons.append(ui.bulkCancel, ui.bulkSubmit);
         form.append(ui.bulkTitle, ui.bulkHint, ui.bulkTextLabel, fileRow, ui.bulkTagsLabel, ui.bulkMode, ui.bulkPreview, buttons);
         form.addEventListener("input", event => {
-            if (event.target === ui.bulkText && !ui.bulkText.value.trim()) { bulkName = ""; ui.bulkFileName.textContent = ""; }
+            if (event.target === ui.bulkText && bulkName && (!ui.bulkText.value.trim() || firstLine(ui.bulkText.value) !== bulkHead)) { bulkName = ""; bulkHead = ""; ui.bulkFileName.textContent = ""; }
             scheduleBulkPreview();
         });
         form.addEventListener("change", event => { if (event.target.type === "radio") updateBulkPreview(); });
@@ -583,7 +585,7 @@
             if (file.size > core.LIMITS.importBytes) { ui.bulkFileName.textContent = importErrorText("tooLarge"); return; }
             try {
                 ui.bulkText.value = await file.text();
-                bulkName = file.name;
+                bulkName = file.name; bulkHead = firstLine(ui.bulkText.value);
                 ui.bulkFileName.textContent = fill(t("studyQuotesBulkFileLoaded", "Loaded {name}."), { name: file.name });
             } catch { ui.bulkFileName.textContent = importErrorText("invalid"); }
             updateBulkPreview();
@@ -629,7 +631,7 @@
         if (!ui.bulk || ui.bulk.hidden) return;
         clearTimeout(bulkTimer);
         ui.bulk.hidden = true;
-        ui.bulkText.value = ""; ui.bulkTags.value = ""; bulkName = ""; bulkPlan = null;
+        ui.bulkText.value = ""; ui.bulkTags.value = ""; bulkName = ""; bulkHead = ""; bulkPlan = null;
         ui.bulkFileName.textContent = "";
         ui.bulkAppend.input.checked = true;
         if (restoreFocus) ui.bulkOpen.focus();
