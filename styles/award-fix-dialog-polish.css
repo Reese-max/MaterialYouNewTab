@@ -111,3 +111,32 @@ html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-a
 	}
 }
 
+/* ==========================================================================
+   第 16 輪：版面細節（所有主題）
+   1. 工作模式卡片的 🚀 開啟網站鈕原本是接在卡片按鈕後的流內元素，貼在左下角邊框上（左側 0 間距、
+      圓角處被裁到）。改放右下角，與右上的「編輯」同一欄對齊；卡片按鈕本來就為右側預留 58px。
+   2. AI 工具排序鈕是 44×44 的觸控目標，裡面的 ↑↓ 卻只有一般字級，看起來空洞；放大為 1.15rem。
+   3. 手機寬度時「已套用○○模式」被擠在標題與「新增模式」之間，變成一字一行；狀態文字不換行，
+      標題列放不下時整組動作移到下一行（寬螢幕排版不變）。
+   ========================================================================== */
+#controlCenterDialog .controlSectionHeading {
+	flex-wrap: wrap;
+	row-gap: 10px;
+}
+
+#controlCenterDialog .workspaceHeadingActions .sectionStatus {
+	white-space: nowrap;
+}
+
+#controlCenterDialog .workspacePresetCard .workspaceLaunchBtn {
+	position: absolute;
+	inset-inline-end: 12px;
+	bottom: 12px;
+	margin: 0;
+}
+
+#aiToolsForm .ai-tool-reorder button {
+	font-size: 1.15rem;
+	font-weight: 600;
+	line-height: 1;
+}
