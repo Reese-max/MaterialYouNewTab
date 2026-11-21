@@ -1,9 +1,10 @@
-/* The root class is set synchronously in the document head, before first paint. */
+/* The root class is set synchronously in the document head, before first paint.
+   The workspace editor hides the whole To-Do choice; hiding only its checkbox left an orphan label. */
 html.mynt-removed-features body :is(
     #todoListCont, #todoContainer,
     #examDaily, #examDailyPanel,
     #myntProfilesPanel, #myntAdaptivePanel, .ttcont:has(#todoListCheckbox), .ttcont:has(#examDailyCheckbox),
-    [data-workspace-widget="todoListCheckbox"]) {
+    label:has(> [data-workspace-widget="todoListCheckbox"]), [data-workspace-widget="todoListCheckbox"]) {
     display: none !important;
 }
 
