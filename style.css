@@ -8098,6 +8098,12 @@ body:has(#menuButton[aria-expanded="true"], #bookmarkSidebar.open) :is(#myntLayo
 #wallpaperGalleryDialog .wallpaperRecoveryRow button { border:0; padding:10px 14px; border-radius:18px; background:var(--whitishColor-blue); color:var(--textColor); cursor:pointer; }
 #wallpaperGalleryDialog .wallpaperCurrentBadge[hidden] { display:none; }
 #wallpaperGalleryDialog .wallpaperRecoveryRow small { white-space:nowrap; }
+/* Delete reads as a button at a glance; permanent deletion carries the error colour (6.1:1 on its tint). */
+#wallpaperGalleryDialog .wallpaperCard .wallpaperCardDelete,
+#wallpaperGalleryDialog .wallpaperRecoveryRow .wallpaperDangerBtn { color:#b3261e; background:rgb(179 38 30 / 0.08); font-weight:600; }
+#wallpaperGalleryDialog .wallpaperCard .wallpaperCardDelete:hover,
+#wallpaperGalleryDialog .wallpaperRecoveryRow .wallpaperDangerBtn:hover { background:rgb(179 38 30 / 0.16); }
+#wallpaperGalleryDialog .wallpaperRecoveryRow .wallpaperDangerBtn:focus-visible { outline:2px solid currentColor; outline-offset:1px; }
 #clearImage { width:auto; min-height:44px; padding:8px 12px; border-radius:22px; }
 
 /* Local backup choices: same settings rhythm, no extra dashboard. */

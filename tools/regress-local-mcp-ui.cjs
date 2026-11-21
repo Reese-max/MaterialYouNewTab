@@ -20,7 +20,8 @@ const source=fs.readFileSync(path.join(__dirname,'../scripts/local-mcp-ui.js'),'
  assert.deepEqual(JSON.parse(JSON.stringify(a.tools)),JSON.parse(fs.readFileSync(path.join(__dirname,'../local-mcp/ui-tools.json'))));
  // Exercise the production workspace hook without a real browser or user data.
  const dashboard=fs.readFileSync(path.join(__dirname,'../scripts/dashboard-tools.js'),'utf8');
- const hook=dashboard.slice(dashboard.indexOf('        function remoteWorkspaceState()'),dashboard.indexOf('        window.myntDashboard ='));
+ // The production background rule travels with the hook (a deleted motion video falls back; nothing is deleted here).
+ const hook=dashboard.slice(dashboard.indexOf('        function workspaceBackgroundFor('),dashboard.indexOf('        function canPlayDecorativeVideo('))+dashboard.slice(dashboard.indexOf('        function remoteWorkspaceState()'),dashboard.indexOf('        window.myntDashboard ='));
  const ids=['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox'];
  const store=new Map(),boxes=Object.fromEntries(ids.map(id=>[id,{checked:false,click(){this.checked=!this.checked;store.set(id+'State',this.checked?'checked':'unchecked');}}]));
  let duration={workMinutes:25,shortBreakMinutes:5,longBreakMinutes:15,roundsBeforeLong:4},paused=0,timerCalls=0;
