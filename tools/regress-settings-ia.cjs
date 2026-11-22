@@ -3,7 +3,7 @@
  * MYNT_EXTENSION selects a baseline checkout without copying this test into it.
  * MYNT_BASE_EXTENSION enables identical-fixture rendering/storage comparison with the baseline.
  * MYNT_FIXTURE overrides the de-identified localStorage fixture; --static needs no browser.
- * --review-case=M1|M3|M4|L1 isolates one review regression for pre-fix/post-fix browser evidence.
+ * --review-case=M1|M3|M4|L1|DARK isolates one review regression for pre-fix/post-fix browser evidence.
  * Browser profiles are disposable and retained for diagnostics, never a real Chrome profile.
  */
 'use strict';
@@ -216,6 +216,109 @@ async function blackThemeStatusContrast(page) {
         });
         for (const result of contrasts) assert(result.opaque && result.ratio >= 4.5, `M4: ${result.state} ${result.color} on ${result.background} = ${result.ratio.toFixed(2)}:1`);
     } finally { await page.evaluate(color => applySelectedTheme(color, false), previous); }
+}
+async function movedSettingsContrast(page) {
+    const results = [];
+    for (const [theme, color, mode, highContrast] of [
+        ['light', 'blue', 'light', false], ['dark', 'blue', 'dark', false],
+        ['black', 'dark', 'dark', false], ['high-contrast', 'dark', 'dark', true]
+    ]) {
+        // Reload through the real theme/accessibility initializers, including the radio that disables inversion.
+        await page.evaluate(({ color, mode, highContrast }) => {
+            localStorage.setItem('selectedTheme', color);
+            localStorage.setItem('preferredTheme', mode);
+            localStorage.setItem('myntAccessibility', JSON.stringify({ highContrast }));
+        }, { color, mode, highContrast });
+        await page.reload();
+        await page.waitForFunction(() => window.myntComponents && window.myntDashboard);
+        await openMenu(page);
+        assert.deepEqual(await page.evaluate(() => ({
+            color: document.querySelector('input[name="color"]:checked').value,
+            mode: document.getElementById('themeSegment').dataset.active,
+            highContrast: document.documentElement.classList.contains('myntHighContrast'),
+            black: document.documentElement.classList.contains('black-theme')
+        })), { color, mode, highContrast, black: color === 'dark' }, `DARK: ${theme} initialized`);
+        const measure = async selector => page.locator(selector).evaluateAll(nodes => {
+            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const pixel = (color, filter = 'none') => {
+                ctx.filter = 'none'; ctx.clearRect(0, 0, 1, 1);
+                ctx.filter = filter; ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1);
+                return [...ctx.getImageData(0, 0, 1, 1).data];
+            };
+            if (pixel('#fff', 'invert(1) hue-rotate(180deg)').slice(0, 3).some(value => value !== 0)) throw Error('Canvas CSS filters unavailable');
+            const over = (fg, bg) => {
+                const alpha = fg[3] + bg[3] * (1 - fg[3]);
+                if (!alpha) return [0, 0, 0, 0];
+                return [...fg.slice(0, 3).map((value, i) => (value * fg[3] + bg[i] * bg[3] * (1 - fg[3])) / alpha), alpha];
+            };
+            const rgba = color => { const values = pixel(color); values[3] /= 255; return values; };
+            const surface = node => {
+                let color = [0, 0, 0, 0];
+                for (; node && color[3] < 1; node = node.parentElement) {
+                    const css = getComputedStyle(node);
+                    if (css.backgroundImage !== 'none') throw Error('Contrast surface has an unmodelled image');
+                    color = over(color, rgba(css.backgroundColor));
+                }
+                if (color[3] !== 1) throw Error('Contrast surface needs an opaque ancestor');
+                return color;
+            };
+            const filters = node => {
+                const values = [];
+                for (; node; node = node.parentElement) {
+                    const css = getComputedStyle(node);
+                    if (Number(css.opacity) !== 1) throw Error('Contrast target has unmodelled group opacity');
+                    if (css.filter !== 'none') {
+                        if (css.filter !== 'invert(1) hue-rotate(180deg)') throw Error(`Unexpected contrast filter: ${css.filter}`);
+                        values.push(css.filter);
+                    }
+                }
+                return values;
+            };
+            const effective = (rgb, values) => values.reduce((rgb, filter) => pixel(`rgb(${rgb.slice(0, 3).join(' ')})`, filter), rgb);
+            const luminance = rgb => rgb.slice(0, 3).map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0);
+            return nodes.flatMap(node => {
+                const original = node.className;
+                try {
+                    return (node.classList.contains('serviceState') ? ['ok', 'error'] : [null]).map(state => {
+                        if (state) node.className = `serviceState ${state}`;
+                        const values = filters(node), background = surface(node);
+                        const fg = effective(over(rgba(getComputedStyle(node).color), background), values);
+                        const bg = effective(background, values), a = luminance(fg), b = luminance(bg);
+                        const card = node.closest('.workspacePresetCard');
+                        return { label: `${node.textContent.trim()}${state ? ` (${state})` : ''}`, fg, bg,
+                            filters: values.length, ratio: (Math.max(a, b) + .05) / (Math.min(a, b) + .05),
+                            ...(card ? { cardLuminance: luminance(effective(surface(card), values)),
+                                panelLuminance: luminance(effective(surface(card.closest('.sectionInner')), values)) } : {}) };
+                    });
+                } finally { node.className = original; }
+            });
+        });
+        await select(page, 0); await expand(page, 'workspaceSectionContent');
+        const cards = await measure('#workspacePresetGrid .workspaceApplyBtn strong');
+        assert(cards.length >= 3, `DARK: ${theme} workspace titles exercised`);
+        await select(page, 3); await expand(page, 'privacySectionContent');
+        const grant = page.locator('[data-permission-action="bookmarks"]');
+        assert.equal(await grant.getAttribute('data-permission-state'), 'prompt', 'DARK: actual Grant button');
+        assert.equal(await grant.isEnabled(), true);
+        const permissions = await measure('#menuCont [data-permission-action="bookmarks"]');
+        assert.equal(permissions.length, 1);
+        await expand(page, 'serviceSectionContent');
+        const names = await measure('#menuCont .serviceRow > span:first-child');
+        const states = await measure('#menuCont .serviceRow .serviceState');
+        assert.equal(names.length, 4, `DARK: ${theme} all service names exercised`);
+        assert.equal(states.length, 8, `DARK: ${theme} ok/error on all service rows`);
+        results.push({ theme, samples: [...cards, ...permissions, ...names, ...states] });
+        console.log(`SETTINGS_IA_DARK_MEASURE ${theme} ${JSON.stringify({
+            ratios: { cards: cards.map(x => x.ratio), grant: permissions.map(x => x.ratio), names: names.map(x => x.ratio), states: states.map(x => x.ratio) },
+            cards: cards.map(({ cardLuminance, panelLuminance }) => ({ cardLuminance, panelLuminance }))
+        })}`);
+    }
+    for (const { theme, samples } of results) for (const sample of samples) {
+        assert.equal(sample.filters, theme === 'dark' ? 1 : 0, `DARK: ${theme} actual inversion pipeline`);
+        assert(sample.ratio >= 4.5, `DARK: ${theme} ${sample.label}: ${sample.fg} on ${sample.bg} = ${sample.ratio.toFixed(2)}:1`);
+        if (theme === 'dark' && 'cardLuminance' in sample) assert(sample.cardLuminance < .2, `DARK: inverted workspace card must stay dark: ${sample.cardLuminance} (panel ${sample.panelLuminance})`);
+    }
 }
 async function componentToggles(page, context) {
     // Supply actual countdown content through the shipped manage dialog; a direct
@@ -574,7 +677,7 @@ async function fixtureSnapshot(page, fixture) {
 }
 async function run(language, mobile) {
     if (REVIEW_CASE) {
-        const cases = { M1: clockOptionsAfterManager, M3: settingsTouchTargets, M4: blackThemeStatusContrast, L1: openSettingsFromShortcutEditor };
+        const cases = { M1: clockOptionsAfterManager, M3: settingsTouchTargets, M4: blackThemeStatusContrast, L1: openSettingsFromShortcutEditor, DARK: movedSettingsContrast };
         assert(cases[REVIEW_CASE], `Unknown review case: ${REVIEW_CASE}`);
         const { context, page, errors } = await launch(EXT, { selectedLanguage: language }, mobile);
         try {
@@ -623,6 +726,12 @@ async function run(language, mobile) {
         await blackThemeStatusContrast(page);
         await backupRoundTrip(page);
         await layoutAndKeyboard(page, mobile);
+        // componentToggles left the context offline with the weather widget on; DARK reloads the page, so restore the
+        // default hidden weather (no weather/IP lookups) and go back online. DARK only measures settings sections.
+        await page.evaluate(() => { localStorage.removeItem('weatherApiKey'); localStorage.setItem('hideWeatherVisible', 'true'); });
+        await context.setOffline(false);
+        await page.evaluate(() => window.dispatchEvent(new Event('online')));
+        await movedSettingsContrast(page);
         assert.deepEqual(errors, [], 'No console/page errors during settings interactions');
         console.log(`SETTINGS_IA_BROWSER_OK ${language} ${mobile ? '390x844@2 touch' : '1400x900'} components=${testedComponents} backup=exact keyboard=ok`);
     } finally { await context.close(); }
