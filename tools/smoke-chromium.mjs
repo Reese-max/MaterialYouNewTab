@@ -673,53 +673,74 @@ async function main() {
         })()`);
     }
 
-    // Dark mode dialogs in the installed extension: every visible text in the control center (with the workspace
-    // editor open) and the wallpaper gallery meets WCAG AA. Colours are painted on a canvas first, so any CSS colour
-    // syntax is measured as rendered. The original theme mode is restored afterwards.
+    // Dialog text in the installed extension, in light mode, dark mode and the black theme: every visible text in
+    // the control center (workspace editor open), wallpaper gallery, encouragement lines, AI tools, bookmark editor,
+    // keyboard help and command palette meets WCAG AA. Colours are painted on a canvas first, so any CSS colour syntax
+    // is measured as rendered; disabled controls are exempt. The original theme mode and colour are restored.
     const previousThemeMode = await evaluate(`localStorage.getItem('preferredTheme')`);
-    let darkDialogs;
+    const previousColour = await evaluate(`document.querySelector('.colorPlate:checked')?.value || 'blue'`);
+    const dialogContrast = {};
+    const auditDialogs = `(async () => {
+        const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+        const paint = canvas.getContext('2d', { willReadFrequently: true });
+        const rgba = colour => { paint.clearRect(0, 0, 1, 1); paint.fillStyle = '#000'; paint.fillStyle = colour; paint.fillRect(0, 0, 1, 1); const d = paint.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
+        const lum = c => { const a = c.slice(0, 3).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return a[0] * .2126 + a[1] * .7152 + a[2] * .0722; };
+        const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+        const behind = el => { const layers = []; for (let e = el; e && e !== document.documentElement; e = e.parentElement) { const c = rgba(getComputedStyle(e).backgroundColor); if (c[3] > 0) layers.push(c); if (c[3] >= 0.99) break; } return layers.reverse().reduce((out, c) => out.map((v, i) => v * (1 - c[3]) + c[i] * c[3]), [0, 0, 0]); };
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        const audit = dialog => { const failures = []; let count = 0;
+            for (const el of dialog.querySelectorAll('*')) {
+                const box = el.getBoundingClientRect(), style = getComputedStyle(el);
+                if (box.width < 1 || box.height < 1 || style.visibility === 'hidden' || Number(style.opacity) === 0 || el.closest(':disabled')) continue;
+                const ownText = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+                const field = /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && !['checkbox', 'radio', 'range', 'color', 'file', 'hidden'].includes(el.type);
+                if (!ownText && !field) continue;
+                count++;
+                const size = parseFloat(style.fontSize), need = size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700) ? 3 : 4.5;
+                const r = ratio(rgba(style.color), behind(el));
+                if (r < need) failures.push((el.id || el.className || el.tagName) + ' ' + r.toFixed(2));
+            }
+            return { count, failures }; };
+        const out = {};
+        const centre = document.getElementById('controlCenterDialog'); centre.showModal();
+        centre.querySelector('.workspaceEditBtn')?.click(); centre.querySelectorAll('details').forEach(d => { d.open = true; });
+        await wait(300); out.controlCenter = audit(centre);
+        document.getElementById('workspaceCancelBtn')?.click(); centre.close();
+        window.myntWallpaper.open(); const gallery = document.getElementById('wallpaperGalleryDialog');
+        gallery.querySelectorAll('details').forEach(d => { d.open = true; });
+        await wait(500); out.wallpaperGallery = audit(gallery); gallery.close();
+        window.myntStudyQuotesManager.open(); await wait(300);
+        out.studyQuotes = audit(document.getElementById('studyQuotesDialog')); window.myntStudyQuotesManager.close();
+        showAIToolsSettings(); await wait(300); const ai = document.getElementById('aiToolsSettingsModal');
+        out.aiTools = audit(ai); ai.close();
+        const bookmark = document.getElementById('editBookmarkModal');
+        document.getElementById('editBookmarkName').value = 'Example'; document.getElementById('editBookmarkURL').value = 'https://example.com/';
+        bookmark.showModal(); await wait(200); out.bookmarkEditor = audit(bookmark); bookmark.close();
+        const help = document.getElementById('shortcutsHelpDialog'); help.showModal(); await wait(200); out.keyboardHelp = audit(help); help.close();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', code: 'KeyK', ctrlKey: true, bubbles: true }));
+        await wait(300); const palette = document.getElementById('commandPaletteDialog'); out.commandPalette = audit(palette); palette.close();
+        return out;
+    })()`;
     try {
-        await evaluate(`document.getElementById('darkThemed').click()`);
-        await waitForValue(`document.getElementById('themeSegment').dataset.active === 'dark'`, "Dark mode did not turn on");
-        darkDialogs = await evaluate(`(async () => {
-            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
-            const paint = canvas.getContext('2d', { willReadFrequently: true });
-            const rgba = colour => { paint.clearRect(0, 0, 1, 1); paint.fillStyle = '#000'; paint.fillStyle = colour; paint.fillRect(0, 0, 1, 1); const d = paint.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
-            const lum = c => { const a = c.slice(0, 3).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return a[0] * .2126 + a[1] * .7152 + a[2] * .0722; };
-            const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
-            const behind = el => { const layers = []; for (let e = el; e && e !== document.documentElement; e = e.parentElement) { const c = rgba(getComputedStyle(e).backgroundColor); if (c[3] > 0) layers.push(c); if (c[3] >= 0.99) break; } return layers.reverse().reduce((out, c) => out.map((v, i) => v * (1 - c[3]) + c[i] * c[3]), [0, 0, 0]); };
-            const audit = dialog => { const failures = []; let count = 0;
-                for (const el of dialog.querySelectorAll('*')) {
-                    const box = el.getBoundingClientRect(), style = getComputedStyle(el);
-                    if (box.width < 1 || box.height < 1 || style.visibility === 'hidden' || Number(style.opacity) === 0) continue;
-                    const ownText = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
-                    const field = /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && !['checkbox', 'radio', 'range', 'color', 'file', 'hidden'].includes(el.type);
-                    if (!ownText && !field) continue;
-                    count++;
-                    const size = parseFloat(style.fontSize), need = size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700) ? 3 : 4.5;
-                    const r = ratio(rgba(style.color), behind(el));
-                    if (r < need) failures.push((el.id || el.className || el.tagName) + ' ' + r.toFixed(2));
-                }
-                return { count, failures }; };
-            const out = {};
-            const centre = document.getElementById('controlCenterDialog'); centre.showModal();
-            centre.querySelector('.workspaceEditBtn')?.click(); centre.querySelectorAll('details').forEach(d => { d.open = true; });
-            await new Promise(r => setTimeout(r, 300));
-            out.controlCenter = audit(centre);
-            document.getElementById('workspaceCancelBtn')?.click(); centre.close();
-            window.myntWallpaper.open(); const gallery = document.getElementById('wallpaperGalleryDialog');
-            gallery.querySelectorAll('details').forEach(d => { d.open = true; });
-            await new Promise(r => setTimeout(r, 500));
-            out.wallpaperGallery = audit(gallery); gallery.close();
-            return out;
-        })()`);
-        for (const [name, result] of Object.entries(darkDialogs)) {
-            assert.ok(result.count > 10, `${name} rendered too little text to audit (${result.count})`);
-            assert.deepEqual(result.failures, [], `${name} text below WCAG AA in dark mode`);
+        for (const [mode, setup] of [
+            ['light', `document.getElementById('lightThemed').click()`],
+            ['dark', `document.getElementById('darkThemed').click()`],
+            ['black', `(() => { document.getElementById('lightThemed').click(); document.querySelector('.colorPlate[value="dark"]').click(); })()`],
+        ]) {
+            await evaluate(setup);
+            await waitForValue(mode === 'black'
+                ? `document.documentElement.classList.contains('black-theme')`
+                : `document.getElementById('themeSegment').dataset.active === '${mode}' && !document.documentElement.classList.contains('black-theme')`, `${mode} theme did not turn on`);
+            dialogContrast[mode] = await evaluate(auditDialogs);
+            for (const [name, result] of Object.entries(dialogContrast[mode])) {
+                assert.ok(result.count >= 5, `${name} rendered too little text to audit in ${mode} (${result.count})`);
+                assert.deepEqual(result.failures, [], `${name} text below WCAG AA in ${mode}`);
+            }
         }
     } finally {
         await evaluate(`(() => {
-            document.querySelectorAll('#controlCenterDialog[open], #wallpaperGalleryDialog[open]').forEach(d => d.close());
+            document.querySelectorAll('dialog[open]').forEach(d => d.close());
+            document.querySelector('.colorPlate[value="${previousColour}"]')?.click();
             const mode = ${JSON.stringify(previousThemeMode)} || 'light';
             document.querySelector('#themeSegment [data-theme="' + mode + '"]')?.click();
             if (${JSON.stringify(previousThemeMode)} === null) localStorage.removeItem('preferredTheme');
@@ -814,7 +835,7 @@ async function main() {
         pomodoroTimerReload: true,
         pomodoroPanelGeometry: pomoGeometry,
         studyQuotesManager: studyQuotes,
-        darkModeDialogText: darkDialogs && Object.fromEntries(Object.entries(darkDialogs).map(([name, result]) => [name, `${result.count} items, all AA`])),
+        dialogTextAA: Object.fromEntries(Object.entries(dialogContrast).map(([mode, dialogs]) => [mode, Object.values(dialogs).reduce((n, r) => n + r.count, 0)])),
         wallpaperVisibilityCycles: 3,
         hiddenInitializedWallpaperStarts: true,
         reviewRegressions: review,
