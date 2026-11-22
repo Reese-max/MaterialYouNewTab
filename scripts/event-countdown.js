@@ -51,6 +51,8 @@
   function eventRow(event, actions) {
     const row = el('li', 'event-countdown-row'); row.dataset.color = event.color; row.dataset.state = core.dayInfo(event, new Date()).kind;
     const icon = el('span', 'event-countdown-icon', event.emoji); icon.setAttribute('aria-hidden','true');
+    // No icon chosen: a line calendar icon (styles/ui-icons.css) instead of an emoji default.
+    if (!event.emoji) { const glyph = el('span', 'mynt-icon'); glyph.dataset.icon = 'calendar'; icon.append(glyph); }
     const details = el('div', 'event-countdown-details'); details.append(el('strong','',event.name),el('span','event-countdown-meta',`${t(event.category)} · ${event.annual ? t('nextDate',{date:core.dayInfo(event,new Date()).date}) : event.date}`));
     const days = el('strong','event-countdown-days',dayLabel(event));
     row.append(icon, details, days);
@@ -72,7 +74,7 @@
   }
   function cancelEdit() { draft = null; stale = false; form.hidden = true; confirmBox.hidden = true; read(); if (!blocked) message(''); render(); add.focus(); }
   function startEdit(event) {
-    draft = event ? copy(event) : {id:`e-${globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`,name:'',date:'',category:'exam',emoji:'📚',color:'lavender',annual:false};
+    draft = event ? copy(event) : {id:`e-${globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`,name:'',date:'',category:'exam',emoji:'',color:'lavender',annual:false};
     draftRaw = raw; stale = false; message(''); confirmBox.hidden = true; form.hidden = false;
     document.getElementById('eventCountdownEditTitle').textContent = t(event ? 'editTitle' : 'add');
     Object.entries(fields).forEach(([key,input]) => { if (input.type === 'checkbox') input.checked = draft[key]; else input.value = draft[key]; });

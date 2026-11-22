@@ -60,7 +60,7 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 .sqExport[hidden] { display: none; }
 .sqExport > summary { display: inline-flex; align-items: center; list-style: none; }
 .sqExport > summary::-webkit-details-marker { display: none; }
-.sqExport > summary::after { content: "▾"; margin-inline-start: 6px; font-size: .8em; }
+.sqExport > summary::after { content: ""; display: inline-block; width: 14px; height: 14px; margin-inline-start: 6px; vertical-align: -2px; background-color: currentColor; -webkit-mask: var(--mynt-icon-chevron-down) center / contain no-repeat; mask: var(--mynt-icon-chevron-down) center / contain no-repeat; }
 .sqMenu { position: absolute; z-index: 2; inset-inline-start: 0; top: calc(100% + 6px); display: grid; min-width: 220px; padding: 6px; border-radius: 14px; background: color-mix(in srgb, var(--accentLightTint-blue) 96%, var(--whitishColor-blue)); border: 1px solid color-mix(in srgb, currentColor 16%, transparent); box-shadow: 0 10px 30px rgb(0 0 0 / .18); }
 .sqMenuItem { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
 .sqMenuItem:hover { background: color-mix(in srgb, currentColor 8%, transparent); }

@@ -13,7 +13,8 @@
     background: #244f8d; color: #fff; border: 0; border-radius: 12px; cursor: pointer;
 }
 #myntLayoutLock { white-space: nowrap; font-size: 12px; color: #546b80; }
-#myntLayoutLock::before { content: '● '; color: #537d64; }
+#myntLayoutLock::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-inline-end: 6px; border-radius: 50%; background: #537d64; vertical-align: 1px; }
+@media (forced-colors: active) { #myntLayoutLock::before { background: CanvasText; forced-color-adjust: none; } }
 #myntLayoutSaveStatus { display: block; margin-top: 5px; font-size: 11px; }
 body.mynt-layout-editing #myntLayoutToolbar {
     position: fixed; left: 50%; right: auto; top: auto; bottom: max(16px, env(safe-area-inset-bottom));

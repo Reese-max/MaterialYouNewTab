@@ -1626,10 +1626,12 @@ body #bookmarkButton.bookmark-button.rotate {
 	z-index: 10;
 }
 .pomodoro-drag-handle::before {
-	content: "\2807";
-	font-size: 14px;
-	color: rgba(255, 255, 255, 0.7);
-	line-height: 1;
+	content: "";
+	width: 14px;
+	height: 14px;
+	background-color: rgba(255, 255, 255, 0.7);
+	-webkit-mask: var(--mynt-icon-grip) center / contain no-repeat;
+	mask: var(--mynt-icon-grip) center / contain no-repeat;
 }
 .pomodoro-drag-handle.pomodoro-drag-near { opacity: 1; }
 .pomodoro-drag-handle:active { cursor: grabbing; background: rgba(255, 255, 255, 0.3); }
