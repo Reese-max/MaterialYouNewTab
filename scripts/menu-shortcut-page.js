@@ -200,6 +200,10 @@ window.myntSettings = {
     open(sectionId = "accessibilitySection") {
         const target = document.getElementById(sectionId);
         if (!target) return;
+        if (shortcutEditPage.style.display === "block") {
+            ++menuRevision;
+            pageReset();
+        }
         if (menuButton.getAttribute("aria-expanded") !== "true") openMenuBar();
         selectSettingsGroup(target.closest("[data-settings-group]")?.dataset.settingsGroup || "system");
         queueMenu(() => {

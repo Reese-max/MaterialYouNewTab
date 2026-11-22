@@ -260,6 +260,7 @@ const zh_TW = {
     "showWeatherCardTitle": "顯示天氣卡片",
     "showWeatherCardInfo": "在窄螢幕顯示完整天氣卡片",
     "showMicTitle": "顯示麥克風圖示",
+    "showMicInfo": "在搜尋列顯示語音輸入按鈕",
     "showAiModeTitle": "顯示 AI 模式按鈕",
     "showAiModeInfo": "顯示搜尋列上的 Google AI 模式按鈕",
     "showSearchProviderTitle": "顯示搜尋服務列",
@@ -483,7 +484,7 @@ const zh_TW = {
 
     // Search
     "micIconTitle": "顯示麥克風圖示",
-    "micIconInfo": "如果語音輸入無法使用",
+    "micIconInfo": "在搜尋列顯示語音輸入按鈕",
     "aiModeIconTitle": "顯示 AI 模式按鈕",
     "aiModeIconInfo": "顯示搜尋列上的 Google AI 模式按鈕",
     "hideSearchWith": "顯示搜尋服務列",

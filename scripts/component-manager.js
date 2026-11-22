@@ -31,6 +31,9 @@
             }
             for (const selector of item.panelSelectors) for (const node of document.querySelectorAll(selector)) node.toggleAttribute('data-mynt-component-hidden', !item.visible);
             if (item.id === 'clock') {
+                for (const options of document.querySelectorAll('.clockOptions')) {
+                    options.classList.toggle('not-applicable', !item.visible && !root.matchMedia('(max-width: 500px)').matches);
+                }
                 // Hide only the clock; never rewrite layout coordinates.
                 document.getElementById('leftDiv')?.classList.remove('clock-hidden-left');
                 const digital = localStorage.getItem('clocktype') === 'digital';

@@ -260,6 +260,7 @@ const en = {
     "showWeatherCardTitle": "Show Weather Card",
     "showWeatherCardInfo": "Show the full weather card on small screens",
     "showMicTitle": "Show Microphone Button",
+    "showMicInfo": "Show the voice typing button in the search bar",
     "showAiModeTitle": "Show AI Mode Button",
     "showAiModeInfo": "Show Google AI Mode search button",
     "showSearchProviderTitle": "Show Search Provider Row",
@@ -483,7 +484,7 @@ const en = {
 
     // Search
     "micIconTitle": "Show Microphone Button",
-    "micIconInfo": "If voice typing is not working",
+    "micIconInfo": "Show the voice typing button in the search bar",
     "aiModeIconTitle": "Show AI Mode Button",
     "aiModeIconInfo": "Show Google AI Mode search button",
     "hideSearchWith": "Show Search Provider Row",

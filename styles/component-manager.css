@@ -26,6 +26,10 @@
 #menuCont .ttcont { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
 #menuCont .ttcont > .texts { flex: 1; min-width: 0; }
 #menuCont .ttcont > .switch { flex-shrink: 0; }
+#menuCont .pomodoroNumBtn { min-width: 44px; min-height: 44px; }
+#menuCont .pomodoroNumberInput { flex-shrink: 0; }
+#menuCont .pomodoroNumberInput input[type="number"] { margin-block: 0; }
+#menuCont :is(.settingsActionBtn, .workspaceEditorActions button) { min-height: 44px; }
 
 #overviewPage [data-settings-group][hidden] { display: none !important; }
 #menuCont .settingsGroupTabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }

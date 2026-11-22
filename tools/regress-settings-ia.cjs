@@ -3,6 +3,7 @@
  * MYNT_EXTENSION selects a baseline checkout without copying this test into it.
  * MYNT_BASE_EXTENSION enables identical-fixture rendering/storage comparison with the baseline.
  * MYNT_FIXTURE overrides the de-identified localStorage fixture; --static needs no browser.
+ * --review-case=M1|M3|M4|L1 isolates one review regression for pre-fix/post-fix browser evidence.
  * Browser profiles are disposable and retained for diagnostics, never a real Chrome profile.
  */
 'use strict';
@@ -10,6 +11,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os'), vm = require('node:vm');
 const EXT = path.resolve(process.env.MYNT_EXTENSION || process.argv.find((arg, i) => i > 1 && !arg.startsWith('--')) || path.join(__dirname, '..'));
 const BASE = process.env.MYNT_BASE_EXTENSION && path.resolve(process.env.MYNT_BASE_EXTENSION);
+const REVIEW_CASE = process.argv.find(arg => arg.startsWith('--review-case='))?.split('=')[1];
 const CHROME = process.env.CHROME_BIN || 'C:/Users/Administrator/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe';
 const fixturePath = process.env.MYNT_FIXTURE || [
     path.resolve(__dirname, '../../fixtures/user-localstorage.json'),
@@ -53,6 +55,9 @@ function staticChecks() {
     for (const lang of ['en', 'zh_TW']) for (const key of ['hideWeatherTitle', 'hideWeatherBox', 'hideSearchWith', 'micIconTitle', 'aiModeIconTitle']) {
         assert(!/^(?:隱藏|Hide\b)/i.test(dictionaries[lang][key]), `${lang}:${key} is positive`);
     }
+    assert.equal(dictionaries.en.showMicInfo, 'Show the voice typing button in the search bar');
+    assert.equal(dictionaries.zh_TW.showMicInfo, '在搜尋列顯示語音輸入按鈕');
+    assert.match(read('scripts/languages.js'), /\{ id: "micIconInfo", key: "showMicInfo" \}/, 'Other locales use the positive English fallback');
     for (const name of ['index.html', 'locales/en.js', 'locales/zh_TW.js', 'scripts/menu-shortcut-page.js',
         'scripts/component-manager.js', 'scripts/widgets-transparency.js', 'scripts/adaptive-background.js',
         'scripts/dashboard-tools.js', 'scripts/weather.js', 'scripts/search.js', 'scripts/voice-search.js',
@@ -116,6 +121,102 @@ async function fixtureCompatibility(page, fixture) {
     if (fixture.aiModeIconVisible) assert.equal(await page.locator('#aiModeIcon').isVisible(), fixture.aiModeIconVisible !== 'false');
     if (fixture.hideWeatherCardState) assert.equal(await page.locator('#hideWeatherCard').isChecked(), fixture.hideWeatherCardState !== 'checked');
 }
+async function clockOptionsAfterManager(page) {
+    // Reproduce a saved hidden clock on load, rather than only toggling an initialized clock.
+    await page.evaluate(() => { localStorage.setItem('hideClockVisible', 'true'); localStorage.setItem('clocktype', 'analog'); localStorage.setItem('hourformat', 'false'); });
+    await page.reload();
+    await page.waitForFunction(() => window.myntComponents && window.myntSettings);
+    await openMenu(page); await select(page, 0);
+    assert.equal(await page.locator('.clockOptions').evaluate(node => node.classList.contains('not-applicable')), page.viewportSize().width > 500, 'Hidden clock keeps the existing narrow-screen exception');
+    await page.locator('#myntComponent-clock').check();
+    assert.equal(await page.evaluate(() => localStorage.getItem('hideClockVisible')), 'false');
+    await select(page, 1); await expand(page, 'clockSectionContent');
+    assert.equal(await page.locator('.clockOptions').evaluate(node => node.classList.contains('not-applicable')), false, 'M1: manager restores clock options');
+    assert.notEqual(await page.locator('.clockOptions').evaluate(node => getComputedStyle(node).pointerEvents), 'none', 'M1: clock options accept clicks');
+    for (const [id, key, expected] of [['digitalCheckbox', 'clocktype', 'digital'], ['12hourcheckbox', 'hourformat', 'true']]) {
+        // '12hourcheckbox' starts with a digit, so '#id' is not a valid CSS selector.
+        await page.locator(`[id="${id}"]`).locator('..').click();
+        assert.equal(await page.locator(`[id="${id}"]`).isChecked(), true, `M1: ${id} is clickable`);
+        await poll(() => page.evaluate(key => localStorage.getItem(key), key), expected, `M1: ${key} persists`);
+    }
+}
+async function touchTargets(page, selector, expectedCount) {
+    const sizes = await page.locator(selector).evaluateAll(nodes => nodes.map(node => {
+        const rect = node.getBoundingClientRect();
+        return { id: node.id || node.dataset.target, width: rect.width, height: rect.height };
+    }));
+    if (expectedCount !== undefined) assert.equal(sizes.length, expectedCount, `M3: ${selector} count`);
+    assert(sizes.length > 0, `M3: ${selector} exercised`);
+    for (const size of sizes) assert(size.height >= 44 && (!selector.includes('pomodoroNumBtn') || size.width >= 44), `M3: ${size.id} target ${size.width}x${size.height}`);
+}
+async function settingsTouchTargets(page) {
+    await select(page, 0);
+    for (const id of ['pomodoro', 'studyQuote']) await page.locator(`#myntComponent-${id}`).check();
+    await select(page, 2);
+    for (const id of ['pomodoroSectionContent', 'pomodoroDurations', 'pomodoroAdvanced', 'studySectionContent']) await expand(page, id);
+    await touchTargets(page, '#menuCont .pomodoroNumBtn:visible', 13);
+    const inline = await page.locator('#menuCont .pomodoroNumberInput:visible').evaluateAll(nodes => nodes.every(node => {
+        const boxes = [...node.children].map(child => child.getBoundingClientRect());
+        return node.scrollWidth <= node.clientWidth + 1 && boxes.every(box => Math.abs(box.top + box.height / 2 - boxes[0].top - boxes[0].height / 2) < 1) && boxes.every((box, i) => i === 0 || boxes[i - 1].right <= box.left);
+    }));
+    assert(inline, 'M3: minus/input/plus stay on one line without overlap or overflow');
+    await touchTargets(page, '#menuCont .settingsActionBtn:visible');
+    assert.equal(await page.locator('#studyQuotesManageButton').isVisible(), true, 'M3: tool action exercised');
+    await select(page, 0); await expand(page, 'workspaceSectionContent');
+    await page.locator('#workspacePresetGrid .workspaceEditBtn').first().click();
+    await touchTargets(page, '#menuCont .workspaceEditorActions button:visible', 3);
+    await touchTargets(page, '#menuCont .settingsActionBtn:visible', 2);
+    await page.locator('#workspaceCancelBtn').click();
+}
+async function openSettingsFromShortcutEditor(page) {
+    await select(page, 0); await page.locator('#myntComponent-shortcuts').check();
+    // Exercise both an editor transition in progress and a fully settled subpage.
+    for (const delay of [0, 700]) {
+        await select(page, 2); await expand(page, 'shortcutsSectionContent');
+        await page.locator('#shortcutEditButton').click();
+        await poll(() => page.locator('#shortcutEditPage').evaluate(node => node.style.display), 'block', 'L1: editor opens');
+        if (delay) await page.waitForTimeout(delay);
+        await page.evaluate(() => window.myntSettings.open('privacySection'));
+        await poll(() => page.locator('#overviewPage').isVisible(), true, 'L1: overview restored');
+        await poll(() => page.evaluate(() => document.activeElement.id), 'privacySection', 'L1: target focused');
+        await page.waitForTimeout(700);
+        assert.equal(await page.locator('#shortcutEditPage').isVisible(), false, 'L1: editor stays hidden after pending animations');
+        assert.equal(await page.locator('#privacySection').isVisible(), true, 'L1: target stays visible');
+        assert.equal(await page.locator('[data-settings-group-button]').nth(3).getAttribute('aria-selected'), 'true');
+        assert.equal(await page.locator('#privacySection').evaluate(node => {
+            const target = node.getBoundingClientRect(), panel = document.getElementById('optCont').getBoundingClientRect();
+            return target.top < panel.bottom && target.bottom > panel.top;
+        }), true, 'L1: target scrolled into the panel');
+    }
+}
+async function blackThemeStatusContrast(page) {
+    const previous = await page.evaluate(() => {
+        const color = document.querySelector('input[name="color"]:checked').value;
+        applySelectedTheme('dark', false);
+        return color;
+    });
+    try {
+        await select(page, 3); await expand(page, 'serviceSectionContent');
+        assert.equal(await page.evaluate(() => document.documentElement.classList.contains('black-theme') && !document.documentElement.classList.contains('myntHighContrast')), true, 'M4: actual black theme without high contrast');
+        const contrasts = await page.locator('#menuCont #serviceSection .serviceState').first().evaluate(node => {
+            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const rgba = color => { ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1); return [...ctx.getImageData(0, 0, 1, 1).data]; };
+            const luminance = rgb => rgb.slice(0, 3).map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+            const original = node.className;
+            try {
+                return ['ok', 'error'].map(state => {
+                    // Reuse the real service row and its opaque black-theme surface; only select the state being measured.
+                    node.className = `serviceState ${state}`;
+                    const color = getComputedStyle(node).color, background = getComputedStyle(node.closest('.serviceRow')).backgroundColor;
+                    const foreground = rgba(color), surface = rgba(background), a = luminance(foreground), b = luminance(surface);
+                    return { state, color, background, opaque: foreground[3] === 255 && surface[3] === 255, ratio: (Math.max(a, b) + .05) / (Math.min(a, b) + .05) };
+                });
+            } finally { node.className = original; }
+        });
+        for (const result of contrasts) assert(result.opaque && result.ratio >= 4.5, `M4: ${result.state} ${result.color} on ${result.background} = ${result.ratio.toFixed(2)}:1`);
+    } finally { await page.evaluate(color => applySelectedTheme(color, false), previous); }
+}
 async function componentToggles(page, context) {
     // Supply actual countdown content through the shipped manage dialog; a direct
     // storage write bypasses the product's revision tracking and fails validation
@@ -134,9 +235,11 @@ async function componentToggles(page, context) {
     assert.equal(await page.locator('#myntComponentManager fieldset').count(), 4, 'Four component groups');
     // Enable the search parent before checking its provider row.
     await page.locator('#myntComponent-search').check();
-    for (const [id, key, kind] of components) {
-        // centered-home.css hides some manager rows (homeWidgets) on the base build as well; nothing to toggle there.
-        if (!await page.locator(`#myntComponent-${id}`).isVisible()) { console.log(`SETTINGS_IA_SKIP ${id}: row hidden by product CSS`); continue; }
+    const tested = [];
+    // Only homeWidgets is intentionally hidden by centered-home.css; every other row must be operable.
+    assert.equal(await page.locator('#myntComponent-homeWidgets').isVisible(), false, 'homeWidgets: centered-home.css exception');
+    for (const [id, key, kind] of components.filter(([id]) => id !== 'homeWidgets')) {
+        assert.equal(await page.locator(`#myntComponent-${id}`).isVisible(), true, `${id}: required manager row visible`);
         // Every step must be a real change: setting an already-matching state fires no change event and writes nothing.
         const initiallyOn = await page.locator(`#myntComponent-${id}`).isChecked();
         for (const visible of initiallyOn ? [false, true, false, true] : [true, false, true]) {
@@ -162,6 +265,7 @@ async function componentToggles(page, context) {
             }, id);
             assert.equal(rendered, visible, `${id}: actual homepage CSS visibility`);
         }
+        tested.push(id);
     }
     // Tool details follow their canonical component state, including manager and refresh paths.
     for (const [id] of components.filter(([id]) => ['shortcuts', 'aiTools', 'pomodoro', 'studyQuote', 'countdowns', 'search', 'weather'].includes(id))) {
@@ -171,6 +275,7 @@ async function componentToggles(page, context) {
         assert.equal(await page.locator(`[data-settings-component="${id}"]`).isVisible(), true, `${id}: enabled tool available`);
     }
     // No network is needed by visibility changes. Keep this context offline for the rest of the checks.
+    return tested.length;
 }
 async function detailsAndPositiveControls(page) {
     await select(page, 1);
@@ -468,6 +573,17 @@ async function fixtureSnapshot(page, fixture) {
     }, { ids: components.map(([id]) => id), keys: [...new Set([...Object.keys(fixture), ...components.map(([, key]) => key)])].sort() });
 }
 async function run(language, mobile) {
+    if (REVIEW_CASE) {
+        const cases = { M1: clockOptionsAfterManager, M3: settingsTouchTargets, M4: blackThemeStatusContrast, L1: openSettingsFromShortcutEditor };
+        assert(cases[REVIEW_CASE], `Unknown review case: ${REVIEW_CASE}`);
+        const { context, page, errors } = await launch(EXT, { selectedLanguage: language }, mobile);
+        try {
+            await openMenu(page); await cases[REVIEW_CASE](page);
+            assert.deepEqual(errors, [], 'No console/page errors in review regression');
+            console.log(`SETTINGS_IA_REVIEW_OK ${REVIEW_CASE} ${language} ${mobile ? 'mobile' : 'desktop'}`);
+        } finally { await context.close(); }
+        return;
+    }
     assert(fixturePath, 'A fixture must exist');
     const data = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
     const fixture = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, typeof value === 'string' ? value : JSON.stringify(value)]));
@@ -498,18 +614,23 @@ async function run(language, mobile) {
         assert.equal(await page.locator('[aria-controls="settingsSectionContent"]').getAttribute('aria-expanded'), 'true', 'Language and backup initially expanded');
         assert.equal(await page.locator('#settingsSectionTitle').textContent(), dictionaries[language].settingsLanguageBackupTitle);
         await noDuplicateSwitches(page);
-        await componentToggles(page, context);
+        await clockOptionsAfterManager(page);
+        const testedComponents = await componentToggles(page, context);
         await detailsAndPositiveControls(page);
+        await settingsTouchTargets(page);
+        await openSettingsFromShortcutEditor(page);
         await controlCenterFunctions(page, language);
+        await blackThemeStatusContrast(page);
         await backupRoundTrip(page);
         await layoutAndKeyboard(page, mobile);
         assert.deepEqual(errors, [], 'No console/page errors during settings interactions');
-        console.log(`SETTINGS_IA_BROWSER_OK ${language} ${mobile ? '390x844@2 touch' : '1400x900'} components=14 backup=exact keyboard=ok`);
+        console.log(`SETTINGS_IA_BROWSER_OK ${language} ${mobile ? '390x844@2 touch' : '1400x900'} components=${testedComponents} backup=exact keyboard=ok`);
     } finally { await context.close(); }
 }
 (async () => {
     if (process.argv.includes('--static')) { staticChecks(); return; }
     for (const language of ['zh_TW', 'en']) for (const mobile of [false, true]) await run(language, mobile);
+    if (REVIEW_CASE) { console.log(`SETTINGS_IA_REVIEW_CASE_OK ${REVIEW_CASE}`); return; }
     staticChecks();
     console.log('SETTINGS_IA_OK');
 })().catch(error => { console.error('SETTINGS_IA_FAIL', error); process.exitCode = 1; });

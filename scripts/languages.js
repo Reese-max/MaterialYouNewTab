@@ -187,7 +187,7 @@ function applyLanguage(lang) {
         { id: "hideWeatherBox", key: "showWeatherCardTitle" },
         { id: "hideWeatherBoxInfo", key: "showWeatherCardInfo" },
         { id: "micIconTitle", key: "showMicTitle" },
-        "micIconInfo",
+        { id: "micIconInfo", key: "showMicInfo" },
         { id: "aiModeIconTitle", key: "showAiModeTitle" },
         { id: "aiModeIconInfo", key: "showAiModeInfo" },
         { id: "hideSearchWith", key: "showSearchProviderTitle" },

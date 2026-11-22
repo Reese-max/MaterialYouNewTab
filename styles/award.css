@@ -707,7 +707,7 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
 	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
 	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
-):not(.black-theme, .myntHighContrast) #controlCenterDialog {
+):not(.black-theme, .myntHighContrast) :is(#controlCenterDialog, #menuCont) {
 	& .controlSection {
 		background: #232833;
 		border-color: rgba(255, 255, 255, 0.08);
@@ -801,7 +801,7 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
 	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
 	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
-):not(.myntHighContrast) #controlCenterDialog {
+):not(.myntHighContrast) :is(#controlCenterDialog, #menuCont) {
 	& :is(.permissionControls em.granted, .serviceState.ok) {
 		color: #81c995;
 	}
@@ -4239,15 +4239,15 @@ dialog.myntAppDialog .myntAppDialogActions .myntAppDialogOk.is-danger:focus-visi
    ========================================================================== */
 html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-active="dark"])):not(:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"])) {
 	& .controlCenterEyebrow,
-	& #controlCenterDialog :is(.controlSectionHeading a, .sectionStatus) {
+	& :is(#controlCenterDialog, #menuCont) :is(.controlSectionHeading a, .sectionStatus) {
 		color: var(--mynt-accent-ink);
 	}
-	& #controlCenterDialog .workspaceLaunchBtn {
+	& :is(#controlCenterDialog, #menuCont) .workspaceLaunchBtn {
 		border-color: color-mix(in srgb, var(--mynt-accent-ink) 35%, transparent);
 		background: color-mix(in srgb, var(--mynt-accent-ink) 10%, transparent);
 		color: var(--mynt-accent-ink);
 	}
-	& #controlCenterDialog .workspaceLaunchBtn:hover {
+	& :is(#controlCenterDialog, #menuCont) .workspaceLaunchBtn:hover {
 		background: var(--mynt-accent-ink);
 		color: #ffffff;
 	}
@@ -4292,15 +4292,16 @@ html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-a
    3. 手機寬度時「已套用○○模式」被擠在標題與「新增模式」之間，變成一字一行；狀態文字不換行，
       標題列放不下時整組動作移到下一行（寬螢幕排版不變）。
    ========================================================================== */
-#controlCenterDialog .controlSectionHeading {
+:is(#controlCenterDialog, #menuCont) .controlSectionHeading {
 	flex-wrap: wrap;
 	row-gap: 10px;
 }
 
-#controlCenterDialog .workspaceHeadingActions .sectionStatus {
+:is(#controlCenterDialog, #menuCont) .workspaceHeadingActions .sectionStatus {
 	white-space: nowrap;
 }
 
+/* Settings uses the grid in component-manager.css; absolute placement belongs to the legacy dialog. */
 #controlCenterDialog .workspacePresetCard .workspaceLaunchBtn {
 	position: absolute;
 	inset-inline-end: 12px;
