@@ -26,7 +26,7 @@ GitHub Pages 第一次使用需要由 Repository 管理者做一次設定：
 
 ## 二、網頁預覽檢查
 
-先開啟預覽首頁，等待右上角或右下角出現「MYNT 網頁預覽」狀態，再進入 `verify.html`。
+一般使用者看不到預覽狀態條；它只在偵測到錯誤或結構問題時自動出現。驗證時請在網址後加上 `?preview`（例如 `https://reese-max.github.io/MaterialYouNewTab/?preview`），等待上方（窄螢幕在左下角）出現「Reese 新分頁預覽」狀態，再進入 `verify.html`。
 
 最低通過標準：
 

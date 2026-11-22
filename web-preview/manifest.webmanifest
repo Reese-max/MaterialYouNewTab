@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Reese 新分頁",
+  "short_name": "新分頁",
+  "description": "繁體中文優先的 Material You 新分頁，整合搜尋、捷徑、待辦、專注與工作區。資料只存在這個裝置。",
+  "lang": "zh-TW",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#95c0ff",
+  "icons": [
+    { "src": "preview/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "preview/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "preview/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
