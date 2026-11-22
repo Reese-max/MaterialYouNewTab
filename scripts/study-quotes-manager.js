@@ -550,6 +550,9 @@
         ui.bulkTitle = el("h3", "sqSectionTitle"); ui.bulkTitle.id = "studyQuotesBulkTitle";
         form.setAttribute("aria-labelledby", "studyQuotesBulkTitle");
         ui.bulkHint = el("p", "sqHint"); ui.bulkHint.id = "studyQuotesBulkHint";
+        ui.bulkExample = el("div", "sqBulkExample");
+        ui.bulkExampleTitle = el("p", "sqHint"); ui.bulkExampleLines = el("pre", "sqBulkExampleLines");
+        ui.bulkExample.append(ui.bulkExampleTitle, ui.bulkExampleLines);
         ui.bulkText = el("textarea", "sqInput sqBulkText"); ui.bulkText.rows = 8; ui.bulkText.spellcheck = false;
         ui.bulkText.setAttribute("aria-describedby", "studyQuotesBulkHint");
         ui.bulkTextLabel = el("label", "sqField"); ui.bulkTextLabelText = el("span", "sqFieldLabel");
@@ -571,7 +574,7 @@
         ui.bulkCancel = button("sqSecondary", "", () => closeBulk());
         ui.bulkSubmit = el("button", "sqPrimary"); ui.bulkSubmit.type = "submit";
         buttons.append(ui.bulkCancel, ui.bulkSubmit);
-        form.append(ui.bulkTitle, ui.bulkHint, ui.bulkTextLabel, fileRow, ui.bulkTagsLabel, ui.bulkMode, ui.bulkPreview, buttons);
+        form.append(ui.bulkTitle, ui.bulkHint, ui.bulkExample, ui.bulkTextLabel, fileRow, ui.bulkTagsLabel, ui.bulkMode, ui.bulkPreview, buttons);
         form.addEventListener("input", event => {
             if (event.target === ui.bulkText && bulkName && (!ui.bulkText.value.trim() || firstLine(ui.bulkText.value) !== bulkHead)) { bulkName = ""; bulkHead = ""; ui.bulkFileName.textContent = ""; }
             scheduleBulkPreview();
@@ -597,6 +600,8 @@
     function localizeBulk() {
         ui.bulkTitle.textContent = t("studyQuotesBulkTitle", "Add many lines");
         ui.bulkHint.textContent = t("studyQuotesBulkHint", "One line each, optionally as \u201ctext — author《source》 #tag\u201d. You can also paste columns copied from Excel or Google Sheets (text, author, source, tags), or choose a .txt, .csv or .json file.");
+        ui.bulkExampleTitle.textContent = t("studyQuotesBulkExampleTitle", "Example: line 1 is text only; line 2 adds an author; line 3 adds author, source and a tag; line 4 has several tags.");
+        ui.bulkExampleLines.textContent = t("studyQuotesBulkExample", "Every day counts.\nSlow is smooth, smooth is fast. — Navy SEALs\nA journey of a thousand miles begins with a single step. — Laozi《Tao Te Ching》 #classics\nOne more question today, one less worry on exam day. — Me #exam #habit");
         ui.bulkTextLabelText.textContent = t("studyQuotesBulkTextLabel", "Lines to add");
         ui.bulkText.placeholder = t("studyQuotesBulkPlaceholder", "Every day counts. — Me #exam\nSlow is smooth, smooth is fast.");
         ui.bulkFileButton.textContent = t("studyQuotesBulkFile", "Choose a file");
