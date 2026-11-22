@@ -43,7 +43,8 @@ assert.match(html, /id=["']videoBg["'][^>]*preload=["']none["']/i);
 assert.match(html, /<source\b[^>]*data-src=["']\.\/videos\/bg\.mp4\?v=2["']/i);
 assert.doesNotMatch(html, /<source\b[^>]*\ssrc=["']\.\/videos\/bg\.mp4\?v=2["']/i);
 assert.doesNotMatch(html, /\bonerror\s*=/i, "Inline error handlers violate the extension CSP");
-assert.equal((html.match(/<button\b[^>]*\bclass=["'][^"']*\bsectionHeader\b[^"']*["']/gi) || []).length, 7);
+// Four settings tabs now reuse the same disclosure for moved tools and control-center sections.
+assert.equal((html.match(/<button\b[^>]*\bclass=["'][^"']*\bsectionHeader\b[^"']*["']/gi) || []).length, 18);
 assert.doesNotMatch(html, /<(?:div|span)\b[^>]*\bclass=["'][^"']*\bsectionHeader\b/i);
 assert.match(html, /<h1\s+id=["']menuTitle["']>My New Tab<\/h1>/i);
 assert.doesNotMatch(html, />\s*Material You New Tab\s*</i, "Legacy product name remains visible in the new-tab UI");
