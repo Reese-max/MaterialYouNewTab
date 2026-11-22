@@ -4,7 +4,8 @@
  */
 
 chrome.runtime.onInstalled.addListener((details) => {
-    if (details.reason !== "update") return;
+    // Reloading an unpacked build also reports "update"; only announce a real version change.
+    if (details.reason !== "update" || details.previousVersion === chrome.runtime.getManifest().version) return;
     chrome.tabs.create({
         url: chrome.runtime.getURL("docs/whats-new.html")
     });
