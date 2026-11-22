@@ -347,11 +347,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             }
         }));
 
-        for (const [direction, symbol, offset] of [["Up", "↑", -1], ["Down", "↓", 1]]) {
+        for (const [direction, icon, offset] of [["Up", "arrow-up", -1], ["Down", "arrow-down", 1]]) {
             const button = document.createElement("button");
             button.type = "button";
             button.className = `shortcutMove${direction}`;
-            button.textContent = symbol;
+            const arrow = document.createElement("span"); arrow.className = "mynt-icon"; arrow.dataset.icon = icon; arrow.setAttribute("aria-hidden", "true");
+            button.appendChild(arrow);
             const template = translations[currentLanguage]?.[`shortcutMove${direction}`] || translations.en[`shortcutMove${direction}`];
             button.setAttribute("aria-label", template.replace("{name}", name));
             button.disabled = offset < 0 ? index === 0 : index === shortcutsCache.length - 1;

@@ -1,0 +1,79 @@
+/* One line-icon set for the whole UI (24px grid, 1.5 stroke, round caps), drawn with CSS masks in the text colour.
+   It replaces emoji and text glyphs that were used as icons (rocket, braille grip, curved arrows, pencil, play
+   triangle and similar), which rendered differently on every platform and read as generated. Usage: <span class="mynt-icon" data-icon="name" aria-hidden="true"></span>,
+   or set --mynt-icon: var(--mynt-icon-name) on an element that draws ::before with the .mynt-icon recipe. */
+:root {
+    --mynt-icon-launch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h6v6'/%3E%3Cpath d='M20 4l-9 9'/%3E%3Cpath d='M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4'/%3E%3C/svg%3E");
+    --mynt-icon-external: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7'/%3E%3Cpath d='M8 7h9v9'/%3E%3C/svg%3E");
+    --mynt-icon-arrow-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='m6 11 6-6 6 6'/%3E%3C/svg%3E");
+    --mynt-icon-arrow-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14'/%3E%3Cpath d='m6 13 6 6 6-6'/%3E%3C/svg%3E");
+    --mynt-icon-edit: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9a2.83 2.83 0 0 0-4-4L4 16v4z'/%3E%3Cpath d='m13.5 6.5 4 4'/%3E%3C/svg%3E");
+    --mynt-icon-video: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='6' width='13' height='12' rx='2'/%3E%3Cpath d='m16 10.5 5-3v9l-5-3'/%3E%3C/svg%3E");
+    --mynt-icon-undo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 14 4 9l5-5'/%3E%3Cpath d='M4 9h10.5a5.5 5.5 0 0 1 0 11H11'/%3E%3C/svg%3E");
+    --mynt-icon-redo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 14 5-5-5-5'/%3E%3Cpath d='M20 9H9.5a5.5 5.5 0 0 0 0 11H13'/%3E%3C/svg%3E");
+    --mynt-icon-move: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v18M3 12h18'/%3E%3Cpath d='m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3'/%3E%3C/svg%3E");
+    --mynt-icon-grip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg fill='black' stroke='none'%3E%3Ccircle cx='9' cy='6' r='1.6'/%3E%3Ccircle cx='15' cy='6' r='1.6'/%3E%3Ccircle cx='9' cy='12' r='1.6'/%3E%3Ccircle cx='15' cy='12' r='1.6'/%3E%3Ccircle cx='9' cy='18' r='1.6'/%3E%3Ccircle cx='15' cy='18' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
+    --mynt-icon-more: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg fill='black' stroke='none'%3E%3Ccircle cx='6' cy='12' r='1.6'/%3E%3Ccircle cx='12' cy='12' r='1.6'/%3E%3Ccircle cx='18' cy='12' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
+    --mynt-icon-resize: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7l10 10'/%3E%3Cpath d='M17 9v8H9'/%3E%3C/svg%3E");
+    --mynt-icon-width: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12h18'/%3E%3Cpath d='m7 8-4 4 4 4'/%3E%3Cpath d='m17 8 4 4-4 4'/%3E%3C/svg%3E");
+    --mynt-icon-height: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v18'/%3E%3Cpath d='m8 7 4-4 4 4'/%3E%3Cpath d='m8 17 4 4 4-4'/%3E%3C/svg%3E");
+    --mynt-icon-minimize: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+    --mynt-icon-expand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='5' width='14' height='14' rx='2'/%3E%3C/svg%3E");
+    --mynt-icon-dock-top: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 4h14'/%3E%3Cpath d='M12 20V9'/%3E%3Cpath d='m7 13 5-5 5 5'/%3E%3C/svg%3E");
+    --mynt-icon-dock-bottom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 20h14'/%3E%3Cpath d='M12 4v11'/%3E%3Cpath d='m7 11 5 5 5-5'/%3E%3C/svg%3E");
+    --mynt-icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --mynt-icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+    --mynt-icon-calendar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15' rx='2'/%3E%3Cpath d='M3.5 10h17M8 3v4M16 3v4'/%3E%3C/svg%3E");
+    --mynt-icon-document: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 3v5h5M9 13h6M9 17h4'/%3E%3C/svg%3E");
+}
+
+.mynt-icon {
+    display: inline-block;
+    flex: none;
+    inline-size: 1.15em;
+    block-size: 1.15em;
+    vertical-align: -0.2em;
+    background-color: currentColor;
+    -webkit-mask: var(--mynt-icon) center / contain no-repeat;
+    mask: var(--mynt-icon) center / contain no-repeat;
+}
+.mynt-icon[data-icon="launch"] { --mynt-icon: var(--mynt-icon-launch); }
+.mynt-icon[data-icon="external"] { --mynt-icon: var(--mynt-icon-external); }
+.mynt-icon[data-icon="arrow-up"] { --mynt-icon: var(--mynt-icon-arrow-up); }
+.mynt-icon[data-icon="arrow-down"] { --mynt-icon: var(--mynt-icon-arrow-down); }
+.mynt-icon[data-icon="edit"] { --mynt-icon: var(--mynt-icon-edit); }
+.mynt-icon[data-icon="video"] { --mynt-icon: var(--mynt-icon-video); }
+.mynt-icon[data-icon="undo"] { --mynt-icon: var(--mynt-icon-undo); }
+.mynt-icon[data-icon="redo"] { --mynt-icon: var(--mynt-icon-redo); }
+.mynt-icon[data-icon="move"] { --mynt-icon: var(--mynt-icon-move); }
+.mynt-icon[data-icon="grip"] { --mynt-icon: var(--mynt-icon-grip); }
+.mynt-icon[data-icon="more"] { --mynt-icon: var(--mynt-icon-more); }
+.mynt-icon[data-icon="resize"] { --mynt-icon: var(--mynt-icon-resize); }
+.mynt-icon[data-icon="width"] { --mynt-icon: var(--mynt-icon-width); }
+.mynt-icon[data-icon="height"] { --mynt-icon: var(--mynt-icon-height); }
+.mynt-icon[data-icon="minimize"] { --mynt-icon: var(--mynt-icon-minimize); }
+.mynt-icon[data-icon="expand"] { --mynt-icon: var(--mynt-icon-expand); }
+.mynt-icon[data-icon="dock-top"] { --mynt-icon: var(--mynt-icon-dock-top); }
+.mynt-icon[data-icon="dock-bottom"] { --mynt-icon: var(--mynt-icon-dock-bottom); }
+.mynt-icon[data-icon="chevron-down"] { --mynt-icon: var(--mynt-icon-chevron-down); }
+.mynt-icon[data-icon="check"] { --mynt-icon: var(--mynt-icon-check); }
+.mynt-icon[data-icon="calendar"] { --mynt-icon: var(--mynt-icon-calendar); }
+.mynt-icon[data-icon="document"] { --mynt-icon: var(--mynt-icon-document); }
+
+/* Windows forced colours replace backgrounds with Canvas, which would erase a mask-drawn icon. */
+@media (forced-colors: active) {
+    .mynt-icon { background-color: CanvasText; forced-color-adjust: none; }
+}
+
+/* Hosts that place an icon beside text. */
+.workspaceLaunchBtn,
+.wallpaperBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.event-countdown-icon > .mynt-icon {
+    inline-size: 1em;
+    block-size: 1em;
+}

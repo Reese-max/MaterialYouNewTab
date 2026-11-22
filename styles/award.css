@@ -1326,19 +1326,10 @@ body.mynt-layout-editing .myntLayoutOverlay:is(
         justify-content: center;
     }
 
-    & > .myntLayoutLabel::before {
-        content: "⠿";
-        font-size: 12px;
-    }
-
     &:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel {
         width: max-content;
         padding-inline: 8px;
         font-size: 12px;
-    }
-
-    &:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel::before {
-        content: none;
     }
 
     /* 小圖示下方留出縮放操作區，不再把縮放鈕壓在圖示上。
@@ -1970,7 +1961,7 @@ body.mynt-layout-editing .myntLayoutOverlay:is(
 
 /* --- 7.7 小型區塊的標籤自動縮為把手圖示 ----------------------------------
    用容器查詢取代逐區塊列舉：寬度 <110px 的覆蓋框（含今日小工具
-   #myntHomeWidgets 等新區塊）標籤縮成 24px ⠿ 圖示，互動時再展開。 */
+   #myntHomeWidgets 等新區塊）標籤縮成 24px 把手圖示，互動時再展開。 */
 body.mynt-layout-editing .myntLayoutOverlay[data-block] {
     container-type: size;
     container-name: myntlayoutblock;
@@ -1987,20 +1978,12 @@ body.mynt-layout-editing .myntLayoutOverlay[data-block] {
         justify-content: center;
     }
 
-    .myntLayoutOverlay > .myntLayoutLabel::before {
-        content: "⠿";
-        font-size: 12px;
-    }
-
     .myntLayoutOverlay:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel {
         width: max-content;
         padding-inline: 8px;
         font-size: 12px;
     }
 
-    .myntLayoutOverlay:is(:hover, :focus-within, .is-selected) > .myntLayoutLabel::before {
-        content: none;
-    }
 }
 
 /* --- 7.8 非置頂面板上下留白加到 88px -------------------------------------
@@ -2127,13 +2110,21 @@ body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle {
 }
 
 /* 原文字仍是按鈕的可及名稱；圖示隨既有 aria-pressed 切換停靠方向。 */
-body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle::before {
-    content: "↥";
-    font: 600 20px/1 system-ui, sans-serif;
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle {
+    --mynt-icon: var(--mynt-icon-dock-top);
 }
 
-body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle[aria-pressed="true"]::before {
-    content: "↧";
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle[aria-pressed="true"] {
+    --mynt-icon: var(--mynt-icon-dock-bottom);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutDockToggle::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask: var(--mynt-icon) center / contain no-repeat;
+    mask: var(--mynt-icon) center / contain no-repeat;
 }
 
 body.mynt-layout-editing #myntLayoutToolbar #myntLayoutUndo { grid-area: undo; }
@@ -2301,11 +2292,6 @@ body.mynt-layout-editing #myntLayoutToolbar .myntLayoutPrecision button {
         justify-content: center;
     }
 
-    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutLabel.myntLayoutMove::before {
-        content: "⠿";
-        font: 600 12px/1 system-ui, sans-serif;
-    }
-
     body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize {
         top: auto;
         bottom: 0;
@@ -2356,10 +2342,10 @@ body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize.mynt
    第 17 輪（2026-11-17）：筆電尺寸的工具列與把手
    - 1366×768／1280×720 時，置中的搜尋列與捷徑列右端把手被 320×512 工具箱蓋住；
      兩側只剩約 230px 空白，換停靠位置無解。工具列改為精簡版：
-     標題列（⠿ 拖曳移動、縮小）＋ 復原／重做／取消／儲存，其餘收進「更多選項」，
+     標題列（把手拖曳移動、縮小）＋ 復原／重做／取消／儲存，其餘收進「更多選項」，
      預設停在右上角，可拖曳或用方向鍵移到任何位置，也可縮成只剩標題列。
    - 寬而矮的區塊（搜尋列、捷徑列、語錄）原本被第 16 輪縮成框內 20px 圖示、
-     蓋住內容左上角；改回框外上緣的「⠿ 名稱」標籤，縮放把手放大到 24px。
+     蓋住內容左上角；改回框外上緣的「把手＋名稱」標籤，縮放把手放大到 24px。
    ========================================================================== */
 body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar {
     display: flex;
@@ -2464,9 +2450,6 @@ body.mynt-layout-editing #myntLayoutToolbar[data-collapsed="true"] > :is(#myntLa
         gap: 4px;
         font-size: 12px;
     }
-    body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutLabel.myntLayoutMove::before {
-        content: none;
-    }
 }
 @container myntlayoutblock (width >= 110px) and (height < 110px) {
     body.mynt-layout-editing .myntLayoutOverlay[data-block] > .myntLayoutResize {
@@ -2491,6 +2474,103 @@ body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > 
 }
 body.mynt-layout-editing #myntLayoutToolbar#myntLayoutToolbar .myntLayoutMore > .myntLayoutHelp > span {
     grid-column: 1 / -1;
+}
+
+/* ==========================================================================
+   第 18 輪：以線條圖示取代文字符號（styles/ui-icons.css）
+   元件標籤、縮放把手、工具列把手／縮小、編輯排版、復原／重做原本用 ⠿ ↘ ↔ ↕ ▢ – ✥ ↶ ↷ 等字元當圖示，
+   各平台字型不同、看起來像生成的介面。文字只保留名稱，圖示改由同一套遮罩線條圖示繪製；
+   標籤在收合（只剩把手）與展開（把手＋名稱）時都顯示同一個把手。
+   ========================================================================== */
+body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel)::before,
+body.mynt-layout-editing .myntLayoutResize::before,
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutToolbarGrip, #myntLayoutMinimize, #myntLayoutUndo, #myntLayoutRedo)::before,
+#myntLayoutEdit::before {
+    content: "";
+    display: inline-block;
+    flex: none;
+    width: 12px;
+    height: 12px;
+    background-color: currentColor;
+    -webkit-mask: var(--mynt-icon) center / contain no-repeat;
+    mask: var(--mynt-icon) center / contain no-repeat;
+}
+
+body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel),
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutToolbarGrip {
+    --mynt-icon: var(--mynt-icon-grip);
+}
+
+body.mynt-layout-editing .myntLayoutResize {
+    --mynt-icon: var(--mynt-icon-resize);
+}
+
+body.mynt-layout-editing .myntLayoutResize.myntLayoutResize-w {
+    --mynt-icon: var(--mynt-icon-width);
+}
+
+body.mynt-layout-editing .myntLayoutResize.myntLayoutResize-h {
+    --mynt-icon: var(--mynt-icon-height);
+}
+
+body.mynt-layout-editing .myntLayoutResize::before {
+    width: min(14px, 70%);
+    height: min(14px, 70%);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutToolbarGrip, #myntLayoutMinimize)::before {
+    width: 18px;
+    height: 18px;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutMinimize {
+    --mynt-icon: var(--mynt-icon-minimize);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutMinimize[data-icon="expand"] {
+    --mynt-icon: var(--mynt-icon-expand);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutUndo {
+    --mynt-icon: var(--mynt-icon-undo);
+}
+
+body.mynt-layout-editing #myntLayoutToolbar #myntLayoutRedo {
+    --mynt-icon: var(--mynt-icon-redo);
+}
+
+#myntLayoutEdit::before {
+    width: 16px;
+    height: 16px;
+    margin-inline-end: 6px;
+    vertical-align: -3px;
+}
+
+/* 復原／重做在四欄工具列裡很窄：圖示與文字排成一行、不換行。 */
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutUndo, #myntLayoutRedo) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutUndo, #myntLayoutRedo)::before {
+    width: 14px;
+    height: 14px;
+}
+
+#myntLayoutEdit {
+    --mynt-icon: var(--mynt-icon-move);
+}
+
+@media (forced-colors: active) {
+    body.mynt-layout-editing :is(.myntLayoutMove, .myntLayoutLabel, .myntLayoutResize)::before,
+    body.mynt-layout-editing #myntLayoutToolbar :is(#myntLayoutToolbarGrip, #myntLayoutMinimize, #myntLayoutUndo, #myntLayoutRedo, #myntLayoutDockToggle)::before,
+    #myntLayoutEdit::before {
+        background-color: CanvasText;
+        forced-color-adjust: none;
+    }
 }
 /* ==== award-fix-todo-actions.css ==== */
 /* 第 3 輪：待辦項目操作圖示、文字斷行與已完成狀態 */

@@ -403,7 +403,7 @@
             const tile = el(document, 'label', '', 'mynt-pomo-background-choice');
             const input = el(document, 'input', '', 'mynt-pomo-sr-only'); input.type = 'radio'; input.name = 'mode'; input.value = mode;
             const preview = el(document, 'span', '', 'mynt-pomo-background-preview'); preview.setAttribute('aria-hidden', 'true');
-            if (mode === 'image') preview.append(el(document, 'span', '▧', 'mynt-pomo-image-symbol'));
+            if (mode === 'image') preview.append(el(document, 'span', '', 'mynt-pomo-image-symbol')); // icon drawn by CSS
             const fallback = el(document, 'span', t('previewUnavailable'), 'mynt-pomo-preview-fallback'); fallback.hidden = true; preview.append(fallback);
             tile.append(input, preview, el(document, 'span', t(mode), 'mynt-pomo-background-label'));
             choices.append(tile); modeChoices.set(mode, { input, tile, preview, fallback });

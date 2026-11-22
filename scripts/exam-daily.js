@@ -98,7 +98,9 @@ if (typeof document !== "undefined") (function () {
         function texts() {
             $("examDailyChipText").textContent = L("今日考古題", "Daily exam question");
             $("examDailyReveal").textContent = L("看答案", "Show answer");
-            $("examDailySource").textContent = L("出處：警察特考考古題 ↗", "Source: police exam archive ↗");
+            const source = $("examDailySource"); source.textContent = L("出處：警察特考考古題", "Source: police exam archive");
+            const external = document.createElement("span"); external.className = "mynt-icon"; external.dataset.icon = "external"; external.setAttribute("aria-hidden", "true");
+            source.append(" ", external);
             const s = $("examDailySettingText"); if (s) s.textContent = L("今日考古題", "Daily exam question");
             const i = $("examDailySettingInfo"); if (i) i.textContent = L("新分頁左下角每天一題資管組考古題，點開作答", "One past exam question per day, collapsed until clicked");
         }
