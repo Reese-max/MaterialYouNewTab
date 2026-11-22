@@ -93,3 +93,25 @@ html.myntReducedMotion :is(.todoListCont, .pomodoroCont):is(:hover, :active) {
     }
 }
 
+
+/* ===== 第 16 輪：首頁強調色實心塊與提示標題 =====
+   天氣卡的地點膠囊、濕度條與設定裡的透明度條，白字放在 --darkColor-blue（#4382ec）上只有 3.72:1；
+   「看到底部有橫幅嗎？」標題以同色當文字只有 2.51:1（18.4px 粗體未達大字門檻）。
+   旁邊的水滴圓鈕一併改色，避免亮藍圓鈕配深藍濕度條。
+   改用 --mynt-accent-ink（各色主題 ≥ 4.7:1）。深色模式下首頁整頁反相，反相後仍維持同樣對比；
+   黑色主題與高對比各有自己的配色，不套用。 */
+html:not(.black-theme, .myntHighContrast) {
+    & :is(.tilesContainer .location, .humidityBar .slider, .opacityBar .opacitySlider) {
+        background-color: var(--mynt-accent-ink);
+    }
+    /* 偽元素不能放進 :is()，水滴圓鈕需獨立一條。 */
+    & .humidityBar::after {
+        background-color: var(--mynt-accent-ink);
+    }
+    & :is(.tilesContainer .location .location_spn, #humidityLevel, #opacityLevel) {
+        color: #ffffff;
+    }
+    & .toast-title {
+        color: var(--mynt-accent-ink);
+    }
+}
