@@ -42,6 +42,10 @@
             if (item.id === 'weather') {
                 const node = document.getElementById('hideWeather');
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
+                for (const options of document.querySelectorAll('.weatherOptions')) {
+                    options.classList.toggle('inactive', !item.visible);
+                    options.classList.toggle('not-applicable', !item.visible);
+                }
             }
             if (item.id === 'exam') { const node = document.getElementById('examDaily'); if (node) node.hidden = !item.visible; }
             // 搜尋服務列沿用 search.js 的顯示邏輯（含搜尋列圖示切換），只套用、不寫入。
@@ -49,6 +53,7 @@
             // 重新顯示時依目前服務狀態決定是否需要提示；不重建控制中心清單。
             if (item.id === 'serviceStatus') root.myntDashboard?.refreshServiceAlert?.();
         }
+        root.myntSettings?.refreshTools(items);
         // A previously CSS-hidden, never-positioned clock can start above the viewport.
         // Apply the editor's existing bounds clamp only to that newly visible clock;
         // never save coordinates or reposition any other component.
@@ -105,15 +110,25 @@
     function init() {
         const host = document.querySelector('#overviewPage > .toggleTextsCont');
         if (!host) return;
-        panel = document.createElement('details'); panel.id = 'myntComponentManager'; panel.dataset.settingsGroup = 'personal';
+        panel = document.createElement('details'); panel.id = 'myntComponentManager'; panel.dataset.settingsGroup = 'home'; panel.open = true;
         const summary = document.createElement('summary'); summary.textContent = translated('componentsTitle', '元件管理', 'Manage components'); panel.append(summary);
         const note = document.createElement('p'); note.textContent = text('勾選加入首頁，取消即可隱藏。資料、計時與排版會保留；設定入口永遠可用。', 'Check to show on your home page. Hiding keeps data, timers and layouts. Settings always remains available.'); panel.append(note);
         const list = document.createElement('div'); list.className = 'mynt-component-list';
+        const groups = [
+            ['componentGroupTop', '上方', 'Top', ['clock', 'search', 'searchProvider']],
+            ['componentGroupEntries', '入口', 'Launchers', ['shortcuts', 'aiTools', 'googleApps', 'bookmarks']],
+            ['componentGroupStudy', '讀書', 'Study', ['pomodoro', 'homeWidgets', 'studyQuote', 'countdowns']],
+            ['componentGroupOther', '其他', 'Other', ['weather', 'galleryEntry', 'serviceStatus']]
+        ].map(([key, zh, en, ids]) => {
+            const fieldset = document.createElement('fieldset'), legend = document.createElement('legend');
+            legend.textContent = translated(key, zh, en); fieldset.append(legend); list.append(fieldset);
+            return { fieldset, ids };
+        });
         for (const item of core.definitions.filter(item => !removed.has(item.id))) {
             const label = document.createElement('label'), input = document.createElement('input'), name = document.createElement('span');
             input.type = 'checkbox'; input.id = `myntComponent-${item.id}`; name.textContent = item.id === 'homeWidgets' ? translated('homeWidgetsSetting', item.labelZh, item.labelEn) : text(item.labelZh, item.labelEn);
             input.addEventListener('change', () => { try { change(item.id, input.checked); } catch (error) { status.textContent = error.rollbackFailed ? text('瀏覽器儲存空間無法使用，部分顯示設定可能尚未回復。請勿清除資料，重新開啟後檢查。', 'Storage is unavailable; some visibility settings may not have rolled back. Do not clear data. Reopen and check.') : text('儲存失敗或資料格式異常，原有資料已保留。請重試或檢查備份。', 'Could not save, or stored data is invalid. Existing data was preserved. Retry or check your backup.'); refresh(); } });
-            label.append(name, input); list.append(label); controls.set(item.id, input);
+            label.append(name, input); (groups.find(group => group.ids.includes(item.id))?.fieldset || list).append(label); controls.set(item.id, input);
         }
         panel.append(list);
         status = document.createElement('p'); status.className = 'mynt-component-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); panel.append(status);

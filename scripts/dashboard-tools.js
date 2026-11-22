@@ -95,7 +95,6 @@ if (typeof document !== "undefined") {
             });
 
             document.getElementById("controlCenterTitle").textContent = t("controlCenterText", "Control Center");
-            document.getElementById("openControlCenterBtn").textContent = t("openText", "Open");
             document.getElementById("commandPaletteInput").placeholder = t("commandPalettePlaceholder", "Search commands...");
             document.getElementById("commandPaletteDialog").setAttribute("aria-label", t("commandPaletteTitle", "Command palette"));
             document.getElementById("closeControlCenterBtn").setAttribute("aria-label", t("menuCloseText", "Close"));
@@ -702,18 +701,36 @@ if (typeof document !== "undefined") {
 
         function openControlCenter(sectionId) {
             if (commandDialog.open) commandDialog.close();
-            if (!controlDialog.open) controlDialog.showModal();
             renderWorkspace();
             renderServiceStatus();
             renderPermissions();
-            requestAnimationFrame(() => {
-                const target = sectionId && document.getElementById(sectionId);
-                if (target) target.scrollIntoView({ block: "start" });
-                else document.querySelector(".controlCenterContent").scrollTop = 0;
-            });
+            window.myntSettings.open(sectionId || "accessibilitySection");
         }
 
-        document.getElementById("openControlCenterBtn").addEventListener("click", () => openControlCenter());
+        // Legacy clients (including the contrast smoke test) may call showModal directly.
+        // Move the same controls temporarily; never create a second state/input source.
+        const legacyShowControlCenter = controlDialog.showModal.bind(controlDialog);
+        let controlCenterPlacements = [];
+        controlDialog.showModal = () => {
+            if (controlDialog.open) return;
+            const content = controlDialog.querySelector('.controlCenterContent');
+            controlCenterPlacements = ['workspaceSection', 'accessibilitySection', 'privacySection', 'serviceSection'].map(id => {
+                const section = document.getElementById(id), marker = document.createComment(id);
+                section.before(marker); content.append(section);
+                section.hidden = false; section.removeAttribute('inert');
+                return { section, marker };
+            });
+            controlDialog.hidden = false; controlDialog.inert = false;
+            renderWorkspace(); renderServiceStatus(); renderPermissions();
+            legacyShowControlCenter();
+        };
+        controlDialog.addEventListener('close', () => {
+            for (const { section, marker } of controlCenterPlacements) marker.replaceWith(section);
+            controlCenterPlacements = [];
+            controlDialog.hidden = true; controlDialog.inert = true;
+            window.myntComponents?.refresh();
+        });
+
         
         const shortcutsHelpDialog = document.getElementById("shortcutsHelpDialog");
         function openShortcutsHelp() {
@@ -752,7 +769,7 @@ if (typeof document !== "undefined") {
             { id: "wallpaperNext", label: "commandWallpaperNext", info: "commandWallpaperNextInfo", run: () => window.myntWallpaper?.next() },
             { id: "wallpaperGallery", label: "commandWallpaperGallery", info: "commandWallpaperGalleryInfo", run: () => window.myntWallpaper?.open() },
             { id: "wallpaperRandom", label: "commandWallpaperRandom", info: "commandWallpaperRandomInfo", run: () => window.myntWallpaper?.random() },
-            { id: "control", label: "commandOpenControl", info: "commandOpenControlInfo", run: () => openControlCenter() },
+            { id: "control", label: "commandSystemSettings", info: "commandSystemSettingsInfo", run: () => openControlCenter() },
             { id: "workspaces", label: "commandWorkspaces", info: "commandWorkspacesInfo", run: () => openControlCenter("workspaceSection") },
             { id: "privacy", label: "commandPrivacy", info: "commandPrivacyInfo", run: () => openControlCenter("privacySection") },
             { id: "accessibility", label: "commandAccessibility", info: "commandAccessibilityInfo", run: () => openControlCenter("accessibilitySection") },
