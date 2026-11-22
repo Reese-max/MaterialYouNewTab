@@ -24,6 +24,7 @@ function setSliderPosition(percentage) {
 
 // Handle drag or click interaction on opacity bar
 function handleDrag(e) {
+    if (opacityBar.dataset.disabled === "true") return;
     document.dispatchEvent(new CustomEvent("mynt:manual-opacity"));
     const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
     const rect = opacityBar.getBoundingClientRect();
@@ -50,6 +51,7 @@ function startDrag() {
 // Click or touch on bar: move slider and enable drag
 ["mousedown", "touchstart"].forEach(evt => {
     opacityBar.addEventListener(evt, e => {
+        if (opacityBar.dataset.disabled === "true") return;
         e.preventDefault();
         handleDrag(e);
         startDrag();
@@ -66,6 +68,7 @@ opacityBar.setAttribute("aria-labelledby", "opacityTitle");
 opacityBar.setAttribute("aria-valuemin", "20");
 opacityBar.setAttribute("aria-valuemax", "100");
 opacityBar.addEventListener("keydown", event => {
+    if (opacityBar.dataset.disabled === "true") return;
     const value = Number(localStorage.getItem("bgOpacity") || 90);
     const next = { ArrowLeft: value - 1, ArrowDown: value - 1, ArrowRight: value + 1, ArrowUp: value + 1, Home: 20, End: 100 }[event.key];
     if (next === undefined) return;

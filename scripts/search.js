@@ -135,9 +135,9 @@ aiModeIcon?.addEventListener("click", event => {
     performAISearch();
 });
 if (aiModeIconCheckbox) {
-    aiModeIconCheckbox.checked = localStorage.getItem("aiModeIconVisible") === "false";
+    aiModeIconCheckbox.checked = localStorage.getItem("aiModeIconVisible") !== "false";
     aiModeIconCheckbox.addEventListener("change", () => {
-        localStorage.setItem("aiModeIconVisible", String(!aiModeIconCheckbox.checked));
+        localStorage.setItem("aiModeIconVisible", String(aiModeIconCheckbox.checked));
         updateAiModeIconVisibility();
     });
 }
@@ -190,7 +190,7 @@ window.myntSearchPreferences = {
         hideSearchWith.checked = localStorage.getItem('showShortcutSwitch') === 'true';
         applySearchProviderVisibility(hideSearchWith.checked, false);
         searchProviderRow.style.display = 'flex';
-        if (aiModeIconCheckbox) aiModeIconCheckbox.checked = localStorage.getItem('aiModeIconVisible') === 'false';
+        if (aiModeIconCheckbox) aiModeIconCheckbox.checked = localStorage.getItem('aiModeIconVisible') !== 'false';
         updateAiModeIconVisibility();
     }
 };

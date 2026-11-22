@@ -41,6 +41,13 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     function persist(){ try{localStorage.setItem(KEY,JSON.stringify(config));storageError=false;}catch{storageError=true;} }
     function applyModes(){
         body.dataset.adaptiveColor=config.color?'on':'off';body.dataset.adaptiveContrast=config.contrast?'on':'off';body.dataset.adaptiveOpacity=config.opacity?'on':'off';
+        const slider = document.querySelector('.opacityBar');
+        if (slider) {
+            slider.setAttribute('aria-disabled', String(config.opacity));
+            slider.dataset.disabled = String(config.opacity);
+            slider.toggleAttribute('inert', config.opacity);
+            slider.tabIndex = config.opacity ? -1 : 0;
+        }
         if(palette)applyPalette(palette,false);
     }
     function visible(el){return el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden';}

@@ -4,18 +4,26 @@ const root = path.join(__dirname, '..'), read = file => fs.readFileSync(path.joi
 const dark = read('styles/award-fix-dark-surfaces.css'), bundle = read('styles/award.css'), css = read('style.css');
 
 // Dark mode: the control center content follows the dark dialog, not the light theme variables.
-const centre = dark.slice(dark.indexOf('):not(.black-theme, .myntHighContrast) #controlCenterDialog {'));
+const centreAt = dark.indexOf('):not(.black-theme, .myntHighContrast) #controlCenterDialog {');
+assert.notEqual(centreAt, -1, 'Ordinary dark surfaces target only the top-layer dialog');
+const centre = dark.slice(centreAt);
 assert.ok(centre.length > 0, 'Dark-mode control center block exists and leaves the black theme and high contrast alone');
 const centreBlock = centre.slice(0, centre.indexOf('\n}\n'));
 for (const part of ['.controlSection', '.workspacePresetCard', '.workspaceEditBtn', '.workspaceLaunchBtn', '.workspaceWidgetChoices',
     '.workspaceEditorActions button', '.permissionControls button', '.serviceRow', '.controlSettingRow select', '.workspaceEditorField textarea'])
     assert.ok(centreBlock.includes(part), `Dark-mode control center covers ${part}`);
 assert.match(centreBlock, /& \.controlSection \{\s*background: #232833;/);
+assert(!centreBlock.includes('#menuCont'), 'Inverted settings keep light surfaces in ordinary dark mode');
+assert(!dark.includes('):not(.black-theme, .myntHighContrast) :is(#controlCenterDialog, #menuCont)'), 'Ordinary dark surfaces never target inverted settings');
 
 // Status words and the workspace Delete use dark-surface colours in dark mode and the black theme, not in high contrast.
-const status = dark.slice(dark.indexOf('):not(.myntHighContrast) #controlCenterDialog {'));
+const statusSelector = '):not(.myntHighContrast) #controlCenterDialog,\nhtml.black-theme:not(.myntHighContrast) #menuCont {';
+const statusAt = dark.indexOf(statusSelector);
+assert.notEqual(statusAt, -1, 'Dark status colours target dialogs and only non-inverted black-theme settings');
+const status = dark.slice(statusAt);
 const statusBlock = status.slice(0, status.indexOf('\n}\n'));
-assert.ok(dark.slice(dark.lastIndexOf(':is(', dark.indexOf('):not(.myntHighContrast) #controlCenterDialog {')), dark.indexOf('):not(.myntHighContrast) #controlCenterDialog {')).includes('html.black-theme'), 'Status colours also apply to the black theme');
+assert.ok(dark.slice(dark.lastIndexOf(':is(', statusAt), statusAt).includes('html.black-theme'), 'Status colours also apply to the black theme');
+assert(!dark.includes('):not(.myntHighContrast) :is(#controlCenterDialog, #menuCont)'), 'Dark status colours never target ordinary inverted settings');
 assert.match(statusBlock, /em\.granted, \.serviceState\.ok\) \{\s*color: #81c995;/);
 assert.match(statusBlock, /em\.denied, \.serviceState\.error, \.serviceState\.offline\) \{\s*color: #f28b82;/);
 assert.match(statusBlock, /\.workspaceEditorActions \.workspaceDangerBtn \{\s*background: transparent;\s*color: #f28b82;/, 'Workspace Delete keeps its danger colour on dark surfaces');
@@ -59,6 +67,6 @@ assert.match(toast, /& :is\(\.toast-bar-vertical, \.toast-timer-bar\) \{\s*backg
 // Layout: the launch button aligns with Edit; reorder arrows fill their 44px targets.
 assert.match(polish, /#controlCenterDialog \.workspacePresetCard \.workspaceLaunchBtn \{\s*position: absolute;\s*inset-inline-end: 12px;\s*bottom: 12px;/);
 assert.match(polish, /#aiToolsForm \.ai-tool-reorder button \{\s*font-size: 1\.15rem;/);
-assert.match(polish, /#controlCenterDialog \.workspaceHeadingActions \.sectionStatus \{\s*white-space: nowrap;/, 'The applied-mode status never breaks one character per line');
+assert.match(polish, /:is\(#controlCenterDialog, #menuCont\) \.workspaceHeadingActions \.sectionStatus \{\s*white-space: nowrap;/, 'The applied-mode status never breaks one character per line');
 for (const marker of ['--mynt-accent-ink', '.commandPaletteItem', '#e3e3e3']) assert.ok(bundle.includes(marker), `Award bundle carries ${marker}`);
 console.log('DIALOG_CONTRAST_OK: dark-mode control center and dialogs, accent ink on light surfaces, primary/secondary buttons, home accent fills, status/danger colours, black-theme high contrast fields, card and reorder layout');

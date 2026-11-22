@@ -668,14 +668,14 @@ const fahrenheitCheckbox = document.getElementById("fahrenheitCheckbox");
 const minMaxTempToggle = document.getElementById("minMaxTempCheckbox");
 
 hideWeatherCard.addEventListener("change", function () {
-    saveCheckboxState("hideWeatherCardState", hideWeatherCard);
+    localStorage.setItem("hideWeatherCardState", hideWeatherCard.checked ? "unchecked" : "checked");
 });
 
 fahrenheitCheckbox.addEventListener("change", function () {
     saveCheckboxState("fahrenheitCheckboxState", fahrenheitCheckbox);
 });
 
-loadCheckboxState("hideWeatherCardState", hideWeatherCard);
+hideWeatherCard.checked = localStorage.getItem("hideWeatherCardState") !== "checked";
 loadCheckboxState("fahrenheitCheckboxState", fahrenheitCheckbox);
 
 // Handle min-max temp checkbox state change
