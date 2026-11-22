@@ -42,7 +42,7 @@
                     if (node) { node.setAttribute('data-mynt-component-display', show ? 'block' : 'none'); node.style.setProperty('--mynt-component-display', show ? 'block' : 'none'); }
                 }
             }
-            if (item.id === 'weather') {
+            if (item.id === 'weather' && !removed.has('weather')) {
                 const node = document.getElementById('hideWeather');
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
                 for (const options of document.querySelectorAll('.weatherOptions')) {
