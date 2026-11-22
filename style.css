@@ -4066,7 +4066,8 @@ input:checked + .toggle:before {
 	margin-top: 10px;
 
 	overflow: hidden;
-	max-height: 1000px; /* large enough */
+	/* shortcut: fixed cap for the expand/collapse transition; the work tab with Pomodoro on is ~1300px, raise if sections grow past this */
+	max-height: 4000px;
 	opacity: 1;
 	transition:
 		max-height 0.4s var(--md-motion-ease),
