@@ -66,7 +66,7 @@
         const state = defaultState();
         try { parseDate(date); } catch { return state; }
         state.enabled = true;
-        state.events = [{ id: 'e-legacy', name: '考試', date, category: 'exam', emoji: '📅', color: 'lavender', annual: false }];
+        state.events = [{ id: 'e-legacy', name: '考試', date, category: 'exam', emoji: '', color: 'lavender', annual: false }];
         return state;
     }
     // Read local date components, then map the calendar date to UTC. Never subtract

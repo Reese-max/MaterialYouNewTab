@@ -212,7 +212,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         dock.hidden = true;
         dock.setAttribute("aria-label", t("layoutManualLabel", "Manual layout"));
         const buttons = document.createElement("div");
-        editButton = button("myntLayoutEdit", t("layoutEditEntry", "✥ Edit layout"), () => setEditing(true));
+        editButton = button("myntLayoutEdit", t("layoutEditEntry", "Edit layout"), () => setEditing(true));
         editButton.setAttribute("aria-keyshortcuts", "Alt+L");
         editButton.setAttribute("aria-expanded", "false");
         const lock = document.createElement("span");
@@ -442,13 +442,14 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             if (MYNT_REMOVED_LAYOUT_IDS.has(id) || (id === "aiTools" && document.getElementById("quickLinksRow"))) continue;
             overlay.className = "myntLayoutOverlay"; overlay.dataset.block = id;
             overlay.setAttribute("role", "group"); overlay.setAttribute("aria-label", name);
-            const handle = button("", `⠿ ${name}`);
+            // Icons for handles and toolbar buttons are drawn by styles/ui-icons.css masks; text stays plain.
+            const handle = button("", name);
             handle.removeAttribute("id"); handle.className = "myntLayoutMove myntLayoutLabel";
             handle.setAttribute("aria-label", t("layoutMoveAria", "Move {name}; arrows 1px, Shift + arrows 10px", { name }));
             handle.title = t("layoutMoveHint", "Drag to move · Arrow keys to nudge · Hold Alt to bypass snapping");
             handle.addEventListener("pointerdown", e => startDrag(e, id, "move"));
             handle.addEventListener("focus", () => select(id));
-            const resize = button("", "↘");
+            const resize = button("", "");
             resize.removeAttribute("id"); resize.className = "myntLayoutResize";
             resize.setAttribute("aria-label", t("layoutResizeAria", "Resize {name}", { name }));
             resize.title = t("layoutResizeManualHint", "Drag to resize; + / − to adjust size");
@@ -471,11 +472,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             });
             overlay.append(handle, resize);
             // Icon-sized controls have no empty space to trim; only content blocks get side handles.
-            if (!MYNT_ICON_LAYOUT_IDS.has(id)) for (const [axis, mode, glyph, key, fallback] of [
-                ["w", "width", "↔", "layoutWidthAria", "Change width of {name}; Left/Right arrows 1px, Shift 10px"],
-                ["h", "height", "↕", "layoutHeightAria", "Change height of {name}; Up/Down arrows 1px, Shift 10px"]
+            if (!MYNT_ICON_LAYOUT_IDS.has(id)) for (const [axis, mode, key, fallback] of [
+                ["w", "width", "layoutWidthAria", "Change width of {name}; Left/Right arrows 1px, Shift 10px"],
+                ["h", "height", "layoutHeightAria", "Change height of {name}; Up/Down arrows 1px, Shift 10px"]
             ]) {
-                const side = button("", glyph);
+                const side = button("", "");
                 side.removeAttribute("id"); side.className = `myntLayoutResize myntLayoutResize-${axis}`; side.dataset.axis = axis;
                 side.setAttribute("aria-label", t(key, fallback, { name }));
                 side.title = t("layoutSideHint", "Drag to change only this direction; content is never cut off");
@@ -526,7 +527,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         const top = document.createElement("div"); top.className = "myntLayoutToolbarRow";
         const title = document.createElement("strong"); title.textContent = t("layoutEditSetting", "Edit layout");
         // Laptop screens leave no free margin beside centred blocks, so the toolbar stays small, collapsible and movable.
-        const grip = button("myntLayoutToolbarGrip", "⠿");
+        const grip = button("myntLayoutToolbarGrip", "");
         grip.setAttribute("aria-label", t("layoutToolbarMove", "Move toolbar; arrow keys move it, Shift moves faster"));
         grip.title = t("layoutToolbarMoveHint", "Drag to move the toolbar; blocks stay in place");
         grip.addEventListener("pointerdown", startToolbarDrag);
@@ -535,8 +536,8 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             e.preventDefault(); e.stopPropagation(); const step = e.shiftKey ? 40 : 10; moveToolbar(d[0] * step, d[1] * step);
         });
         minimizeButton = button("myntLayoutMinimize", "", () => setToolbarCollapsed(!toolbarUi.collapsed));
-        undoButton = button("myntLayoutUndo", t("layoutUndo", "↶ Undo"), () => changeHistory("undo"));
-        redoButton = button("myntLayoutRedo", t("layoutRedo", "↷ Redo"), () => changeHistory("redo"));
+        undoButton = button("myntLayoutUndo", t("layoutUndo", "Undo"), () => changeHistory("undo"));
+        redoButton = button("myntLayoutRedo", t("layoutRedo", "Redo"), () => changeHistory("redo"));
         undoButton.setAttribute("aria-keyshortcuts", "Control+z Meta+z"); redoButton.setAttribute("aria-keyshortcuts", "Control+Shift+z Meta+Shift+z Control+y");
         const snapLabel = document.createElement("label");
         snapBox = document.createElement("input"); snapBox.type = "checkbox"; snapBox.id = "myntLayoutSnap";
@@ -560,7 +561,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             layout.blocks = {}; applyAll(); recordChange();
         });
         const hint = document.createElement("span"); hint.className = "myntLayoutInstructions";
-        hint.textContent = t("layoutInstructions", "Drag ⠿ handles · Arrows 1px · Shift 10px · Esc cancels");
+        hint.textContent = t("layoutInstructions", "Drag the handles · Arrows 1px · Shift 10px · Esc cancels");
         bottom.append(selectedLabel, resetSelectedButton, reset, hint);
         const precise=document.createElement('details');precise.className='myntLayoutPrecision';
         const summary=document.createElement('summary');summary.textContent=t('layoutPrecision','Position, size and alignment');precise.append(summary);
@@ -596,7 +597,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
     function setToolbarCollapsed(on) {
         toolbarUi.collapsed = on; toolbar.dataset.collapsed = String(on);
-        minimizeButton.textContent = on ? "▢" : "–";
+        minimizeButton.dataset.icon = on ? "expand" : "minimize";
         minimizeButton.setAttribute("aria-expanded", String(!on));
         const label = on ? t("layoutToolbarExpand", "Expand toolbar") : t("layoutToolbarCollapse", "Collapse toolbar");
         minimizeButton.setAttribute("aria-label", label); minimizeButton.title = label;

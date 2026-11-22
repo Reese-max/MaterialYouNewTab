@@ -392,7 +392,8 @@ function buildAIToolOption({ toolId, label, visible, custom, deletable = custom,
     controls.append(checkbox, labelElement);
     const reorder = document.createElement("div"); reorder.className = "ai-tool-reorder";
     const moveButtons = ["up", "down"].map(direction => {
-        const button = document.createElement("button"); button.type = "button"; button.className = `reorder-${direction}`; button.textContent = direction === "up" ? "↑" : "↓";
+        const button = document.createElement("button"); button.type = "button"; button.className = `reorder-${direction}`;
+        const arrow = document.createElement("span"); arrow.className = "mynt-icon"; arrow.dataset.icon = `arrow-${direction}`; arrow.setAttribute("aria-hidden", "true"); button.appendChild(arrow);
         reorder.appendChild(button);
         return button;
     });

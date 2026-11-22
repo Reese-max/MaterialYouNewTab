@@ -459,7 +459,10 @@ if (typeof document !== "undefined") {
                     const launch = document.createElement("button");
                     launch.type = "button";
                     launch.className = "workspaceLaunchBtn";
-                    launch.textContent = `🚀 ${preset.urls.length}`;
+                    // A line icon from styles/ui-icons.css, not an emoji; the count is the visible label.
+                    const launchIcon = document.createElement("span"); launchIcon.className = "mynt-icon"; launchIcon.dataset.icon = "launch"; launchIcon.setAttribute("aria-hidden", "true");
+                    const launchCount = document.createElement("span"); launchCount.textContent = String(preset.urls.length);
+                    launch.append(launchIcon, launchCount);
                     launch.setAttribute("aria-label", format("workspaceLaunchTitle", "Open {count} sites in new tabs", { count: preset.urls.length }));
                     launch.title = format("workspaceLaunchTitle", "Open {count} sites in new tabs", { count: preset.urls.length });
                     launch.addEventListener("click", (e) => {

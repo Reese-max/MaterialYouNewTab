@@ -559,7 +559,10 @@
             badges.className = "wallpaperBadges";
             if (item.type === "video") {
                 const b = document.createElement("span");
-                b.className = "wallpaperBadge"; b.textContent = "▶ " + t("wallpaperVideoBadge", "Video");
+                b.className = "wallpaperBadge";
+                const play = document.createElement("span"); play.className = "mynt-icon"; play.dataset.icon = "video"; play.setAttribute("aria-hidden", "true");
+                const label = document.createElement("span"); label.textContent = t("wallpaperVideoBadge", "Video");
+                b.appendChild(play); b.appendChild(label);
                 badges.appendChild(b);
             }
             if (item.source === "bundled") {
@@ -591,7 +594,8 @@
             footer.appendChild(name);
             if (item.source !== "bundled") {
                 const ren = document.createElement("button");
-                ren.type = "button"; ren.className = "wallpaperCardIcon"; ren.textContent = "✎";
+                ren.type = "button"; ren.className = "wallpaperCardIcon";
+                const pencil = document.createElement("span"); pencil.className = "mynt-icon"; pencil.dataset.icon = "edit"; pencil.setAttribute("aria-hidden", "true"); ren.appendChild(pencil);
                 ren.title = t("wallpaperRename", "Rename"); ren.setAttribute("aria-label", t("wallpaperRename", "Rename"));
                 ren.addEventListener("click", () => renameItem(item));
                 footer.appendChild(ren);

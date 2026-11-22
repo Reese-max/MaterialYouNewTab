@@ -409,7 +409,8 @@
             if (track.id === focusTrack) { trackFocus = select; if (focusAction === 'select') restoreFocus = select; }
             for (const [key, delta] of [['up', -1], ['down', 1]]) {
                 const b = button(key, item, () => { if (importBusy || writeBusy || index + delta < 0 || index + delta >= list.length) return; const ids = list.map(x => x.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; settings.order = ids; save(); renderList(); });
-                b.textContent = delta < 0 ? '↑' : '↓'; b.className = 'mynt-music-order'; b.title = t(key);
+                const arrow = document.createElement('span'); arrow.className = 'mynt-icon'; arrow.dataset.icon = delta < 0 ? 'arrow-up' : 'arrow-down'; arrow.setAttribute('aria-hidden', 'true');
+                b.textContent = ''; b.append(arrow); b.className = 'mynt-music-order'; b.title = t(key);
                 b.dataset.boundary = String(index + delta < 0 || index + delta >= list.length); b.setAttribute('aria-label', `${t(key)}: ${track.name}`);
                 b.dataset.musicTrack = track.id; b.dataset.musicAction = key; ui.mutations.push(b);
                 if (track.id === focusTrack && focusAction === key) restoreFocus = b;
@@ -448,7 +449,7 @@
         ui.root = node('section', '', host); ui.root.className = 'mynt-pomo-music'; ui.root.setAttribute('aria-label', t('title'));
         node('div', t('title'), ui.root).className = 'mynt-music-heading';
         const now = node('div', '', ui.root); now.className = 'mynt-music-now';
-        const artwork = node('span', '♪', now); artwork.className = 'mynt-music-artwork'; artwork.setAttribute('aria-hidden', 'true');
+        const artwork = node('span', '', now); /* icon drawn by CSS */ artwork.className = 'mynt-music-artwork'; artwork.setAttribute('aria-hidden', 'true');
         const information = node('div', '', now); information.className = 'mynt-music-information';
         ui.trackName = node('div', '', information); ui.trackName.className = 'mynt-music-current';
         ui.status = node('p', '', information); ui.status.className = 'mynt-music-status'; ui.status.setAttribute('role', 'status'); ui.status.setAttribute('aria-live', 'polite'); ui.status.setAttribute('aria-atomic', 'true');

@@ -17,6 +17,7 @@
     <script src="scripts/restore-guard.js"></script>
     <script src="scripts/removed-features.js"></script>
     <link href="style.css" rel="stylesheet">
+    <link href="styles/ui-icons.css" rel="stylesheet">
     <link href="styles/layout-editor.css" rel="stylesheet">
     <link href="styles/quote-contrast.css" rel="stylesheet">
     <link href="styles/exam-daily.css" rel="stylesheet">
@@ -2086,7 +2087,7 @@
     </dialog>
 
     <div id="examDaily" class="examDaily" hidden>
-        <button id="examDailyChip" class="examDailyChip" type="button" aria-expanded="false" aria-controls="examDailyPanel"><span aria-hidden="true">📝</span><span id="examDailyChipText">今日考古題</span></button>
+        <button id="examDailyChip" class="examDailyChip" type="button" aria-expanded="false" aria-controls="examDailyPanel"><span class="mynt-icon" data-icon="document" aria-hidden="true"></span><span id="examDailyChipText">今日考古題</span></button>
         <section id="examDailyPanel" class="examDailyPanel" hidden aria-labelledby="examDailyChipText">
             <div id="examDailyMeta" class="examDailyMeta"></div>
             <p id="examDailyStem" class="examDailyStem"></p>
@@ -2094,7 +2095,7 @@
             <div class="examDailyFooter">
                 <button id="examDailyReveal" class="examDailyReveal" type="button" hidden>看答案</button>
                 <span id="examDailyAnswer" class="examDailyAnswer" role="status" hidden></span>
-                <a id="examDailySource" class="examDailySource" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener">出處：警察特考考古題 ↗</a>
+                <a id="examDailySource" class="examDailySource" href="https://reese-max.github.io/police-exam-archive/" target="_blank" rel="noopener">出處：警察特考考古題</a>
             </div>
         </section>
     </div>
