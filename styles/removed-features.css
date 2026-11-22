@@ -8,3 +8,17 @@ html.mynt-removed-features body :is(
     display: none !important;
 }
 
+/* Weather has its own switch so removing one ID restores every retained entry point. */
+html.mynt-removed-weather body :is(
+    #hideWeather#hideWeather#hideWeather, #hideWeather .lrectangle, #hideWeather .rAndakar,
+    .ttcont:has(#hideWeatherCheckbox), [data-settings-component="weather"],
+    .permissionRow:has([data-permission-action="location"]),
+    #privacyDisclosureWeather, #privacyDisclosureIp,
+    label:has(> [data-workspace-widget="hideWeatherCheckbox"]), [data-workspace-widget="hideWeatherCheckbox"]) {
+    display: none !important;
+}
+/* Location was the last permission row; the preceding row now ends the group. */
+html.mynt-removed-weather body .permissionRow:has([data-permission-action="notifications"]) {
+    border-bottom: 0;
+}
+
