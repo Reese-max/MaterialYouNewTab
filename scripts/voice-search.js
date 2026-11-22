@@ -31,7 +31,7 @@ if (savedState !== null) {
 }
 
 // Set the checkbox state based on the saved or default state
-micIconCheckbox.checked = !isMicIconVisible; // Checked hides the mic icon
+micIconCheckbox.checked = isMicIconVisible; // Checked shows the mic icon
 if (isMicIconVisible) {
     micIcon.style.display = "block";  // Mic icon is displayed
 } else {
@@ -47,10 +47,10 @@ function toggleMicIconVisibility(isVisible) {
 // Toggle mic icon display based on checkbox state
 micIconCheckbox.addEventListener("change", () => {
     const isChecked = micIconCheckbox.checked;
-    toggleMicIconVisibility(!isChecked); // Checked hides the mic icon
+    toggleMicIconVisibility(isChecked); // Keep the existing positive storage value
 
     // Only initialize Web Speech API if the mic icon is visible
-    if (!isChecked) {
+    if (isChecked) {
         initializeSpeechRecognition();
     }
 });
@@ -131,7 +131,7 @@ function initializeSpeechRecognition() {
 }
 
 // Initialize SpeechRecognition only if the mic icon is visible
-if (!micIconCheckbox.checked) {
+if (micIconCheckbox.checked) {
     initializeSpeechRecognition();
 }
 //  -----------End of Voice Search------------

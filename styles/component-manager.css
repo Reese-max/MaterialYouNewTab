@@ -11,3 +11,56 @@
 #myntComponentManager :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
 #myntComponentManager .mynt-component-status:empty { display: none; }
 @media(max-width:420px) { #myntComponentManager .mynt-component-list { grid-template-columns: 1fr; } }
+
+/* Compatibility inputs remain available to legacy scripts, never as duplicate settings. */
+.mynt-visibility-compat { display: none !important; }
+
+#menuCont .sectionHeader { min-height: 44px; gap: 16px; }
+#menuCont .sectionChevron { flex: 0 0 10px; }
+#menuCont .section > .sectionOuter > .sectionHeader .sectionChevron { transform: rotate(45deg) translate(-3px, -2px); }
+#menuCont .section.expanded > .sectionOuter > .sectionHeader .sectionChevron { transform: rotate(-135deg) translateY(-3px); }
+#menuCont .section :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+#menuCont .sectionInner .section { margin-block: 12px; }
+#menuCont .section:not(.expanded) > .sectionOuter > .sectionInner { margin-top: 0; }
+#menuCont .sectionInner .ttcont:not(:has(~ .ttcont:not([hidden]))) { border-bottom: 0; }
+#menuCont .ttcont { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+#menuCont .ttcont > .texts { flex: 1; min-width: 0; }
+#menuCont .ttcont > .switch { flex-shrink: 0; }
+#menuCont .pomodoroNumBtn { min-width: 44px; min-height: 44px; }
+#menuCont .pomodoroNumberInput { flex-shrink: 0; }
+#menuCont .pomodoroNumberInput input[type="number"] { margin-block: 0; }
+#menuCont :is(.settingsActionBtn, .workspaceEditorActions button) { min-height: 44px; }
+
+#overviewPage [data-settings-group][hidden] { display: none !important; }
+#menuCont .settingsGroupTabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#myntComponentManager fieldset { min-width: 0; margin: 0; padding: 8px; border: 1px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 12px; }
+#myntComponentManager legend { padding-inline: 6px; font-weight: 600; }
+#menuCont .controlSectionHeading { flex-wrap: wrap; }
+#menuCont #workspaceSection :is(input, select, textarea) { max-width: 100%; box-sizing: border-box; }
+#menuCont :is(.controlSettingRow, .permissionRow) { flex-wrap: wrap; }
+#menuCont .permissionControls { flex-wrap: wrap; }
+#menuCont :is(.controlSettingRow, .permissionRow) > span:first-child { min-width: 140px; }
+#menuCont :is(.permissionControls button, .controlSettingRow select, .workspaceEditBtn) { min-height: 44px; }
+#menuCont .workspacePresetGrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+#menuCont .workspaceEditorFields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); }
+#menuCont .workspaceEditorActions { display: flex; flex-wrap: wrap; }
+#menuCont .workspaceHeadingActions .sectionStatus { white-space: nowrap; }
+#menuCont .workspacePresetCard { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+#menuCont .workspacePresetCard .workspaceApplyBtn { grid-column: 1 / -1; padding: 16px; }
+#menuCont .workspacePresetCard .workspaceEditBtn { position: static; grid-row: 2; grid-column: 1; justify-self: start; margin: 0 0 12px 12px; min-width: 44px; min-height: 44px; }
+#menuCont .workspacePresetCard .workspaceLaunchBtn { position: static; grid-row: 2; grid-column: 2; margin: 0 12px 12px 0; min-width: 44px; min-height: 44px; }
+#menuCont [data-settings-component="pomodoro"][data-component-enabled="true"] .pomodoroSettingsHidden { display: flex !important; }
+#menuCont #opacityTextContainer { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+#menuCont #opacityTextContainer > .texts { flex: 1; min-width: 150px; }
+#menuCont #opacityTextContainer > label { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+#menuCont #opacityTextContainer > label input { width: 22px; height: 22px; }
+#menuCont #opacityTextContainer > .opacityBar { order: 3; flex-basis: 100%; margin-block: 12px; }
+#menuCont .opacityBar[aria-disabled="true"] { opacity: .5; cursor: default; }
+#menuCont #weatherAdvanced :is(input[type="text"], input[type="password"]) { width: 100%; box-sizing: border-box; }
+#menuCont [data-settings-component="weather"][data-component-enabled="true"] .weatherOptions { max-height: none; }
+@media (max-width: 420px) {
+    #menuCont .settingsGroupTabs button { padding-inline: 4px; overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #menuCont :is(.sectionOuter, .sectionInner, .sectionChevron) { transition: none; }
+}

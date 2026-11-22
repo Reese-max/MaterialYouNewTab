@@ -4053,7 +4053,7 @@ input:checked + .toggle:before {
 }
 
 /* Expanded state */
-.section.expanded .sectionChevron {
+.section.expanded > .sectionOuter > .sectionHeader .sectionChevron {
 	transform: rotate(-135deg) translateY(-3px);
 }
 
@@ -4082,16 +4082,16 @@ input:checked + .toggle:before {
 	padding: 16px 4px;
 }
 
-.sectionInner .ttcont:not(:last-child) {
+.sectionInner .ttcont:has(~ .ttcont:not([hidden])) {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* Collapse */
-.section:not(.expanded) .sectionOuter {
+.section:not(.expanded) > .sectionOuter {
 	border-radius: 20px;
 }
 
-.section:not(.expanded) .sectionInner {
+.section:not(.expanded) > .sectionOuter > .sectionInner {
 	max-height: 0;
 	opacity: 0;
 	margin-top: 0;
@@ -4138,7 +4138,7 @@ input:checked + .toggle:before {
 	background-color: #333333;
 }
 
-.black-theme .sectionInner .ttcont:not(:last-child) {
+.black-theme .sectionInner .ttcont:has(~ .ttcont:not([hidden])) {
 	border-bottom: 1px solid #ffffff1a;
 }
 
@@ -5690,7 +5690,7 @@ body[data-bg="wallpaper"] .dropdown-content {
 			scale: 0.8;
 		}
 	}
-	.centerDiv:has(~ .menuBar #hideWeatherCard:checked) .topDiv .lrectangle {
+	.centerDiv:has(~ .menuBar #hideWeatherCard:not(:checked)) .topDiv .lrectangle {
 		display: none;
 	}
 	.centerDiv {

@@ -754,7 +754,7 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 	}
 }
 
-/* 狀態文字原為淺色底用的 #18733c／#a82d2d，在深色區塊上只有 2.2–4.1:1；黑色主題同樣適用（高對比除外，其底色為 Canvas）。 */
+/* 一般深色的 #menuCont 會整體反相，沿用淺色表面與狀態色；只有 top-layer dialog 與不反相的黑色主題使用深色字色。 */
 :is(
 	html.black-theme,
 	html:has(body[data-bg="color"] .menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
@@ -763,7 +763,8 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 	html:has(body[data-bg="wallpaper"][sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)),
 	html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)),
 	html:has([sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked))
-):not(.myntHighContrast) #controlCenterDialog {
+):not(.myntHighContrast) #controlCenterDialog,
+html.black-theme:not(.myntHighContrast) #menuCont {
 	& :is(.permissionControls em.granted, .serviceState.ok) {
 		color: #81c995;
 	}

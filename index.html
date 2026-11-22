@@ -1070,16 +1070,18 @@
 
                     <div id="settingsGroupTabs" class="settingsGroupTabs" role="tablist" aria-label="Settings categories">
                         <button id="settingsGroupPersonal" type="button" role="tab" aria-selected="true"
-                            data-settings-group-button="personal">Personalization</button>
+                            data-settings-group-button="home">Home</button>
+                        <button id="settingsGroupAppearance" type="button" role="tab" aria-selected="false"
+                            data-settings-group-button="appearance">Appearance</button>
                         <button id="settingsGroupWork" type="button" role="tab" aria-selected="false"
-                            data-settings-group-button="work">Work tools</button>
+                            data-settings-group-button="work">Tools</button>
                         <button id="settingsGroupAdvanced" type="button" role="tab" aria-selected="false"
-                            data-settings-group-button="advanced">Advanced</button>
+                            data-settings-group-button="system">System</button>
                     </div>
 
                     <div class="toggleTextsCont">
 
-                        <div class="section expanded" data-settings-group="work">
+                        <div class="section expanded" data-settings-component="shortcuts" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="shortcutsSectionContent">
                                     <span class="sectionTitle" id="shortcutsSectionTitle">Shortcuts</span>
@@ -1087,7 +1089,7 @@
                                 </button>
 
                                 <div class="sectionInner" id="shortcutsSectionContent">
-                                    <div class="ttcont">
+                                    <div hidden inert class="mynt-visibility-compat ttcont">
                                         <div class="texts">
                                             <div class="bigText" id="shortcutsText">Shortcuts</div>
                                             <div class="infoText" id="enableShortcutsText">Show saved shortcuts</div>
@@ -1116,17 +1118,7 @@
                                         </label>
                                     </div>
 
-                                    <div class="ttcont" id="adaptiveIconField">
-                                        <div class="texts">
-                                            <div class="bigText" id="adaptiveIconText">Adaptive Icons</div>
-                                            <div class="infoText" id="adaptiveIconInfoText">Shortcut icons will match
-                                                the theme</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="adaptiveIconToggle" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
+
 
                                 </div>
                             </div>
@@ -1134,15 +1126,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded" data-settings-group="work">
-                            <div class="sectionOuter">
-                                <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="personalizationSectionContent">
-                                    <span class="sectionTitle" id="personalizationSectionTitle">Personalization</span>
-                                    <span class="sectionChevron"></span>
-                                </button>
-
-                                <div class="sectionInner" id="personalizationSectionContent">
-                                    <div class="ttcont">
+                        <div hidden inert class="mynt-visibility-compat"><div hidden inert class="mynt-visibility-compat ttcont">
                                         <div class="texts">
                                             <div class="bigText" id="bookmarksText">書籤</div>
                                             <div class="infoText" id="bookmarksInfo">顯示書籤側邊欄</div>
@@ -1151,9 +1135,7 @@
                                             <input id="bookmarksCheckbox" type="checkbox">
                                             <span class="toggle"></span>
                                         </label>
-                                    </div>
-
-                                    <div class="ttcont">
+                                    </div><div hidden inert class="mynt-visibility-compat ttcont">
                                         <div class="texts">
                                             <div class="bigText" id="ai_tools_button">AI Tools</div>
                                             <div class="infoText" id="enable_ai_tools">Show shortcuts for AI tools</div>
@@ -1162,9 +1144,41 @@
                                             <input id="aiToolsCheckbox" type="checkbox">
                                             <span class="toggle"></span>
                                         </label>
-                                    </div>
-
-                                    <div class="ttcont" id="aiToolsEditField">
+                                    </div><div hidden inert class="mynt-visibility-compat ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="googleAppsMenuText">Google Apps</div>
+                                            <div class="infoText" id="googleAppsMenuInfo">Show shortcuts for Google Apps
+                                            </div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="googleAppsCheckbox" type="checkbox">
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div><div class="ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="todoListText">To Do List</div>
+                                            <div class="infoText" id="todoListInfo">Show a daily To Do list</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="todoListCheckbox" type="checkbox">
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div><div class="ttcont">
+                                        <div class="texts">
+                                            <div class="bigText" id="examDailySettingText">今日考古題</div>
+                                            <div class="infoText" id="examDailySettingInfo">新分頁左下角每天一題資管組考古題，點開作答</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="examDailyCheckbox" type="checkbox" checked>
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div></div>
+<div class="section expanded" data-settings-component="aiTools" data-settings-group="work">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="aiToolSectionContent">
+            <span class="sectionTitle" id="aiToolSectionTitle">AI tools</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="aiToolSectionContent"><div class="ttcont" id="aiToolsEditField">
                                         <div class="texts">
                                             <div class="bigText" id="aiToolsSettingsText">AI Tools Settings</div>
                                             <div class="infoText" id="aiToolsSettingsInfo">Select which AI tools to
@@ -1180,33 +1194,15 @@
                                                 </svg>
                                             </button>
                                         </label>
-                                    </div>
-
-                                    <div class="ttcont">
-                                        <div class="texts">
-                                            <div class="bigText" id="googleAppsMenuText">Google Apps</div>
-                                            <div class="infoText" id="googleAppsMenuInfo">Show shortcuts for Google Apps
-                                            </div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="googleAppsCheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="ttcont">
-                                        <div class="texts">
-                                            <div class="bigText" id="todoListText">To Do List</div>
-                                            <div class="infoText" id="todoListInfo">Show a daily To Do list</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="todoListCheckbox" type="checkbox">
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-
-                                    <!-- Pomodoro Timer -->
-                                    <div class="ttcont">
+                                    </div></div>
+    </div>
+</div>
+<section class="section" data-settings-component="pomodoro" data-settings-group="work">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="pomodoroSectionContent">
+            <span class="sectionTitle" id="pomodoroSectionTitle">Pomodoro</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="pomodoroSectionContent"><div hidden inert class="mynt-visibility-compat ttcont">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroText">Pomodoro Timer</div>
                                             <div class="infoText" id="pomodoroInfo">Show a focus timer widget</div>
@@ -1216,80 +1212,85 @@
                                             <span class="toggle"></span>
                                         </label>
                                     </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroWorkRow">
+<section class="section" id="pomodoroDurations">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="pomodoroDurationsContent">
+            <span class="sectionTitle"><span id="pomodoroDurationsLabel">Durations</span> · <span id="pomodoroDurationSummary">25 / 5 / 15 min · 4 rounds</span></span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="pomodoroDurationsContent"><div class="ttcont pomodoroSettingsHidden" id="pomodoroWorkRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroWorkText">Work Duration</div>
                                             <div class="infoText" id="pomodoroWorkInfo">Minutes per work session</div>
                                         </div>
                                         <div class="pomodoroNumberInput">
                                             <button class="pomodoroNumBtn" data-target="pomodoroWorkInput" data-dir="-1">&minus;</button>
-                                            <input id="pomodoroWorkInput" type="number" value="25" min="1" max="120">
+                                            <input id="pomodoroWorkInput" aria-labelledby="pomodoroWorkText" type="number" value="25" min="1" max="120">
                                             <button class="pomodoroNumBtn" data-target="pomodoroWorkInput" data-dir="1">+</button>
                                         </div>
                                     </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroShortBreakRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroShortBreakRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroShortBreakText">Short Break</div>
                                             <div class="infoText" id="pomodoroShortBreakInfo">Minutes per short break</div>
                                         </div>
                                         <div class="pomodoroNumberInput">
                                             <button class="pomodoroNumBtn" data-target="pomodoroShortBreakInput" data-dir="-1">&minus;</button>
-                                            <input id="pomodoroShortBreakInput" type="number" value="5" min="1" max="60">
+                                            <input id="pomodoroShortBreakInput" aria-labelledby="pomodoroShortBreakText" type="number" value="5" min="1" max="60">
                                             <button class="pomodoroNumBtn" data-target="pomodoroShortBreakInput" data-dir="1">+</button>
                                         </div>
                                     </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroLongBreakRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroLongBreakRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroLongBreakText">Long Break</div>
                                             <div class="infoText" id="pomodoroLongBreakInfo">Minutes per long break</div>
                                         </div>
                                         <div class="pomodoroNumberInput">
                                             <button class="pomodoroNumBtn" data-target="pomodoroLongBreakInput" data-dir="-1">&minus;</button>
-                                            <input id="pomodoroLongBreakInput" type="number" value="15" min="1" max="60">
+                                            <input id="pomodoroLongBreakInput" aria-labelledby="pomodoroLongBreakText" type="number" value="15" min="1" max="60">
                                             <button class="pomodoroNumBtn" data-target="pomodoroLongBreakInput" data-dir="1">+</button>
                                         </div>
                                     </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroRoundsRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroRoundsRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroRoundsText">Rounds</div>
                                             <div class="infoText" id="pomodoroRoundsInfo">Sessions before long break</div>
                                         </div>
                                         <div class="pomodoroNumberInput">
                                             <button class="pomodoroNumBtn" data-target="pomodoroRoundsInput" data-dir="-1">&minus;</button>
-                                            <input id="pomodoroRoundsInput" type="number" value="4" min="1" max="12">
+                                            <input id="pomodoroRoundsInput" aria-labelledby="pomodoroRoundsText" type="number" value="4" min="1" max="12">
                                             <button class="pomodoroNumBtn" data-target="pomodoroRoundsInput" data-dir="1">+</button>
                                         </div>
-                                    </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroIconSizeRow">
+                                    </div></div>
+    </div>
+</section>
+<section class="section" id="pomodoroAdvanced">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="pomodoroAdvancedContent">
+            <span class="sectionTitle" id="pomodoroAdvancedLabel">Advanced</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="pomodoroAdvancedContent"><div class="ttcont pomodoroSettingsHidden" id="pomodoroIconSizeRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroIconSizeText">Icon Size</div>
                                             <div class="infoText" id="pomodoroIconSizeInfo">Clock icon size (px)</div>
                                         </div>
                                         <div class="pomodoroNumberInput">
                                             <button class="pomodoroNumBtn" data-target="pomodoroIconSizeInput" data-dir="-4">&minus;</button>
-                                            <input id="pomodoroIconSizeInput" type="number" value="36" min="20" max="72">
+                                            <input id="pomodoroIconSizeInput" aria-labelledby="pomodoroIconSizeText" type="number" value="36" min="20" max="72">
                                             <button class="pomodoroNumBtn" data-target="pomodoroIconSizeInput" data-dir="4">+</button>
                                         </div>
                                     </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroPanelScaleRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroPanelScaleRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroPanelScaleText">Panel Size</div>
                                             <div class="infoText" id="pomodoroPanelScaleInfo">Timer panel scale (%)</div>
                                         </div>
                                         <div class="pomodoroNumberInput">
                                             <button class="pomodoroNumBtn" data-target="pomodoroPanelScaleInput" data-dir="-10">&minus;</button>
-                                            <input id="pomodoroPanelScaleInput" type="number" value="100" min="50" max="150">
+                                            <input id="pomodoroPanelScaleInput" aria-labelledby="pomodoroPanelScaleText" type="number" value="100" min="50" max="150">
                                             <button class="pomodoroNumBtn" data-target="pomodoroPanelScaleInput" data-dir="10">+</button>
                                         </div>
                                     </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroResetPosRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroResetPosRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroResetPosText">Reset Position</div>
                                             <div class="infoText" id="pomodoroResetPosInfo">Reset icon &amp; panel position</div>
@@ -1297,9 +1298,10 @@
                                         <button class="pomodoroNumBtn" id="pomodoroResetPosBtn" title="Reset Position">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                                         </button>
-                                    </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroAutoStartRow">
+                                    </div></div>
+    </div>
+</section>
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroAutoStartRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroAutoStartText">Auto Start</div>
                                             <div class="infoText" id="pomodoroAutoStartInfo">Auto start next session</div>
@@ -1309,8 +1311,7 @@
                                             <span class="toggle"></span>
                                         </label>
                                     </div>
-
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroSoundRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroSoundRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroSoundText">Sound Alert</div>
                                             <div class="infoText" id="pomodoroSoundInfo">Play sound when session ends</div>
@@ -1320,8 +1321,7 @@
                                             <span class="toggle"></span>
                                         </label>
                                     </div>
-
-                                                                        <div class="ttcont pomodoroSettingsHidden" id="pomodoroAmbientAutoRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroAmbientAutoRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroAmbientAutoText">Ambient Sound Auto-play</div>
                                             <div class="infoText" id="pomodoroAmbientAutoInfo">Play ambient audio during focus session</div>
@@ -1331,7 +1331,7 @@
                                             <span class="toggle"></span>
                                         </label>
                                     </div>
-                                    <div class="ttcont pomodoroSettingsHidden" id="pomodoroNotifRow">
+<div class="ttcont pomodoroSettingsHidden" id="pomodoroNotifRow">
                                         <div class="texts">
                                             <div class="bigText" id="pomodoroNotifText">Notification</div>
                                             <div class="infoText" id="pomodoroNotifInfo">Desktop notification when done</div>
@@ -1340,10 +1340,15 @@
                                             <input id="pomodoroNotifCheckbox" type="checkbox" checked>
                                             <span class="toggle"></span>
                                         </label>
-                                    </div>
-
-                                    <!-- Study encouragement -->
-                                    <div class="ttcont">
+                                    </div></div>
+    </div>
+</section>
+<section class="section" data-settings-component="studyQuote" data-settings-group="work">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="studySectionContent">
+            <span class="sectionTitle" id="studySectionTitle">Study encouragement</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="studySectionContent"><div hidden inert class="mynt-visibility-compat ttcont">
                                         <div class="texts">
                                             <div class="bigText" id="studyQuoteSettingText">Study encouragement</div>
                                             <div class="infoText" id="studyQuoteSettingInfo">Show a gentle line at the bottom; click it for another</div>
@@ -1353,40 +1358,34 @@
                                             <span class="toggle"></span>
                                         </label>
                                     </div>
-                                    <div class="ttcont" id="studyQuotesManageField">
+<div class="ttcont" id="studyQuotesManageField">
                                         <div class="texts">
                                             <div class="bigText" id="studyQuotesManageText">Manage encouragement lines</div>
                                             <div class="infoText" id="studyQuotesManageInfo">Add, paste, import, tag, hide or delete the lines shown at the bottom</div>
                                         </div>
                                         <button type="button" class="settingsActionBtn" id="studyQuotesManageButton">Manage</button>
-                                    </div>
-                                    <div class="ttcont">
-                                        <div class="texts">
-                                            <div class="bigText" id="examDailySettingText">今日考古題</div>
-                                            <div class="infoText" id="examDailySettingInfo">新分頁左下角每天一題資管組考古題，點開作答</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input id="examDailyCheckbox" type="checkbox" checked>
-                                            <span class="toggle"></span>
-                                        </label>
-                                    </div>
-                                    <div class="ttcont">
+                                    </div></div>
+    </div>
+</section>
+<section class="section" data-settings-component="countdowns" data-settings-group="work">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="countdownSectionContent">
+            <span class="sectionTitle" id="countdownSectionTitle">Important dates</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="countdownSectionContent"><div class="ttcont">
                                         <div class="texts">
                                             <div class="bigText" id="eventCountdownSettingTitle">特考與紀念日倒數</div>
                                             <div class="infoText" id="eventCountdownSettingInfo">管理重要日期，保存在這個瀏覽器</div>
                                         </div>
                                         <button id="eventCountdownManage" class="settingsActionBtn" type="button">管理倒數</button>
-                                    </div>
+                                    </div></div>
+    </div>
+</section>
 
-
-
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded" data-settings-group="personal">
+                        <div class="section expanded" data-settings-group="appearance">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="clockSectionContent">
                                     <span class="sectionTitle" id="clockSectionTitle">Clock</span>
@@ -1394,7 +1393,7 @@
                                 </button>
 
                                 <div class="sectionInner" id="clockSectionContent">
-                                    <div class="ttcont" id="clockHidden">
+                                    <div hidden inert class="mynt-visibility-compat ttcont" id="clockHidden">
                                         <div class="texts">
                                             <div class="bigText" id="showClockBox">Show clock</div>
                                             <div class="infoText" id="showClockBoxInfo">Show the clock and date on the home page
@@ -1430,16 +1429,7 @@
                                             </label>
                                         </div>
 
-                                        <div class="ttcont">
-                                            <div class="texts">
-                                                <div class="bigText" id="layoutEditTitle">Edit layout</div>
-                                                <div class="infoText" id="layoutEditInfo">Move and resize blocks (Alt+L)</div>
-                                            </div>
-                                            <label class="switch">
-                                                <input id="layoutEditCheckbox" type="checkbox">
-                                                <span class="toggle"></span>
-                                            </label>
-                                        </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -1447,7 +1437,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section expanded" data-settings-group="work">
+                        <div class="section expanded" data-settings-component="search" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="searchSectionContent">
                                     <span class="sectionTitle" id="searchSectionTitle">Search</span>
@@ -1457,7 +1447,7 @@
                                 <div class="sectionInner" id="searchSectionContent">
                                     <div class="ttcont">
                                         <div class="texts">
-                                            <div class="bigText" id="micIconTitle">Hide Microphone Button</div>
+                                            <div class="bigText" id="micIconTitle">Show Microphone Button</div>
                                             <div class="infoText" id="micIconInfo">If voice typing is not working</div>
                                         </div>
                                         <label class="switch">
@@ -1468,8 +1458,8 @@
 
                                     <div class="ttcont">
                                         <div class="texts">
-                                            <div class="bigText" id="aiModeIconTitle">Hide AI Mode Button</div>
-                                            <div class="infoText" id="aiModeIconInfo">Hide Google AI Mode search button</div>
+                                            <div class="bigText" id="aiModeIconTitle">Show AI Mode Button</div>
+                                            <div class="infoText" id="aiModeIconInfo">Show Google AI Mode search button</div>
                                         </div>
                                         <label class="switch">
                                             <input id="aiModeIconCheckbox" type="checkbox">
@@ -1477,10 +1467,10 @@
                                         </label>
                                     </div>
 
-                                    <div class="ttcont">
+                                    <div hidden inert class="mynt-visibility-compat ttcont">
                                         <div class="texts">
-                                            <div class="bigText" id="hideSearchWith">Hide Search Provider Row</div>
-                                            <div class="infoText" id="hideSearchWithInfo">Hide the Google provider row below the search bar</div>
+                                            <div class="bigText" id="hideSearchWith">Show Search Provider Row</div>
+                                            <div class="infoText" id="hideSearchWithInfo">Show the Google provider row below the search bar</div>
                                         </div>
                                         <label class="switch">
                                             <input id="shortcut_switchcheckbox" type="checkbox">
@@ -1493,7 +1483,7 @@
 
                         <!-- ---🟡--- -->
 
-                        <div class="section" data-settings-group="advanced">
+                        <div class="section" data-settings-component="weather" data-settings-group="work">
                             <div class="sectionOuter">
                                 <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="weatherSectionContent">
                                     <span class="sectionTitle" id="weatherSectionTitle">Weather</span>
@@ -1501,10 +1491,10 @@
                                 </button>
 
                                 <div class="sectionInner" id="weatherSectionContent">
-                                    <div class="ttcont" id="weatherHeader">
+                                    <div hidden inert class="mynt-visibility-compat ttcont" id="weatherHeader">
                                         <div class="texts">
-                                            <div class="bigText" id="hideWeatherTitle">Hide Weather</div>
-                                            <div class="infoText" id="hideWeatherInfo">Disable the weather widgets</div>
+                                            <div class="bigText" id="hideWeatherTitle">Show Weather</div>
+                                            <div class="infoText" id="hideWeatherInfo">Show the weather widgets</div>
                                         </div>
 
                                         <label class="switch">
@@ -1513,12 +1503,16 @@
                                         </label>
                                     </div>
 
-                                    <div class="weatherOptions">
+                                    <div class="weatherOptions"><section class="section" id="weatherAdvanced">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="weatherAdvancedContent">
+            <span class="sectionTitle" id="weatherAdvancedLabel">Advanced</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="weatherAdvancedContent">
                                         <div class="ttcont">
                                             <div class="texts">
-                                                <div class="bigText" id="hideWeatherBox">Hide Weather Card</div>
-                                                <div class="infoText" id="hideWeatherBoxInfo">Show only temperature pill
-                                                </div>
+                                                <div class="bigText" id="hideWeatherBox">Show Weather Card</div>
+                                                <div class="infoText" id="hideWeatherBoxInfo">Show the full weather card on small screens</div>
                                             </div>
                                             <label class="switch">
                                                 <input id="hideWeatherCard" type="checkbox">
@@ -1558,7 +1552,7 @@
                                                     correct</div>
                                             </div>
 
-                                            <input id="userLoc"
+                                            <input id="userLoc" aria-labelledby="UserLocText"
                                                 placeholder="Your City or Coordinates (Latitude, Longitude)"
                                                 type="text">
 
@@ -1589,7 +1583,7 @@
                                                 <div class="infoText" id="WeatherApiSubtext">If the weather
                                                     functionality isn't working</div>
                                             </div>
-                                            <input id="userAPI" placeholder="Your weatherAPI key" type="password"
+                                            <input id="userAPI" aria-labelledby="WeatherApiText" placeholder="Your weatherAPI key" type="password"
                                                 autocomplete="off" spellcheck="false">
                                             <div class="bottom">
                                                 <a href="https://prem-k-r.github.io/MaterialYouNewTab/docs/Get_WeatherAPI_Key.html"
@@ -1598,14 +1592,284 @@
                                             </div>
                                         </div>
                                     </div>
+    </div>
+</section></div>
                                 </div>
                             </div>
                         </div>
+                    <section class="section expanded" data-settings-group="home">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="layoutSectionContent">
+            <span class="sectionTitle" id="layoutSectionTitle">Layout</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="layoutSectionContent"><div class="ttcont">
+                                            <div class="texts">
+                                                <div class="bigText" id="layoutEditTitle">Edit layout</div>
+                                                <div class="infoText" id="layoutEditInfo">Move and resize blocks (Alt+L)</div>
+                                            </div>
+                                            <label class="switch">
+                                                <input id="layoutEditCheckbox" type="checkbox">
+                                                <span class="toggle"></span>
+                                            </label>
+                                        </div></div>
+    </div>
+</section>
+<section class="section expanded" data-settings-group="home" id="workspaceSection" aria-labelledby="workspaceTitle">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="workspaceSectionContent">
+            <span class="sectionTitle" id="workspaceTitle">Work modes</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="workspaceSectionContent">
+                <div class="controlSectionHeading">
+                    <div>
+
+                        <p id="workspaceInfo">Choose your tools, sites, background, and focus length.</p>
                     </div>
+                    <div class="workspaceHeadingActions">
+                        <span id="workspaceStatus" class="sectionStatus" aria-live="polite"></span>
+                        <button id="workspaceAddBtn" class="settingsActionBtn" type="button">New mode</button>
+                    </div>
+                </div>
+                <div id="workspacePresetGrid" class="workspacePresetGrid"></div>
+
+                <form id="workspaceEditorForm" class="workspaceEditor" hidden>
+                    <input id="workspaceEditorId" type="hidden">
+                    <label class="workspaceEditorField" for="workspaceNameInput">
+                        <span id="workspaceNameLabel">Mode name</span>
+                        <input id="workspaceNameInput" maxlength="30" required autocomplete="off">
+                    </label>
+                    <fieldset class="workspaceWidgetChoices">
+                        <legend id="workspaceWidgetsLegend">Show in this mode</legend>
+                        <label><input type="checkbox" data-workspace-widget="shortcutsCheckbox"><span id="workspaceWidgetShortcuts">Shortcut sites</span></label>
+                        <label><input type="checkbox" data-workspace-widget="bookmarksCheckbox"><span id="workspaceWidgetBookmarks">Bookmarks</span></label>
+                        <label><input type="checkbox" data-workspace-widget="todoListCheckbox"><span id="workspaceWidgetTodo">To Do List</span></label>
+                        <label><input type="checkbox" data-workspace-widget="pomodoroCheckbox"><span id="workspaceWidgetPomodoro">Pomodoro</span></label>
+                        <label><input type="checkbox" data-workspace-widget="aiToolsCheckbox"><span id="workspaceWidgetAi">AI tools</span></label>
+                        <label><input type="checkbox" data-workspace-widget="googleAppsCheckbox"><span id="workspaceWidgetGoogle">Google Apps</span></label>
+                    </fieldset>
+                    <div class="workspaceEditorFields">
+                        <label class="workspaceEditorField" for="workspaceBackgroundSelect">
+                            <span id="workspaceBackgroundLabel">Background</span>
+                            <select id="workspaceBackgroundSelect">
+                                <option id="workspaceBackgroundVideo" value="video">Motion video</option>
+                                <option id="workspaceBackgroundWallpaper" value="wallpaper">Wallpaper</option>
+                                <option id="workspaceBackgroundColor" value="color">Theme color</option>
+                            </select>
+                        </label>
+                        <label class="workspaceEditorField" for="workspaceFocusMinutesInput">
+                            <span id="workspaceFocusMinutesLabel">Focus minutes</span>
+                            <input id="workspaceFocusMinutesInput" type="number" min="1" max="120" required>
+                        </label>
+                    </div>
+                    <label class="workspaceEditorField" for="workspaceUrlsInput">
+                        <span id="workspaceUrlsLabel">Mode launcher sites (one URL per line)</span>
+                        <textarea id="workspaceUrlsInput" rows="3" placeholder="https://github.com&#10;https://mail.google.com"></textarea>
+                    </label>
+                    <div class="workspaceEditorActions">
+                        <button id="workspaceDeleteBtn" class="workspaceDangerBtn" type="button">Delete</button>
+                        <span></span>
+                        <button id="workspaceCancelBtn" type="button">Cancel</button>
+                        <button id="workspaceSaveBtn" class="settingsActionBtn" type="submit">Save &amp; apply</button>
+                    </div>
+                </form>
+            </div>
+    </div>
+</section>
+<div class="section expanded" data-settings-group="system">
+                        <div class="sectionOuter">
+                            <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="settingsSectionContent">
+                                <span class="sectionTitle" id="settingsSectionTitle">Language &amp; backup</span>
+                                <span class="sectionChevron"></span>
+                            </button>
+
+                            <div class="sectionInner" id="settingsSectionContent">
+                                <!-- start of languageSelector -->
+                                <div class="languageSection">
+                                    <div class="languageIcon">
+                                        <svg height="100%" width="30px" viewBox="0 0 16 16"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <g id="languageSelectorIconSvg" class="accentColor">
+                                                <path
+                                                    d="M4.545 6.714L4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286zm1.634-.736L5.5 3.956h-.049l-.679 2.022z" />
+                                                <path
+                                                    d="M0 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm7.138 9.995q.289.451.63.846c-.748.575-1.673 1.001-2.768 1.292c.178.217.451.635.555.867c1.125-.359 2.08-.844 2.886-1.494c.777.665 1.739 1.165 2.93 1.472c.133-.254.414-.673.629-.89c-1.125-.253-2.057-.694-2.82-1.284c.681-.747 1.222-1.651 1.621-2.757H14V8h-3v1.047h.765c-.318.844-.74 1.546-1.272 2.13a6 6 0 0 1-.415-.492a2 2 0 0 1-.94.31" />
+                                            </g>
+                                        </svg>
+                                    </div>
+
+                                    <!-- LANGUAGE SELECTION OPTIONS -->
+                                    <select class="languageSelector" id="languageSelector">
+                                        <option value="en">English</option>
+                                        <option value="pt">Português (Brasil)</option>
+                                        <option value="ne">नेपाली</option>
+                                        <option value="es">Español</option>
+                                        <option value="hi">हिन्दी</option>
+                                        <option value="hu">Magyar</option>
+                                        <option value="zh">简体中文</option>
+                                        <option value="zh_TW">繁體中文</option>
+                                        <option value="cs">Čeština</option>
+                                        <option value="it">Italiano</option>
+                                        <option value="tr">Türkçe</option>
+                                        <option value="bn">বাংলা</option>
+                                        <option value="vi">Tiếng Việt</option>
+                                        <option value="ru">Русский</option>
+                                        <option value="uz">O‘zbekcha</option>
+                                        <option value="ja">日本語</option>
+                                        <option value="ko">한국어</option>
+                                        <option value="idn">Bahasa Indonesia</option>
+                                        <option value="mr">मराठी</option>
+                                        <option value="fr">Français</option>
+                                        <option value="az">Azərbaycanca</option>
+                                        <option value="sl">Slovenščina</option>
+                                        <option value="ur">اردو</option>
+                                        <option value="de">Deutsch</option>
+                                        <option value="fa">فارسی</option>
+                                        <option value="ar_SA">العربية</option>
+                                        <option value="el">Ελληνικά</option>
+                                        <option value="ta">தமிழ்</option>
+                                        <option value="th">ไทย</option>
+                                        <option value="pl">Polski</option>
+                                        <option value="uk">Українська</option>
+                                        <option value="sv">Svenska</option>
+                                    </select>
+                                    <!-- end of languageSelector -->
+                                </div>
+
+
+
+
+                                <!-- Choose a truthful backup scope without changing existing data. -->
+                                <div class="backupScopeControl">
+                                    <label id="backupScopeLabel" for="backupScopeSelect">Backup contents</label>
+                                    <select id="backupScopeSelect" aria-describedby="backupScopeText">
+                                        <option id="backupScopeFull" value="full">Settings and media</option>
+                                        <option id="backupScopeSettings" value="settings">Settings only</option>
+                                    </select>
+                                </div>
+                                <div class="backupRestoreContainer">
+                                    <button class="backupRestoreBtn" id="backupBtn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24">
+                                            <path fill="currentColor"
+                                                d="M6.5 20q-2.275 0-3.887-1.575T1 14.575q0-1.95 1.175-3.475T5.25 9.15q.625-2.3 2.5-3.725T12 4q2.925 0 4.963 2.038T19 11q1.725.2 2.863 1.488T23 15.5q0 1.875-1.312 3.188T18.5 20H13q-.825 0-1.412-.587T11 18v-5.15L9.4 14.4L8 13l4-4l4 4l-1.4 1.4l-1.6-1.55V18h5.5q1.05 0 1.775-.725T21 15.5t-.725-1.775T18.5 13H17v-2q0-2.075-1.463-3.538T12 6T8.463 7.463T7 11h-.5q-1.45 0-2.475 1.025T3 14.5t1.025 2.475T6.5 18H9v2zm5.5-7" />
+                                        </svg>
+                                        <span id="backupText">Backup</span>
+                                    </button>
+
+                                    <button class="backupRestoreBtn" id="restoreBtn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24">
+                                            <path fill="currentColor"
+                                                d="M13.25 3a9.003 9.003 0 0 0-9.26 9H2.2c-.45 0-.67.54-.35.85l2.79 2.8c.2.2.51.2.71 0l2.79-2.8c.32-.31.09-.85-.35-.85h-1.8c0-3.9 3.18-7.05 7.1-7c3.72.05 6.85 3.18 6.9 6.9c.05 3.91-3.1 7.1-7 7.1c-1.61 0-3.1-.55-4.28-1.48a.994.994 0 0 0-1.32.08c-.42.43-.39 1.13.08 1.5a8.93 8.93 0 0 0 5.52 1.9c5.05 0 9.14-4.17 9-9.26c-.13-4.69-4.05-8.61-8.74-8.74m-.51 5c-.41 0-.75.34-.75.75v3.68c0 .35.19.68.49.86l3.12 1.85c.36.21.82.09 1.03-.26c.21-.36.09-.82-.26-1.03l-2.88-1.71v-3.4c0-.4-.33-.74-.75-.74" />
+                                        </svg>
+                                        <span id="restoreText">Restore</span>
+                                    </button>
+                                </div>
+                                <p id="backupScopeText" class="infoText"></p>
+                                <details class="backupScopeDetails">
+                                    <summary id="backupDetailsLabel">What does this backup include?</summary>
+                                    <p id="backupScopeDetailsText" class="infoText"></p>
+                                </details>
+                                <p id="backupStatus" class="infoText" role="status" aria-live="polite"></p>
+
+                                <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+                                <button class="resetbtn" id="resetsettings">Reset Settings</button>
+
+                            </div>
+                        </div>
+                    </div>
+<section class="section expanded" data-settings-group="system" id="accessibilitySection" aria-labelledby="accessibilityTitle">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="accessibilitySectionContent">
+            <span class="sectionTitle" id="accessibilityTitle">Accessibility</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="accessibilitySectionContent">
+                <div class="controlSectionHeading">
+                    <div>
+
+                        <p id="accessibilityInfo">Settings apply immediately and are included in backup files.</p>
+                    </div>
+                </div>
+                <div class="ttcont">
+                    <div class="texts"><div class="bigText" id="reduceMotionText">Reduce motion</div><div class="infoText" id="reduceMotionInfo">Pause decorative video and minimize animation</div></div>
+                    <label class="switch"><input id="reduceMotionCheckbox" type="checkbox" aria-labelledby="reduceMotionText" aria-describedby="reduceMotionInfo"><span class="toggle"></span></label>
+                </div>
+                <div class="ttcont">
+                    <div class="texts"><div class="bigText" id="highContrastText">High contrast</div><div class="infoText" id="highContrastInfo">Increase borders and text separation</div></div>
+                    <label class="switch"><input id="highContrastCheckbox" type="checkbox" aria-labelledby="highContrastText" aria-describedby="highContrastInfo"><span class="toggle"></span></label>
+                </div>
+                <label class="controlSettingRow" for="fontScaleSelect">
+                    <span><strong id="fontScaleText">Text size</strong><small id="fontScaleInfo">Scale interface text without browser zoom</small></span>
+                    <select id="fontScaleSelect">
+                        <option value="0.9">90%</option>
+                        <option value="1">100%</option>
+                        <option value="1.1">110%</option>
+                        <option value="1.2">120%</option>
+                    </select>
+                </label>
+            </div>
+    </div>
+</section>
+<section class="section expanded" data-settings-group="system" id="privacySection" aria-labelledby="privacyCenterTitle">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="privacySectionContent">
+            <span class="sectionTitle" id="privacyCenterTitle">Permissions &amp; privacy</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="privacySectionContent">
+                <div class="controlSectionHeading">
+                    <div>
+
+                        <p id="privacyCenterInfo">Optional access is requested only when you choose to enable it.</p>
+                    </div>
+                    <a href="privacy-policy.html" id="privacyPolicyLink" target="_blank" rel="noopener noreferrer">Policy</a>
+                </div>
+                <div class="permissionList">
+                    <div class="permissionRow">
+                        <span><strong id="permissionBookmarksTitle">Bookmarks &amp; favicons</strong><small id="permissionBookmarksInfo">Read and manage browser bookmarks; use cached site icons.</small></span>
+                        <span class="permissionControls"><em id="permissionBookmarksStatus">Checking...</em><button type="button" data-permission-action="bookmarks">Manage</button></span>
+                    </div>
+                    <div class="permissionRow">
+                        <span><strong id="permissionNotificationsTitle">Notifications</strong><small id="permissionNotificationsInfo">Show a local alert when a Pomodoro phase ends.</small></span>
+                        <span class="permissionControls"><em id="permissionNotificationsStatus">Checking...</em><button type="button" data-permission-action="notifications">Request</button></span>
+                    </div>
+                    <div class="permissionRow">
+                        <span><strong id="permissionLocationTitle">Location</strong><small id="permissionLocationInfo">Share coordinates with WeatherAPI only when GPS weather is enabled.</small></span>
+                        <span class="permissionControls"><em id="permissionLocationStatus">Checking...</em><button type="button" data-permission-action="location">Request</button></span>
+                    </div>
+                </div>
+                <ul class="privacyDisclosureList">
+                    <li id="privacyDisclosureWeather">WeatherAPI receives your configured location and API key in HTTPS query parameters.</li>
+                    <li id="privacyDisclosureIp">IPinfo receives your IP address when weather is on without manual location or GPS.</li>
+                    <li id="privacyDisclosureLocal">Accessibility and workspace preferences stay in this browser.</li>
+                </ul>
+            </div>
+    </div>
+</section>
+<section class="section expanded" data-settings-group="system" id="serviceSection" aria-labelledby="serviceStatusTitle">
+    <div class="sectionOuter">
+        <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="serviceSectionContent">
+            <span class="sectionTitle" id="serviceStatusTitle">Offline &amp; service status</span><span class="sectionChevron"></span>
+        </button>
+        <div class="sectionInner" id="serviceSectionContent">
+                <div class="controlSectionHeading">
+                    <div>
+
+                        <p id="serviceStatusInfo">Only service name, result, and time are stored. URLs and query text are not logged.</p>
+                    </div>
+                </div>
+                <label hidden inert class="mynt-visibility-compat controlSettingRow">
+                    <span><strong id="serviceAlertToggleText">Show service alerts on the home page</strong><small id="serviceAlertToggleInfo">Turn off to hide the bottom-right service issue / offline alert. Status here keeps updating.</small></span>
+                    <input id="serviceStatusPillCheckbox" type="checkbox" checked>
+                </label>
+                <div id="serviceStatusList" class="serviceStatusList" aria-live="polite"></div>
+            </div>
+    </div>
+</section></div>
 
                     <div class="divider"></div>
 
-                    <div class="section expanded appearanceSection" data-settings-group="personal">
+                    <div class="section expanded appearanceSection" data-settings-group="appearance">
                         <div class="sectionOuter">
                             <button class="sectionHeader" type="button" aria-expanded="true" aria-controls="appearanceSectionContent">
                                 <span class="sectionTitle" id="appearanceSectionTitle">Appearance</span>
@@ -1705,131 +1969,32 @@
                                                 <div class="infoText" id="adjustOpacityDesc">Adjust interface
                                                     transparency</div>
                                             </div>
-                                        </div>
                                         <div class="opacityBar">
                                             <div class="thinLine"></div>
                                             <div class="opacitySlider" id="opacitySlider">
                                                 <div id="opacityLevel">90%</div>
                                             </div>
-                                        </div>
+                                        </div></div>
+
                                     </div>
                                     <!-- End of opacity Bar Control -->
                                 </div>
-                            </div>
+                            <div class="innerSurface"><div class="ttcont" id="adaptiveIconField">
+                                        <div class="texts">
+                                            <div class="bigText" id="adaptiveIconText">Adaptive Icons</div>
+                                            <div class="infoText" id="adaptiveIconInfoText">Shortcut icons will match
+                                                the theme</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="adaptiveIconToggle" type="checkbox">
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </div></div></div>
                         </div>
                     </div>
                     <!-- end of themingStuff -->
 
-                    <div class="section" data-settings-group="advanced">
-                        <div class="sectionOuter">
-                            <button class="sectionHeader" type="button" aria-expanded="false" aria-controls="settingsSectionContent">
-                                <span class="sectionTitle" id="settingsSectionTitle">Settings</span>
-                                <span class="sectionChevron"></span>
-                            </button>
 
-                            <div class="sectionInner" id="settingsSectionContent">
-                                <!-- start of languageSelector -->
-                                <div class="languageSection">
-                                    <div class="languageIcon">
-                                        <svg height="100%" width="30px" viewBox="0 0 16 16"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <g id="languageSelectorIconSvg" class="accentColor">
-                                                <path
-                                                    d="M4.545 6.714L4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286zm1.634-.736L5.5 3.956h-.049l-.679 2.022z" />
-                                                <path
-                                                    d="M0 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm7.138 9.995q.289.451.63.846c-.748.575-1.673 1.001-2.768 1.292c.178.217.451.635.555.867c1.125-.359 2.08-.844 2.886-1.494c.777.665 1.739 1.165 2.93 1.472c.133-.254.414-.673.629-.89c-1.125-.253-2.057-.694-2.82-1.284c.681-.747 1.222-1.651 1.621-2.757H14V8h-3v1.047h.765c-.318.844-.74 1.546-1.272 2.13a6 6 0 0 1-.415-.492a2 2 0 0 1-.94.31" />
-                                            </g>
-                                        </svg>
-                                    </div>
-
-                                    <!-- LANGUAGE SELECTION OPTIONS -->
-                                    <select class="languageSelector" id="languageSelector">
-                                        <option value="en">English</option>
-                                        <option value="pt">Português (Brasil)</option>
-                                        <option value="ne">नेपाली</option>
-                                        <option value="es">Español</option>
-                                        <option value="hi">हिन्दी</option>
-                                        <option value="hu">Magyar</option>
-                                        <option value="zh">简体中文</option>
-                                        <option value="zh_TW">繁體中文</option>
-                                        <option value="cs">Čeština</option>
-                                        <option value="it">Italiano</option>
-                                        <option value="tr">Türkçe</option>
-                                        <option value="bn">বাংলা</option>
-                                        <option value="vi">Tiếng Việt</option>
-                                        <option value="ru">Русский</option>
-                                        <option value="uz">O‘zbekcha</option>
-                                        <option value="ja">日本語</option>
-                                        <option value="ko">한국어</option>
-                                        <option value="idn">Bahasa Indonesia</option>
-                                        <option value="mr">मराठी</option>
-                                        <option value="fr">Français</option>
-                                        <option value="az">Azərbaycanca</option>
-                                        <option value="sl">Slovenščina</option>
-                                        <option value="ur">اردو</option>
-                                        <option value="de">Deutsch</option>
-                                        <option value="fa">فارسی</option>
-                                        <option value="ar_SA">العربية</option>
-                                        <option value="el">Ελληνικά</option>
-                                        <option value="ta">தமிழ்</option>
-                                        <option value="th">ไทย</option>
-                                        <option value="pl">Polski</option>
-                                        <option value="uk">Українська</option>
-                                        <option value="sv">Svenska</option>
-                                    </select>
-                                    <!-- end of languageSelector -->
-                                </div>
-
-
-                                <div class="ttcont controlCenterLaunch">
-                                    <div class="texts">
-                                        <div class="bigText" id="controlCenterText">Control Center</div>
-                                        <div class="infoText" id="controlCenterInfo">Workspaces, privacy, accessibility, and service status</div>
-                                    </div>
-                                    <button class="settingsActionBtn" id="openControlCenterBtn" type="button">Open</button>
-                                </div>
-
-                                <!-- Choose a truthful backup scope without changing existing data. -->
-                                <div class="backupScopeControl">
-                                    <label id="backupScopeLabel" for="backupScopeSelect">Backup contents</label>
-                                    <select id="backupScopeSelect" aria-describedby="backupScopeText">
-                                        <option id="backupScopeFull" value="full">Settings and media</option>
-                                        <option id="backupScopeSettings" value="settings">Settings only</option>
-                                    </select>
-                                </div>
-                                <div class="backupRestoreContainer">
-                                    <button class="backupRestoreBtn" id="backupBtn">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24">
-                                            <path fill="currentColor"
-                                                d="M6.5 20q-2.275 0-3.887-1.575T1 14.575q0-1.95 1.175-3.475T5.25 9.15q.625-2.3 2.5-3.725T12 4q2.925 0 4.963 2.038T19 11q1.725.2 2.863 1.488T23 15.5q0 1.875-1.312 3.188T18.5 20H13q-.825 0-1.412-.587T11 18v-5.15L9.4 14.4L8 13l4-4l4 4l-1.4 1.4l-1.6-1.55V18h5.5q1.05 0 1.775-.725T21 15.5t-.725-1.775T18.5 13H17v-2q0-2.075-1.463-3.538T12 6T8.463 7.463T7 11h-.5q-1.45 0-2.475 1.025T3 14.5t1.025 2.475T6.5 18H9v2zm5.5-7" />
-                                        </svg>
-                                        <span id="backupText">Backup</span>
-                                    </button>
-
-                                    <button class="backupRestoreBtn" id="restoreBtn">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24">
-                                            <path fill="currentColor"
-                                                d="M13.25 3a9.003 9.003 0 0 0-9.26 9H2.2c-.45 0-.67.54-.35.85l2.79 2.8c.2.2.51.2.71 0l2.79-2.8c.32-.31.09-.85-.35-.85h-1.8c0-3.9 3.18-7.05 7.1-7c3.72.05 6.85 3.18 6.9 6.9c.05 3.91-3.1 7.1-7 7.1c-1.61 0-3.1-.55-4.28-1.48a.994.994 0 0 0-1.32.08c-.42.43-.39 1.13.08 1.5a8.93 8.93 0 0 0 5.52 1.9c5.05 0 9.14-4.17 9-9.26c-.13-4.69-4.05-8.61-8.74-8.74m-.51 5c-.41 0-.75.34-.75.75v3.68c0 .35.19.68.49.86l3.12 1.85c.36.21.82.09 1.03-.26c.21-.36.09-.82-.26-1.03l-2.88-1.71v-3.4c0-.4-.33-.74-.75-.74" />
-                                        </svg>
-                                        <span id="restoreText">Restore</span>
-                                    </button>
-                                </div>
-                                <p id="backupScopeText" class="infoText"></p>
-                                <details class="backupScopeDetails">
-                                    <summary id="backupDetailsLabel">What does this backup include?</summary>
-                                    <p id="backupScopeDetailsText" class="infoText"></p>
-                                </details>
-                                <p id="backupStatus" class="infoText" role="status" aria-live="polite"></p>
-
-                                <input type="file" id="fileInput" accept=".json" style="display: none;">
-
-                                <button class="resetbtn" id="resetsettings">Reset Settings</button>
-
-                            </div>
-                        </div>
-                    </div>
 
 
                     <!-- ------------------ -->
@@ -1962,7 +2127,7 @@
             <div class="shortcutItem"><kbd>!bang</kbd><span id="shortcutBangHelp">Search bangs (!yt, !gh, !gpt...)</span></div>
         </div>
     </dialog>
-    <dialog id="controlCenterDialog" class="myntDialog controlCenterDialog" aria-labelledby="controlCenterTitle">
+    <dialog hidden inert id="controlCenterDialog" class="myntDialog controlCenterDialog" aria-labelledby="controlCenterTitle">
         <header class="controlCenterHeader">
             <div>
                 <span class="controlCenterEyebrow" id="controlCenterEyebrow">Stored locally</span>
@@ -1972,129 +2137,13 @@
         </header>
 
         <div class="controlCenterContent">
-            <section class="controlSection" id="workspaceSection" aria-labelledby="workspaceTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="workspaceTitle">Work modes</h3>
-                        <p id="workspaceInfo">Choose your tools, sites, background, and focus length.</p>
-                    </div>
-                    <div class="workspaceHeadingActions">
-                        <span id="workspaceStatus" class="sectionStatus" aria-live="polite"></span>
-                        <button id="workspaceAddBtn" class="settingsActionBtn" type="button">New mode</button>
-                    </div>
-                </div>
-                <div id="workspacePresetGrid" class="workspacePresetGrid"></div>
 
-                <form id="workspaceEditorForm" class="workspaceEditor" hidden>
-                    <input id="workspaceEditorId" type="hidden">
-                    <label class="workspaceEditorField" for="workspaceNameInput">
-                        <span id="workspaceNameLabel">Mode name</span>
-                        <input id="workspaceNameInput" maxlength="30" required autocomplete="off">
-                    </label>
-                    <fieldset class="workspaceWidgetChoices">
-                        <legend id="workspaceWidgetsLegend">Show in this mode</legend>
-                        <label><input type="checkbox" data-workspace-widget="shortcutsCheckbox"><span id="workspaceWidgetShortcuts">Shortcut sites</span></label>
-                        <label><input type="checkbox" data-workspace-widget="bookmarksCheckbox"><span id="workspaceWidgetBookmarks">Bookmarks</span></label>
-                        <label><input type="checkbox" data-workspace-widget="todoListCheckbox"><span id="workspaceWidgetTodo">To Do List</span></label>
-                        <label><input type="checkbox" data-workspace-widget="pomodoroCheckbox"><span id="workspaceWidgetPomodoro">Pomodoro</span></label>
-                        <label><input type="checkbox" data-workspace-widget="aiToolsCheckbox"><span id="workspaceWidgetAi">AI tools</span></label>
-                        <label><input type="checkbox" data-workspace-widget="googleAppsCheckbox"><span id="workspaceWidgetGoogle">Google Apps</span></label>
-                    </fieldset>
-                    <div class="workspaceEditorFields">
-                        <label class="workspaceEditorField" for="workspaceBackgroundSelect">
-                            <span id="workspaceBackgroundLabel">Background</span>
-                            <select id="workspaceBackgroundSelect">
-                                <option id="workspaceBackgroundVideo" value="video">Motion video</option>
-                                <option id="workspaceBackgroundWallpaper" value="wallpaper">Wallpaper</option>
-                                <option id="workspaceBackgroundColor" value="color">Theme color</option>
-                            </select>
-                        </label>
-                        <label class="workspaceEditorField" for="workspaceFocusMinutesInput">
-                            <span id="workspaceFocusMinutesLabel">Focus minutes</span>
-                            <input id="workspaceFocusMinutesInput" type="number" min="1" max="120" required>
-                        </label>
-                    </div>
-                    <label class="workspaceEditorField" for="workspaceUrlsInput">
-                        <span id="workspaceUrlsLabel">Mode launcher sites (one URL per line)</span>
-                        <textarea id="workspaceUrlsInput" rows="3" placeholder="https://github.com&#10;https://mail.google.com"></textarea>
-                    </label>
-                    <div class="workspaceEditorActions">
-                        <button id="workspaceDeleteBtn" class="workspaceDangerBtn" type="button">Delete</button>
-                        <span></span>
-                        <button id="workspaceCancelBtn" type="button">Cancel</button>
-                        <button id="workspaceSaveBtn" class="settingsActionBtn" type="submit">Save &amp; apply</button>
-                    </div>
-                </form>
-            </section>
 
-            <section class="controlSection" id="accessibilitySection" aria-labelledby="accessibilityTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="accessibilityTitle">Accessibility</h3>
-                        <p id="accessibilityInfo">Settings apply immediately and are included in backup files.</p>
-                    </div>
-                </div>
-                <label class="controlSettingRow">
-                    <span><strong id="reduceMotionText">Reduce motion</strong><small id="reduceMotionInfo">Pause decorative video and minimize animation</small></span>
-                    <input id="reduceMotionCheckbox" type="checkbox">
-                </label>
-                <label class="controlSettingRow">
-                    <span><strong id="highContrastText">High contrast</strong><small id="highContrastInfo">Increase borders and text separation</small></span>
-                    <input id="highContrastCheckbox" type="checkbox">
-                </label>
-                <label class="controlSettingRow" for="fontScaleSelect">
-                    <span><strong id="fontScaleText">Text size</strong><small id="fontScaleInfo">Scale interface text without browser zoom</small></span>
-                    <select id="fontScaleSelect">
-                        <option value="0.9">90%</option>
-                        <option value="1">100%</option>
-                        <option value="1.1">110%</option>
-                        <option value="1.2">120%</option>
-                    </select>
-                </label>
-            </section>
 
-            <section class="controlSection" id="privacySection" aria-labelledby="privacyCenterTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="privacyCenterTitle">Permissions &amp; privacy</h3>
-                        <p id="privacyCenterInfo">Optional access is requested only when you choose to enable it.</p>
-                    </div>
-                    <a href="privacy-policy.html" id="privacyPolicyLink" target="_blank" rel="noopener noreferrer">Policy</a>
-                </div>
-                <div class="permissionList">
-                    <div class="permissionRow">
-                        <span><strong id="permissionBookmarksTitle">Bookmarks &amp; favicons</strong><small id="permissionBookmarksInfo">Read and manage browser bookmarks; use cached site icons.</small></span>
-                        <span class="permissionControls"><em id="permissionBookmarksStatus">Checking...</em><button type="button" data-permission-action="bookmarks">Manage</button></span>
-                    </div>
-                    <div class="permissionRow">
-                        <span><strong id="permissionNotificationsTitle">Notifications</strong><small id="permissionNotificationsInfo">Show a local alert when a Pomodoro phase ends.</small></span>
-                        <span class="permissionControls"><em id="permissionNotificationsStatus">Checking...</em><button type="button" data-permission-action="notifications">Request</button></span>
-                    </div>
-                    <div class="permissionRow">
-                        <span><strong id="permissionLocationTitle">Location</strong><small id="permissionLocationInfo">Share coordinates with WeatherAPI only when GPS weather is enabled.</small></span>
-                        <span class="permissionControls"><em id="permissionLocationStatus">Checking...</em><button type="button" data-permission-action="location">Request</button></span>
-                    </div>
-                </div>
-                <ul class="privacyDisclosureList">
-                    <li id="privacyDisclosureWeather">WeatherAPI receives your configured location and API key in HTTPS query parameters.</li>
-                    <li id="privacyDisclosureIp">IPinfo receives your IP address when weather is on without manual location or GPS.</li>
-                    <li id="privacyDisclosureLocal">Accessibility and workspace preferences stay in this browser.</li>
-                </ul>
-            </section>
 
-            <section class="controlSection" id="serviceSection" aria-labelledby="serviceStatusTitle">
-                <div class="controlSectionHeading">
-                    <div>
-                        <h3 id="serviceStatusTitle">Offline &amp; service status</h3>
-                        <p id="serviceStatusInfo">Only service name, result, and time are stored. URLs and query text are not logged.</p>
-                    </div>
-                </div>
-                <label class="controlSettingRow">
-                    <span><strong id="serviceAlertToggleText">Show service alerts on the home page</strong><small id="serviceAlertToggleInfo">Turn off to hide the bottom-right service issue / offline alert. Status here keeps updating.</small></span>
-                    <input id="serviceStatusPillCheckbox" type="checkbox" checked>
-                </label>
-                <div id="serviceStatusList" class="serviceStatusList" aria-live="polite"></div>
-            </section>
+
+
+
         </div>
     </dialog>
 

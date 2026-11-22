@@ -155,22 +155,25 @@ document.querySelectorAll(".sectionHeader").forEach(header => {
     });
 });
 
-// Keep the large settings menu scannable without moving its existing controls.
+// Compatibility names are accepted by callers; no tab preference was persisted.
 const settingsGroupButtons = [...document.querySelectorAll("[data-settings-group-button]")];
-const settingsGroupSections = [...document.querySelectorAll("#overviewPage .section[data-settings-group]")];
+let activeSettingsGroup = "home";
 
-function selectSettingsGroup(group) {
+function selectSettingsGroup(group, resetScroll = true) {
+    group = ({ personal: "appearance", tools: "work", advanced: "system" })[group] || group;
+    if (!settingsGroupButtons.some(button => button.dataset.settingsGroupButton === group)) group = "home";
+    activeSettingsGroup = group;
     settingsGroupButtons.forEach(button => {
         const selected = button.dataset.settingsGroupButton === group;
         button.setAttribute("aria-selected", String(selected));
         button.tabIndex = selected ? 0 : -1;
     });
-    settingsGroupSections.forEach(section => {
-        const hidden = section.dataset.settingsGroup !== group;
+    document.querySelectorAll("#overviewPage [data-settings-group]").forEach(section => {
+        const hidden = section.dataset.settingsGroup !== group || section.dataset.componentEnabled === "false";
         section.hidden = hidden;
         section.toggleAttribute("inert", hidden);
     });
-    optCont.scrollTop = 0;
+    if (resetScroll) optCont.scrollTop = 0;
 }
 
 settingsGroupButtons.forEach((button, index) => {
@@ -184,7 +187,34 @@ settingsGroupButtons.forEach((button, index) => {
         selectSettingsGroup(next.dataset.settingsGroupButton);
     });
 });
-selectSettingsGroup("personal");
+selectSettingsGroup("home");
+window.myntSettings = {
+    selectGroup: selectSettingsGroup,
+    refreshTools(items) {
+        document.querySelectorAll("[data-settings-component]").forEach(section => {
+            const item = items.find(item => item.id === section.dataset.settingsComponent);
+            section.dataset.componentEnabled = String(item?.visible === true);
+        });
+        selectSettingsGroup(activeSettingsGroup, false);
+    },
+    open(sectionId = "accessibilitySection") {
+        const target = document.getElementById(sectionId);
+        if (!target) return;
+        if (shortcutEditPage.style.display === "block") {
+            ++menuRevision;
+            pageReset();
+        }
+        if (menuButton.getAttribute("aria-expanded") !== "true") openMenuBar();
+        selectSettingsGroup(target.closest("[data-settings-group]")?.dataset.settingsGroup || "system");
+        queueMenu(() => {
+            const section = target.closest(".section");
+            if (section && !section.classList.contains("expanded")) section.querySelector(".sectionHeader").click();
+            target.tabIndex = -1;
+            target.focus({ preventScroll: true });
+            target.scrollIntoView({ block: "start" });
+        }, 60);
+    }
+};
 
 // Explain the two unlabeled floating actions on the first three visits, then simplify them.
 const HOME_HINT_KEY = "myntHomeActionHintViews";

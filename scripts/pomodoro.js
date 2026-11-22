@@ -164,6 +164,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }));
     }
 
+    function updateDurationSummary() {
+        const summary = document.getElementById("pomodoroDurationSummary");
+        if (summary) {
+            const durations = timer.getState().durations;
+            summary.textContent = getPomodoroText("pomodoroDurationSummary", "{work} / {short} / {long} min · {rounds} rounds")
+                .replace("{work}", durations.workMinutes).replace("{short}", durations.shortBreakMinutes)
+                .replace("{long}", durations.longBreakMinutes).replace("{rounds}", durations.roundsBeforeLong);
+        }
+    }
+    for (const event of ["mynt:pomodoro-ready", "mynt:pomodoro-state", "mynt:language-changed"]) {
+        document.addEventListener(event, updateDurationSummary);
+    }
+
     // --- UI update ---
     function updatePomodoroUI() {
         pomodoroRingFg.classList.toggle("running", pomodoroState.isRunning);
