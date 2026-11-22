@@ -54,6 +54,23 @@ test('search-enter#2', () => {
     assert.ok(input.emit('keydown', { key: 'Enter' }).prevented); assert.deepEqual(searched, ['!yt cats']);
 });
 
+test('search-stays-in-browser', () => {
+    // iOS hands google.com/search to the Google app ("Open in Google?") unless noiga=1 is present.
+    const c = context(); c.searchInput = node(); c.window = { location: { href: '' } };
+    c.localStorage = store({ selectedLanguage: 'zh_TW' });
+    run(c, between('scripts/search.js', 'const SEARCH_BANGS', '// Enter searches;'));
+    c.performSearch('還 書');
+    const url = new URL(c.window.location.href);
+    assert.equal(url.origin + url.pathname, 'https://www.google.com/search');
+    assert.equal(url.searchParams.get('q'), '還 書');
+    assert.equal(url.searchParams.get('hl'), 'zh-TW');
+    assert.equal(url.searchParams.get('noiga'), '1');
+    c.performSearch('!yt cats');
+    assert.equal(c.window.location.href, 'https://www.youtube.com/results?search_query=cats');
+    c.performSearch('https://example.com/a?b=1');
+    assert.equal(c.window.location.href, 'https://example.com/a?b=1');
+});
+
 test('search-nav#3', () => {
     const c = context({ MAX_SHORTCUTS: 3, isQuotaExceededError: e => e.name === 'QuotaExceededError', alertPrompt() {}, translations: { en: { iconStorageQuotaMessage: 'quota' } }, currentLanguage: 'en', shortcutsCache: [{ name: 'Old', url: 'https://old.test', icon: 'oldicon' }] });
     c.localStorage = store({ shortcutAmount: '1', shortcutName0: 'Old', shortcutURL0: 'https://old.test', shortcutIcon0: 'oldicon' });

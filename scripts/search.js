@@ -93,6 +93,10 @@ function performSearch(query) {
     const searchURL = new URL("https://www.google.com/search");
     searchURL.searchParams.set("hl", language);
     searchURL.searchParams.set("q", searchTerm);
+    // On iPhone and iPad the Google app claims google.com/search links, so Safari stops
+    // to ask "Open in Google?" on every search. Google's own link rules leave URLs with
+    // noiga=1 to the browser, so results open right here like any search page.
+    searchURL.searchParams.set("noiga", "1");
     window.location.href = searchURL.toString();
 }
 
