@@ -48,6 +48,14 @@ assert.match(home, /& :is\(\.tilesContainer \.location, \.humidityBar \.slider, 
 assert.match(home, /& \.humidityBar::after \{\s*background-color: var\(--mynt-accent-ink\);/);
 assert.match(home, /& \.toast-title \{\s*color: var\(--mynt-accent-ink\);/);
 assert.doesNotMatch(home + polish + dark, /:is\([^)]*::(after|before)/, 'Pseudo-elements never sit inside :is()');
+// Black theme home toast: a dark glass surface with light text instead of the grey upstream glass (10:1 and 13.7:1).
+const toastAt = home.indexOf('html.black-theme:not(.myntHighContrast) #chromeFooterToast {');
+assert.notEqual(toastAt, -1, 'Black theme toast block exists and leaves high contrast alone');
+const toast = home.slice(toastAt);
+assert.match(toast, /& \.liquidGlass-tint \{\s*background: rgba\(30, 29, 28, 0\.88\);/);
+assert.match(toast, /& \.toast-title \{\s*color: #a8c7fa;\s*text-shadow: none;/);
+assert.match(toast, /& \.toast-message \{\s*color: #e3e3e3;\s*text-shadow: none;/);
+assert.match(toast, /& :is\(\.toast-bar-vertical, \.toast-timer-bar\) \{\s*background: #a8c7fa;/, 'The countdown bar is visible on the dark toast');
 // Layout: the launch button aligns with Edit; reorder arrows fill their 44px targets.
 assert.match(polish, /#controlCenterDialog \.workspacePresetCard \.workspaceLaunchBtn \{\s*position: absolute;\s*inset-inline-end: 12px;\s*bottom: 12px;/);
 assert.match(polish, /#aiToolsForm \.ai-tool-reorder button \{\s*font-size: 1\.15rem;/);

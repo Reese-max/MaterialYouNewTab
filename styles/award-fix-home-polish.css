@@ -115,3 +115,41 @@ html:not(.black-theme, .myntHighContrast) {
         color: var(--mynt-accent-ink);
     }
 }
+
+/* ===== 第 19 輪：黑色主題的首頁提示框改為深色 =====
+   提示框沿用上游的液態玻璃：白色半透明底（0.55）疊在黑色背景上成了中灰塊，
+   搭配深灰標題、黑色內文與 #212121 的倒數條（在深底上看不見），是黑色主題裡唯一的淺灰表面。
+   保留玻璃的模糊與光澤層次，只把底色調深、文字與強調色改為黑色主題的淺色；
+   深色模式靠整頁反相已是深色，高對比沿用系統色。 */
+html.black-theme:not(.myntHighContrast) #chromeFooterToast {
+    & .liquidGlass-tint {
+        background: rgba(30, 29, 28, 0.88);
+    }
+    & .liquidGlass-shine {
+        box-shadow:
+            inset 1px 1px 0 rgba(255, 255, 255, 0.12),
+            inset -1px -1px 0 rgba(255, 255, 255, 0.06);
+    }
+    & .liquidGlass-wrapper {
+        box-shadow:
+            0 6px 16px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+    & :is(.toast-bar-vertical, .toast-timer-bar) {
+        background: #a8c7fa;
+    }
+    & .toast-title {
+        color: #a8c7fa;
+        text-shadow: none;
+    }
+    & .toast-message {
+        color: #e3e3e3;
+        text-shadow: none;
+    }
+    & .toast-close svg {
+        color: #e3e3e3;
+    }
+    & .toast-close:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
+}
