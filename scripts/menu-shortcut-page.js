@@ -193,7 +193,7 @@ window.myntSettings = {
     refreshTools(items) {
         document.querySelectorAll("[data-settings-component]").forEach(section => {
             const item = items.find(item => item.id === section.dataset.settingsComponent);
-            section.dataset.componentEnabled = String(item?.visible === true);
+            section.dataset.componentEnabled = String(item?.visible === true && !(window.MYNT_REMOVED_COMPONENT_IDS || []).includes(item.id));
         });
         selectSettingsGroup(activeSettingsGroup, false);
     },

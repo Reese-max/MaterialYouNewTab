@@ -42,7 +42,7 @@
                     if (node) { node.setAttribute('data-mynt-component-display', show ? 'block' : 'none'); node.style.setProperty('--mynt-component-display', show ? 'block' : 'none'); }
                 }
             }
-            if (item.id === 'weather') {
+            if (item.id === 'weather' && !removed.has('weather')) {
                 const node = document.getElementById('hideWeather');
                 if (node) { node.classList.toggle('weather-hidden', !item.visible); node.setAttribute('data-mynt-component-display', 'flex'); node.style.setProperty('--mynt-component-display', 'flex'); }
                 for (const options of document.querySelectorAll('.weatherOptions')) {
@@ -143,7 +143,7 @@
                 const clock = document.getElementById(digital ? 'digitalClock' : 'analogClock');
                 const weather = document.getElementById('hideWeather');
                 if (clock && getComputedStyle(clock).display === 'none') hiddenByLegacyStyles.push('clock');
-                if (weather && getComputedStyle(weather).display === 'none') hiddenByLegacyStyles.push('weather');
+                if (!removed.has('weather') && weather && getComputedStyle(weather).display === 'none') hiddenByLegacyStyles.push('weather');
             }
             commitPlan(core.planMigration(localStorage, { hiddenByLegacyStyles }));
         } catch (_) { status.textContent = text('原有顯示偏好未遷移；請檢查儲存空間或備份。其他內容未變更。', 'Existing visibility preferences were not migrated. Check storage or backup; other content is unchanged.'); }

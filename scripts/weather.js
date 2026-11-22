@@ -8,7 +8,12 @@
 
 let weatherInitializationPromise = null;
 
+function isWeatherRemoved() {
+    return (window.MYNT_REMOVED_COMPONENT_IDS || []).includes("weather");
+}
+
 function isWeatherWidgetRendered() {
+    if (isWeatherRemoved()) return false;
     const weatherWidget = document.getElementById("hideWeather");
     if (!weatherWidget) return false;
 
@@ -67,6 +72,8 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function getWeatherData({ allowNetwork = true } = {}) {
+    // Stop before registering location search, GPS, initial fetch or refresh callbacks.
+    if (isWeatherRemoved()) return;
     // Display texts 
     document.getElementById("conditionText").textContent = translations[currentLanguage]?.conditionText || translations["en"].conditionText;
     document.getElementById("humidityLevel").textContent = translations[currentLanguage]?.humidityLevel || translations["en"].humidityLevel;

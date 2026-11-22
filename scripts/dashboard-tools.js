@@ -100,13 +100,14 @@ if (typeof document !== "undefined") {
             document.getElementById("closeControlCenterBtn").setAttribute("aria-label", t("menuCloseText", "Close"));
         }
 
+        const weatherRemoved = (window.MYNT_REMOVED_COMPONENT_IDS || []).includes("weather");
         // Service status records only a service identifier, result, and timestamp.
         const serviceDefinitions = [
             ["network", "serviceNetwork"],
             ["weather", "serviceWeather"],
             ["location", "serviceLocation"],
             ["wallpaper", "serviceWallpaper"]
-        ];
+        ].filter(([id]) => !weatherRemoved || !["weather", "location"].includes(id));
         let serviceState = readJSON(KEYS.serviceStatus, {});
 
         function serviceFromRequest(input) {
@@ -202,8 +203,8 @@ if (typeof document !== "undefined") {
             const pill = document.getElementById("serviceStatusPill");
             const pillText = document.getElementById("serviceStatusPillText");
             if (!pill || !pillText) return;
-            const recentError = Object.values(serviceState).some(saved =>
-                ["error", "offline"].includes(saved?.status) && Date.now() - saved.at < 15 * 60 * 1000
+            const recentError = serviceDefinitions.some(([id]) =>
+                ["error", "offline"].includes(serviceState[id]?.status) && Date.now() - serviceState[id].at < 15 * 60 * 1000
             );
 
             // 使用者可在元件管理或控制中心關閉首頁提示；狀態清單與本機紀錄照常更新。
@@ -647,6 +648,7 @@ if (typeof document !== "undefined") {
                 setPermissionRow("Notifications", "unsupported", false);
             }
 
+            if (weatherRemoved) return;
             if (!navigator.geolocation) {
                 setPermissionRow("Location", "unsupported", false);
             } else {
@@ -673,7 +675,7 @@ if (typeof document !== "undefined") {
                     }
                 } else if (action === "notifications" && Notification.permission === "default") {
                     await Notification.requestPermission();
-                } else if (action === "location") {
+                } else if (action === "location" && !weatherRemoved) {
                     await new Promise(resolve => navigator.geolocation.getCurrentPosition(resolve, resolve, {
                         enableHighAccuracy: false,
                         timeout: 6000,
@@ -753,7 +755,7 @@ if (typeof document !== "undefined") {
         });
 
         // Commands that would reopen or write into features removed from the homepage (scripts/removed-features.js).
-        const REMOVED_COMMANDS = { todo: ["todo", "quick-create-task"], exam: ["exam-today"] };
+        const REMOVED_COMMANDS = { todo: ["todo", "quick-create-task"], exam: ["exam-today"], weather: ["weather"] };
         const hiddenCommandIds = new Set((window.MYNT_REMOVED_COMPONENT_IDS || []).flatMap(id => REMOVED_COMMANDS[id] || []));
 
         function ensureWidget(checkboxId, triggerId, visibleSelector) {
