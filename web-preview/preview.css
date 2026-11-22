@@ -93,6 +93,224 @@
     display: none;
 }
 
+/* Install card (website only). Light by default; the dark theme inverts it with the rest of the page. */
+#mynt-install-card {
+    position: fixed;
+    z-index: 2147483646;
+    top: max(16px, calc(env(safe-area-inset-top) + 8px));
+    left: 50%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 0 14px;
+    width: min(420px, calc(100vw - 32px));
+    padding: 16px 16px 14px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.97);
+    color: #1f1f1f;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: start;
+    transform: translateX(-50%);
+    animation: mynt-install-in 0.22s ease-out;
+}
+
+@keyframes mynt-install-in {
+    from { opacity: 0; transform: translate(-50%, -8px); }
+    to { opacity: 1; transform: translateX(-50%); }
+}
+
+@media (min-width: 761px) {
+    html[data-mynt-preview-badge="visible"] #mynt-install-card {
+        top: calc(max(12px, env(safe-area-inset-top)) + 64px);
+    }
+}
+
+#mynt-install-card .mynt-install-icon {
+    width: 44px;
+    height: 44px;
+    margin-top: 2px;
+}
+
+/* The dark theme inverts the page (and this card); flip the app icon back like the site's own favicons. */
+html:has(.menuBar .themeSegment[data-active="dark"]):not(:has(#darkTheme:checked)) #mynt-install-card .mynt-install-icon,
+html:has(body[sysTheme="systemDark"] .menuBar .themeSegment[data-active="system"]):not(:has(#darkTheme:checked)) #mynt-install-card .mynt-install-icon {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+#mynt-install-card .mynt-install-copy {
+    min-width: 0;
+}
+
+#mynt-install-card h2 {
+    margin: 2px 0 4px;
+    color: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+#mynt-install-card p,
+#mynt-install-card ol {
+    margin: 0;
+    color: #444746;
+    overflow-wrap: anywhere;
+}
+
+#mynt-install-card ol {
+    display: grid;
+    gap: 2px;
+    padding-inline-start: 1.25em;
+}
+
+#mynt-install-card .mynt-install-share {
+    width: 18px;
+    height: 18px;
+    margin-inline-start: 4px;
+    vertical-align: -3px;
+    fill: none;
+    stroke: var(--mynt-accent-ink, #0b57d0);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#mynt-install-card .mynt-install-note {
+    margin-top: 8px;
+    color: #5f6368;
+    font-size: 13px;
+}
+
+#mynt-install-card .mynt-install-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+#mynt-install-card button {
+    min-height: 44px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+#mynt-install-card .mynt-install-primary {
+    background: var(--mynt-accent-ink, #0b57d0);
+    color: #fff;
+}
+
+#mynt-install-card .mynt-install-secondary {
+    border-color: #c4c7c5;
+    background: transparent;
+    color: var(--mynt-accent-ink, #0b57d0);
+}
+
+#mynt-install-card button:hover {
+    filter: brightness(1.08);
+}
+
+#mynt-install-card .mynt-install-secondary:hover {
+    background: rgba(11, 87, 208, 0.08);
+    filter: none;
+}
+
+#mynt-install-card button:focus-visible {
+    outline: 3px solid var(--mynt-accent-ink, #0b57d0);
+    outline-offset: 2px;
+}
+
+html.black-theme:not(.myntHighContrast) #mynt-install-card {
+    background: rgba(30, 29, 28, 0.96);
+    color: #e3e3e3;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+html.black-theme:not(.myntHighContrast) #mynt-install-card p,
+html.black-theme:not(.myntHighContrast) #mynt-install-card ol {
+    color: #c4c7c5;
+}
+
+html.black-theme:not(.myntHighContrast) #mynt-install-card .mynt-install-note {
+    color: #b4b8bd;
+}
+
+html.black-theme:not(.myntHighContrast) #mynt-install-card .mynt-install-share {
+    stroke: #a8c7fa;
+}
+
+html.black-theme:not(.myntHighContrast) #mynt-install-card .mynt-install-primary {
+    background: #a8c7fa;
+    color: #062e6f;
+}
+
+html.black-theme:not(.myntHighContrast) #mynt-install-card .mynt-install-secondary {
+    border-color: #8e918f;
+    color: #a8c7fa;
+}
+
+html.black-theme:not(.myntHighContrast) #mynt-install-card button:focus-visible {
+    outline-color: #a8c7fa;
+}
+
+html.myntHighContrast #mynt-install-card {
+    border: 2px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+}
+
+html.myntHighContrast #mynt-install-card :is(p, ol, .mynt-install-note) {
+    color: CanvasText;
+}
+
+html.myntHighContrast #mynt-install-card .mynt-install-share {
+    stroke: CanvasText;
+}
+
+html.myntHighContrast #mynt-install-card button {
+    border: 2px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+}
+
+html.myntHighContrast #mynt-install-card .mynt-install-primary {
+    border-width: 3px;
+}
+
+html.myntHighContrast #mynt-install-card button:focus-visible {
+    outline-color: Highlight;
+}
+
+@media (forced-colors: active) {
+    #mynt-install-card {
+        border: 1px solid CanvasText;
+    }
+
+    #mynt-install-card .mynt-install-share {
+        stroke: CanvasText;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #mynt-install-card {
+        animation: none;
+    }
+}
+
+html.myntReducedMotion #mynt-install-card {
+    animation: none;
+}
+
 .mynt-verify-page {
     min-height: 100vh;
     margin: 0;

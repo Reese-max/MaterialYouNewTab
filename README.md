@@ -137,9 +137,9 @@ https://reese-max.github.io/MaterialYouNewTab/
 
 The repository owner enables this once: **Settings → Pages → Build and deployment → Source: GitHub Actions**, then re-run **Deploy web preview** in Actions.
 
-On the tablet, open the address and either set it as the browser home page or use **Share → Add to Home Screen** (Safari) / **Add to home screen** (Chrome). Search, shortcuts, AI tools, Pomodoro, encouragement lines, wallpapers, themes, weather, countdowns and backup/restore work as on the desktop. A web page cannot replace the browser's New Tab page, read browser bookmarks or fetch site icons through the extension's favicon permission. Data stays in that browser only; to move your setup, use **Backup** on the desktop and **Restore** on the tablet.
+On the tablet, open the address once. On iPad and iPhone a small card shows the two steps (**Share → Add to Home Screen**); in Chrome, Edge and Android it offers a one-tap **Install** button. The installed app opens full screen from its own icon. Add it first and set things up from the Home Screen icon: on iPad and iPhone the Home Screen app keeps its data separately from the browser. Search, shortcuts, AI tools, Pomodoro, encouragement lines, wallpapers, themes, weather, countdowns and backup/restore work as on the desktop. A web page cannot replace the browser's New Tab page, read browser bookmarks or fetch site icons through the extension's favicon permission. Data stays in that browser only; to move your setup, use **Backup** on the desktop and **Restore** on the tablet.
 
-平板（iPad 的 Chrome／Safari、Android 平板的 Chrome）不能安裝擴充功能，請改用上方網址的網頁版：設成瀏覽器首頁，或用「分享 → 加入主畫面」。網頁版無法取代新分頁、讀取瀏覽器書籤或自動抓網站圖示；資料只存在該瀏覽器，可用電腦上的「備份」再到平板「還原」搬過去。
+平板（iPad 的 Chrome／Safari、Android 平板的 Chrome）不能安裝擴充功能，請改用上方網址的網頁版。第一次打開時，iPad／iPhone 會出現小卡片說明兩個步驟（「分享 → 加入主畫面」），Chrome、Edge 與 Android 則有一鍵「安裝」按鈕；裝好後從自己的圖示全螢幕開啟。建議先加入主畫面再開始設定，因為 iPad／iPhone 上主畫面 App 和瀏覽器的資料是分開的。網頁版無法取代新分頁、讀取瀏覽器書籤或自動抓網站圖示；資料只存在該瀏覽器，可用電腦上的「備份」再到平板「還原」搬過去。
 
 ## Upstream store builds
 
