@@ -833,6 +833,8 @@ const en = {
     "studyQuotesBulk": "Paste or import",
     "studyQuotesBulkTitle": "Add many lines",
     "studyQuotesBulkHint": "One line each, optionally as “text — author《source》 #tag”. You can also paste columns copied from Excel or Google Sheets (text, author, source, tags), or choose a .txt, .csv or .json file.",
+    "studyQuotesBulkExampleTitle": "Example: line 1 is text only; line 2 adds an author; line 3 adds author, source and a tag; line 4 has several tags.",
+    "studyQuotesBulkExample": "Every day counts.\nSlow is smooth, smooth is fast. — Navy SEALs\nA journey of a thousand miles begins with a single step. — Laozi《Tao Te Ching》 #classics\nOne more question today, one less worry on exam day. — Me #exam #habit",
     "studyQuotesBulkTextLabel": "Lines to add",
     "studyQuotesBulkPlaceholder": "Every day counts. — Me #exam\nSlow is smooth, smooth is fast.",
     "studyQuotesBulkFile": "Choose a file",
