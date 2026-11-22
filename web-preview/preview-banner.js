@@ -61,6 +61,19 @@
         }
     }
 
+    function forceBadge() {
+        try {
+            return new URLSearchParams(location.search).has("preview") || location.hash === "#preview";
+        } catch {
+            return false;
+        }
+    }
+
+    function setBadgeVisible(badge, visible) {
+        badge.hidden = !visible;
+        document.documentElement.dataset.myntPreviewBadge = visible ? "visible" : "hidden";
+    }
+
     function createBadge(meta) {
         const badge = document.createElement("aside");
         badge.id = "mynt-web-preview-badge";
@@ -102,6 +115,8 @@
         });
 
         badge.append(dot, copy, verifyLink, collapseButton);
+        // Everyday visitors only see the badge when something needs checking; add ?preview to the address to show it anyway.
+        setBadgeVisible(badge, forceBadge());
         document.body.appendChild(badge);
         let saved = null;
         try { saved = localStorage.getItem("myntWebPreviewBadgeCollapsed"); } catch { /* storage may be blocked */ }
@@ -158,6 +173,7 @@
             } else {
                 badge.dataset.status = "ok";
             }
+            if (badge.dataset.status !== "ok") setBadgeVisible(badge, true);
         }, 1800);
     }, { once: true });
 })();

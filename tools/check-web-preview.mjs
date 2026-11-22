@@ -53,6 +53,11 @@ assert.equal(meta.version, sourceManifest.version, "Preview metadata version doe
 assert.equal(typeof meta.commit, "string");
 assert.equal(typeof meta.branch, "string");
 
+// Everyday visitors do not see the developer badge unless the page finds a problem or ?preview is used.
+assert.match(banner, /setBadgeVisible\(badge, forceBadge\(\)\)/u, "Preview badge must start hidden unless forced");
+assert.match(banner, /status !== "ok"\) setBadgeVisible\(badge, true\)/u, "Preview badge must reappear on warnings and errors");
+assert.match(read("preview/preview.css"), /#mynt-web-preview-badge\[hidden\]\s*\{\s*display:\s*none;/u, "Hidden preview badge must not render");
+
 const htmlFiles = ["index.html", "verify.html"];
 for (const htmlFile of htmlFiles) {
     const html = read(htmlFile);

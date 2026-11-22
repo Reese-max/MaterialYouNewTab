@@ -23,6 +23,10 @@
     backdrop-filter: blur(16px);
 }
 
+#mynt-web-preview-badge[hidden] {
+    display: none;
+}
+
 #mynt-web-preview-badge[data-status="warning"] {
     border-color: rgba(255, 190, 92, 0.78);
 }
