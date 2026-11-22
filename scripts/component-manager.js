@@ -143,7 +143,7 @@
                 const clock = document.getElementById(digital ? 'digitalClock' : 'analogClock');
                 const weather = document.getElementById('hideWeather');
                 if (clock && getComputedStyle(clock).display === 'none') hiddenByLegacyStyles.push('clock');
-                if (weather && getComputedStyle(weather).display === 'none') hiddenByLegacyStyles.push('weather');
+                if (!removed.has('weather') && weather && getComputedStyle(weather).display === 'none') hiddenByLegacyStyles.push('weather');
             }
             commitPlan(core.planMigration(localStorage, { hiddenByLegacyStyles }));
         } catch (_) { status.textContent = text('原有顯示偏好未遷移；請檢查儲存空間或備份。其他內容未變更。', 'Existing visibility preferences were not migrated. Check storage or backup; other content is unchanged.'); }

@@ -7,7 +7,7 @@ class Element {
  setAttribute(k,v){this.attrs.set(k,v)} toggleAttribute(k,v){if(v)this.attrs.set(k,'');else this.attrs.delete(k)}
  hasAttribute(k){return this.attrs.has(k)} getBoundingClientRect(){return {width:300,height:300,top:-200,left:70,right:370,bottom:100}} get offsetWidth(){return 300} get offsetHeight(){return 300} addEventListener(k,fn){this.handlers[k]=fn} contains(e){return this===e||this.children.some(c=>c.contains?.(e))} querySelector(){return null} matches(){return false}
 }
-function setup(initial={},fail=false,layout=null,{video=false}={}){
+function setup(initial={},fail=false,layout=null,{video=false,removed=[]}={}){
  const values=new Map(Object.entries(initial)),nodes=new Map(),events={},host=new Element(),all=[];
  const node=id=>{if(!nodes.has(id)){const e=new Element();e.id=id;nodes.set(id,e)}return nodes.get(id)};
  core.definitions.forEach(d=>[...d.selectors,...d.panelSelectors].forEach(s=>node(s.slice(1))));
@@ -16,7 +16,7 @@ function setup(initial={},fail=false,layout=null,{video=false}={}){
  document.body.matches=()=>video;
  const calls={clockInit:0,clockRefresh:0,clockReload:0,countdowns:0,study:0};
  const clockRuntime=()=>({refreshVisibility(){calls.clockRefresh++},reload(){calls.clockReload++}});
- const root={MYNTComponentVisibilityCore:core,addEventListener(k,fn){events[k]=fn},myntCountdowns:{render(){calls.countdowns++}},myntStudy:{render(){calls.study++}}};
+ const root={MYNTComponentVisibilityCore:core,MYNT_REMOVED_COMPONENT_IDS:removed,addEventListener(k,fn){events[k]=fn},myntCountdowns:{render(){calls.countdowns++}},myntStudy:{render(){calls.study++}}};
  if(layout)root.myntLayout={get:()=>layout,isEditing:()=>Boolean(layout.editing)};
  const context={innerWidth:1180,innerHeight:758,myntClampOffset:require('../scripts/layout-editor.js').myntClampOffset,window:root,localStorage:storage,document,getComputedStyle:()=>({display:video?'none':'block'}),queueMicrotask:fn=>fn(),MutationObserver:class{observe(){}},CustomEvent:class{},initializeClock(){calls.clockInit++;root.myntClockPreferences=clockRuntime()}};
  vm.runInNewContext(fs.readFileSync(require.resolve('../scripts/component-manager.js'),'utf8'),context);
@@ -66,6 +66,16 @@ assert.equal(video.values.has('hideClockVisible'),false,'CSS-hidden startup neve
 assert.equal(video.node('analogClock').hasAttribute('data-mynt-component-hidden'),false);
 assert.equal(video.node('date').hasAttribute('data-mynt-component-hidden'),false);
 assert.equal(video.values.get('hideWeatherVisible'),'true','Unrelated legacy weather migration is unchanged.');
+for(const preference of [null,'false','true','broken']){
+ const initial={weatherApiKey:'keep-key',useGPS:'true',weatherLocation:'keep-city',weatherParsedData:'keep-cache'};
+ if(preference!==null)initial.hideWeatherVisible=preference;
+ const removed=setup(initial,false,null,{video:true,removed:['weather']});
+ assert.equal(removed.control('weather'),undefined,'Removed weather has no manager row.');
+ assert.equal(removed.values.get('hideWeatherVisible')??null,preference,'Removal must not migrate missing or explicit weather preferences.');
+ for(const [key,value]of Object.entries(initial))assert.equal(removed.values.get(key),value);
+ removed.root.myntComponents.refresh();removed.events.storage({key:'hideWeatherVisible'});
+ assert.equal(removed.values.get('hideWeatherVisible')??null,preference,'Refresh and cross-tab changes never rewrite old weather state.');
+}
 crossTab.values.set('clocktype','digital');crossTab.events.storage({key:'clocktype'});
 assert.equal(crossTab.calls.clockRefresh,1);assert.equal(crossTab.calls.clockReload,0,'Visibility synchronization must not invoke legacy layout-changing reload.');
 crossTab.change('clock',false);assert.equal(crossTab.calls.clockRefresh,2,'Local manager hide updates clock intervals too.');

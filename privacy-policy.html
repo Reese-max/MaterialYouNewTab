@@ -176,26 +176,18 @@
         <h3>瀏覽器 API</h3>
         <ul>
             <li><strong>語音辨識（Web Speech API）：</strong>僅在您點擊麥克風圖示後啟動。音訊處理由瀏覽器提供者控制，依瀏覽器實作可能傳送至其語音服務；MYNT 不另行儲存音訊。</li>
-            <li><strong>地理位置：</strong>僅在您確認啟用 GPS 天氣後請求。取得的經緯度會傳送至 WeatherAPI 以查詢天氣。</li>
+            <li><strong>地理位置：</strong>目前版本已隱藏式移除天氣功能，不要求地理位置權限，也不使用或傳送位置資訊。既有本機天氣設定與快取保留，不會自動清除。 / Weather is removed in this version. MYNT does not request geolocation or use or transmit location information; existing local weather preferences and cache are retained.</li>
         </ul>
 
         <h3>外部 API</h3>
         <p>只有相關功能啟用或觸發時，MYNT 才會使用下列服務：</p>
         <ul>
-            <li><strong>位置偵測（<a href="https://ipinfo.io/" target="_blank" rel="noopener noreferrer">IPinfo</a>）：</strong>
-                <ul>
-                    <li><code>https://ipinfo.io/json</code> — 天氣功能開啟且未設定手動位置或 GPS 時，根據 IP 位址取得約略經緯度。</li>
-                </ul>
-                <p>只有在天氣元件實際顯示且未被停用時，才會連線至 IPinfo，接著向 WeatherAPI 查詢天氣。若版面未呈現天氣元件或您在設定中隱藏天氣，MYNT 不會為不可見的天氣內容發出位置或天氣請求。</p>
-                <p>天氣會先顯示本機快取與更新時間。可見且啟用的分頁每分鐘檢查一次，或在回到分頁時檢查；快取過期才向既有 WeatherAPI 服務更新，失敗保留快取並標示過期。沒有新增服務或儲存欄位。 / Weather displays the existing local cache and update time first. Visible, enabled tabs check each minute and when returning to the tab, refreshing expired data through the existing WeatherAPI service. Failed updates retain the cache and mark it stale. No new service or storage field is added.</p>
+            <li><strong>位置偵測（IPinfo）：</strong>
+                <p>目前版本不連線 IPinfo，不以 IP 位址查詢位置；即使舊設定曾開啟天氣或 GPS 也不會查詢。 / This version does not contact IPinfo or look up location by IP, even with previously enabled weather or GPS preferences.</p>
             </li>
 
-            <li><strong>天氣更新（<a href="https://www.weatherapi.com/" target="_blank" rel="noopener noreferrer">WeatherAPI</a>）：</strong>
-                <ul>
-                    <li><code>https://api.weatherapi.com/v1/forecast.json?key=*</code> — 接收手動位置、IP 推估位置或 GPS 經緯度，以及語言偏好。</li>
-                    <li><code>https://api.weatherapi.com/v1/search.json?key=*</code> — 使用自訂 API 金鑰時，接收您輸入的城市查詢以提供位置建議。</li>
-                </ul>
-                <p>專案內含可公開檢視的共用 WeatherAPI 金鑰，也允許您輸入自己的金鑰。自訂金鑰會以純文字儲存在瀏覽器的 localStorage，並作為 HTTPS 查詢參數傳送。備份檔會刻意排除自訂 API 金鑰，還原後如有需要請重新輸入。請勿把同一組金鑰用於其他敏感用途。</p>
+            <li><strong>天氣更新（WeatherAPI）：</strong>
+                <p>天氣已於 2026-11-23 依擁有者決定隱藏式移除。目前版本不連線 WeatherAPI，不查詢天氣或城市建議，也不傳送既有位置或自訂金鑰。程式碼、語系與本機儲存值保留，以便日後恢復功能；自訂 WeatherAPI 金鑰仍排除於一般備份，還原時保留目的端金鑰。 / Weather was reversibly removed on 2026-11-23. This version does not contact WeatherAPI for forecasts or city suggestions, or transmit saved locations or API keys. Code, translations and local data remain available for future restoration. Custom WeatherAPI keys remain excluded from ordinary backups and are preserved at the destination during restore.</p>
             </li>
 
             <li><strong>隨機桌布（<a href="https://picsum.photos/" target="_blank" rel="noopener noreferrer">Lorem Picsum</a>）：</strong>

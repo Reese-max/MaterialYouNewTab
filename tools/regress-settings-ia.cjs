@@ -27,7 +27,7 @@ const components = [
     ['aiTools', 'aiToolsCheckboxState', 'checked', false], ['googleApps', 'googleAppsCheckboxState', 'checked', false],
     ['bookmarks', 'bookmarksCheckboxState', 'checked', false], ['pomodoro', 'pomodoroCheckboxState', 'checked', false],
     ['homeWidgets', 'myntHomeWidgetsVisible', 'boolean', true], ['studyQuote', 'myntStudyQuoteEnabled', 'string01', true],
-    ['countdowns', 'myntEventCountdownsV1', 'events', true], ['weather', 'hideWeatherVisible', 'inverse', true],
+    ['countdowns', 'myntEventCountdownsV1', 'events', true],
     ['galleryEntry', 'myntGalleryEntryVisible', 'boolean', true], ['serviceStatus', 'myntServiceStatusPillVisible', 'boolean', true]
 ];
 const compatibilityInputs = ['hideClock', 'hideWeatherCheckbox', 'shortcut_switchcheckbox', 'shortcutsCheckbox',
@@ -306,8 +306,8 @@ async function movedSettingsContrast(page) {
         await expand(page, 'serviceSectionContent');
         const names = await measure('#menuCont .serviceRow > span:first-child');
         const states = await measure('#menuCont .serviceRow .serviceState');
-        assert.equal(names.length, 4, `DARK: ${theme} all service names exercised`);
-        assert.equal(states.length, 8, `DARK: ${theme} ok/error on all service rows`);
+        assert.equal(names.length, 2, `DARK: ${theme} all service names exercised`);
+        assert.equal(states.length, 4, `DARK: ${theme} ok/error on all service rows`);
         results.push({ theme, samples: [...cards, ...permissions, ...names, ...states] });
         console.log(`SETTINGS_IA_DARK_MEASURE ${theme} ${JSON.stringify({
             ratios: { cards: cards.map(x => x.ratio), grant: permissions.map(x => x.ratio), names: names.map(x => x.ratio), states: states.map(x => x.ratio) },
@@ -334,7 +334,7 @@ async function componentToggles(page, context) {
     await context.setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event('offline')));
     await select(page, 0);
-    await poll(() => page.locator('#myntComponentManager input[type="checkbox"]').count(), 14, '14 manager switches');
+    await poll(() => page.locator('#myntComponentManager input[type="checkbox"]').count(), 13, '13 manager switches (weather removed)');
     assert.equal(await page.locator('#myntComponentManager fieldset').count(), 4, 'Four component groups');
     // Enable the search parent before checking its provider row.
     await page.locator('#myntComponent-search').check();
@@ -371,7 +371,7 @@ async function componentToggles(page, context) {
         tested.push(id);
     }
     // Tool details follow their canonical component state, including manager and refresh paths.
-    for (const [id] of components.filter(([id]) => ['shortcuts', 'aiTools', 'pomodoro', 'studyQuote', 'countdowns', 'search', 'weather'].includes(id))) {
+    for (const [id] of components.filter(([id]) => ['shortcuts', 'aiTools', 'pomodoro', 'studyQuote', 'countdowns', 'search'].includes(id))) {
         await select(page, 0); await page.locator(`#myntComponent-${id}`).uncheck(); await select(page, 2);
         assert.equal(await page.locator(`[data-settings-component="${id}"]`).isVisible(), false, `${id}: disabled tool absent`);
         await select(page, 0); await page.locator(`#myntComponent-${id}`).check(); await select(page, 2);
@@ -433,15 +433,9 @@ async function detailsAndPositiveControls(page) {
     await poll(() => page.locator('#pomodoroDurationSummary').textContent().then(value => /31/.test(value)), true, 'Summary follows duration');
     await expand(page, 'pomodoroAdvanced');
     for (const id of ['pomodoroIconSizeInput', 'pomodoroPanelScaleInput', 'pomodoroResetPosBtn']) assert.equal(await page.locator(`#${id}`).isVisible(), true, id);
-    await expand(page, 'weatherSectionContent');
-    assert.equal(await page.locator('[aria-controls="weatherAdvancedContent"]').getAttribute('aria-expanded'), 'false', 'Weather advanced initially collapsed');
-    assert.equal(await page.locator('#weatherAdvancedContent').getAttribute('inert'), '', 'Collapsed weather settings cannot receive focus');
-    await expand(page, 'weatherAdvanced');
-    for (const id of ['fahrenheitCheckbox', 'minMaxTempCheckbox', 'userLoc', 'useGPScheckbox', 'userAPI']) assert.equal(await page.locator(`#${id}`).isVisible(), true, id);
-    if (page.viewportSize().width === 390) for (const checked of [false, true]) {
-        await page.locator('#hideWeatherCard').setChecked(checked);
-        assert.equal(await page.evaluate(() => localStorage.getItem('hideWeatherCardState')), checked ? 'unchecked' : 'checked');
-        assert.equal(await page.locator('#hideWeather .lrectangle').isVisible(), checked, 'Mobile card positive state');
+    for (const selector of ['[data-settings-component="weather"]', '#weatherAdvanced', '#hideWeatherCard',
+        '#fahrenheitCheckbox', '#minMaxTempCheckbox', '#userLoc', '#useGPScheckbox', '#userAPI']) {
+        assert.equal(await page.locator(selector).isVisible(), false, `${selector}: removed weather settings hidden`);
     }
 }
 
@@ -485,8 +479,9 @@ async function controlCenterFunctions(page, language) {
     await page.locator('#fontScaleSelect').selectOption('1.2');
     assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--mynt-font-scale')), '1.2');
     assert.equal(await page.locator('#privacyPolicyLink').getAttribute('href'), 'privacy-policy.html');
-    assert.equal(await page.locator('.privacyDisclosureList li').count(), 3);
-    assert(await page.locator('#serviceStatusList .serviceRow').count() >= 3);
+    assert.equal(await page.locator('.privacyDisclosureList li:visible').count(), 1);
+    assert.equal(await page.locator('[data-permission-action="location"]').isVisible(), false);
+    assert.equal(await page.locator('#serviceStatusList .serviceRow').count(), 2);
     // Stub only permission boundaries; real handlers and status refresh still execute.
     await page.evaluate(() => {
         window.__iaPermissions = [];
@@ -506,12 +501,12 @@ async function controlCenterFunctions(page, language) {
         window.dispatchEvent(new Event('offline'));
         document.dispatchEvent(new Event('visibilitychange'));
     });
-    for (const permission of ['bookmarks', 'notifications', 'location']) {
+    for (const permission of ['bookmarks', 'notifications']) {
         const button = page.locator(`[data-permission-action="${permission}"]`);
         await poll(() => button.isEnabled(), true, `${permission}: request available`);
         await button.click();
     }
-    assert.deepEqual(await page.evaluate(() => window.__iaPermissions), ['bookmarks', 'notifications', 'location']);
+    assert.deepEqual(await page.evaluate(() => window.__iaPermissions), ['bookmarks', 'notifications']);
     // Exercise the actual command entry points that formerly opened the dialog.
     for (const [key, section, group] of [['commandWorkspaces', 'workspaceSection', 0], ['commandPrivacy', 'privacySection', 3], ['commandAccessibility', 'accessibilitySection', 3], ['commandOpenControl', 'accessibilitySection', 3]]) {
         await page.keyboard.press('Control+k');
@@ -605,7 +600,7 @@ async function layoutAndKeyboard(page, touch) {
             for (const id of ['reduceMotionCheckbox', 'highContrastCheckbox']) assert.equal(await page.locator(`#${id}`).evaluate(input => Boolean(input.closest('.ttcont') && input.closest('.switch'))), true, `${id}: shared switch row`);
         }
         // Each shared disclosure updates ARIA and makes its own content inert; nested sections keep their state.
-        for (const header of await page.locator('#overviewPage [data-settings-group]:not([hidden]) > .sectionOuter > .sectionHeader').all()) {
+        for (const header of await page.locator('#overviewPage [data-settings-group]:not([hidden]) > .sectionOuter > .sectionHeader:visible').all()) {
             const content = page.locator(`#${await header.getAttribute('aria-controls')}`);
             await header.click();
             assert.equal(await header.getAttribute('aria-expanded'), 'false');
@@ -701,9 +696,9 @@ async function run(language, mobile) {
         if (BASE) {
             const base = await launch(BASE, fixture, mobile);
             try {
-                assert.deepEqual(snapshot, await fixtureSnapshot(base.page, fixture), 'Identical fixture: 14 component roots, theme, language and stored values match baseline');
+                assert.deepEqual(snapshot, await fixtureSnapshot(base.page, fixture), 'Identical fixture: 13 component roots, theme, language and stored values match baseline');
                 assert.deepEqual(base.errors, [], 'Baseline fixture has no console/page errors');
-                console.log(`SETTINGS_IA_BASE_COMPARISON_OK ${language} ${mobile ? 'mobile' : 'desktop'} roots=14 storage=exact`);
+                console.log(`SETTINGS_IA_BASE_COMPARISON_OK ${language} ${mobile ? 'mobile' : 'desktop'} roots=13 storage=exact`);
             } finally { await base.context.close(); }
         } else console.log('SKIP base comparison (set MYNT_BASE_EXTENSION)');
         console.log(`SETTINGS_IA_FIXTURE_OK ${language} ${mobile ? 'mobile' : 'desktop'}`);
@@ -726,9 +721,7 @@ async function run(language, mobile) {
         await blackThemeStatusContrast(page);
         await backupRoundTrip(page);
         await layoutAndKeyboard(page, mobile);
-        // componentToggles left the context offline with the weather widget on; DARK reloads the page, so restore the
-        // default hidden weather (no weather/IP lookups) and go back online. DARK only measures settings sections.
-        await page.evaluate(() => { localStorage.removeItem('weatherApiKey'); localStorage.setItem('hideWeatherVisible', 'true'); });
+        // componentToggles left the context offline; DARK reloads online to measure settings surfaces.
         await context.setOffline(false);
         await page.evaluate(() => window.dispatchEvent(new Event('online')));
         await movedSettingsContrast(page);
