@@ -833,6 +833,8 @@ const zh_TW = {
     "studyQuotesBulk": "大量新增／匯入",
     "studyQuotesBulkTitle": "大量新增或匯入",
     "studyQuotesBulkHint": "每行一句，可以寫成「句子 — 作者《出處》 #標籤」。也可以貼上從 Excel 或 Google 試算表複製的欄位（句子、作者、出處、標籤），或選擇 .txt、.csv、.json 檔案。",
+    "studyQuotesBulkExampleTitle": "範例：第 1 行只有句子；第 2 行加作者；第 3 行加作者、出處和標籤；第 4 行可以有多個標籤。",
+    "studyQuotesBulkExample": "每天進步一點點。\n不積跬步，無以至千里。— 荀子\n志當存高遠。— 諸葛亮《誡外甥書》 #古文\n今天多做一題，考場就少一分慌。— 我自己 #特考 #堅持",
     "studyQuotesBulkTextLabel": "要新增的內容",
     "studyQuotesBulkPlaceholder": "每天進步一點點。— 我自己 #考試\n人恆過，然後能改。— 孟子《孟子·告子下》",
     "studyQuotesBulkFile": "選擇檔案",

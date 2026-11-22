@@ -45,6 +45,9 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 /* Bulk paste / import and the export menu */
 .sqBulk { display: grid; gap: 10px; margin: 4px 0 12px; padding: 14px; border-radius: 16px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
 .sqBulk[hidden] { display: none; }
+.sqBulkExample { padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, currentColor 5%, transparent); }
+.sqBulkExample .sqHint { margin-bottom: 6px; }
+.sqBulkExampleLines { margin: 0; font-family: inherit; font-size: .84rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sqBulkText { min-height: 150px; font-family: inherit; white-space: pre; overflow-wrap: normal; overflow-x: auto; }
 .sqFileRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .sqFileName { margin: 0; overflow-wrap: anywhere; }
