@@ -174,9 +174,11 @@ test('focus-study#3', async () => {
 
 test('data-platform#5', () => {
     for (const file of ['manifest.json', 'manifest(firefox).json']) {
-        const manifest = JSON.parse(read(file)); const calls = [], c = context({ chrome: { runtime: { onInstalled: { addListener: fn => calls.push(fn) }, getURL: s => s, setUninstallURL: url => assert.match(url, /Reese-max/) }, tabs: { create: value => calls.push(value) } } });
+        const manifest = JSON.parse(read(file)); const calls = [], c = context({ chrome: { runtime: { onInstalled: { addListener: fn => calls.push(fn) }, getURL: s => s, getManifest: () => manifest, setUninstallURL: url => assert.match(url, /Reese-max/) }, tabs: { create: value => calls.push(value) } } });
         const script = manifest.manifest_version === 2 ? manifest.background?.scripts?.[0] : manifest.background?.service_worker;
-        assert.equal(script, 'scripts/background.js'); run(c, read(script)); calls[0]({ reason: 'update' }); assert.equal(calls[1].url, 'docs/whats-new.html');
+        assert.equal(script, 'scripts/background.js'); run(c, read(script));
+        calls[0]({ reason: 'update', previousVersion: manifest.version }); assert.equal(calls.length, 1, 'reload without a version change stays quiet');
+        calls[0]({ reason: 'update', previousVersion: '0.0.1' }); assert.equal(calls[1].url, 'docs/whats-new.html');
     }
 });
 
