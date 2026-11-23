@@ -100,6 +100,9 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 .sqFooter { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px 16px; border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
 .sqStatus { margin: 0; min-height: 1.3em; font-size: .88rem; overflow-wrap: anywhere; }
 .sqUndo[hidden] { display: none; }
+/* With no message and no undo, the footer folds away instead of leaving an empty band; the live region stays in place. */
+.sqFooter:has(.sqStatus:empty):has(.sqUndo[hidden]) { padding-block: 0; border-top-color: transparent; }
+.sqFooter .sqStatus:empty { min-height: 0; }
 
 .studyQuotesDialog :is(button, input, select, textarea):focus-visible { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
 .sqSwitch input:focus-visible + .sqSwitchTrack { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
