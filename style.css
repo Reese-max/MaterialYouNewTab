@@ -4953,6 +4953,23 @@ option:checked {
 	background-size: 74%;
 }
 
+/* Narrow screens: the 240px swatch grid plus the 50px palette icon overflowed the card (218px inside at 320px).
+   Stack the decorative icon above and let the grid choose how many 36px columns fit. */
+@media (max-width: 420px) {
+	.themingStuff {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.colorsContainer {
+		width: 100%;
+		box-sizing: border-box;
+		grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+		justify-items: center;
+	}
+}
+
 .themingStuff .btn {
 	background-color: var(--whitishColor-blue);
 	height: 50px;
