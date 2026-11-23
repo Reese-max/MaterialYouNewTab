@@ -260,7 +260,7 @@ html.mynt-removed-features body #studyQuote[data-lines="2"] { border-radius: 20p
   html.mynt-removed-features body #addQuickLinkButton { width: 40px !important; min-width: 40px !important; flex-basis: 40px !important; height: 40px !important; }
   html.mynt-removed-features body #quickLinksRow #toolsCont a, html.mynt-removed-features body #quickLinksRow #shortcutsContainer > * > a { height: 40px !important; }
   html.mynt-removed-features body #searchbar { height: 56px !important; }
-  html.mynt-removed-features body #studyQuote { inset: auto 16px 80px 16px !important; width: auto !important; margin-inline: auto; }
+  html.mynt-removed-features body #studyQuote { inset: auto 16px 80px 16px !important; width: fit-content !important; max-width: calc(100vw - 32px) !important; margin-inline: auto; }
 }
 /* Pomodoro panel layout: clear hierarchy (phase -> timer -> primary action -> task -> quiet extras -> one-line stats). */
 html.mynt-removed-features body #pomodoroCont[aria-expanded="true"] #pomodoroHover { display: none !important; }
