@@ -54,14 +54,16 @@
     // No icon chosen: a line calendar icon (styles/ui-icons.css) instead of an emoji default.
     if (!event.emoji) { const glyph = el('span', 'mynt-icon'); glyph.dataset.icon = 'calendar'; icon.append(glyph); }
     const details = el('div', 'event-countdown-details'); details.append(el('strong','',event.name),el('span','event-countdown-meta',`${t(event.category)} · ${event.annual ? t('nextDate',{date:core.dayInfo(event,new Date()).date}) : event.date}`));
-    const days = el('strong','event-countdown-days',dayLabel(event));
+    const days = el('strong','event-countdown-days'), info = core.dayInfo(event, new Date());
+    if (info.days === 0) days.textContent = dayLabel(event);
+    else { const parts = t(info.days > 0 ? 'future' : 'past', {n:'\u0000'}).split('\u0000'), [before, after] = parts; if (parts.length !== 2) days.textContent = dayLabel(event); else days.append(el('span','event-countdown-unit',before), el('span','event-countdown-num',String(Math.abs(info.days))), el('span','event-countdown-unit',after)); }
     row.append(icon, details, days);
     if (actions) { const controls = el('div','event-countdown-actions'); const edit = button(t('edit'), () => startEdit(event), ''); edit.setAttribute('aria-label',`${t('edit')} ${event.name}`); const remove = button(t('remove'), () => askDelete(event), ''); remove.setAttribute('aria-label',`${t('remove')} ${event.name}`); edit.disabled = remove.disabled = blocked || !!draft; controls.append(edit,remove); row.append(controls); }
     return row;
   }
   function render() {
     card.replaceChildren(); card.hidden = blocked || !state.enabled || !state.events.length;
-    if (!card.hidden) { const head = el('div','event-countdown-head'); head.append(el('h2','',t('title')),button(t('manage'),open)); card.append(head); const items = el('ul','event-countdown-items'); core.sortEvents(state.events,new Date()).slice(0,3).forEach(e => items.append(eventRow(e,false))); card.append(items,el('p','event-countdown-zone',t('zone')+zone())); }
+    if (!card.hidden) { const head = el('div','event-countdown-head'); head.append(el('h2','',t('title')),button(t('manage'),open)); card.append(head); const items = el('ul','event-countdown-items'); core.sortEvents(state.events,new Date()).slice(0,3).forEach(e => items.append(eventRow(e,false))); card.append(items); }
     if (!dialog.open) return;
     title.textContent = t('manage'); close.textContent = t('close');
     enable.checked = state.enabled; enable.disabled = blocked || !!draft;
@@ -109,7 +111,7 @@
     const formActions=el('div','event-countdown-actions'); const save=el('button','event-countdown-primary',t('save')); save.type='submit'; formActions.append(button(t('cancel'),cancelEdit),save); form.append(formActions);
     form.addEventListener('submit',event=>{ event.preventDefault(); if(!draft || draft.deleteId) return; const item={...draft}; Object.entries(fields).forEach(([key,input])=>{item[key]=input.type==='checkbox'?input.checked:input.value.trim();}); const next=copy(state), index=next.events.findIndex(e=>e.id===item.id); if(index<0 && next.events.length>=30) return message('limit',true); if(index<0) next.events.push(item); else next.events[index]=item; try { valid(next); } catch (_) { return message('invalid',true); } if(write(next)){draft=null; form.hidden=true;render();add.focus();} });
     confirmBox=el('section','event-countdown-confirm'); confirmBox.hidden=true; confirmBox.setAttribute('aria-label',t('remove'));
-    dialog.append(head,el('p','event-countdown-help',t('local')),toggle,status,toolbar,count,form,confirmBox,list); document.body.append(dialog);
+    dialog.append(head,el('p','event-countdown-help',t('local')),el('p','event-countdown-help',t('zone')+zone()),toggle,status,toolbar,count,form,confirmBox,list); document.body.append(dialog);
     dialog.addEventListener('cancel',event=>{event.preventDefault();if(draft)cancelEdit();else dialog.close();});
     dialog.addEventListener('close',()=>{draft=null;form.hidden=confirmBox.hidden=true;(returnFocus?.isConnected ? returnFocus : (!card.hidden ? card.querySelector('button') : document.getElementById('eventCountdownManage')))?.focus();});
     dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();return;}if(event.key!=='Tab')return;const nodes=[...dialog.querySelectorAll('button,input,select,[tabindex]')].filter(n=>!n.disabled&&n.getClientRects().length);if(!nodes.length)return;const first=nodes[0],last=nodes[nodes.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
