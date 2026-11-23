@@ -66,6 +66,7 @@ class Element {
     get disabled() { return this._disabled || false; }
     set disabled(value) { this._disabled = value; if (value && this.ownerDocument?.activeElement === this) this.ownerDocument.activeElement = this.ownerDocument.body; }
     focus() { if (!this.disabled && this.ownerDocument) { this.ownerDocument.activeElement = this; this.ownerDocument.focusChanged?.(this); } }
+    click() { this.clicks = (this.clicks || 0) + 1; }
     append(child) { this.children.push(child); }
     replaceChildren() { this.children = []; }
     addEventListener(name, callback) { (this.listeners[name] ||= []).push(callback); }
@@ -129,14 +130,18 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     document.body = new Element('body', document); document.activeElement = document.body;
     const navigator = noLocks ? {} : { locks: { request: async (_name, _options, fn) => { lockRequests++; await fn(locked ? null : {}); lockReleased++; } } };
     shared.tabs.add(events);
-    const context = { window, document, navigator, currentLanguage: 'en', localStorage: { getItem: key => values.get(key) || null, setItem(k, v) { const oldValue = values.get(k); values.set(k, v); if (shared.notify && oldValue !== v) for (const other of shared.tabs) if (other !== events) setTimeout(() => other.storage?.({ key: k, newValue: v }), 0); }, removeItem: k => values.delete(k) }, indexedDB: { open() { const req = { result: db }; setTimeout(() => req.onsuccess(), 0); return req; } }, Audio, URL: { createObjectURL: () => 'blob:local', revokeObjectURL: () => revoked++ }, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask, console };
+    const context = { window, document, navigator, translations: { en: { pomoMusicImportSong: 'Import song' } }, currentLanguage: 'en', localStorage: { getItem: key => values.get(key) || null, setItem(k, v) { const oldValue = values.get(k); values.set(k, v); if (shared.notify && oldValue !== v) for (const other of shared.tabs) if (other !== events) setTimeout(() => other.storage?.({ key: k, newValue: v }), 0); }, removeItem: k => values.delete(k) }, indexedDB: { open() { const req = { result: db }; setTimeout(() => req.onsuccess(), 0); return req; } }, Audio, URL: { createObjectURL: () => 'blob:local', revokeObjectURL: () => revoked++ }, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask, console };
     const flat = el => [el, ...el.children.flatMap(flat)];
     vm.runInNewContext(source, context);
     // IDB open/read/commit spans several tasks; elapsed time is not readiness.
     await until(() => flat(host).find(el => el.className === 'mynt-music-library')?.['aria-busy'] === 'false');
-    return { api: window.myntPomoMusic, document, events, audios, shared, get revoked() { return revoked; }, get lockReleased() { return lockReleased; }, get lockRequests() { return lockRequests; }, get confirmations() { return confirmations; }, get buttons() { return flat(host).filter(x => x.tag === 'button'); }, get input() { return flat(host).find(x => x.type === 'file'); }, get seek() { return flat(host).find(x => x['aria-label'] === 'Playback position'); }, get volume() { return flat(host).find(x => x.type === 'range' && x['aria-label'] === 'Volume'); }, get current() { return flat(host).find(x => x.className === 'mynt-music-current'); }, get disclosure() { return flat(host).find(x => x.className === 'mynt-music-library'); }, get status() { return flat(host).find(x => x.role === 'status')?.textContent; }, host };
+    return { api: window.myntPomoMusic, document, events, audios, shared, get revoked() { return revoked; }, get lockReleased() { return lockReleased; }, get lockRequests() { return lockRequests; }, get confirmations() { return confirmations; }, get buttons() { return flat(host).filter(x => x.tag === 'button'); }, get root() { return flat(host).find(x => x.className === 'mynt-pomo-music'); }, get emptyImportButton() { return flat(host).find(x => x.className === 'mynt-music-empty-import'); }, get importStatus() { return flat(host).find(x => x.className === 'mynt-music-import-status'); }, get count() { return flat(host).find(x => x.className === 'mynt-music-count'); }, get input() { return flat(host).find(x => x.type === 'file'); }, get seek() { return flat(host).find(x => x['aria-label'] === 'Playback position'); }, get volume() { return flat(host).find(x => x.type === 'range' && x['aria-label'] === 'Volume'); }, get current() { return flat(host).find(x => x.className === 'mynt-music-current'); }, get disclosure() { return flat(host).find(x => x.className === 'mynt-music-library'); }, get status() { return flat(host).find(x => x.role === 'status')?.textContent; }, host };
 }
 (async () => {
+    const empty = await browserFixture({ shared: sharedLibrary([]) });
+    assert.equal(empty.root['data-empty'], 'true'); assert.equal(empty.emptyImportButton.textContent, 'Import song'); assert.equal(empty.importStatus.role, undefined, 'compact status already announces imports'); assert.equal(empty.emptyImportButton.hidden, false); assert.equal(empty.count.hidden, true);
+    empty.emptyImportButton.emit('click'); assert.equal(empty.input.clicks, 1); assert.ok(empty.root.children.includes(empty.importStatus)); assert.ok(!empty.disclosure.children.includes(empty.importStatus));
+    count++; console.log('? Empty library shows one localized import action, hides zero count, and keeps import feedback outside the collapsed list');
     const f = await browserFixture();
     assert.equal(f.audios.length, 0); count++; console.log('✓ Reload mounts without creating or playing audio');
     assert.equal(f.seek.disabled, true); assert.equal(f.seek['aria-valuetext'], '0:00 / 0:00');
@@ -224,6 +229,7 @@ async function browserFixture({ locked = false, playError = null, noLocks = fals
     restored.buttons.find(x => x.textContent === 'Delete track').emit('click');
     await until(() => restored.api.getTracks().length === 0);
     assert.equal(restored.current.textContent, 'No track selected'); assert.equal(restored.seek.disabled, true); assert.equal(restored.buttons.find(x => x.textContent === 'Play').disabled, true);
+    assert.equal(restored.root['data-empty'], 'true'); assert.equal(restored.emptyImportButton.hidden, false); assert.equal(restored.count.hidden, true);
     restored.buttons.find(x => x.textContent === 'Undo deletion').emit('click'); await until(() => restored.api.getTracks().length === 1);
     assert.equal(restored.current.title, longName); assert.equal(restored.buttons.find(x => x.textContent === 'Undo deletion').hidden, true); assert.equal(restored.audios.length, 0);
     restored.events.pagehide(); count++; console.log('✓ Full long filenames remain accessible; last-track deletion and undo update the compact state without autoplay');

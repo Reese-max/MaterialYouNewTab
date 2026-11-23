@@ -76,7 +76,7 @@
     const words = {
         recovery: ['Removed tracks', '已移除曲目'], restore: ['Restore track', '還原曲目'], recoveryHint: ['Removed tracks stay on this device and still count toward storage limits. Restoring never starts playback.', '已移除曲目仍保存在本機，並計入儲存上限；還原不會自動播放。'],
         title: ['My focus music', '我的專注音樂'], local: ['Audio stays on this device. Up to 30 tracks, 100 MiB each, 300 MiB total. Full backups include music when the complete backup fits the 32 MiB limit.', '音樂只儲存在本機。最多 30 首，每首 100 MiB，合計 300 MiB；完整備份未超過 32 MiB 上限時會包含音樂。'],
-        import: ['Import audio', '匯入音樂'], play: ['Play', '播放'], pause: ['Pause', '暫停'], up: ['Move up', '上移'], down: ['Move down', '下移'], remove: ['Delete track', '刪除曲目'], undo: ['Undo deletion', '復原刪除'],
+        import: ['Import audio', '匯入音樂'], importSong: ['Import song', '匯入歌曲'], play: ['Play', '播放'], pause: ['Pause', '暫停'], up: ['Move up', '上移'], down: ['Move down', '下移'], remove: ['Delete track', '刪除曲目'], undo: ['Undo deletion', '復原刪除'],
         volume: ['Volume', '音量'], mode: ['Repeat', '重複播放'], off: ['Off', '關閉'], one: ['One track', '單曲'], all: ['All tracks', '全部曲目'], shuffle: ['Shuffle', '隨機播放'], rest: ['During breaks', '休息時'], continue: ['Keep playing', '繼續播放'], restPause: ['Pause (resume manually)', '暫停（手動恢復）'],
         library: ['Playlist & settings', '播放清單與設定'], noTrack: ['No track selected', '尚未選擇曲目'], seek: ['Playback position', '播放進度'], select: ['Select track', '選擇曲目'],
         capacity: ['{count}/{maxTracks} tracks · {used}/{maxSize} MiB', '{count}/{maxTracks} 首 · {used}/{maxSize} MiB'], checking: ['Checking local music…', '正在檢查本機音樂…'], capacityUnknown: ['Local music usage unavailable', '無法取得本機音樂用量'], capacityHint: ['Stored audio size, not free device space. The browser may run out of storage before this limit.', '顯示已儲存的音樂大小，並非裝置剩餘空間；瀏覽器可用空間可能先達上限。'],
@@ -103,10 +103,15 @@
     function updateLibraryState() {
         if (!ui.capacity) return;
         const usage = libraryUsage(tracks), known = libraryKnown && usage.bytes !== null;
+        const empty = libraryKnown && !activeTracks().length;
+        ui.root.setAttribute('data-empty', String(empty));
+        ui.emptyImportButton.hidden = !empty;
+        ui.count.hidden = empty;
         ui.count.textContent = known ? String(usage.count) : '…';
         ui.capacity.textContent = libraryLoading ? t('checking') : known ? message('capacity', { count: usage.count, maxTracks: MAX_TRACKS, used: formatMiB(usage.bytes), maxSize: formatMiB(MAX_TOTAL) }) : t('capacityUnknown');
         ui.capacity.title = `${ui.capacity.textContent}. ${t('capacityHint')}`;
         const pending = importBusy || writeBusy || libraryLoading;
+        ui.emptyImportButton.disabled = pending;
         ui.library.setAttribute('aria-busy', String(pending));
         ui.input.disabled = pending;
         if (ui.importButton) ui.importButton.disabled = pending;
@@ -448,6 +453,7 @@
         if (!host || mounted) return; mounted = true;
         ui.root = node('section', '', host); ui.root.className = 'mynt-pomo-music'; ui.root.setAttribute('aria-label', t('title'));
         node('div', t('title'), ui.root).className = 'mynt-music-heading';
+        ui.emptyImportButton = button('importSong', ui.root, () => { if (!ui.input.disabled) ui.input.click(); }); ui.emptyImportButton.className = 'mynt-music-empty-import'; ui.emptyImportButton.hidden = true;
         const now = node('div', '', ui.root); now.className = 'mynt-music-now';
         const artwork = node('span', '', now); /* icon drawn by CSS */ artwork.className = 'mynt-music-artwork'; artwork.setAttribute('aria-hidden', 'true');
         const information = node('div', '', now); information.className = 'mynt-music-information';
@@ -498,7 +504,7 @@
         // same normal file chooser, without browser-language-dependent chrome.
         ui.importButton = button('import', importer, () => { if (!ui.input.disabled) ui.input.click(); });
         ui.input.addEventListener('change', () => void importFiles(ui.input.files));
-        ui.importStatus = node('p', '', details); ui.importStatus.className = 'mynt-music-import-status'; ui.importStatus.id = 'myntMusicImportResult'; ui.importStatus.hidden = true;
+        ui.importStatus = node('p', '', ui.root); ui.importStatus.className = 'mynt-music-import-status'; ui.importStatus.id = 'myntMusicImportResult'; ui.importStatus.hidden = true;
         // The compact status announces the outcome once; this persistent report
         // keeps all rejection reasons available after playback status changes.
         ui.input.setAttribute('aria-describedby', `${ui.capacity.id} ${capacityHint.id} ${privacy.id} ${ui.importStatus.id}`);
