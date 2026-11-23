@@ -415,10 +415,17 @@ async function testFoldersOpenAndMoves(kind) {
     assert.notEqual(managed.context.createBookmarkItem(mnode('31')).draggable, true, 'Managed bookmarks are not draggable');
     managed.run('draggedBookmark = { id: "13", section: "bookmarkSectionFolders" }');
     assert.equal(managed.context.resolveBookmarkDrop(mnode('30'), 'bookmarkSectionFolders'), null); assert.equal(managed.context.resolveBookmarkDrop(mnode('31'), 'bookmarkSectionFolders'), null);
+    managed.id('sortManual').click(); managed.run('bookmarkRenderSection = "bookmarkSectionFolders"');
+    assert.deepEqual(actionClasses(mnode('31')).filter(name => name === 'bookmark-move-button'), [], 'Managed bookmarks get no move up/down in custom order');
+    assert.equal(actionClasses(mnode('13')).filter(name => name === 'bookmark-move-button').length, 2, 'Ordinary bookmarks keep move up/down in custom order');
+    managed.run('bookmarkRenderSection = ""');
 
     // Review round 1: Firefox separators come back as separators, not empty folders.
     const sepTree = fixtureTree(); sepTree[0].children[0].children[0].children.push({ id: '14', parentId: '10', index: 2, title: '', type: 'separator' });
-    const sep = await harness({ kind, tree: sepTree }).ready(); await sep.context.deleteBookmarkFolder(sep.run('bookmarkNodeMap.get("10")'));
+    const sep = await harness({ kind, tree: sepTree }).ready();
+    assert.equal(sep.id('bookmarkList').all().filter(node => node.className === 'bookmark-folder' && node.dataset.id === '14').length, 0, 'Separators are not drawn as folders');
+    sep.context.openBookmarkEditor(); assert.equal(sep.id('editBookmarkFolder').children.some(option => option.value === '14'), false, 'Separators are not offered as folders'); sep.context.closeBookmarkEditor();
+    await sep.context.deleteBookmarkFolder(sep.run('bookmarkNodeMap.get("10")'));
     assert.equal(await sep.context.undoBookmarkDelete(), true); const back = sep.find('1').children.find(child => child.title === '工作');
     assert.deepEqual(back.children.map(child => child.type === 'separator' ? 'separator' : child.title), ['Alpha <script>fixture</script>', '繁體中文', 'separator']);
     assert.equal(back.children[2].children, undefined, 'A separator is never recreated as a folder');

@@ -368,7 +368,8 @@ function hasBookmarkContent() {
 }
 
 function sortBookmarkNodes(nodes) {
-    const sorted = [...nodes];
+    // Firefox separators have neither url nor children; never draw them as folders.
+    const sorted = nodes.filter(node => node.type !== "separator");
     if (currentSortMethod === "date") return sorted.sort((a, b) => (a.dateAdded || 0) - (b.dateAdded || 0));
     if (currentSortMethod === "manual") return sorted.sort((a, b) => (a.index || 0) - (b.index || 0));
     return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || "", bookmarkLocale()));
@@ -856,7 +857,7 @@ function createBookmarkActions(node) {
         );
     }
     const fixed = !node.url && isFixedBookmarkFolder(node);
-    if (!fixed && currentSortMethod === "manual" && !bookmarkSearch.value.trim() && bookmarkRenderSection === "bookmarkSectionFolders") {
+    if (!fixed && !node.unmodifiable && currentSortMethod === "manual" && !bookmarkSearch.value.trim() && bookmarkRenderSection === "bookmarkSectionFolders") {
         const siblings = bookmarkNodeMap.get(String(node.parentId))?.children || [];
         const index = siblings.findIndex(child => String(child.id) === String(node.id));
         menu.append(
@@ -944,7 +945,7 @@ function bookmarkFolderOptions(excludeId = null) {
     const options = [];
     const visit = (nodes, path) => {
         for (const node of nodes || []) {
-            if (node.url || node.unmodifiable || String(node.id) === String(excludeId)) continue;
+            if (node.url || node.type === "separator" || node.unmodifiable || String(node.id) === String(excludeId)) continue;
             const label = [...path, node.title || bookmarkText("bookmarkUntitledFolder")];
             options.push({ id: String(node.id), label: label.join(" › ") });
             visit(node.children, label);
