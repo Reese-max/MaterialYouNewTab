@@ -325,6 +325,9 @@ function openBookmarkSidebar() {
 
 function closeBookmarkSidebar() {
     if (!bookmarkSidebar.classList.contains("open")) return;
+    // A drag cannot outlive the panel; releasing later must not move anything.
+    cancelBookmarkTouchDrag();
+    draggedBookmark = null;
     bookmarkSidebar.classList.remove("open");
     bookmarkSidebar.setAttribute("aria-hidden", "true");
     bookmarkSidebar.setAttribute("inert", "");
@@ -483,6 +486,9 @@ function createDuplicateSection() {
 
 function renderBookmarks() {
     if (!bookmarkDataAvailable) return;
+    // Rebuilding the rows (also after an outside bookmark change) ends any drag; its target may be gone.
+    cancelBookmarkTouchDrag();
+    draggedBookmark = null;
     const tokens = bookmarkSearchTokens();
     const query = tokens.join(" ");
     bookmarkSearchClearButton.hidden = !query;
@@ -873,7 +879,8 @@ function makeFavoritesDropZone(section) {
 
 // Touch has no HTML5 drag: a long press picks the row up and the finger carries it.
 function startBookmarkTouchDrag(event, element, node) {
-    if (event.touches.length !== 1 || bookmarkMutationPending) return;
+    // Holding the ⋯ button or a menu item is a press on that control, not on the row.
+    if (event.touches.length !== 1 || bookmarkMutationPending || event.target.closest?.(".bookmark-action-menu")) return;
     cancelBookmarkTouchDrag();
     const touch = event.touches[0];
     const state = { element, node, x: touch.clientX, y: touch.clientY, active: false, drop: null };

@@ -376,7 +376,7 @@
 }
 #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item .bookmark-item-copy small { display: none; }
 /* Search results keep "domain · folder" in the grid too; it is how same-named results differ. */
-#bookmarkSidebar #bookmarkList.grid-view .bookmark-section[data-section="bookmarkSectionSearch"] .bookmark-item-copy small {
+#bookmarkSidebar #bookmarkList.grid-view .bookmark-section:is([data-section="bookmarkSectionSearch"], [data-section="bookmarkSectionDuplicates"]) .bookmark-item-copy small {
     display: block; overflow-wrap: anywhere; text-align: center; font-size: .6875rem;
 }
 #bookmarkSidebar #bookmarkList.grid-view .bookmark-section-list > .bookmark-item > .bookmark-action-menu > summary {
