@@ -12,7 +12,8 @@ const presets = [...html.matchAll(/<input\b[^>]*>/g)].map(m => m[0])
     .filter(tag => /\bclass="colorPlate"/.test(tag) && /\bname="color"/.test(tag) && /\btype="radio"/.test(tag))
     .map(tag => /\bvalue="([a-z]+)"/.exec(tag)[1]);
 
-for (const added of ['indigo', 'teal', 'lime', 'amber', 'wine', 'magenta', 'slate']) assert(presets.includes(added), `Preset ${added} is offered`);
+const ADDED = ['indigo', 'teal', 'lime', 'amber', 'wine', 'magenta', 'slate'];
+for (const added of ADDED) assert(presets.includes(added), `Preset ${added} is offered`);
 assert.equal(new Set(presets).size, presets.length, 'Preset values are unique');
 assert.equal(presets.at(-1), 'dark', 'Black theme stays the last preset, next to the custom picker');
 
@@ -44,6 +45,12 @@ for (const color of presets) {
     for (const [label, value] of [['text on background', ratio(t.textColorDark, t['bg-color'])], ['text on tint', ratio(t.textColorDark, t.accentLightTint)],
         ['accent ink on tint', ratio(ink, t.accentLightTint)], ['white on accent ink', ratio(ink, '#ffffff')], ['action label', action]]) {
         assert(value >= 4.5, `${color}: ${label} ${value.toFixed(2)}:1`);
+    }
+    // Buttons such as .backupRestoreBtn put --darkerColor text on --bg-color/--accentLightTint. Several older presets
+    // (blue included) sit below 4.5:1 there; the presets added in 2026-11 must not.
+    if (ADDED.includes(color)) for (const surface of ['bg-color', 'accentLightTint']) {
+        const value = ratio(t.darkerColor, t[surface]);
+        assert(value >= 4.5, `${color}: darkerColor on ${surface} ${value.toFixed(2)}:1`);
     }
 }
 console.log(`THEME_PALETTES_OK presets=${presets.length}`);

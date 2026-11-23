@@ -119,11 +119,11 @@
 	--whitishColor-peach: #ffffff;
 
 	/* indigo */
-	--bg-color-indigo: #cacfec;
-	--accentLightTint-indigo: #eceef8;
-	--darkerColor-indigo: #2a3679;
-	--darkColor-indigo: #4e5fc1;
-	--textColorDark-indigo: #141834;
+	--bg-color-indigo: #cbcdeb;
+	--accentLightTint-indigo: #ededf8;
+	--darkerColor-indigo: #2d3276;
+	--darkColor-indigo: #4249ae;
+	--textColorDark-indigo: #141634;
 	--whitishColor-indigo: #ffffff;
 
 	/* teal */
@@ -137,7 +137,7 @@
 	/* lime */
 	--bg-color-lime: #e1efc8;
 	--accentLightTint-lime: #f4f9eb;
-	--darkerColor-lime: #5f7e25;
+	--darkerColor-lime: #4d671e;
 	--darkColor-lime: #8cba36;
 	--textColorDark-lime: #293414;
 	--whitishColor-lime: #ffffff;
@@ -145,7 +145,7 @@
 	/* amber */
 	--bg-color-amber: #f4e2c2;
 	--accentLightTint-amber: #fcf5e8;
-	--darkerColor-amber: #a36700;
+	--darkerColor-amber: #8a5700;
 	--darkColor-amber: #f09800;
 	--textColorDark-amber: #342814;
 	--whitishColor-amber: #ffffff;
@@ -4912,7 +4912,7 @@ option:checked {
 }
 
 .colorsContainer input[value="indigo"] {
-	background-color: #4e5fc1;
+	background-color: #4249ae;
 }
 
 .colorsContainer input[value="teal"] {
