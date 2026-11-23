@@ -4447,8 +4447,9 @@ html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-a
 }
 
 #menuCont .switch input:checked + .toggle {
-	background-color: var(--darkColor-blue);
-	border-color: var(--darkerColor-blue);
+	/* Same deepened accent as selected rows: the white knob stays clear on yellow, lime and peach (darkColor gave ~2.2:1). */
+	background-color: var(--menu-selected);
+	border-color: var(--menu-selected);
 }
 
 #menuCont .switch input:checked + .toggle::before {
