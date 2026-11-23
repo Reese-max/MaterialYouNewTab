@@ -473,6 +473,8 @@
 /* Editor: folder picker, and fields a folder does not have. */
 #editBookmarkModal [hidden] { display: none !important; }
 #editBookmarkModal .bookmark-folder-field { display: flex; flex-direction: column; gap: 6px; }
+#editBookmarkModal .bookmark-folder-field[hidden] { display: none; }
+#editBookmarkModal .bookmark-editor-hint { margin: 0; padding-inline: 17px; font-size: .8rem; line-height: 1.5; }
 #editBookmarkModal .bookmark-folder-field label { padding-inline: 17px; font-size: .8rem; }
 #editBookmarkModal .bookmark-folder-field select {
     inline-size: 100%;
