@@ -103,10 +103,15 @@
     function updateLibraryState() {
         if (!ui.capacity) return;
         const usage = libraryUsage(tracks), known = libraryKnown && usage.bytes !== null;
+        const empty = libraryKnown && !activeTracks().length;
+        ui.root.setAttribute('data-empty', String(empty));
+        ui.emptyImportButton.hidden = !empty;
+        ui.count.hidden = empty;
         ui.count.textContent = known ? String(usage.count) : '…';
         ui.capacity.textContent = libraryLoading ? t('checking') : known ? message('capacity', { count: usage.count, maxTracks: MAX_TRACKS, used: formatMiB(usage.bytes), maxSize: formatMiB(MAX_TOTAL) }) : t('capacityUnknown');
         ui.capacity.title = `${ui.capacity.textContent}. ${t('capacityHint')}`;
         const pending = importBusy || writeBusy || libraryLoading;
+        ui.emptyImportButton.disabled = pending;
         ui.library.setAttribute('aria-busy', String(pending));
         ui.input.disabled = pending;
         if (ui.importButton) ui.importButton.disabled = pending;
@@ -448,6 +453,7 @@
         if (!host || mounted) return; mounted = true;
         ui.root = node('section', '', host); ui.root.className = 'mynt-pomo-music'; ui.root.setAttribute('aria-label', t('title'));
         node('div', t('title'), ui.root).className = 'mynt-music-heading';
+        ui.emptyImportButton = button('importSong', ui.root, () => { if (!ui.input.disabled) ui.input.click(); }); ui.emptyImportButton.className = 'mynt-music-empty-import'; ui.emptyImportButton.hidden = true;
         const now = node('div', '', ui.root); now.className = 'mynt-music-now';
         const artwork = node('span', '', now); /* icon drawn by CSS */ artwork.className = 'mynt-music-artwork'; artwork.setAttribute('aria-hidden', 'true');
         const information = node('div', '', now); information.className = 'mynt-music-information';
@@ -498,7 +504,7 @@
         // same normal file chooser, without browser-language-dependent chrome.
         ui.importButton = button('import', importer, () => { if (!ui.input.disabled) ui.input.click(); });
         ui.input.addEventListener('change', () => void importFiles(ui.input.files));
-        ui.importStatus = node('p', '', details); ui.importStatus.className = 'mynt-music-import-status'; ui.importStatus.id = 'myntMusicImportResult'; ui.importStatus.hidden = true;
+        ui.importStatus = node('p', '', ui.root); ui.importStatus.className = 'mynt-music-import-status'; ui.importStatus.id = 'myntMusicImportResult'; ui.importStatus.hidden = true;
         // The compact status announces the outcome once; this persistent report
         // keeps all rejection reasons available after playback status changes.
         ui.input.setAttribute('aria-describedby', `${ui.capacity.id} ${capacityHint.id} ${privacy.id} ${ui.importStatus.id}`);

@@ -54,6 +54,9 @@ assert.match(studioCSS,/html\.myntReducedMotion #pomodoroPanel/);
 assert.match(studioCSS,/#pomodoroPanel :is\(#pomodoroStartBtn, #pomodoroPauseBtn\)/);
 for(const token of ['--pomo-fg','--pomo-accent','--pomo-surface','--pomo-muted','--pomo-on-accent'])assert.ok(studioCSS.includes(token));
 assert.doesNotMatch(studioCSS,/#myntPomoExtras button,#myntPomoExtras input/,'Studio controls must not override music internals');
+assert.match(studioCSS,/\[data-empty="true"\] \.mynt-music-now/,'Empty music state hides the playback card');
+assert.match(studioCSS,/\[data-empty="true"\] \.mynt-music-count/,'Empty music state hides the zero count');
+assert.match(studioCSS,/\[data-empty="true"\] \.mynt-music-import/,'Empty music state hides the duplicate import control in the collapsed playlist');
 console.log('POMODORO_HIERARCHY_OK: bounded custom inputs, shared tokens, fixed primary-control footprint, and both reduced-motion modes');
 
 // Exercise the real module through a dependency-free DOM harness. Layout remains browser-tested separately.
@@ -80,14 +83,14 @@ class StudioNode {
  scrollIntoView(){this.scrolled=true;}
  checkValidity(){const value=Number(this.value);return this.value!==''&&Number.isInteger(value)&&value>=Number(this.min)&&value<=Number(this.max);}
  reportValidity(){this.reported=true;return this.checkValidity();}
- async emit(type,detail={}){const event={target:this,key:'',stopped:false,stopPropagation(){this.stopped=true;},...detail};for(const listener of this.listeners[type]||[])await listener(event);await this['on'+type]?.(event);return event;}
+ async emit(type,detail={}){const event={target:this,key:'',stopped:false,stopPropagation(){this.stopped=true;},preventDefault(){this.defaultPrevented=true;},...detail};for(const listener of this.listeners[type]||[])await listener(event);await this['on'+type]?.(event);return event;}
 }
 (async()=>{
  const document=new StudioNode('document');document.ownerDocument=document;document.createElement=tag=>new StudioNode(tag,document);document.body=document.createElement('body');document.append(document.body);document.activeElement=document.body;
  const make=(tag,id,className='')=>{const node=document.createElement(tag);node.id=id;node.className=className;return node;};
- const panel=make('div','pomodoroPanel'),mount=make('div','myntPomoStudioMount'),extras=make('div','myntPomoExtras'),float=make('div','myntPomoFloatMount'),controls=make('div','','pomodoroControls');
+ const panel=make('div','pomodoroPanel'),mount=make('div','myntPomoStudioMount'),extras=make('div','myntPomoExtras'),float=make('div','myntPomoFloatMount'),controls=make('div','','pomodoroControls'),ambientRow=make('div','pomodoroAmbientRow'),musicMount=make('div','myntPomoMusicMount');
  const start=make('button','pomodoroStartBtn'),pause=make('button','pomodoroPauseBtn'),reset=make('button','pomodoroResetBtn');for(const button of [start,pause,reset])button.append(make('svg',''));controls.append(start,pause,reset);
- const originalVideo=make('video','','pomodoro-bg-video'),originalOverlay=make('div','','pomodoro-bg-overlay');panel.append(originalVideo,originalOverlay,controls,float,mount,extras,make('div','','pomodoroSessionsToday'),make('div','','pomodoroFocusSummary'));document.body.append(panel);
+ const originalVideo=make('video','','pomodoro-bg-video'),originalOverlay=make('div','','pomodoro-bg-overlay');panel.append(originalVideo,originalOverlay,controls,float,mount,ambientRow,extras,musicMount,make('div','','pomodoroSessionsToday'),make('div','','pomodoroFocusSummary'));document.body.append(panel);
  const appearance=make('details',''),floatButton=make('button',''),popup=make('button',''),note=make('p','','mynt-pomo-note');float.append(appearance,floatButton,popup,note);
  const storage=new Map([['pomodoroPanelPosition','{"top":85,"left":15}']]),frames=[];
  let state={durations:{...builtin[0].durations},isRunning:false,totalTime:1500,timeRemaining:1500,task:''},notify,accepted=false,confirmations=0,resets=0,durationWrites=0,appearanceWrites=0,musicWrites=0,starts=0;
@@ -97,6 +100,13 @@ class StudioNode {
  require('node:vm').runInNewContext(source,context);await document.emit('DOMContentLoaded');
  const flush=()=>{while(frames.length)frames.shift()();};
  assert.equal(appearance.parentNode,extras);assert.equal(appearance.classList.contains('mynt-pomo-settings'),true,'moving background settings keeps their typography and input scope');
+ const sound=extras.querySelector('.pomoStudioSound'),usage=sound.querySelector('.pomoStudioUsage'),limits=sound.querySelector('#myntPomoUsageNotes');
+ assert.ok(sound.querySelector('#pomodoroAmbientRow'));assert.equal(musicMount.parentNode,sound);assert.equal(sound.querySelectorAll('input').find(input=>input.type==='range')?.parentNode.parentNode.className,'pomoStudioAlarmRow');
+ assert.deepEqual(extras.children.filter(node=>node.tagName==='details').map(node=>node.className),['pomoStudioScenarios','pomoStudioSound','mynt-pomo-settings']);
+ assert.equal(usage.getAttribute('aria-label'),'使用說明');assert.equal(usage.getAttribute('aria-controls'),'myntPomoUsageNotes');assert.equal(usage.getAttribute('aria-expanded'),'false');assert.equal(limits.hidden,true);
+ await usage.emit('click');assert.equal(usage.getAttribute('aria-expanded'),'true');assert.equal(limits.hidden,false);await usage.emit('click');assert.equal(limits.hidden,true);
+ await usage.emit('click');const usageEscape=await usage.emit('keydown',{key:'Escape'});assert.equal(usageEscape.stopped,true);assert.equal(usage.getAttribute('aria-expanded'),'false');assert.equal(limits.hidden,true);assert.equal(document.activeElement,usage);
+ console.log('POMODORO_SOUND_AND_USAGE_OK: ambient row, music, alarm slider, disclosure toggle, and Escape focus recovery');
  assert.equal(originalVideo.parentNode.className,'pomoStudioBackdrop');assert.equal(originalOverlay.parentNode,originalVideo.parentNode);assert.equal(originalVideo.parentNode.parentNode,panel);assert.equal(panel.scrollTop,0);assert.equal(originalVideo.style.translate,undefined,'decorative media never enlarges scroll overflow with transforms');
  const find=(tag,label)=>panel.querySelectorAll(tag).find(node=>node.textContent===label);
  const cards=panel.querySelectorAll('.pomoStudioCard'),fields=panel.querySelector('.pomoStudioDurations').querySelectorAll('input');
