@@ -205,3 +205,10 @@ html.myntHighContrast #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > bu
 #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]:not(:checked) { border-color: color-mix(in srgb, var(--pomo-fg, #fff) 55%, transparent); }
 /* Playing ambient sound keeps the accent fill: the glass rule in centered-home.css would otherwise leave the white icon on 62% white. */
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras #pomodoroAmbientToggleBtn.active:not(:disabled), html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras #pomodoroAmbientToggleBtn.active:not(:disabled):hover { background: var(--pomo-accent, #234c78) !important; border-color: var(--pomo-accent, #234c78) !important; color: var(--pomo-on-accent, #ffffff) !important; }
+/* Touch screens get 44px secondary buttons, matching the 44px fields and icon buttons. centered-home.css (loaded later) sets 34px with !important, so these add :not(.myntHighContrast) to outrank it. */
+@media (pointer: coarse), (max-width: 500px) {
+  html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoFloatMount > .mynt-pomo-open-float,
+  html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoStudioMount > .pomoStudioRow > button:not(#myntPomoTask),
+  html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras > .mynt-pomo-open-popup { height: 44px !important; min-height: 44px !important; }
+  html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel .mynt-pomo-image-controls input[type="file"]::file-selector-button { height: 44px; }
+}
