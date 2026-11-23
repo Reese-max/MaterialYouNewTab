@@ -120,15 +120,15 @@
 #pomodoroPanel .pomoStudioCard[aria-pressed="true"] { border-color: var(--pomo-accent, #d7e8ff); box-shadow: inset 0 0 0 1px var(--pomo-accent, #d7e8ff); }
 #myntPomoExtras { text-align: start; margin: 10px -2px 8px; padding: 8px 12px; border-radius: 20px; background: var(--pomo-surface, #0c141ba3); color: var(--pomo-fg, #fff); }
 #myntPomoExtras > details, #myntPomoExtras .pomoStudioScenarios { border-bottom: 1px solid var(--pomo-border, #ffffff24); }
-#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioSound) summary { display: list-item; min-height: 44px; box-sizing: border-box; padding: 12px 0; cursor: pointer; font-size: var(--pomo-type-body); line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) summary { display: list-item; min-height: 44px; box-sizing: border-box; padding: 12px 0; cursor: pointer; font-size: var(--pomo-type-body); line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
 #myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound)[open] { padding-bottom: 12px; }
 #myntPomoExtras .mynt-pomo-music { border: 0; padding: 0; margin: 0; border-radius: 0; }
-#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioSound) label { display: grid; gap: 6px; font-size: var(--pomo-type-body); line-height: 1.4; margin: 10px 0; }
-#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioSound) :is(button, input, select), #myntPomoExtras > button { box-sizing: border-box; font: inherit; font-size: var(--pomo-type-body); line-height: 1.4; min-height: 44px; max-width: 100%; color: var(--pomo-fg, #fff); }
-#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioSound) button, #myntPomoExtras > button { border: 1px solid var(--pomo-border, #ffffff30); border-radius: 16px; background: var(--pomo-surface, #ffffff12); padding: 8px 10px; cursor: pointer; overflow-wrap: anywhere; }
-#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioSound) :is(input:not([type=range]):not([type=checkbox]), select) { width: 100%; min-width: 0; border: 1px solid var(--pomo-border, #ffffff40); border-radius: 12px; padding: 8px; background: var(--pomo-surface, #0003); }
-#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioSound) select option { background: var(--pomo-surface, #25313c); color: var(--pomo-fg, #fff); }
-#myntPomoExtras :is(.pomoStudioSettings, .pomoStudioSound) input[type=range] { width: 100%; accent-color: var(--pomo-accent, #bbd6fd); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) label { display: grid; gap: 6px; font-size: var(--pomo-type-body); line-height: 1.4; margin: 10px 0; }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) :is(button, input, select), #myntPomoExtras > button { box-sizing: border-box; font: inherit; font-size: var(--pomo-type-body); line-height: 1.4; min-height: 44px; max-width: 100%; color: var(--pomo-fg, #fff); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) button, #myntPomoExtras > button { border: 1px solid var(--pomo-border, #ffffff30); border-radius: 16px; background: var(--pomo-surface, #ffffff12); padding: 8px 10px; cursor: pointer; overflow-wrap: anywhere; }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) :is(input:not([type=range]):not([type=checkbox]), select) { width: 100%; min-width: 0; border: 1px solid var(--pomo-border, #ffffff40); border-radius: 12px; padding: 8px; background: var(--pomo-surface, #0003); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) select option { background: var(--pomo-surface, #25313c); color: var(--pomo-fg, #fff); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) input[type=range] { width: 100%; accent-color: var(--pomo-accent, #bbd6fd); }
 #myntPomoExtras .pomodoroAmbientRow { flex-wrap: wrap; margin: 0; }
 #myntPomoExtras .pomodoroAmbientSelect { flex: 1; }
 
@@ -249,12 +249,17 @@ html:not(.myntHighContrast) body #pomodoroPanel.pomodoro-panel.pomoStudioExpande
   color: var(--pomo-fg, #fff); font: inherit; cursor: pointer;
 }
 #pomodoroPanel #myntPomoExtras .pomoStudioUsage:focus-visible { outline: 3px solid var(--pomo-accent, #bbd6fd); outline-offset: 2px; }
+/* Idle empty card is visually hidden but stays in the a11y tree so later status changes are still announced. */
+#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music[data-empty="true"] .mynt-music-now:has(.mynt-music-status[data-state="empty"]) {
+  position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important;
+  overflow: hidden !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important;
+}
 #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music[data-empty="true"] .mynt-music-import,
-#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music[data-empty="true"] .mynt-music-now,
+#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music[data-empty="true"] :is(.mynt-music-artwork, .mynt-music-current, .mynt-music-progress, .mynt-music-controls),
 #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music[data-empty="true"] .mynt-music-count { display: none !important; }
-#pomodoroPanel #myntPomoMusicMount .mynt-pomo-music .mynt-music-empty-import {
+html body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music button.mynt-music-empty-import {
   min-height: 44px; width: 100%; padding: 10px 14px; border: 1px solid var(--pomo-border, #ffffff40);
-  border-radius: 16px; background: var(--pomo-accent, #bbd6fd); color: var(--pomo-on-accent, #183149);
+  border-radius: 16px; background: var(--pomo-accent, #bbd6fd) !important; color: var(--pomo-on-accent, #183149) !important;
   font: inherit; font-size: var(--pomo-type-body); font-weight: 600; cursor: pointer;
 }
 #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music .mynt-music-empty-import[hidden] { display: none !important; }
@@ -263,6 +268,6 @@ html:not(.myntHighContrast) body #pomodoroPanel.pomodoro-panel.pomoStudioExpande
 html.myntHighContrast body #pomodoroPanel #myntPomoExtras .pomoStudioUsage,
 html.myntHighContrast body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music .mynt-music-empty-import { background: Canvas !important; color: CanvasText !important; border: 1px solid ButtonText !important; }
 @media (forced-colors: active) {
-  #pomodoroPanel #myntPomoExtras { background: Canvas !important; color: CanvasText !important; }
+  #pomodoroPanel #myntPomoExtras, html:not(.myntHighContrast) body #pomodoroPanel.pomodoro-panel.pomoStudioExpanded #myntPomoExtras { background: Canvas !important; color: CanvasText !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
   #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music .mynt-music-empty-import { background: ButtonFace; color: ButtonText; border: 1px solid ButtonText; }
 }
