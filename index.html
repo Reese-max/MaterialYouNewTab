@@ -244,7 +244,7 @@
             <div class="bookmark-sidebar-header">
                 <div class="bookmark-heading-copy">
                     <h2 id="bookmarksHeading">書籤</h2>
-                    <p id="bookmarksSubtitle">常用優先，快速找到最近與資料夾</p>
+                    <p id="bookmarksSubtitle">搜尋、整理並開啟瀏覽器書籤</p>
                 </div>
                 <div class="bookmark-header-actions">
                     <button id="bookmarkAddButton" type="button" aria-label="新增書籤" title="新增書籤">
@@ -296,6 +296,13 @@
                         </div>
 
                         <div class="bookmark-control-group">
+                            <h3 id="bookmarkToolsHeading">整理</h3>
+                            <div class="button-group">
+                                <button id="bookmarkFindDuplicates" class="bookmark-sort-button" type="button">找出重複書籤</button>
+                            </div>
+                        </div>
+
+                        <div class="bookmark-control-group">
                             <h3 id="bookmarkViewAs">檢視方式</h3>
                             <div class="button-group">
                                 <input type="checkbox" id="bookmarkGridCheckbox" hidden />
@@ -314,6 +321,11 @@
     <dialog id="editBookmarkModal" aria-labelledby="editBookmarkHeading">
         <div class="modal-content">
             <h2 id="editBookmarkHeading">編輯書籤</h2>
+
+            <div id="editBookmarkType" class="bookmark-type-toggle" role="group" aria-labelledby="editBookmarkHeading">
+                <button id="editBookmarkTypeBookmark" type="button" aria-pressed="true">書籤</button>
+                <button id="editBookmarkTypeFolder" type="button" aria-pressed="false">資料夾</button>
+            </div>
 
             <img id="editBookmarkFavicon" src="./svgs/offline.svg" alt="">
 
