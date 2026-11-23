@@ -251,6 +251,8 @@ html.mynt-removed-features body #studyQuote {
   background: var(--mynt-glass) !important; border: 1px solid var(--mynt-glass-edge) !important; box-shadow: 0 4px 16px rgba(18, 38, 66, .10) !important;
 }
 html.mynt-removed-features body #studyQuote :is(#studyQuoteText, #studyQuoteSource) { color: var(--mynt-ink-soft) !important; font-size: 13.5px !important; letter-spacing: .02em; }
+/* The source is a footnote to the line: one step smaller so the quote leads. */
+html.mynt-removed-features body #studyQuote #studyQuoteSource { font-size: 12px !important; }
 /* A wrapped (two-line) quote keeps a soft card shape instead of a tall capsule. */
 html.mynt-removed-features body #studyQuote[data-lines="2"] { border-radius: 20px !important; }
 @media (max-width: 600px) {
@@ -260,7 +262,7 @@ html.mynt-removed-features body #studyQuote[data-lines="2"] { border-radius: 20p
   html.mynt-removed-features body #addQuickLinkButton { width: 40px !important; min-width: 40px !important; flex-basis: 40px !important; height: 40px !important; }
   html.mynt-removed-features body #quickLinksRow #toolsCont a, html.mynt-removed-features body #quickLinksRow #shortcutsContainer > * > a { height: 40px !important; }
   html.mynt-removed-features body #searchbar { height: 56px !important; }
-  html.mynt-removed-features body #studyQuote { inset: auto 16px 80px 16px !important; width: auto !important; margin-inline: auto; }
+  html.mynt-removed-features body #studyQuote { inset: auto 16px 80px 16px !important; width: fit-content !important; max-width: calc(100vw - 32px) !important; margin-inline: auto; }
 }
 /* Pomodoro panel layout: clear hierarchy (phase -> timer -> primary action -> task -> quiet extras -> one-line stats). */
 html.mynt-removed-features body #pomodoroCont[aria-expanded="true"] #pomodoroHover { display: none !important; }
@@ -468,7 +470,7 @@ html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoE
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoMusicMount .mynt-music-controls > button { border-radius: 999px !important; }
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras :is(.pomoStudioScenarios > button, .mynt-music-controls > button, .mynt-music-import > button, #pomodoroAmbientToggleBtn):disabled { opacity: 1 !important; background: color-mix(in srgb, var(--pomo-surface, #ffffff) 38%, transparent) !important; border: 1px solid var(--mynt-glass-edge) !important; box-shadow: none !important; color: color-mix(in srgb, var(--pomo-fg, #1b1f24) 50%, transparent) !important; cursor: not-allowed; }
 /* No card inside the sheet: settings are grouped by a hairline and share the left and right edge of the buttons above. */
-html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras { background: transparent !important; border: 0 !important; border-top: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 12%, transparent) !important; border-radius: 0 !important; box-shadow: none !important; padding-inline: 0 !important; }
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras { background: transparent !important; border: 0 !important; border-top: 1px solid color-mix(in srgb, var(--pomo-fg, #1b1f24) 20%, transparent) !important; border-radius: 0 !important; box-shadow: none !important; padding-inline: 0 !important; margin-inline: 0 !important; }
 /* With a picture, the sheet below the start button is frosted glass instead of flat grey. */
 html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel.mynt-pomo-static > .pomoStudioBackdrop::after { background: color-mix(in srgb, var(--mynt-pomo-panel-bg, #f7f7f7) 72%, transparent); backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7); }
 /* With shortcuts switched off or all deleted the row would show a lone "+"; name the action instead. */

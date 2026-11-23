@@ -21,9 +21,9 @@
 .sqToolbar, .sqActions { display: flex; flex-wrap: wrap; gap: 8px; }
 .sqActions { margin: 10px 0; }
 .sqSearch { flex: 1 1 220px; }
-.sqSearch, .sqFilter, .sqInput { box-sizing: border-box; min-height: 40px; padding: 8px 10px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--whitishColor-blue) 70%, transparent); color: inherit; font: inherit; }
+.sqSearch, .sqFilter, .sqInput { box-sizing: border-box; min-height: 44px; padding: 8px 10px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--whitishColor-blue) 70%, transparent); color: inherit; font: inherit; }
 .sqFilter[hidden], .sqActions > [hidden] { display: none; }
-.sqPrimary, .sqSecondary, .sqLink { min-height: 40px; padding: 8px 16px; border-radius: 999px; font: inherit; cursor: pointer; white-space: nowrap; }
+.sqPrimary, .sqSecondary, .sqLink { min-height: 44px; padding: 8px 16px; border-radius: 999px; font: inherit; cursor: pointer; white-space: nowrap; }
 .sqPrimary { border: 0; background: var(--darkerColor-blue); color: var(--onActionColor-blue, #fff); }
 .sqSecondary { border: 1px solid color-mix(in srgb, currentColor 32%, transparent); background: transparent; color: inherit; }
 .sqLink { border: 0; background: transparent; color: inherit; text-decoration: underline; padding-inline: 8px; }
@@ -85,11 +85,11 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 .sqMeta { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; font-size: .8rem; opacity: .82; }
 .sqTag { padding: 0 8px; border-radius: 999px; background: color-mix(in srgb, var(--darkerColor-blue) 14%, transparent); }
 .sqRowControls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
-.sqIconButton { min-width: 44px; min-height: 36px; padding: 4px 10px; border: 1px solid color-mix(in srgb, currentColor 26%, transparent); border-radius: 10px; background: transparent; color: inherit; font: inherit; font-size: .85rem; cursor: pointer; }
-.sqSwitch { position: relative; display: inline-flex; flex: none; width: 44px; height: 26px; cursor: pointer; }
+.sqIconButton { min-width: 44px; min-height: 44px; padding: 4px 10px; border: 1px solid color-mix(in srgb, currentColor 26%, transparent); border-radius: 10px; background: transparent; color: inherit; font: inherit; font-size: .85rem; cursor: pointer; }
+.sqSwitch { position: relative; display: inline-flex; align-items: center; flex: none; width: 44px; height: 44px; cursor: pointer; }
 .sqSwitch input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.sqSwitchTrack { pointer-events: none; width: 100%; height: 100%; border-radius: 999px; background: color-mix(in srgb, currentColor 22%, transparent); transition: background-color .15s ease; }
-.sqSwitchTrack::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .3); transition: transform .15s ease; }
+.sqSwitchTrack { pointer-events: none; width: 100%; height: 26px; border-radius: 999px; background: color-mix(in srgb, currentColor 22%, transparent); transition: background-color .15s ease; }
+.sqSwitchTrack::after { content: ""; position: absolute; top: 12px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .3); transition: transform .15s ease; }
 .sqSwitch input:checked + .sqSwitchTrack { background: var(--darkerColor-blue); }
 .sqSwitch input:checked + .sqSwitchTrack::after { transform: translateX(18px); }
 .sqSwitch input:disabled + .sqSwitchTrack { opacity: .5; }
@@ -100,6 +100,9 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 .sqFooter { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px 16px; border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
 .sqStatus { margin: 0; min-height: 1.3em; font-size: .88rem; overflow-wrap: anywhere; }
 .sqUndo[hidden] { display: none; }
+/* With no message and no undo, the footer folds away instead of leaving an empty band; the live region stays in place. */
+.sqFooter:has(.sqStatus:empty):has(.sqUndo[hidden]) { padding-block: 0; border-top-color: transparent; }
+.sqFooter .sqStatus:empty { min-height: 0; }
 
 .studyQuotesDialog :is(button, input, select, textarea):focus-visible { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
 .sqSwitch input:focus-visible + .sqSwitchTrack { outline: 3px solid var(--darkerColor-blue); outline-offset: 2px; }
@@ -123,6 +126,11 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 /* The black theme's accent is light; keep the switch knob visible on it. */
 .black-theme .sqSwitch input:checked + .sqSwitchTrack::after { background: #1f2630; }
 
+/* Keep each tab label with its count on one line on the narrowest phones; the labels fit once the side padding shrinks. */
+@media (max-width: 360px) {
+    .sqTabs { gap: 0; }
+    .sqTab { flex: 1 1 auto; padding-inline: 4px; font-size: .875rem; white-space: nowrap; }
+}
 @media (prefers-reduced-motion: reduce) {
     .sqSwitchTrack, .sqSwitchTrack::after { transition: none; }
 }

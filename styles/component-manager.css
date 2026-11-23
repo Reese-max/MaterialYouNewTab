@@ -46,9 +46,11 @@
 #menuCont .workspaceEditorActions { display: flex; flex-wrap: wrap; }
 #menuCont .workspaceHeadingActions .sectionStatus { white-space: nowrap; }
 #menuCont .workspacePresetCard { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
-#menuCont .workspacePresetCard .workspaceApplyBtn { grid-column: 1 / -1; padding: 16px; }
-#menuCont .workspacePresetCard .workspaceEditBtn { position: static; grid-row: 2; grid-column: 1; justify-self: start; margin: 0 0 12px 12px; min-width: 44px; min-height: 44px; }
-#menuCont .workspacePresetCard .workspaceLaunchBtn { position: static; grid-row: 2; grid-column: 2; margin: 0 12px 12px 0; min-width: 44px; min-height: 44px; }
+#menuCont .workspacePresetCard .workspaceApplyBtn { grid-column: 1 / -1; padding: 12px; min-height: 64px; }
+/* Card summaries and the edit label read at the same size as other settings descriptions. */
+#menuCont .workspacePresetCard .workspaceApplyBtn span { font-size: 0.8125rem; line-height: 1.5; text-wrap: pretty; word-break: keep-all; }
+#menuCont .workspacePresetCard .workspaceEditBtn { position: static; grid-row: 2; grid-column: 1; justify-self: start; margin: 0 0 8px 12px; min-width: 44px; min-height: 44px; font-size: 0.8125rem; }
+#menuCont .workspacePresetCard .workspaceLaunchBtn { position: static; grid-row: 2; grid-column: 2; margin: 0 12px 8px 0; min-width: 44px; min-height: 44px; }
 #menuCont [data-settings-component="pomodoro"][data-component-enabled="true"] .pomodoroSettingsHidden { display: flex !important; }
 #menuCont #opacityTextContainer { display: flex; flex-wrap: wrap; gap: 8px 12px; }
 #menuCont #opacityTextContainer > .texts { flex: 1; min-width: 150px; }
