@@ -591,6 +591,7 @@ const en = {
     "bookmarkFolderNameRequired": "Enter a folder name.",
     "bookmarkAddHere": "Add here…",
     "bookmarkEditFolder": "Edit folder",
+    "bookmarkFolderLocked": "Built-in folders can't be edited",
     "bookmarkDeleteFolder": "Delete folder",
     "deleteBookmarkFolder": "Delete the folder \"{title}\" and the {count} bookmarks in it?",
     "bookmarkFolderCreated": "Folder added.",

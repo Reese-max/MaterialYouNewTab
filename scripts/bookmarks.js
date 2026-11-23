@@ -1102,6 +1102,9 @@ function createBookmarkActions(node) {
                 createActionButton(bookmarkText("bookmarkEditFolder"), "bookmark-edit-button", () => openBookmarkEditor(node)),
                 createActionButton(bookmarkText("bookmarkDeleteFolder"), "bookmark-delete-button", () => deleteBookmarkFolder(node))
             );
+        } else {
+            // The browser refuses edits to its root and managed folders; say so instead of hiding the action.
+            menu.append(createActionButton(bookmarkText("bookmarkFolderLocked"), "bookmark-locked-button", () => {}, true));
         }
     }
     if (node.url) {

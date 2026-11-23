@@ -591,6 +591,7 @@ const zh_TW = {
     "bookmarkFolderNameRequired": "請輸入資料夾名稱。",
     "bookmarkAddHere": "在此新增…",
     "bookmarkEditFolder": "編輯資料夾",
+    "bookmarkFolderLocked": "內建資料夾無法編輯",
     "bookmarkDeleteFolder": "刪除資料夾",
     "deleteBookmarkFolder": "要刪除資料夾「{title}」和裡面的 {count} 個書籤嗎？",
     "bookmarkFolderCreated": "已新增資料夾。",
