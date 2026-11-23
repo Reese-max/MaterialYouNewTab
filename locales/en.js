@@ -592,6 +592,8 @@ const en = {
     "bookmarkAddHere": "Add here…",
     "bookmarkEditFolder": "Edit folder",
     "bookmarkFolderLocked": "Built-in folders can't be edited",
+    "bookmarkRenameFolder": "Rename",
+    "bookmarkRootNameHint": "Only changes the name shown in MYNT; the browser keeps \"{name}\". Leave it empty to use the original name.",
     "bookmarkDeleteFolder": "Delete folder",
     "deleteBookmarkFolder": "Delete the folder \"{title}\" and the {count} bookmarks in it?",
     "bookmarkFolderCreated": "Folder added.",

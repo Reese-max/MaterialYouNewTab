@@ -38,6 +38,8 @@ const sortTimeAdded = document.getElementById("sortTimeAdded");
 const sortManual = document.getElementById("sortManual");
 const editBookmarkURLField = document.getElementById("editBookmarkURLField");
 const editBookmarkFolder = document.getElementById("editBookmarkFolder");
+const editBookmarkFolderField = document.getElementById("editBookmarkFolderField");
+const editBookmarkHint = document.getElementById("editBookmarkHint");
 const editBookmarkType = document.getElementById("editBookmarkType");
 const editBookmarkNameLabel = document.getElementById("editBookmarkNameLabel");
 const editBookmarkTypeBookmark = document.getElementById("editBookmarkTypeBookmark");
@@ -46,6 +48,8 @@ const bookmarkFindDuplicates = document.getElementById("bookmarkFindDuplicates")
 const bookmarkDisplayOptions = document.getElementById("bookmarkDisplayOptions");
 
 const BOOKMARK_FAVORITES_KEY = "myntBookmarkFavorites";
+// Browsers refuse to rename their root folders, so MYNT keeps its own display names for them.
+const BOOKMARK_FOLDER_NAMES_KEY = "myntBookmarkFolderNames";
 const BOOKMARK_FOLDERS_KEY = "myntBookmarkExpandedFolders";
 const BOOKMARK_UNDO_MS = 7000;
 const BOOKMARK_RECENT_SHOWN = 4;
@@ -59,6 +63,7 @@ let recentBookmarks = [];
 let bookmarkNodeMap = new Map();
 let currentBookmarkId = null;
 let currentEditorIsFolder = false;
+let currentEditorRootName = false;
 let currentEditorParentId = null;
 let recentBookmarksExpanded = false;
 let draggedBookmark = null;
@@ -119,6 +124,20 @@ function writeStoredArray(key, value) {
         setBookmarkStatus("bookmarkLocalSaveError", {}, 5000);
         return false;
     }
+}
+
+function readFolderNames() {
+    try {
+        const value = JSON.parse(readBookmarkSetting(BOOKMARK_FOLDER_NAMES_KEY) || "{}");
+        return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    } catch {
+        return {};
+    }
+}
+
+// A browser root folder such as the bookmarks bar: never editable through the API, but renamable inside MYNT.
+function isRootBookmarkFolder(node) {
+    return !node.url && !node.unmodifiable && bookmarkTree.some(root => String(root.id) === String(node.parentId));
 }
 
 function getFavoriteIds() {
@@ -410,6 +429,13 @@ async function loadBookmarks() {
         recentBookmarks = (Array.isArray(recent) ? recent : []).filter(node => node.url).slice(0, BOOKMARK_RECENT_MAX);
         const allNodes = flattenBookmarkNodes(bookmarkTree);
         bookmarkNodeMap = new Map(allNodes.map(node => [String(node.id), node]));
+        const folderNames = readFolderNames();
+        for (const node of allNodes) {
+            if (!isRootBookmarkFolder(node)) continue;
+            node.browserTitle = node.title || "";
+            const name = folderNames[String(node.id)];
+            if (typeof name === "string" && name.trim()) node.title = name.trim();
+        }
         seedFavoritesFromShortcuts(allNodes);
         bookmarkDataAvailable = true;
         if (!hasBookmarkContent()) {
@@ -1102,8 +1128,10 @@ function createBookmarkActions(node) {
                 createActionButton(bookmarkText("bookmarkEditFolder"), "bookmark-edit-button", () => openBookmarkEditor(node)),
                 createActionButton(bookmarkText("bookmarkDeleteFolder"), "bookmark-delete-button", () => deleteBookmarkFolder(node))
             );
+        } else if (isRootBookmarkFolder(node)) {
+            menu.append(createActionButton(bookmarkText("bookmarkRenameFolder"), "bookmark-edit-button", () => openBookmarkEditor(node, { rootName: true })));
         } else {
-            // The browser refuses edits to its root and managed folders; say so instead of hiding the action.
+            // The browser refuses edits to managed folders; say so instead of hiding the action.
             menu.append(createActionButton(bookmarkText("bookmarkFolderLocked"), "bookmark-locked-button", () => {}, true));
         }
     }
@@ -1194,9 +1222,13 @@ function setBookmarkEditorType(isFolder) {
     bookmarkEditorError.textContent = "";
 }
 
-function openBookmarkEditor(node = null, { folder = false, parentId = null } = {}) {
+function openBookmarkEditor(node = null, { folder = false, parentId = null, rootName = false } = {}) {
     if (!bookmarkDataAvailable || bookmarkMutationPending || editBookmarkModal.open) return;
     currentBookmarkId = node?.id ? String(node.id) : null;
+    currentEditorRootName = Boolean(rootName && node);
+    editBookmarkFolderField.hidden = currentEditorRootName;
+    editBookmarkHint.hidden = !currentEditorRootName;
+    editBookmarkHint.textContent = currentEditorRootName ? bookmarkText("bookmarkRootNameHint", { name: node.browserTitle || "" }) : "";
     currentEditorParentId = node?.parentId != null ? String(node.parentId) : null;
     setBookmarkEditorType(Boolean(folder || (node && !node.url)));
     editBookmarkType.hidden = Boolean(node);
@@ -1241,6 +1273,7 @@ function setBookmarkEditorSaving(saving) {
 
 async function saveBookmarkEditor() {
     if (!editBookmarkModal.open || bookmarkMutationPending) return false;
+    if (currentEditorRootName) return saveRootFolderName();
     const title = editBookmarkName.value.trim();
     const isFolder = currentEditorIsFolder;
     const url = isFolder ? null : normalizeBookmarkUrl(editBookmarkURL.value);
@@ -1284,6 +1317,26 @@ async function saveBookmarkEditor() {
         setBookmarkEditorSaving(false);
         bookmarkMutationPending = false;
     }
+}
+
+// Only MYNT's local name changes; an empty name or the browser's own name restores the default.
+async function saveRootFolderName() {
+    const id = currentBookmarkId;
+    const name = editBookmarkName.value.trim();
+    const names = readFolderNames();
+    if (name && name !== bookmarkNodeMap.get(id)?.browserTitle) names[id] = name;
+    else delete names[id];
+    try {
+        localStorage.setItem(BOOKMARK_FOLDER_NAMES_KEY, JSON.stringify(names));
+    } catch (error) {
+        console.error("Error saving folder name:", error);
+        bookmarkEditorError.textContent = bookmarkText("bookmarkSaveError");
+        return false;
+    }
+    setBookmarkStatus("bookmarkFolderUpdated");
+    closeBookmarkEditor();
+    await loadBookmarks();
+    return true;
 }
 
 async function deleteBookmark(node) {
@@ -1618,6 +1671,8 @@ document.addEventListener("click", event => {
     if (document.getElementById("prompt-modal-container")?.style.display === "flex") return;
     // The confirm dialog hides itself before its button click bubbles here; that click is not an outside click.
     if (event.target.closest?.("#prompt-modal-container")) return;
+    // A local-only save closes the editor before its click bubbles here; that is not an outside click either.
+    if (event.target.closest?.("#editBookmarkModal")) return;
     // Re-rendering the list detaches the clicked control; a detached target is not an outside click.
     if (event.target.isConnected === false) return;
     if (!bookmarkSidebar.contains(event.target) && !bookmarkButton.contains(event.target)) closeBookmarkSidebar();

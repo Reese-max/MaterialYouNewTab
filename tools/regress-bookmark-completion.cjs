@@ -452,6 +452,26 @@ async function testFoldersOpenAndMoves(kind) {
     assert.deepEqual(actionClasses(mnode('30')).filter(name => /add-here|add-folder|edit|delete/u.test(name)), [], 'Managed folders take no new children and cannot be edited');
     const lockedNote = managed.context.createBookmarkActions(mnode('30')).children[1].children.find(button => button.className === 'bookmark-locked-button');
     assert.ok(lockedNote?.disabled, 'Managed folders explain why they cannot be edited');
+    // Root folders: the browser refuses renames, so the name only changes inside MYNT.
+    const roots = await harness({ kind }).ready(); const rnode = id => roots.run(`bookmarkNodeMap.get("${id}")`);
+    const rootButtons = roots.context.createBookmarkActions(rnode('1')).children[1].children;
+    assert.equal(rootButtons.find(button => button.className === 'bookmark-edit-button')?.textContent, roots.context.bookmarkText('bookmarkRenameFolder'), 'Root folders offer a rename');
+    assert.ok(!rootButtons.some(button => /delete|locked/u.test(button.className)), 'Root folders cannot be deleted and are not shown as locked');
+    roots.context.openBookmarkEditor(rnode('1'), { rootName: true });
+    assert.equal(roots.id('editBookmarkFolderField').hidden, true, 'Root folders cannot move'); assert.equal(roots.id('editBookmarkHint').hidden, false); assert.equal(roots.id('editBookmarkHint').textContent, roots.context.bookmarkText('bookmarkRootNameHint', { name: 'Toolbar' }));
+    roots.id('editBookmarkName').value = '  我的書籤列 '; assert.equal(await roots.context.saveBookmarkEditor(), true);
+    assert.equal(roots.count('update') + roots.count('move'), 0, 'No browser write'); assert.equal(roots.find('1').title, 'Toolbar');
+    assert.deepEqual(JSON.parse(roots.storage.get('myntBookmarkFolderNames')), { 1: '我的書籤列' }); assert.equal(rnode('1').title, '我的書籤列');
+    roots.context.openBookmarkEditor();
+    assert.equal(roots.id('editBookmarkFolderField').hidden, false); assert.equal(roots.id('editBookmarkHint').hidden, true);
+    assert.ok(roots.id('editBookmarkFolder').children.some(option => option.textContent === '我的書籤列 › 工作'), 'Folder paths use the MYNT name'); roots.context.closeBookmarkEditor();
+    roots.blockStorage(true); roots.context.openBookmarkEditor(rnode('1'), { rootName: true }); roots.id('editBookmarkName').value = 'X';
+    assert.equal(await roots.context.saveBookmarkEditor(), false); assert.equal(roots.id('editBookmarkModal').open, true, 'A failed local save keeps the editor open'); roots.blockStorage(false);
+    roots.id('editBookmarkName').value = ''; assert.equal(await roots.context.saveBookmarkEditor(), true);
+    assert.deepEqual(JSON.parse(roots.storage.get('myntBookmarkFolderNames')), {}, 'An empty name restores the browser name'); assert.equal(rnode('1').title, 'Toolbar');
+    for (const stored of ['["x"]', '{"1":5}', '{bad']) {
+        const odd = await harness({ kind, storage: { myntBookmarkFolderNames: stored } }).ready(); assert.equal(odd.run('bookmarkNodeMap.get("1").title'), 'Toolbar', 'Malformed names are ignored');
+    }
     assert.deepEqual(actionClasses(mnode('31')).filter(name => /edit|delete/u.test(name)), [], 'Managed bookmarks cannot be edited or deleted');
     assert.notEqual(managed.context.createBookmarkItem(mnode('31')).draggable, true, 'Managed bookmarks are not draggable');
     managed.run('draggedBookmark = { id: "13", section: "bookmarkSectionFolders" }');

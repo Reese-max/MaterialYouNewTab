@@ -592,6 +592,8 @@ const zh_TW = {
     "bookmarkAddHere": "在此新增…",
     "bookmarkEditFolder": "編輯資料夾",
     "bookmarkFolderLocked": "內建資料夾無法編輯",
+    "bookmarkRenameFolder": "重新命名",
+    "bookmarkRootNameHint": "只改 MYNT 裡顯示的名稱，瀏覽器裡仍是「{name}」。留空即恢復原名。",
     "bookmarkDeleteFolder": "刪除資料夾",
     "deleteBookmarkFolder": "要刪除資料夾「{title}」和裡面的 {count} 個書籤嗎？",
     "bookmarkFolderCreated": "已新增資料夾。",
