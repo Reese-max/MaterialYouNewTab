@@ -271,3 +271,10 @@ html.myntHighContrast body #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music .
   #pomodoroPanel #myntPomoExtras, html:not(.myntHighContrast) body #pomodoroPanel.pomodoro-panel.pomoStudioExpanded #myntPomoExtras { background: Canvas !important; color: CanvasText !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
   #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music .mynt-music-empty-import { background: ButtonFace; color: ButtonText; border: 1px solid ButtonText; }
 }
+
+/* Short viewports put phase and round on one row (award.css); with pill backgrounds keep both pills text-sized and centered as a pair (3px + 2px column-gap + 3px = 8px). */
+@media (max-height: 800px) {
+  html.mynt-removed-features body #pomodoroPanel.pomodoro-panel.mynt-pomo-static :is(.pomodoroPhaseLabel, .pomodoroRoundDisplay) { flex: 0 0 auto !important; align-self: center !important; text-align: center !important; }
+  html.mynt-removed-features body #pomodoroPanel.pomodoro-panel.mynt-pomo-static .pomodoroPhaseLabel { margin: 0 3px 0 auto !important; }
+  html.mynt-removed-features body #pomodoroPanel.pomodoro-panel.mynt-pomo-static .pomodoroRoundDisplay { margin: 0 auto 0 3px !important; }
+}
