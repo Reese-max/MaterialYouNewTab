@@ -118,6 +118,62 @@
 	--textColorDark-peach: #441730;
 	--whitishColor-peach: #ffffff;
 
+	/* indigo */
+	--bg-color-indigo: #cbcdeb;
+	--accentLightTint-indigo: #ededf8;
+	--darkerColor-indigo: #2d3276;
+	--darkColor-indigo: #4249ae;
+	--textColorDark-indigo: #141634;
+	--whitishColor-indigo: #ffffff;
+
+	/* teal */
+	--bg-color-teal: #c2f4ef;
+	--accentLightTint-teal: #e8fcfa;
+	--darkerColor-teal: #006b60;
+	--darkColor-teal: #009485;
+	--textColorDark-teal: #143431;
+	--whitishColor-teal: #ffffff;
+
+	/* lime */
+	--bg-color-lime: #e1efc8;
+	--accentLightTint-lime: #f4f9eb;
+	--darkerColor-lime: #4d671e;
+	--darkColor-lime: #8cba36;
+	--textColorDark-lime: #293414;
+	--whitishColor-lime: #ffffff;
+
+	/* amber */
+	--bg-color-amber: #f4e2c2;
+	--accentLightTint-amber: #fcf5e8;
+	--darkerColor-amber: #8a5700;
+	--darkColor-amber: #f09800;
+	--textColorDark-amber: #342814;
+	--whitishColor-amber: #ffffff;
+
+	/* wine */
+	--bg-color-wine: #efc8d2;
+	--accentLightTint-wine: #f9ebef;
+	--darkerColor-wine: #7e253d;
+	--darkColor-wine: #9e2e4c;
+	--textColorDark-wine: #34141c;
+	--whitishColor-wine: #ffffff;
+
+	/* slate */
+	--bg-color-slate: #d3dce3;
+	--accentLightTint-slate: #eff3f5;
+	--darkerColor-slate: #405464;
+	--darkColor-slate: #5f7e95;
+	--textColorDark-slate: #1c252c;
+	--whitishColor-slate: #ffffff;
+
+	/* magenta */
+	--bg-color-magenta: #edc9ed;
+	--accentLightTint-magenta: #f9ecf9;
+	--darkerColor-magenta: #7a297a;
+	--darkColor-magenta: #bf40bf;
+	--textColorDark-magenta: #341434;
+	--whitishColor-magenta: #ffffff;
+
 	/* ⚫⚫⚫ */
 	--bg-color-dark: #171615;
 	--accentLightTint-dark: #3c3c3c;
@@ -4774,11 +4830,12 @@ option:checked {
 /* Segmented Control ended */
 
 .themingStuff {
-	margin: 22px auto 100px;
+	/* Grow with the swatch grid instead of reserving a fixed 100px overflow margin. */
+	margin: 22px auto 0;
 	position: relative;
 	width: 100%;
-	height: 50px;
 	display: flex;
+	align-items: flex-start;
 	justify-content: space-evenly;
 	gap: 20px;
 }
@@ -4854,6 +4911,34 @@ option:checked {
 	background: linear-gradient(45deg, #bb4dee, #f8b880);
 }
 
+.colorsContainer input[value="indigo"] {
+	background-color: #4249ae;
+}
+
+.colorsContainer input[value="teal"] {
+	background-color: #009485;
+}
+
+.colorsContainer input[value="lime"] {
+	background-color: #8cba36;
+}
+
+.colorsContainer input[value="amber"] {
+	background-color: #f09800;
+}
+
+.colorsContainer input[value="wine"] {
+	background-color: #9e2e4c;
+}
+
+.colorsContainer input[value="magenta"] {
+	background-color: #bf40bf;
+}
+
+.colorsContainer input[value="slate"] {
+	background-color: #5f7e95;
+}
+
 .colorsContainer input[value="dark"] {
 	background-color: #171717;
 }
@@ -4869,7 +4954,7 @@ option:checked {
 
 .themingStuff .btn {
 	background-color: var(--whitishColor-blue);
-	height: 100%;
+	height: 50px;
 	aspect-ratio: 1/1;
 	inset-inline-end: 0;
 	border-radius: 100%;
@@ -5066,7 +5151,7 @@ option:checked {
 }
 
 .colorPickerLabel {
-	grid-column: span 3;
+	grid-column: 1 / -1;
 	width: 100%;
 	background: var(--accentLightTint-blue);
 	height: 100%;

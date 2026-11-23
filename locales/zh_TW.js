@@ -600,6 +600,13 @@ const zh_TW = {
     "themeColorBrown": "棕色",
     "themeColorSilver": "銀灰色",
     "themeColorPeach": "蜜桃色",
+    "themeColorIndigo": "靛藍色",
+    "themeColorTeal": "青綠色",
+    "themeColorLime": "萊姆綠",
+    "themeColorAmber": "琥珀色",
+    "themeColorWine": "酒紅色",
+    "themeColorMagenta": "洋紅色",
+    "themeColorSlate": "石板藍",
     "themeColorDark": "深色",
     "resetShortcutsLabel": "重設捷徑",
 
