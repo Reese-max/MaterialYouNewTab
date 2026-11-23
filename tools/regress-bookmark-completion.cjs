@@ -429,6 +429,20 @@ async function testFoldersOpenAndMoves(kind) {
     assert.equal(await sep.context.undoBookmarkDelete(), true); const back = sep.find('1').children.find(child => child.title === '工作');
     assert.deepEqual(back.children.map(child => child.type === 'separator' ? 'separator' : child.title), ['Alpha <script>fixture</script>', '繁體中文', 'separator']);
     assert.equal(back.children[2].children, undefined, 'A separator is never recreated as a folder');
+
+    // Review round 3: custom-order moves skip hidden separators: [sep, A, sep, B].
+    const gapTree = fixtureTree(); const work = gapTree[0].children[0].children[0];
+    work.children = [{ id: '40', parentId: '10', index: 0, title: '', type: 'separator' }, { ...work.children[0], index: 1 }, { id: '41', parentId: '10', index: 2, title: '', type: 'separator' }, { ...work.children[1], index: 3 }];
+    const gap = await harness({ kind, tree: gapTree }).ready(); gap.id('sortManual').click(); const gnode = id => gap.run(`bookmarkNodeMap.get("${id}")`);
+    gap.run('bookmarkRenderSection = "bookmarkSectionFolders"');
+    const moveButtons = id => gap.context.createBookmarkActions(gnode(id)).children[1].children.filter(button => button.className === 'bookmark-move-button').map(button => button.disabled);
+    assert.deepEqual(moveButtons('11'), [true, false], 'The first visible row cannot move up past a hidden separator');
+    assert.deepEqual(moveButtons('12'), [false, true], 'The last visible row cannot move down');
+    gap.run('bookmarkRenderSection = ""');
+    assert.equal(await gap.context.moveBookmarkWithinFolder(gnode('11'), 1), true);
+    assert.deepEqual(gap.find('10').children.filter(child => child.type !== 'separator').map(child => child.id), ['12', '11'], 'Move down passes the visible neighbour, not the separator');
+    assert.equal(await gap.context.moveBookmarkWithinFolder(gnode('11'), -1), true);
+    assert.deepEqual(gap.find('10').children.filter(child => child.type !== 'separator').map(child => child.id), ['11', '12']);
 }
 
 (async () => {

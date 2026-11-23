@@ -676,14 +676,22 @@ async function moveBookmarkNode(id, destination) {
     }
 }
 
+// Rows the user sees in a folder: the browser order without (hidden) Firefox separators.
+function visibleBookmarkSiblings(node) {
+    return (bookmarkNodeMap.get(String(node.parentId))?.children || []).filter(child => child.type !== "separator");
+}
+
+// Swaps with the visible neighbour; positions come from the full child list, separators included.
 function moveBookmarkWithinFolder(node, direction) {
     const parent = bookmarkNodeMap.get(String(node.parentId));
-    const siblings = parent?.children || [];
+    const all = parent?.children || [];
+    const siblings = visibleBookmarkSiblings(node);
     const index = siblings.findIndex(child => String(child.id) === String(node.id));
-    const target = index + direction;
-    if (index < 0 || target < 0 || target >= siblings.length) return Promise.resolve(false);
-    const beforeIndex = direction < 0 ? target : target + 1;
-    return moveBookmarkNode(node.id, { parentId: String(parent.id), index: bookmarkMoveIndex({ ...node, index }, parent.id, beforeIndex) });
+    const neighbor = siblings[index + direction];
+    if (index < 0 || !neighbor) return Promise.resolve(false);
+    const to = all.indexOf(neighbor);
+    const beforeIndex = direction < 0 ? to : to + 1;
+    return moveBookmarkNode(node.id, { parentId: String(parent.id), index: bookmarkMoveIndex({ ...node, index: all.indexOf(siblings[index]) }, parent.id, beforeIndex) });
 }
 
 // Decides what dropping the dragged bookmark on target would do, or null when it would do nothing.
@@ -858,7 +866,7 @@ function createBookmarkActions(node) {
     }
     const fixed = !node.url && isFixedBookmarkFolder(node);
     if (!fixed && !node.unmodifiable && currentSortMethod === "manual" && !bookmarkSearch.value.trim() && bookmarkRenderSection === "bookmarkSectionFolders") {
-        const siblings = bookmarkNodeMap.get(String(node.parentId))?.children || [];
+        const siblings = visibleBookmarkSiblings(node);
         const index = siblings.findIndex(child => String(child.id) === String(node.id));
         menu.append(
             createActionButton(bookmarkText("bookmarkMoveUp"), "bookmark-move-button", () => moveBookmarkWithinFolder(node, -1), index <= 0),
@@ -1308,7 +1316,8 @@ bookmarkSearch.addEventListener("keydown", event => {
         event.preventDefault();
         clearTimeout(bookmarkSearchTimer);
         renderBookmarks();
-        bookmarkList.querySelector?.(".bookmark-item > a[href]")?.click();
+        // First visible bookmark only; bookmarks inside a collapsed matching folder are hidden.
+        bookmarkNavigationTargets().find(target => target.matches(".bookmark-item > a[href]"))?.click();
     }
 });
 bookmarkList.addEventListener("keydown", event => {
