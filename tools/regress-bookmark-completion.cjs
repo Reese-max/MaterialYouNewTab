@@ -77,6 +77,7 @@ function harness({ kind = 'chrome', granted = true, hiddenApi = false, tree = fi
     const document = new Element('document'); document.ownerDocument = document;
     const elements = new Map();
     document.createElement = tag => new Element(tag, document);
+    document.createTextNode = text => { const node = new Element('#text', document); node.textContent = text; return node; };
     document.getElementById = id => elements.get(id) || null;
     const ids = [...source.matchAll(/document\.getElementById\("([^"]+)"\)/gu)].map(match => match[1]);
     ids.push('bookmarkGridCheckbox');
@@ -110,11 +111,28 @@ function harness({ kind = 'chrome', granted = true, hiddenApi = false, tree = fi
             if (!parent || !parent.children) throw new Error('Parent not found');
             const index = details.index ?? parent.children.length;
             if (index > parent.children.length) throw new Error('Index out of range');
-            const node = { ...details, id: String(nextId++), parentId: parent.id, index, dateAdded: 50 };
+            const node = { ...details, id: String(nextId++), parentId: parent.id, index, dateAdded: 50 }; if (!details.url) node.children = [];
             parent.children.splice(index, 0, node); parent.children.forEach((child, i) => { child.index = i; });
             api.onCreated.emit({ id: node.id }); return clone(node);
         }
         if (method === 'update') { const node = find(args[0]); if (!node) throw new Error('Bookmark not found'); Object.assign(node, args[1]); api.onChanged.emit({ id: node.id }); return clone(node); }
+        if (method === 'move') {
+            const node = find(args[0]), destination = args[1]; if (!node) throw new Error('Bookmark not found');
+            const from = find(node.parentId), parent = find(destination.parentId ?? node.parentId);
+            if (!parent || !parent.children || walk([node]).includes(parent)) throw new Error('Invalid move target');
+            const oldIndex = from.children.indexOf(node); let index = destination.index ?? (parent === from ? parent.children.length - 1 : parent.children.length);
+            // Chromium counts the index before removal from the same folder; Firefox counts the final position.
+            if (kind === 'chrome' && destination.index != null && parent === from && index > oldIndex) index--;
+            from.children.splice(oldIndex, 1); parent.children.splice(Math.min(index, parent.children.length), 0, node); node.parentId = parent.id;
+            for (const folder of [from, parent]) folder.children.forEach((child, i) => { child.index = i; });
+            api.onMoved.emit({ id: node.id }); return clone(node);
+        }
+        if (method === 'getSubTree') { const node = find(args[0]); if (!node) throw new Error('Bookmark not found'); return [clone(node)]; }
+        if (method === 'removeTree') {
+            const node = find(args[0]); if (!node || !node.children) throw new Error('Folder not found');
+            const parent = find(node.parentId); parent.children.splice(parent.children.indexOf(node), 1); parent.children.forEach((child, i) => { child.index = i; });
+            api.onRemoved.emit({ id: node.id }); return;
+        }
         if (method === 'remove') {
             const node = find(args[0]); if (!node) throw new Error('Bookmark not found');
             if (node.children) throw new Error('Refusing folder removal');
@@ -129,7 +147,7 @@ function harness({ kind = 'chrome', granted = true, hiddenApi = false, tree = fi
             runtime.lastError = { message: error.message }; try { callback(); } finally { runtime.lastError = null; }
         });
     };
-    const api = Object.fromEntries(['getTree', 'getRecent', 'create', 'update', 'remove'].map(method => [method, wrap(method)]));
+    const api = Object.fromEntries(['getTree', 'getRecent', 'create', 'update', 'remove', 'move', 'getSubTree', 'removeTree'].map(method => [method, wrap(method)]));
     for (const name of ['onCreated', 'onChanged', 'onRemoved', 'onMoved', 'onChildrenReordered']) api[name] = eventSource();
     const permissions = { contains: wrap('contains'), request: wrap('request'), onAdded: eventSource(), onRemoved: eventSource() };
     const namespace = { runtime, permissions }; if (!hiddenApi) namespace.bookmarks = api;
@@ -308,10 +326,89 @@ async function testMutations(kind) {
     return app;
 }
 
+async function testFoldersOpenAndMoves(kind) {
+    // A. Folder management through the editor.
+    const app = await harness({ kind, storage: { myntBookmarkFavorites: '["11","10"]' } }).ready();
+    app.context.openBookmarkEditor(null, { folder: true, parentId: '10' });
+    assert.equal(app.id('editBookmarkHeading').textContent, app.context.bookmarkText('addFolderHeading')); assert.equal(app.id('editBookmarkURLField').hidden, true);
+    assert.deepEqual(app.id('editBookmarkFolder').children.map(option => option.value), ['1', '10', '2']); assert.equal(app.id('editBookmarkFolder').value, '10');
+    assert.equal(await app.context.saveBookmarkEditor(), false, 'A folder needs a name'); assert.equal(app.count('create'), 0);
+    app.id('editBookmarkName').value = '子資料夾'; assert.equal(await app.context.saveBookmarkEditor(), true);
+    const folder = app.find('100'); assert.equal(folder.parentId, '10'); assert.equal(folder.url, undefined); assert.equal(folder.title, '子資料夾');
+    app.context.openBookmarkEditor(clone(app.find('10')));
+    assert.equal(app.id('editBookmarkHeading').textContent, app.context.bookmarkText('editFolderHeading'));
+    assert.deepEqual(app.id('editBookmarkFolder').children.map(option => option.value), ['1', '2'], 'A folder cannot be moved into itself or its subfolders');
+    app.id('editBookmarkName').value = '工作 2026'; app.id('editBookmarkFolder').value = '2'; assert.equal(await app.context.saveBookmarkEditor(), true);
+    assert.equal(app.find('10').title, '工作 2026'); assert.equal(app.find('10').parentId, '2'); assert.equal(app.find('10').url, undefined, 'Renaming a folder never adds a URL');
+    app.context.openBookmarkEditor(clone(app.find('13'))); assert.equal(app.id('editBookmarkURLField').hidden, false); assert.equal(app.id('editBookmarkFolder').value, '1');
+    app.id('editBookmarkFolder').value = '100'; assert.equal(await app.context.saveBookmarkEditor(), true); assert.equal(app.find('13').parentId, '100'); assert.equal(app.find('13').url, 'mailto:fixture@example.invalid');
+    app.context.openBookmarkEditor(); assert.equal(app.id('editBookmarkFolder').value, '1', 'New bookmarks default to the bookmarks bar'); app.context.closeBookmarkEditor();
+
+    // A. Folder delete: confirmation, fixed folders, undo of nested contents and favorites.
+    assert.equal(await app.context.deleteBookmarkFolder(clone(app.find('1'))), false, 'Browser root folders cannot be deleted'); assert.equal(app.count('removeTree'), 0);
+    app.confirm(false); assert.equal(await app.context.deleteBookmarkFolder(app.run('bookmarkNodeMap.get("10")')), false); assert.equal(app.count('removeTree'), 0);
+    app.confirm(true); const before = clone(app.find('10'));
+    assert.equal(await app.context.deleteBookmarkFolder(app.run('bookmarkNodeMap.get("10")')), true); assert.equal(app.find('10'), undefined); assert.equal(app.find('11'), undefined);
+    assert.deepEqual(clone(app.run('getFavoriteIds()')), [], 'Favorites inside the deleted folder are removed'); assert.equal(app.id('bookmarkUndoMessage').textContent, app.context.bookmarkText('bookmarkFolderDeletedWithUndo'));
+    assert.equal(await app.context.undoBookmarkDelete(), true); const restored = app.find('2').children.find(node => node.title === before.title);
+    assert.equal(restored.index, before.index); assert.deepEqual(restored.children.map(node => node.title), before.children.map(node => node.title));
+    const restoredSub = restored.children.find(node => node.title === '子資料夾'); assert.deepEqual(restoredSub.children.map(node => node.url), ['mailto:fixture@example.invalid'], 'Nested folders come back with their bookmarks');
+    const restoredAlpha = restored.children.find(node => node.url === 'https://alpha.example/test');
+    assert.deepEqual(clone(app.run('getFavoriteIds()')), [restoredAlpha.id, restored.id], 'Favorites point at the restored copies in their old order');
+    const partial = await harness({ kind }).ready(); await partial.context.deleteBookmarkFolder(partial.run('bookmarkNodeMap.get("10")'));
+    const creates = partial.count('create'); let calls = 0; const realCreate = partial.api.create;
+    partial.api.create = (...args) => { calls++; if (calls === 2) partial.fail('create'); return realCreate(...args); };
+    assert.equal(await partial.context.undoBookmarkDelete(), true); assert.equal(partial.id('bookmarkShortcutStatus').textContent, partial.context.bookmarkText('bookmarkFolderRestorePartial'));
+    assert.equal(partial.run('pendingBookmarkUndo'), null, 'A half-restored folder is never restored a second time'); assert.equal(partial.count('create'), creates + 2);
+
+    // B. Open in tabs and copy.
+    const opened = []; app.namespace.tabs = { create: async details => { opened.push(details); return { id: opened.length }; } };
+    assert.equal(await app.context.openBookmarksInTabs([{ url: 'https://one.example/' }, { url: 'javascript:alert(1)' }, { url: 'https://two.example/' }]), 2);
+    assert.deepEqual(clone(opened), [{ url: 'https://one.example/', active: false }, { url: 'https://two.example/', active: false }], 'Unsafe URLs are never opened');
+    const many = Array.from({ length: 11 }, (_, i) => ({ url: `https://n${i}.example/` }));
+    app.confirm(false); assert.equal(await app.context.openBookmarksInTabs(many), 0); assert.equal(opened.length, 2, 'More than ten tabs waits for confirmation');
+    app.confirm(true); assert.equal(await app.context.openBookmarksInTabs(many), 11);
+    assert.equal(await app.context.openBookmarksInTabs([]), 0); assert.equal(app.id('bookmarkShortcutStatus').textContent, app.context.bookmarkText('bookmarkFolderNoLinks'));
+    const copied = []; app.context.navigator = { clipboard: { writeText: async text => { copied.push(text); } } };
+    assert.equal(await app.context.copyBookmarkUrl({ url: 'https://copy.example/' }), true); assert.deepEqual(copied, ['https://copy.example/']);
+    app.context.navigator = {}; assert.equal(await app.context.copyBookmarkUrl({ url: 'https://copy.example/' }), false);
+
+    // C. Highlight and the expandable recent list.
+    const search = await harness({ kind }).ready(); search.id('bookmarkSearch').value = '繁體'; search.context.renderBookmarks();
+    const strong = search.id('bookmarkList').all().find(node => node.tagName === 'STRONG'); assert.deepEqual(strong.children.map(node => [node.tagName, node.textContent]), [['#TEXT', ''], ['MARK', '繁體'], ['#TEXT', '中文']]);
+    search.id('bookmarkSearch').value = ''; for (let i = 0; i < 6; i++) search.find('2').children.push({ id: `r${i}`, parentId: '2', index: i, title: `Recent ${i}`, url: `https://r${i}.example/`, dateAdded: 100 + i });
+    search.context.translations.zh_TW = { bookmarkSectionCount: '{count}' };
+    await search.context.loadBookmarks(); const recent = () => search.id('bookmarkList').children[1];
+    assert.equal(recent().all().filter(node => node.className === 'bookmark-item').length, 4); assert.equal(recent().children[0].children[1].textContent, '9');
+    const toggle = recent().children.at(-1); assert.equal(toggle.getAttribute('aria-expanded'), 'false'); toggle.click();
+    assert.equal(recent().all().filter(node => node.className === 'bookmark-item').length, 9); assert.equal(recent().children.at(-1).getAttribute('aria-expanded'), 'true');
+
+    // D. Drop rules and in-folder moves.
+    const drag = await harness({ kind, storage: { myntBookmarkFavorites: '["11","12","13"]' } }).ready(); const node = id => drag.run(`bookmarkNodeMap.get("${id}")`);
+    drag.run('draggedBookmark = { id: "13", section: "bookmarkSectionFolders" }');
+    assert.deepEqual(clone(drag.context.resolveBookmarkDrop(node('10'), 'bookmarkSectionFolders')), { type: 'into', sourceId: '13', parentId: '10' });
+    assert.equal(drag.context.resolveBookmarkDrop(node('1'), 'bookmarkSectionFolders'), null, 'Dropping on the current folder does nothing');
+    assert.equal(drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFavorites'), null, 'Folder items cannot be dropped into favorites');
+    assert.deepEqual(clone(drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFolders')), { type: 'into', sourceId: '13', parentId: '10' }, 'Outside custom order a bookmark row means its folder');
+    drag.run('draggedBookmark = { id: "10", section: "bookmarkSectionFolders" }');
+    assert.equal(drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFolders'), null, 'A folder cannot move into its own contents');
+    drag.run('draggedBookmark = { id: "13", section: "bookmarkSectionFavorites" }');
+    const favoriteDrop = drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFavorites'); assert.equal(favoriteDrop.type, 'favorite');
+    await drag.context.applyBookmarkDrop(favoriteDrop); assert.deepEqual(clone(drag.run('getFavoriteIds()')), ['13', '11', '12']); assert.equal(drag.count('move'), 0, 'Reordering favorites never moves real bookmarks');
+    drag.id('sortManual').click(); drag.run('draggedBookmark = { id: "11", section: "bookmarkSectionFolders" }');
+    await drag.context.applyBookmarkDrop(drag.context.resolveBookmarkDrop(node('13'), 'bookmarkSectionFolders'));
+    assert.deepEqual(drag.find('1').children.map(child => child.id), ['10', '11', '13'], 'Custom order drop lands in front of the target');
+    await drag.context.moveBookmarkWithinFolder(node('11'), 1); assert.deepEqual(drag.find('1').children.map(child => child.id), ['10', '13', '11']);
+    await drag.context.moveBookmarkWithinFolder(node('11'), -1); await drag.context.moveBookmarkWithinFolder(node('11'), -1); assert.deepEqual(drag.find('1').children.map(child => child.id), ['11', '10', '13']);
+    assert.equal(await drag.context.moveBookmarkWithinFolder(node('11'), -1), false, 'The first item cannot move further up');
+    drag.fail('move'); assert.equal(await drag.context.moveBookmarkWithinFolder(node('10'), 1), false); assert.equal(drag.id('bookmarkShortcutStatus').textContent, drag.context.bookmarkText('bookmarkMoveError'));
+    assert.equal(drag.run('currentSortMethod'), 'manual'); assert.equal(drag.storage.get('bookmarkSortMethod'), 'manual');
+}
+
 (async () => {
     for (const kind of ['chrome', 'firefox']) {
-        await testStates(kind); await testTreeAndNavigation(kind); await testMutations(kind);
-        console.log(`BOOKMARK_MOCK_${kind.toUpperCase()}_OK: permission/denial/errors/races, zh_TW, tree/folders/search, safe anchor targets, local icons, create/update/cancel, delete/undo/failures, duplicate prevention and unrelated-data preservation`);
+        await testStates(kind); await testTreeAndNavigation(kind); await testMutations(kind); await testFoldersOpenAndMoves(kind);
+        console.log(`BOOKMARK_MOCK_${kind.toUpperCase()}_OK: permission/denial/errors/races, zh_TW, tree/folders/search, safe anchor targets, local icons, create/update/cancel, delete/undo/failures, duplicate prevention and unrelated-data preservation, folder create/rename/move/delete/undo, open in tabs/copy, highlight/recent, drop rules and in-folder moves`);
     }
     console.log('BOOKMARK_REAL_API_UNVERIFIED: this suite uses isolated mocks only; it does not install an extension, navigate a real bookmark, access user data, or prove real browser API behavior.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
