@@ -388,7 +388,7 @@ async function testFoldersOpenAndMoves(kind) {
     drag.run('draggedBookmark = { id: "13", section: "bookmarkSectionFolders" }');
     assert.deepEqual(clone(drag.context.resolveBookmarkDrop(node('10'), 'bookmarkSectionFolders')), { type: 'into', sourceId: '13', parentId: '10' });
     assert.equal(drag.context.resolveBookmarkDrop(node('1'), 'bookmarkSectionFolders'), null, 'Dropping on the current folder does nothing');
-    assert.equal(drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFavorites'), null, 'Folder items cannot be dropped into favorites');
+    assert.deepEqual(clone(drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFavorites')), { type: 'favorite-add', sourceId: '13', beforeId: '11' }, 'A folder item dropped on a favorite lands in front of it');
     assert.deepEqual(clone(drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFolders')), { type: 'into', sourceId: '13', parentId: '10' }, 'Outside custom order a bookmark row means its folder');
     drag.run('draggedBookmark = { id: "10", section: "bookmarkSectionFolders" }');
     assert.equal(drag.context.resolveBookmarkDrop(node('11'), 'bookmarkSectionFolders'), null, 'A folder cannot move into its own contents');
@@ -403,6 +403,45 @@ async function testFoldersOpenAndMoves(kind) {
     assert.equal(await drag.context.moveBookmarkWithinFolder(node('11'), -1), false, 'The first item cannot move further up');
     drag.fail('move'); assert.equal(await drag.context.moveBookmarkWithinFolder(node('10'), 1), false); assert.equal(drag.id('bookmarkShortcutStatus').textContent, drag.context.bookmarkText('bookmarkMoveError'));
     assert.equal(drag.run('currentSortMethod'), 'manual'); assert.equal(drag.storage.get('bookmarkSortMethod'), 'manual');
+
+    // Polish B: dragging into favorites adds there, at the drop point or at the end.
+    const favAdd = await harness({ kind, storage: { myntBookmarkFavorites: '["12"]' } }).ready(); const fnode = id => favAdd.run(`bookmarkNodeMap.get("${id}")`);
+    favAdd.run('draggedBookmark = { id: "13", section: "bookmarkSectionFolders" }');
+    assert.deepEqual(clone(favAdd.context.resolveFavoriteAppend()), { type: 'favorite-add', sourceId: '13', beforeId: null });
+    await favAdd.context.applyBookmarkDrop(favAdd.context.resolveFavoriteAppend()); assert.deepEqual(clone(favAdd.run('getFavoriteIds()')), ['12', '13']);
+    favAdd.run('draggedBookmark = { id: "11", section: "bookmarkSectionFolders" }');
+    await favAdd.context.applyBookmarkDrop(favAdd.context.resolveBookmarkDrop(fnode('13'), 'bookmarkSectionFavorites')); assert.deepEqual(clone(favAdd.run('getFavoriteIds()')), ['12', '11', '13']);
+    assert.equal(favAdd.count('move'), 0, 'Adding a favorite never moves the real bookmark');
+    favAdd.run('draggedBookmark = { id: "11", section: "bookmarkSectionFolders" }'); assert.equal(favAdd.context.resolveFavoriteAppend(), null, 'An existing favorite is not appended twice');
+    favAdd.run('draggedBookmark = { id: "12", section: "bookmarkSectionFavorites" }'); assert.equal(favAdd.context.resolveFavoriteAppend(), null);
+
+    // Polish C: duplicates are grouped by normalized URL and shown with their folder.
+    const dupTree = fixtureTree(); dupTree[0].children[1].children.push({ id: '20', parentId: '2', index: 0, title: 'Beta copy', url: 'https://beta.example/', dateAdded: 60 });
+    const dup = await harness({ kind, tree: dupTree }).ready();
+    assert.deepEqual(clone(dup.context.findDuplicateBookmarks().map(group => group.map(item => item.id).sort())), [['12', '20']]);
+    dup.id('bookmarkFindDuplicates').click(); assert.equal(dup.run('bookmarkDuplicateMode'), true);
+    const dupItems = dup.id('bookmarkList').all().filter(item => item.className === 'bookmark-item'); assert.deepEqual(dupItems.map(item => item.dataset.id).sort(), ['12', '20']);
+    assert.notEqual(dupItems[0].draggable, true, 'Rows in the duplicate list are not draggable');
+    assert.ok(dupItems.some(item => item.children[0].children[1].children[1].textContent.endsWith('· 工作')), 'Duplicates name their folder');
+    dup.id('bookmarkSearch').value = 'mail'; dup.id('bookmarkSearch').emit('input'); assert.equal(dup.run('bookmarkDuplicateMode'), false, 'Typing a search leaves the duplicate list');
+    const none = await harness({ kind }).ready(); none.id('bookmarkFindDuplicates').click();
+    assert.equal(none.id('bookmarkList').all().filter(item => item.className === 'bookmark-section-empty').length, 1);
+
+    // Polish D: one "add here" entry; the editor switches between bookmark and folder.
+    const addHere = await harness({ kind }).ready(); const folderButtons = addHere.context.createBookmarkActions(addHere.run('bookmarkNodeMap.get("10")')).children[1].children.map(button => button.className);
+    assert.equal(folderButtons.filter(name => name === 'bookmark-add-here-button').length, 1); assert.equal(folderButtons.includes('bookmark-add-folder-button'), false);
+    addHere.context.openBookmarkEditor(null, { parentId: '10' }); assert.equal(addHere.id('editBookmarkType').hidden, false); assert.equal(addHere.id('editBookmarkURLField').hidden, false);
+    addHere.id('editBookmarkTypeFolder').click(); assert.equal(addHere.id('editBookmarkURLField').hidden, true); assert.equal(addHere.id('editBookmarkTypeFolder').getAttribute('aria-pressed'), 'true');
+    addHere.id('editBookmarkName').value = '新資料夾'; assert.equal(await addHere.context.saveBookmarkEditor(), true); assert.equal(addHere.find('100').children.length, 0); assert.equal(addHere.find('100').parentId, '10');
+    addHere.context.openBookmarkEditor(clone(addHere.find('11'))); assert.equal(addHere.id('editBookmarkType').hidden, true, 'Editing keeps the item kind'); addHere.context.closeBookmarkEditor();
+
+    // Polish E: folder names narrow a search but never list a folder's whole contents alone.
+    const words = await harness({ kind }).ready(); const searchIds = value => { words.id('bookmarkSearch').value = value; words.context.renderBookmarks(); return words.id('bookmarkList').all().filter(item => ['bookmark-item', 'bookmark-folder'].includes(item.className) && item.parentNode?.className === 'bookmark-section-list').map(item => item.dataset.id); };
+    assert.deepEqual(searchIds('工作 beta'), ['12']); assert.deepEqual(searchIds('工作'), ['10']); assert.deepEqual(searchIds('toolbar 工作 alpha'), ['11']); assert.deepEqual(searchIds('beta alpha'), []);
+    words.id('bookmarkSearch').value = '工作 繁體'; words.context.renderBookmarks();
+    const marked = words.id('bookmarkList').all().find(item => item.tagName === 'STRONG'); assert.deepEqual(marked.children.filter(item => item.tagName === 'MARK').map(item => item.textContent), ['繁體']);
+    words.id('bookmarkSearch').value = 'alpha script'; words.context.renderBookmarks();
+    assert.deepEqual(words.id('bookmarkList').all().find(item => item.tagName === 'STRONG').children.filter(item => item.tagName === 'MARK').map(item => item.textContent), ['Alpha', 'script'], 'Each word is marked');
 
     // Review round 1: managed (policy) nodes offer no edits, drops or drags.
     const managedTree = fixtureTree(); managedTree[0].children.push({ id: '3', parentId: '0', title: 'Managed', unmodifiable: 'managed', children: [

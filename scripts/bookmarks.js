@@ -38,6 +38,12 @@ const sortTimeAdded = document.getElementById("sortTimeAdded");
 const sortManual = document.getElementById("sortManual");
 const editBookmarkURLField = document.getElementById("editBookmarkURLField");
 const editBookmarkFolder = document.getElementById("editBookmarkFolder");
+const editBookmarkType = document.getElementById("editBookmarkType");
+const editBookmarkNameLabel = document.getElementById("editBookmarkNameLabel");
+const editBookmarkTypeBookmark = document.getElementById("editBookmarkTypeBookmark");
+const editBookmarkTypeFolder = document.getElementById("editBookmarkTypeFolder");
+const bookmarkFindDuplicates = document.getElementById("bookmarkFindDuplicates");
+const bookmarkDisplayOptions = document.getElementById("bookmarkDisplayOptions");
 
 const BOOKMARK_FAVORITES_KEY = "myntBookmarkFavorites";
 const BOOKMARK_FOLDERS_KEY = "myntBookmarkExpandedFolders";
@@ -45,6 +51,7 @@ const BOOKMARK_UNDO_MS = 7000;
 const BOOKMARK_RECENT_SHOWN = 4;
 const BOOKMARK_RECENT_MAX = 12;
 const BOOKMARK_OPEN_ALL_CONFIRM = 10;
+const BOOKMARK_LONG_PRESS_MS = 450;
 let bookmarksAPI = null;
 let bookmarkApiUsesPromises = false;
 let bookmarkTree = [];
@@ -56,6 +63,8 @@ let currentEditorParentId = null;
 let recentBookmarksExpanded = false;
 let draggedBookmark = null;
 let bookmarkRenderSection = "";
+let bookmarkDuplicateMode = false;
+let bookmarkTouchDrag = null;
 let currentSortMethod = readBookmarkSetting("bookmarkSortMethod") || "title";
 let bookmarkStatusTimer = null;
 let bookmarkSearchTimer = null;
@@ -214,6 +223,9 @@ function renderBookmarkState(kind) {
         error: ["bookmarkStateErrorTitle", "bookmarkStateErrorDescription", "bookmarkRetryAction", refreshBookmarkAvailability]
     };
     const state = states[kind] || states.error;
+    // The rows are hidden behind this state, so no drag over them may finish.
+    cancelBookmarkTouchDrag();
+    draggedBookmark = null;
     if (!["empty", "search-empty"].includes(kind)) bookmarkDataAvailable = false;
     bookmarkState.dataset.state = kind;
     bookmarkStateTitle.textContent = bookmarkText(state[0]);
@@ -229,6 +241,8 @@ function renderBookmarkState(kind) {
 function showBookmarkContent() {
     bookmarkState.hidden = true;
     bookmarkContent.hidden = false;
+    // Hiding and showing the list restores its scroll position without a scroll event.
+    bookmarkList.classList.toggle("is-scrolled", bookmarkList.scrollTop > 0);
     bookmarkSearch.disabled = false;
     bookmarkAddButton.disabled = false;
 }
@@ -316,6 +330,9 @@ function openBookmarkSidebar() {
 
 function closeBookmarkSidebar() {
     if (!bookmarkSidebar.classList.contains("open")) return;
+    // A drag cannot outlive the panel; releasing later must not move anything.
+    cancelBookmarkTouchDrag();
+    draggedBookmark = null;
     bookmarkSidebar.classList.remove("open");
     bookmarkSidebar.setAttribute("aria-hidden", "true");
     bookmarkSidebar.setAttribute("inert", "");
@@ -409,15 +426,85 @@ async function loadBookmarks() {
     }
 }
 
+function bookmarkSearchTokens() {
+    return bookmarkSearch.value.trim().toLocaleLowerCase(bookmarkLocale()).split(/\s+/u).filter(Boolean);
+}
+
+// Names of the folders above node, outermost first, without the invisible tree root.
+function bookmarkFolderPath(node) {
+    const names = [];
+    for (let parent = bookmarkNodeMap.get(String(node.parentId)); parent && parent.parentId != null; parent = bookmarkNodeMap.get(String(parent.parentId))) {
+        names.unshift(parent.title || "");
+    }
+    return names;
+}
+
+// Every word must match the bookmark or a folder above it, and at least one must match the bookmark itself,
+// so "工作 github" finds GitHub inside 工作 while "工作" alone does not list the whole folder.
+function matchesBookmarkSearch(node, tokens) {
+    const own = `${node.title || ""} ${node.url || ""}`.toLocaleLowerCase(bookmarkLocale());
+    const path = bookmarkFolderPath(node).join(" ").toLocaleLowerCase(bookmarkLocale());
+    return tokens.every(token => own.includes(token) || path.includes(token)) && tokens.some(token => own.includes(token));
+}
+
+function findDuplicateBookmarks() {
+    const groups = new Map();
+    for (const node of bookmarkNodeMap.values()) {
+        if (!node.url) continue;
+        const key = bookmarkComparableUrl(node.url) || node.url;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(node);
+    }
+    return [...groups.values()].filter(group => group.length > 1);
+}
+
+function createDuplicateSection() {
+    const groups = findDuplicateBookmarks();
+    const section = createBookmarkSectionShell("bookmarkSectionDuplicates", groups.length);
+    const exit = document.createElement("button");
+    exit.type = "button";
+    exit.className = "bookmark-duplicate-exit";
+    exit.textContent = bookmarkText("bookmarkDuplicatesExit");
+    exit.addEventListener("click", () => {
+        bookmarkDuplicateMode = false;
+        renderBookmarks();
+        bookmarkSearch.focus();
+    });
+    section.children[0].append(exit);
+    if (!groups.length) {
+        const empty = document.createElement("p");
+        empty.className = "bookmark-section-empty";
+        empty.textContent = bookmarkText("bookmarkSectionDuplicatesEmpty");
+        section.append(empty);
+        return section;
+    }
+    bookmarkRenderSection = "bookmarkSectionDuplicates";
+    for (const group of groups) {
+        const list = document.createElement("ul");
+        list.className = "bookmark-section-list bookmark-duplicate-group";
+        list.append(...group.map(createBookmarkItem));
+        section.append(list);
+    }
+    bookmarkRenderSection = "";
+    return section;
+}
+
 function renderBookmarks() {
     if (!bookmarkDataAvailable) return;
-    const query = bookmarkSearch.value.trim().toLocaleLowerCase(bookmarkLocale());
+    // Rebuilding the rows (also after an outside bookmark change) ends any drag; its target may be gone.
+    cancelBookmarkTouchDrag();
+    draggedBookmark = null;
+    const tokens = bookmarkSearchTokens();
+    const query = tokens.join(" ");
     bookmarkSearchClearButton.hidden = !query;
     bookmarkList.replaceChildren();
+    if (bookmarkDuplicateMode && !query) {
+        bookmarkList.append(createDuplicateSection());
+        showBookmarkContent();
+        return;
+    }
     if (query) {
-        const matches = [...bookmarkNodeMap.values()].filter(node =>
-            `${node.title || ""} ${node.url || ""}`.toLocaleLowerCase(bookmarkLocale()).includes(query)
-        );
+        const matches = [...bookmarkNodeMap.values()].filter(node => matchesBookmarkSearch(node, tokens));
         if (!matches.length) {
             renderBookmarkState("search-empty");
             return;
@@ -436,8 +523,10 @@ function renderBookmarks() {
     const recentShown = recentBookmarksExpanded ? recentBookmarks : recentBookmarks.slice(0, BOOKMARK_RECENT_SHOWN);
     const recent = createBookmarkSection("bookmarkSectionRecent", recentShown, "bookmarkSectionRecentEmpty", true, recentBookmarks.length);
     if (recentBookmarks.length > BOOKMARK_RECENT_SHOWN) recent.append(createRecentToggle());
+    const favoriteSection = createBookmarkSection("bookmarkSectionFavorites", favorites, "bookmarkSectionFavoritesEmpty", true);
+    makeFavoritesDropZone(favoriteSection);
     bookmarkList.append(
-        createBookmarkSection("bookmarkSectionFavorites", favorites, "bookmarkSectionFavoritesEmpty", true),
+        favoriteSection,
         recent,
         createBookmarkSection("bookmarkSectionFolders", roots, "bookmarkSectionFoldersEmpty", true)
     );
@@ -460,21 +549,31 @@ function createRecentToggle() {
     return button;
 }
 
-// Wraps the first case-insensitive match in <mark>; text whose lowercase form changes length is left plain.
+// Wraps the first case-insensitive match of each search word in <mark>; text whose lowercase form changes length is left plain.
 function appendHighlightedText(element, text) {
-    const query = bookmarkSearch.value.trim().toLocaleLowerCase(bookmarkLocale());
     const lower = text.toLocaleLowerCase(bookmarkLocale());
-    const start = query ? lower.indexOf(query) : -1;
-    if (start < 0 || lower.length !== text.length) {
+    const ranges = lower.length !== text.length ? [] : bookmarkSearchTokens()
+        .map(token => [lower.indexOf(token), token.length])
+        .filter(([start]) => start >= 0)
+        .map(([start, length]) => [start, start + length])
+        .sort((a, b) => a[0] - b[0]);
+    if (!ranges.length) {
         element.textContent = text;
         return;
     }
-    const mark = document.createElement("mark");
-    mark.textContent = text.slice(start, start + query.length);
-    element.append(document.createTextNode(text.slice(0, start)), mark, document.createTextNode(text.slice(start + query.length)));
+    let cursor = 0;
+    for (const [start, end] of ranges) {
+        if (end <= cursor) continue;
+        const from = Math.max(start, cursor);
+        const mark = document.createElement("mark");
+        mark.textContent = text.slice(from, end);
+        element.append(document.createTextNode(text.slice(cursor, from)), mark);
+        cursor = end;
+    }
+    element.append(document.createTextNode(text.slice(cursor)));
 }
 
-function createBookmarkSection(titleKey, nodes, emptyKey, keepOrder = false, total = nodes.length) {
+function createBookmarkSectionShell(titleKey, total) {
     const section = document.createElement("li");
     section.className = "bookmark-section";
     section.dataset.section = titleKey;
@@ -486,6 +585,11 @@ function createBookmarkSection(titleKey, nodes, emptyKey, keepOrder = false, tot
     count.textContent = bookmarkText("bookmarkSectionCount", { count: String(total) });
     header.append(heading, count);
     section.append(header);
+    return section;
+}
+
+function createBookmarkSection(titleKey, nodes, emptyKey, keepOrder = false, total = nodes.length) {
+    const section = createBookmarkSectionShell(titleKey, total);
     if (!nodes.length) {
         const empty = document.createElement("p");
         empty.className = "bookmark-section-empty";
@@ -615,7 +719,7 @@ function createBookmarkItem(node) {
     appendHighlightedText(title, node.title || safeHostname(node.url));
     const url = document.createElement("small");
     // Search results also name the folder, so same-named bookmarks can be told apart.
-    const parent = bookmarkSearch.value.trim() ? bookmarkNodeMap.get(String(node.parentId)) : null;
+    const parent = bookmarkSearch.value.trim() || bookmarkDuplicateMode ? bookmarkNodeMap.get(String(node.parentId)) : null;
     const folder = parent && !bookmarkTree.some(root => String(root.id) === String(parent.id)) ? parent.title || bookmarkText("bookmarkUntitledFolder") : "";
     url.textContent = folder ? `${safeHostname(node.url)} · ${folder}` : safeHostname(node.url);
     copy.append(title, url);
@@ -652,7 +756,7 @@ function sectionOf(element) {
 
 // "before" means: insert in front of the node now at beforeIndex. Chromium counts that index before the moved
 // node leaves a shared folder; Firefox counts the final position.
-// shortcut: the Firefox branch follows MDN and was not run in Firefox; verify there before relying on it.
+// The Firefox branch matches Bookmarks.sys.mjs update() (same-folder moves store position = index); not run in Firefox.
 function bookmarkMoveIndex(node, parentId, beforeIndex) {
     const sameParent = String(node.parentId) === String(parentId);
     // Not bookmarkApiUsesPromises: Chromium also exposes the promise-based browser namespace.
@@ -702,7 +806,10 @@ function resolveBookmarkDrop(target, targetSection) {
         return targetSection === "bookmarkSectionFavorites" && getFavoriteIds().includes(String(target.id))
             ? { type: "favorite", sourceId: String(source.id), beforeId: String(target.id) } : null;
     }
-    if (targetSection === "bookmarkSectionFavorites") return null;
+    if (targetSection === "bookmarkSectionFavorites") {
+        return getFavoriteIds().includes(String(target.id))
+            ? { type: "favorite-add", sourceId: String(source.id), beforeId: String(target.id) } : null;
+    }
     if (target.unmodifiable) return null;
     if (!target.url) {
         if (isBookmarkInside(target, source.id) || String(source.parentId) === String(target.id)) return null;
@@ -716,11 +823,20 @@ function resolveBookmarkDrop(target, targetSection) {
     return String(source.parentId) === String(parent.id) ? null : { type: "into", sourceId: String(source.id), parentId: String(parent.id) };
 }
 
+// Dropping on the favorites area itself (not on a favorite) adds the bookmark at the end.
+function resolveFavoriteAppend() {
+    const source = draggedBookmark && bookmarkNodeMap.get(draggedBookmark.id);
+    if (!source || draggedBookmark.section === "bookmarkSectionFavorites" || getFavoriteIds().includes(String(source.id))) return null;
+    return { type: "favorite-add", sourceId: String(source.id), beforeId: null };
+}
+
 function applyBookmarkDrop(action) {
-    if (action.type === "favorite") {
+    if (action.type === "favorite" || action.type === "favorite-add") {
         const favorites = getFavoriteIds().filter(id => id !== action.sourceId);
-        favorites.splice(Math.max(0, favorites.indexOf(action.beforeId)), 0, action.sourceId);
+        const before = action.beforeId ? favorites.indexOf(action.beforeId) : -1;
+        favorites.splice(before < 0 ? favorites.length : before, 0, action.sourceId);
         writeStoredArray(BOOKMARK_FAVORITES_KEY, favorites);
+        if (action.type === "favorite-add") setBookmarkStatus("bookmarkFavoriteAdded");
         renderBookmarks();
         return Promise.resolve(true);
     }
@@ -733,20 +849,122 @@ function clearBookmarkDropMarkers() {
     bookmarkList.querySelectorAll?.(".drop-into, .drop-before").forEach(element => element.classList.remove("drop-into", "drop-before"));
 }
 
-// Pointer-only shortcut; every move here also exists in the action menu (folder picker, move up/down).
+function markBookmarkDropTarget(element, action) {
+    clearBookmarkDropMarkers();
+    element.classList.add(action.type === "into" || (action.type === "favorite-add" && !action.beforeId) ? "drop-into" : "drop-before");
+}
+
+// Inside a favorited folder only the folder itself is a favorite; its contents drag as normal bookmarks.
+function bookmarkDragSection(element, node) {
+    const section = sectionOf(element);
+    const isFavorite = section === "bookmarkSectionFavorites" && getFavoriteIds().includes(String(node.id));
+    return isFavorite || section !== "bookmarkSectionFavorites" ? section : "";
+}
+
+function makeFavoritesDropZone(section) {
+    section.addEventListener("dragover", event => {
+        const action = resolveFavoriteAppend();
+        if (!action) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        markBookmarkDropTarget(section, action);
+    });
+    section.addEventListener("dragleave", event => {
+        if (!section.contains(event.relatedTarget)) section.classList.remove("drop-into");
+    });
+    section.addEventListener("drop", event => {
+        const action = resolveFavoriteAppend();
+        clearBookmarkDropMarkers();
+        if (!action) return;
+        event.preventDefault();
+        draggedBookmark = null;
+        applyBookmarkDrop(action);
+    });
+}
+
+// Touch has no HTML5 drag: a long press picks the row up and the finger carries it.
+function startBookmarkTouchDrag(event, element, node) {
+    // Holding the ⋯ button or a menu item is a press on that control, not on the row.
+    if (event.touches.length !== 1 || bookmarkMutationPending || event.target.closest?.(".bookmark-action-menu")) return;
+    cancelBookmarkTouchDrag();
+    const touch = event.touches[0];
+    const state = { element, node, x: touch.clientX, y: touch.clientY, active: false, drop: null };
+    state.timer = setTimeout(() => {
+        if (bookmarkTouchDrag !== state) return;
+        state.active = true;
+        draggedBookmark = { id: String(node.id), section: bookmarkDragSection(element, node) };
+        element.classList.add("dragging");
+        globalThis.navigator?.vibrate?.(10);
+    }, BOOKMARK_LONG_PRESS_MS);
+    bookmarkTouchDrag = state;
+}
+
+function cancelBookmarkTouchDrag() {
+    const state = bookmarkTouchDrag;
+    if (!state) return;
+    bookmarkTouchDrag = null;
+    clearTimeout(state.timer);
+    state.element.classList.remove("dragging");
+    if (state.active) draggedBookmark = null;
+    clearBookmarkDropMarkers();
+}
+
+function bookmarkDropTargetAt(x, y) {
+    const hit = document.elementFromPoint(x, y);
+    if (!hit || !bookmarkList.contains(hit)) return null;
+    const section = sectionOf(hit);
+    const row = hit.closest(".bookmark-item, .bookmark-folder-row");
+    const node = row && bookmarkNodeMap.get(String(row.dataset.id || row.parentElement?.dataset.id));
+    const action = node && resolveBookmarkDrop(node, section);
+    if (action) return { element: row, action };
+    const favorites = hit.closest('[data-section="bookmarkSectionFavorites"]');
+    const append = favorites && resolveFavoriteAppend();
+    return append ? { element: favorites, action: append } : null;
+}
+
+function moveBookmarkTouchDrag(event) {
+    const state = bookmarkTouchDrag;
+    if (!state) return;
+    const touch = event.touches[0];
+    if (!state.active) {
+        // Moving before the long press completes is a scroll or swipe; let the browser have it.
+        if (Math.hypot(touch.clientX - state.x, touch.clientY - state.y) > 8) cancelBookmarkTouchDrag();
+        return;
+    }
+    event.preventDefault();
+    const list = bookmarkList.getBoundingClientRect();
+    if (touch.clientY < list.top + 40) bookmarkList.scrollTop -= 12;
+    else if (touch.clientY > list.bottom - 40) bookmarkList.scrollTop += 12;
+    const target = bookmarkDropTargetAt(touch.clientX, touch.clientY);
+    state.drop = target?.action || null;
+    if (target) markBookmarkDropTarget(target.element, target.action);
+    else clearBookmarkDropMarkers();
+}
+
+function endBookmarkTouchDrag(event) {
+    const state = bookmarkTouchDrag;
+    if (!state) return;
+    const drop = state.active ? state.drop : null;
+    const wasActive = state.active;
+    cancelBookmarkTouchDrag();
+    if (!wasActive) return;
+    // A finished drag is not a tap: keep the lifted link from opening.
+    event.preventDefault();
+    if (drop) applyBookmarkDrop(drop);
+}
+
+// Pointer and touch shortcut; every move here also exists in the action menu (folder picker, move up/down).
 function makeBookmarkDraggable(element, node) {
-    if (!bookmarkSearch.value.trim() && !node.unmodifiable && !(!node.url && isFixedBookmarkFolder(node))) {
+    if (!bookmarkSearch.value.trim() && !bookmarkDuplicateMode && !node.unmodifiable && !(!node.url && isFixedBookmarkFolder(node))) {
         element.draggable = true;
+        element.addEventListener("touchstart", event => startBookmarkTouchDrag(event, element, node), { passive: true });
         element.addEventListener("dragstart", event => {
             if (bookmarkMutationPending) {
                 event.preventDefault();
                 return;
             }
             event.stopPropagation();
-            // Inside a favorited folder only the folder itself is a favorite; its contents drag as normal bookmarks.
-            const section = sectionOf(element);
-            const isFavorite = section === "bookmarkSectionFavorites" && getFavoriteIds().includes(String(node.id));
-            draggedBookmark = { id: String(node.id), section: isFavorite || section !== "bookmarkSectionFavorites" ? section : "" };
+            draggedBookmark = { id: String(node.id), section: bookmarkDragSection(element, node) };
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.setData("text/plain", node.url || node.title || "");
             element.classList.add("dragging");
@@ -763,8 +981,7 @@ function makeBookmarkDraggable(element, node) {
         event.preventDefault();
         event.stopPropagation();
         event.dataTransfer.dropEffect = "move";
-        element.classList.toggle("drop-into", action.type === "into");
-        element.classList.toggle("drop-before", action.type !== "into");
+        markBookmarkDropTarget(element, action);
     });
     element.addEventListener("dragleave", event => {
         if (!element.contains(event.relatedTarget)) element.classList.remove("drop-into", "drop-before");
@@ -877,10 +1094,8 @@ function createBookmarkActions(node) {
         menu.append(createActionButton(bookmarkText("bookmarkOpenAll"), "bookmark-open-button", () => openBookmarksInTabs(collectBookmarkLinks(node))));
         // Managed (policy) folders cannot take new children.
         if (!node.unmodifiable) {
-            menu.append(
-                createActionButton(bookmarkText("bookmarkAddHere"), "bookmark-add-here-button", () => openBookmarkEditor(null, { parentId: node.id })),
-                createActionButton(bookmarkText("bookmarkAddSubfolder"), "bookmark-add-folder-button", () => openBookmarkEditor(null, { folder: true, parentId: node.id }))
-            );
+            // One entry; the editor's bookmark/folder switch picks what to add.
+            menu.append(createActionButton(bookmarkText("bookmarkAddHere"), "bookmark-add-here-button", () => openBookmarkEditor(null, { parentId: node.id })));
         }
         if (!fixed) {
             menu.append(
@@ -963,17 +1178,27 @@ function bookmarkFolderOptions(excludeId = null) {
     return options;
 }
 
+// The bookmark/folder switch only exists while adding; an edited item keeps its kind.
+function setBookmarkEditorType(isFolder) {
+    currentEditorIsFolder = isFolder;
+    const editing = Boolean(currentBookmarkId);
+    editBookmarkHeading.textContent = bookmarkText(isFolder ? (editing ? "editFolderHeading" : "addFolderHeading") : (editing ? "editBookmarkHeading" : "addBookmarkHeading"));
+    editBookmarkURLField.hidden = isFolder;
+    editBookmarkFavicon.hidden = isFolder;
+    editBookmarkNameLabel.textContent = bookmarkText(isFolder ? "bookmarkFolderNameLabel" : "editBookmarkName");
+    editBookmarkTypeBookmark.setAttribute("aria-pressed", String(!isFolder));
+    editBookmarkTypeFolder.setAttribute("aria-pressed", String(isFolder));
+    bookmarkEditorError.textContent = "";
+}
+
 function openBookmarkEditor(node = null, { folder = false, parentId = null } = {}) {
     if (!bookmarkDataAvailable || bookmarkMutationPending || editBookmarkModal.open) return;
     currentBookmarkId = node?.id ? String(node.id) : null;
-    currentEditorIsFolder = Boolean(folder || (node && !node.url));
     currentEditorParentId = node?.parentId != null ? String(node.parentId) : null;
-    const headingKey = currentEditorIsFolder ? (node ? "editFolderHeading" : "addFolderHeading") : (node ? "editBookmarkHeading" : "addBookmarkHeading");
-    editBookmarkHeading.textContent = bookmarkText(headingKey);
+    setBookmarkEditorType(Boolean(folder || (node && !node.url)));
+    editBookmarkType.hidden = Boolean(node);
     editBookmarkName.value = node?.title || "";
     editBookmarkURL.value = node?.url || "";
-    editBookmarkURLField.hidden = currentEditorIsFolder;
-    editBookmarkFavicon.hidden = currentEditorIsFolder;
     const options = bookmarkFolderOptions(currentEditorIsFolder ? currentBookmarkId : null);
     editBookmarkFolder.replaceChildren(...options.map(option => {
         const element = document.createElement("option");
@@ -1006,6 +1231,8 @@ function setBookmarkEditorSaving(saving) {
     editBookmarkName.disabled = saving;
     editBookmarkURL.disabled = saving;
     editBookmarkFolder.disabled = saving;
+    editBookmarkTypeBookmark.disabled = saving;
+    editBookmarkTypeFolder.disabled = saving;
     editBookmarkModal.setAttribute("aria-busy", String(saving));
 }
 
@@ -1275,7 +1502,25 @@ bookmarkCloseButton.addEventListener("click", closeBookmarkSidebar);
 bookmarkAddButton.addEventListener("click", () => openBookmarkEditor());
 bookmarkUndoButton.addEventListener("click", undoBookmarkDelete);
 bookmarkSearchClearButton.addEventListener("click", clearBookmarkSearch);
+bookmarkList.addEventListener("scroll", () => bookmarkList.classList.toggle("is-scrolled", bookmarkList.scrollTop > 0), { passive: true });
+document.addEventListener("touchmove", moveBookmarkTouchDrag, { passive: false });
+document.addEventListener("touchend", endBookmarkTouchDrag);
+document.addEventListener("touchcancel", cancelBookmarkTouchDrag);
+// A held row must not also open the browser's link menu.
+document.addEventListener("contextmenu", event => {
+    if (bookmarkTouchDrag?.active) event.preventDefault();
+});
+editBookmarkTypeBookmark.addEventListener("click", () => setBookmarkEditorType(false));
+editBookmarkTypeFolder.addEventListener("click", () => setBookmarkEditorType(true));
+bookmarkFindDuplicates.addEventListener("click", () => {
+    bookmarkDuplicateMode = true;
+    bookmarkSearch.value = "";
+    bookmarkDisplayOptions.open = false;
+    renderBookmarks();
+    bookmarkList.querySelector?.(".bookmark-duplicate-exit")?.focus();
+});
 bookmarkSearch.addEventListener("input", () => {
+    bookmarkDuplicateMode = false;
     clearTimeout(bookmarkSearchTimer);
     bookmarkSearchClearButton.hidden = !bookmarkSearch.value;
     bookmarkSearchTimer = setTimeout(renderBookmarks, 120);
