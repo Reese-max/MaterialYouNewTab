@@ -56,7 +56,7 @@
     const details = el('div', 'event-countdown-details'); details.append(el('strong','',event.name),el('span','event-countdown-meta',`${t(event.category)} · ${event.annual ? t('nextDate',{date:core.dayInfo(event,new Date()).date}) : event.date}`));
     const days = el('strong','event-countdown-days'), info = core.dayInfo(event, new Date());
     if (info.days === 0) days.textContent = dayLabel(event);
-    else { const [before, after = ''] = t(info.days > 0 ? 'future' : 'past', {n:'\u0000'}).split('\u0000'); days.append(el('span','event-countdown-unit',before), el('span','event-countdown-num',String(Math.abs(info.days))), el('span','event-countdown-unit',after)); }
+    else { const parts = t(info.days > 0 ? 'future' : 'past', {n:'\u0000'}).split('\u0000'), [before, after] = parts; if (parts.length !== 2) days.textContent = dayLabel(event); else days.append(el('span','event-countdown-unit',before), el('span','event-countdown-num',String(Math.abs(info.days))), el('span','event-countdown-unit',after)); }
     row.append(icon, details, days);
     if (actions) { const controls = el('div','event-countdown-actions'); const edit = button(t('edit'), () => startEdit(event), ''); edit.setAttribute('aria-label',`${t('edit')} ${event.name}`); const remove = button(t('remove'), () => askDelete(event), ''); remove.setAttribute('aria-label',`${t('remove')} ${event.name}`); edit.disabled = remove.disabled = blocked || !!draft; controls.append(edit,remove); row.append(controls); }
     return row;

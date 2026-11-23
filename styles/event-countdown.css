@@ -119,12 +119,13 @@ html.myntReducedMotion .event-countdown-card button, html.myntReducedMotion .eve
 .event-countdown-row[data-color=green] { --ec: #80ae93; }
 .event-countdown-row[data-color=peach] { --ec: #d9a17f; }
 .event-countdown-row[data-color=rose] { --ec: #ca8da2; }
-.event-countdown-row .event-countdown-icon { width: 36px; height: 36px; border-radius: 50%; background: color-mix(in srgb, var(--ec) 26%, transparent); font-size: 1.125rem; }
+.event-countdown-row .event-countdown-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--ec); background: color-mix(in srgb, var(--ec) 26%, transparent); font-size: 1.125rem; }
+.event-countdown-dialog .event-countdown-row { grid-template-columns: 36px minmax(0,1fr) auto; }
 .event-countdown-card .event-countdown-items { gap: 0; margin-top: 8px; }
-.event-countdown-card .event-countdown-row { grid-template-columns: 36px minmax(0,1fr) auto; align-items: center; column-gap: 12px; padding: 12px 0; border-radius: 0; background: transparent; }
+.event-countdown-card .event-countdown-row { grid-template-columns: 36px minmax(0,1fr) fit-content(45%); align-items: center; column-gap: 12px; padding: 12px 0; border-radius: 0; background: transparent; }
 .event-countdown-card .event-countdown-row + .event-countdown-row { border-top: 1px solid #8882; }
 .event-countdown-card .event-countdown-icon { align-self: center; }
-.event-countdown-card .event-countdown-days { grid-column: 3; text-align: end; white-space: nowrap; font-size: .8125rem; font-weight: 600; }
+.event-countdown-card .event-countdown-days { grid-column: 3; text-align: end; white-space: normal; overflow-wrap: anywhere; font-size: .8125rem; font-weight: 600; }
 .event-countdown-card .event-countdown-num { font-size: 1.75rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; margin-inline: 2px; }
 .event-countdown-card .event-countdown-unit { font-weight: 500; opacity: .8; }
 .event-countdown-card .event-countdown-row[data-state=today] .event-countdown-days { font-size: 1.125rem; font-weight: 700; text-decoration: none; }
@@ -132,6 +133,7 @@ html.myntReducedMotion .event-countdown-card button, html.myntReducedMotion .eve
   .event-countdown-card .event-countdown-row { grid-template-columns: 36px minmax(0,1fr); row-gap: 2px; }
   .event-countdown-card .event-countdown-icon { align-self: start; }
   .event-countdown-card .event-countdown-days { grid-column: 2; text-align: start; }
+  .event-countdown-dialog .event-countdown-row { grid-template-columns: 36px minmax(0,1fr); }
 }
 .event-countdown-card .event-countdown-row[data-state=past] .event-countdown-num { font-weight: 600; opacity: .7; }
 html.myntHighContrast .event-countdown-card .event-countdown-row { border: 0; }
@@ -139,3 +141,9 @@ html.myntHighContrast .event-countdown-card .event-countdown-row + .event-countd
 html.myntHighContrast .event-countdown-row .event-countdown-icon { background: transparent; border: 1px solid CanvasText; }
 html.myntHighContrast .event-countdown-card .event-countdown-unit, html.myntHighContrast .event-countdown-card .event-countdown-row[data-state=past] .event-countdown-num { opacity: 1; }
 html.myntHighContrast .event-countdown-card .event-countdown-row[data-state=today] .event-countdown-days { text-decoration: underline; }
+@media (forced-colors: active) {
+  .event-countdown-card .event-countdown-row { border: 0; }
+  .event-countdown-card .event-countdown-row + .event-countdown-row { border-top: 1px solid CanvasText; }
+  .event-countdown-row .event-countdown-icon { border: 1px solid CanvasText; }
+  .event-countdown-card .event-countdown-unit, .event-countdown-card .event-countdown-row[data-state=past] .event-countdown-num { opacity: 1; }
+}
