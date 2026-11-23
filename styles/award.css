@@ -627,8 +627,8 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 		& #menuCont #colorsContainer {
 			--award-swatch-gap: var(--award-filter-elevated);
 		}
-		/* 黑色色票原有抵銷反相，邊線與間隔環須直接指定深色顯示值。 */
-		& #menuCont #colorsContainer #darkTheme {
+		/* 色票（含黑色）都抵銷反相顯示原色，邊線與間隔環須直接指定深色顯示值。 */
+		& #menuCont #colorsContainer input.colorPlate {
 			--award-swatch-edge: #8b98a9;
 			--award-swatch-gap: #1b2533;
 			--award-swatch-ring: color-mix(in srgb, var(--darkColor-blue, #4382ec) 60%, #ffffff);
@@ -4447,8 +4447,9 @@ html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-a
 }
 
 #menuCont .switch input:checked + .toggle {
-	background-color: var(--darkColor-blue);
-	border-color: var(--darkerColor-blue);
+	/* Same deepened accent as selected rows: the white knob stays clear on yellow, lime and peach (darkColor gave ~2.2:1). */
+	background-color: var(--menu-selected);
+	border-color: var(--menu-selected);
 }
 
 #menuCont .switch input:checked + .toggle::before {
@@ -4545,6 +4546,13 @@ html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-a
 	opacity: 1;
 	line-height: 1.4;
 	margin-top: 2px;
+}
+
+/* Section and row helper text in the newer panels uses the same size and grey as row descriptions, not a faded 0.78rem. */
+#menuCont :is(.controlSectionHeading p, .controlSettingRow small, .permissionRow small) {
+	font-size: 0.8125rem;
+	color: var(--menu-row-muted);
+	opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {

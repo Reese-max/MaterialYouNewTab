@@ -444,7 +444,8 @@ html:has(
 	filter: invert(1) hue-rotate(180deg);
 	-webkit-filter: invert(1) hue-rotate(180deg);
 
-	& #darkTheme,
+	/* Theme swatches show their real colour under the inverted panel, not the inverted one. */
+	& #colorsContainer input.colorPlate,
 	& .favicon,
 	& #wIcon,
 	&:not(:has(#adaptiveIconToggle:checked))
@@ -486,7 +487,8 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	filter: invert(1) hue-rotate(180deg);
 	-webkit-filter: invert(1) hue-rotate(180deg);
 
-	& #darkTheme,
+	/* Theme swatches show their real colour under the inverted panel, not the inverted one. */
+	& #colorsContainer input.colorPlate,
 	& .favicon,
 	& #wIcon,
 	&:not(:has(#adaptiveIconToggle:checked))
@@ -4692,7 +4694,8 @@ input:checked + .toggle:before {
 	align-items: center;
 	justify-content: center;
 	height: fit-content;
-	min-width: 240px;
+	/* Shrink with the row instead of forcing 240px, which overflowed the card below 360px wide. */
+	min-width: 0;
 	width: 100%;
 	border: 2px solid transparent;
 	/* adding transparent border on focus it will be turned to theme color*/
@@ -4700,11 +4703,11 @@ input:checked + .toggle:before {
 	padding: 12px;
 	color: var(--textColorDark-blue);
 	border-radius: 26px;
-	appearance: none;
-	-moz-appearance: none;
+	/* Native arrow and inherited size, like the export-scope select below, so it reads as a dropdown. */
+	appearance: auto;
 	cursor: pointer;
 	padding-inline-start: 20px;
-	font-size: 0.82rem;
+	font-size: inherit;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 	@-moz-document url-prefix() {
 		/* Scrollbar styles for Firefox */
@@ -4952,6 +4955,23 @@ option:checked {
 	background-size: 74%;
 }
 
+/* Narrow screens: the 240px swatch grid plus the 50px palette icon overflowed the card (218px inside at 320px).
+   Stack the decorative icon above and let the grid choose how many 36px columns fit. */
+@media (max-width: 420px) {
+	.themingStuff {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.colorsContainer {
+		width: 100%;
+		box-sizing: border-box;
+		grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+		justify-items: center;
+	}
+}
+
 .themingStuff .btn {
 	background-color: var(--whitishColor-blue);
 	height: 50px;
@@ -5130,19 +5150,21 @@ option:checked {
 	cursor: pointer;
 	border: none;
 	background-color: var(--bg-color-blue);
-	color: var(--darkerColor-blue);
+	/* Dark theme text keeps 7.4:1 or better on every colour theme's background; --darkerColor fell to 2.5:1 on yellow. */
+	color: var(--textColorDark-blue);
 	border-radius: 20px;
 	transition: background-color 0.3s ease;
 }
 
 .backupRestoreBtn:hover {
-	background-color: var(--darkColor-blue);
-	color: #fffffff5;
+	/* White on the accent ink stays at 5.2:1 or better; --darkColor under white dropped to 2.2:1 on bright themes. */
+	background-color: var(--mynt-accent-ink);
+	color: #ffffff;
 }
 
 .backupRestoreBtn:active {
-	background-color: var(--darkerColor-blue);
-	color: #fffffff5;
+	background-color: var(--mynt-accent-ink);
+	color: #ffffff;
 }
 
 /* <!-- ----Color Picker || ColorPicker---- --> */
