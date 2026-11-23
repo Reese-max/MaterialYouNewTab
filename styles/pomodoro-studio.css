@@ -203,3 +203,5 @@ html.myntHighContrast #pomodoroPanel :is(#myntPomoTask, #myntPomoFloatMount > bu
 #pomodoroPanel #myntPomoExtras .pomoStudioScenarios > input { margin-top: 8px; }
 #pomodoroPanel #myntPomoMusicMount .mynt-music-preferences > label:not(:first-child):not(.mynt-music-shuffle) { margin-top: 16px; }
 #pomodoroPanel #myntPomoMusicMount .mynt-pomo-music input[type=checkbox]:not(:checked) { border-color: color-mix(in srgb, var(--pomo-fg, #fff) 55%, transparent); }
+/* Playing ambient sound keeps the accent fill: the glass rule in centered-home.css would otherwise leave the white icon on 62% white. */
+html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras #pomodoroAmbientToggleBtn.active:not(:disabled), html.mynt-removed-features:not(.myntHighContrast) body #pomodoroPanel #myntPomoExtras #pomodoroAmbientToggleBtn.active:not(:disabled):hover { background: var(--pomo-accent, #234c78) !important; border-color: var(--pomo-accent, #234c78) !important; color: var(--pomo-on-accent, #ffffff) !important; }
