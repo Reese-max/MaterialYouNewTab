@@ -144,8 +144,13 @@ function status(env) { return env.descendants(env.ids.get('eventCountdownDialog'
     const names=node=>rows(node).map(row=>many.descendants(row).find(n=>n.tagName==='strong').textContent);
     const card=many.ids.get('eventCountdownCard'); assert.equal(rows(card).length,3,'homepage card caps thirty events at three rows'); assert.deepEqual(names(card),[longName,'Future','Past'],'today then future then most recent past');
     assert.deepEqual(rows(card).map(row=>row.dataset.state),['today','future','past'],'visual state follows calendar result without changing sorting');
+    const dayNodes=rows(card).map(row=>many.descendants(row).find(n=>n.className==='event-countdown-days'));
+    assert.equal(dayNodes[0].children.length,0,'today keeps its plain label'); assert.ok(dayNodes[0].textContent);
+    assert.deepEqual(dayNodes.slice(1).map(d=>d.children.find(n=>n.className==='event-countdown-num').textContent),['1','1'],'future and past counts render as a separate number');
+    assert.ok(dayNodes.slice(1).every(d=>d.children.map(n=>n.textContent).join('').includes('1')),'number stays inside the localized sentence');
+    assert.equal(many.descendants(card).some(n=>n.className==='event-countdown-zone'),false,'timezone is not repeated on the homepage card');
     const oldOpen=card.querySelector('button'); oldOpen.focus(); oldOpen.click();
-    const manager=many.ids.get('eventCountdownDialog'); assert.equal(rows(manager).length,30); assert.equal(names(manager)[0],longName,'manager retains full eighty-codepoint name');
+    const manager=many.ids.get('eventCountdownDialog'); assert.equal(rows(manager).length,30); assert.ok(many.descendants(manager).some(n=>n.className==='event-countdown-help'&&n.textContent.includes(Intl.DateTimeFormat().resolvedOptions().timeZone)),'manager shows the timezone'); assert.equal(names(manager)[0],longName,'manager retains full eighty-codepoint name');
     assert.equal(oldOpen.isConnected,false,'card refresh replaces original opener'); manager.close(); assert.equal(many.document.activeElement,card.querySelector('button'),'close restores focus to replacement card opener');
     card.querySelector('button').focus(); card.querySelector('button').click(); const hide=many.ids.get('eventCountdownEnabled'); hide.checked=false; hide.fire('change'); manager.close(); assert.equal(many.document.activeElement,many.ids.get('eventCountdownManage'),'hidden card falls back to settings manager button');
     const css=fs.readFileSync(path.join(root,'styles/event-countdown.css'),'utf8');

@@ -112,3 +112,30 @@ html.myntHighContrast .event-countdown-meta, html.myntHighContrast .event-countd
  .event-countdown-dialog .event-countdown-row { row-gap:2px; }
 }
 html.myntReducedMotion .event-countdown-card button, html.myntReducedMotion .event-countdown-dialog button { transition:none; }
+
+/* Card polish: the day count leads, colour moves from a side stripe to the icon chip, rows sit directly on the card. */
+.event-countdown-row { --ec: #9a83bd; border-inline-start: 0; }
+.event-countdown-row[data-color=blue] { --ec: #7da5d1; }
+.event-countdown-row[data-color=green] { --ec: #80ae93; }
+.event-countdown-row[data-color=peach] { --ec: #d9a17f; }
+.event-countdown-row[data-color=rose] { --ec: #ca8da2; }
+.event-countdown-row .event-countdown-icon { width: 36px; height: 36px; border-radius: 50%; background: color-mix(in srgb, var(--ec) 26%, transparent); font-size: 1.125rem; }
+.event-countdown-card .event-countdown-items { gap: 0; margin-top: 8px; }
+.event-countdown-card .event-countdown-row { grid-template-columns: 36px minmax(0,1fr) auto; align-items: center; column-gap: 12px; padding: 12px 0; border-radius: 0; background: transparent; }
+.event-countdown-card .event-countdown-row + .event-countdown-row { border-top: 1px solid #8882; }
+.event-countdown-card .event-countdown-icon { align-self: center; }
+.event-countdown-card .event-countdown-days { grid-column: 3; text-align: end; white-space: nowrap; font-size: .8125rem; font-weight: 600; }
+.event-countdown-card .event-countdown-num { font-size: 1.75rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; margin-inline: 2px; }
+.event-countdown-card .event-countdown-unit { font-weight: 500; opacity: .8; }
+.event-countdown-card .event-countdown-row[data-state=today] .event-countdown-days { font-size: 1.125rem; font-weight: 700; text-decoration: none; }
+@media (max-width: 440px) {
+  .event-countdown-card .event-countdown-row { grid-template-columns: 36px minmax(0,1fr); row-gap: 2px; }
+  .event-countdown-card .event-countdown-icon { align-self: start; }
+  .event-countdown-card .event-countdown-days { grid-column: 2; text-align: start; }
+}
+.event-countdown-card .event-countdown-row[data-state=past] .event-countdown-num { font-weight: 600; opacity: .7; }
+html.myntHighContrast .event-countdown-card .event-countdown-row { border: 0; }
+html.myntHighContrast .event-countdown-card .event-countdown-row + .event-countdown-row { border-top: 1px solid CanvasText; }
+html.myntHighContrast .event-countdown-row .event-countdown-icon { background: transparent; border: 1px solid CanvasText; }
+html.myntHighContrast .event-countdown-card .event-countdown-unit, html.myntHighContrast .event-countdown-card .event-countdown-row[data-state=past] .event-countdown-num { opacity: 1; }
+html.myntHighContrast .event-countdown-card .event-countdown-row[data-state=today] .event-countdown-days { text-decoration: underline; }
