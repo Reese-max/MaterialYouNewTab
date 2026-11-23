@@ -600,6 +600,13 @@ const en = {
     "themeColorBrown": "Brown",
     "themeColorSilver": "Silver",
     "themeColorPeach": "Peach",
+    "themeColorIndigo": "Indigo",
+    "themeColorTeal": "Teal",
+    "themeColorLime": "Lime",
+    "themeColorAmber": "Amber",
+    "themeColorWine": "Wine",
+    "themeColorMagenta": "Magenta",
+    "themeColorSlate": "Slate",
     "themeColorDark": "Dark",
     "resetShortcutsLabel": "Reset shortcuts",
 

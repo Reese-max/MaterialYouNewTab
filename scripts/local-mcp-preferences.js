@@ -4,7 +4,7 @@
 const bool={type:'boolean'},str=n=>({type:'string',maxLength:n}),en=values=>({type:'string',enum:values});
 const obj=(properties,required=[])=>({type:'object',properties,required,additionalProperties:false});
 const IDS=['chatGPT','claude','youtube'];
-const PALETTES=['red','yellow','green','cyan','blue','pink','purple','orange','brown','silver','peach','dark'];
+const PALETTES=['red','yellow','green','cyan','blue','pink','purple','orange','brown','silver','peach','indigo','teal','lime','amber','wine','magenta','slate','dark'];
 const LOCALES=['en','pt','ne','es','hi','hu','zh','zh_TW','cs','it','tr','bn','vi','ru','uz','ja','ko','idn','mr','fr','az','sl','ur','de','fa','ar_SA','el','ta','th','pl','uk','sv'];
 const definitions=[
  ['mynt_clock_get','Read clock mode, 12-hour format and visibility.','clock'],
