@@ -241,7 +241,7 @@
     background: var(--whitishColor-blue);
     box-shadow: 0 4px 16px rgb(0 0 0 / .16);
 }
-#bookmarkSidebar .bookmark-action-popover :is(.bookmark-open-button, .bookmark-copy-button, .bookmark-favorite-button, .bookmark-move-button, .bookmark-add-here-button, .bookmark-add-folder-button, .bookmark-shortcut-button, .bookmark-edit-button, .bookmark-delete-button) {
+#bookmarkSidebar .bookmark-action-popover :is(.bookmark-open-button, .bookmark-copy-button, .bookmark-favorite-button, .bookmark-move-button, .bookmark-add-here-button, .bookmark-add-folder-button, .bookmark-shortcut-button, .bookmark-edit-button, .bookmark-locked-button, .bookmark-delete-button) {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -266,6 +266,8 @@
     color: var(--bookmark-danger);
 }
 #bookmarkSidebar button:disabled { opacity: .45; cursor: default; }
+/* An explanation, not a dead control: keep it readable. */
+#bookmarkSidebar .bookmark-action-popover .bookmark-locked-button:disabled { opacity: .75; }
 
 #bookmarkSidebar .bookmark-display-options { flex-shrink: 0; padding-block: 0 8px; padding-inline: 24px 16px; }
 #bookmarkSidebar .bookmark-display-options > summary {
