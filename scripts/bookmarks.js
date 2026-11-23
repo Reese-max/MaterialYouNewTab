@@ -223,6 +223,9 @@ function renderBookmarkState(kind) {
         error: ["bookmarkStateErrorTitle", "bookmarkStateErrorDescription", "bookmarkRetryAction", refreshBookmarkAvailability]
     };
     const state = states[kind] || states.error;
+    // The rows are hidden behind this state, so no drag over them may finish.
+    cancelBookmarkTouchDrag();
+    draggedBookmark = null;
     if (!["empty", "search-empty"].includes(kind)) bookmarkDataAvailable = false;
     bookmarkState.dataset.state = kind;
     bookmarkStateTitle.textContent = bookmarkText(state[0]);
@@ -238,6 +241,8 @@ function renderBookmarkState(kind) {
 function showBookmarkContent() {
     bookmarkState.hidden = true;
     bookmarkContent.hidden = false;
+    // Hiding and showing the list restores its scroll position without a scroll event.
+    bookmarkList.classList.toggle("is-scrolled", bookmarkList.scrollTop > 0);
     bookmarkSearch.disabled = false;
     bookmarkAddButton.disabled = false;
 }
