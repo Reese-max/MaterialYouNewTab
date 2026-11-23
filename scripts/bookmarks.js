@@ -694,12 +694,13 @@ function resolveBookmarkDrop(target, targetSection) {
             ? { type: "favorite", sourceId: String(source.id), beforeId: String(target.id) } : null;
     }
     if (targetSection === "bookmarkSectionFavorites") return null;
+    if (target.unmodifiable) return null;
     if (!target.url) {
         if (isBookmarkInside(target, source.id) || String(source.parentId) === String(target.id)) return null;
         return { type: "into", sourceId: String(source.id), parentId: String(target.id) };
     }
     const parent = bookmarkNodeMap.get(String(target.parentId));
-    if (!parent || isBookmarkInside(parent, source.id)) return null;
+    if (!parent || parent.unmodifiable || isBookmarkInside(parent, source.id)) return null;
     if (currentSortMethod === "manual" && targetSection === "bookmarkSectionFolders") {
         return { type: "before", sourceId: String(source.id), parentId: String(parent.id), index: bookmarkMoveIndex(source, parent.id, target.index) };
     }
@@ -725,7 +726,7 @@ function clearBookmarkDropMarkers() {
 
 // Pointer-only shortcut; every move here also exists in the action menu (folder picker, move up/down).
 function makeBookmarkDraggable(element, node) {
-    if (!bookmarkSearch.value.trim() && !(!node.url && isFixedBookmarkFolder(node))) {
+    if (!bookmarkSearch.value.trim() && !node.unmodifiable && !(!node.url && isFixedBookmarkFolder(node))) {
         element.draggable = true;
         element.addEventListener("dragstart", event => {
             if (bookmarkMutationPending) {
@@ -733,7 +734,10 @@ function makeBookmarkDraggable(element, node) {
                 return;
             }
             event.stopPropagation();
-            draggedBookmark = { id: String(node.id), section: sectionOf(element) };
+            // Inside a favorited folder only the folder itself is a favorite; its contents drag as normal bookmarks.
+            const section = sectionOf(element);
+            const isFavorite = section === "bookmarkSectionFavorites" && getFavoriteIds().includes(String(node.id));
+            draggedBookmark = { id: String(node.id), section: isFavorite || section !== "bookmarkSectionFavorites" ? section : "" };
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.setData("text/plain", node.url || node.title || "");
             element.classList.add("dragging");
@@ -861,11 +865,14 @@ function createBookmarkActions(node) {
         );
     }
     if (!node.url) {
-        menu.append(
-            createActionButton(bookmarkText("bookmarkOpenAll"), "bookmark-open-button", () => openBookmarksInTabs(collectBookmarkLinks(node))),
-            createActionButton(bookmarkText("bookmarkAddHere"), "bookmark-add-here-button", () => openBookmarkEditor(null, { parentId: node.id })),
-            createActionButton(bookmarkText("bookmarkAddSubfolder"), "bookmark-add-folder-button", () => openBookmarkEditor(null, { folder: true, parentId: node.id }))
-        );
+        menu.append(createActionButton(bookmarkText("bookmarkOpenAll"), "bookmark-open-button", () => openBookmarksInTabs(collectBookmarkLinks(node))));
+        // Managed (policy) folders cannot take new children.
+        if (!node.unmodifiable) {
+            menu.append(
+                createActionButton(bookmarkText("bookmarkAddHere"), "bookmark-add-here-button", () => openBookmarkEditor(null, { parentId: node.id })),
+                createActionButton(bookmarkText("bookmarkAddSubfolder"), "bookmark-add-folder-button", () => openBookmarkEditor(null, { folder: true, parentId: node.id }))
+            );
+        }
         if (!fixed) {
             menu.append(
                 createActionButton(bookmarkText("bookmarkEditFolder"), "bookmark-edit-button", () => openBookmarkEditor(node)),
@@ -874,13 +881,15 @@ function createBookmarkActions(node) {
         }
     }
     if (node.url) {
-        menu.append(
-            createActionButton(bookmarkText("bookmarkPinToShortcuts"), "bookmark-shortcut-button", () => {
-                document.dispatchEvent(new CustomEvent("mynt:add-shortcut", { detail: { name: node.title, url: node.url } }));
-            }),
-            createActionButton(bookmarkText("bookmarkEditLabel"), "bookmark-edit-button", () => openBookmarkEditor(node)),
-            createActionButton(bookmarkText("bookmarkDeleteLabel"), "bookmark-delete-button", () => deleteBookmark(node))
-        );
+        menu.append(createActionButton(bookmarkText("bookmarkPinToShortcuts"), "bookmark-shortcut-button", () => {
+            document.dispatchEvent(new CustomEvent("mynt:add-shortcut", { detail: { name: node.title, url: node.url } }));
+        }));
+        if (!node.unmodifiable) {
+            menu.append(
+                createActionButton(bookmarkText("bookmarkEditLabel"), "bookmark-edit-button", () => openBookmarkEditor(node)),
+                createActionButton(bookmarkText("bookmarkDeleteLabel"), "bookmark-delete-button", () => deleteBookmark(node))
+            );
+        }
     }
     actions.append(summary, menu);
     actions.addEventListener("toggle", () => {
@@ -1113,6 +1122,11 @@ async function deleteBookmarkFolder(node) {
 
 async function restoreBookmarkChildren(children, parentId, idMap) {
     for (const child of children || []) {
+        // Firefox separators have neither url nor children; recreate them as separators, not empty folders.
+        if (child.type === "separator") {
+            await callBookmarkApi("create", { parentId, type: "separator" });
+            continue;
+        }
         const details = { parentId, title: child.title || "" };
         if (child.url) details.url = child.url;
         const created = await callBookmarkApi("create", details);
@@ -1281,6 +1295,9 @@ for (const [method, button] of Object.entries(bookmarkSortButtons)) {
 bookmarkSearch.addEventListener("keydown", event => {
     if (event.isComposing) return;
     if (event.key === "ArrowDown") {
+        // Apply a pending search first, or focus would land on a row that the late render then removes.
+        clearTimeout(bookmarkSearchTimer);
+        renderBookmarks();
         const first = bookmarkNavigationTargets()[0];
         if (first) {
             event.preventDefault();
@@ -1310,9 +1327,11 @@ editBookmarkModal.addEventListener("cancel", event => {
     closeBookmarkEditor();
 });
 editBookmarkName.addEventListener("keydown", event => {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && !event.isComposing) {
         event.preventDefault();
-        editBookmarkURL.focus();
+        // A folder has no URL field, so Enter saves it.
+        if (currentEditorIsFolder) saveBookmarkEditor();
+        else editBookmarkURL.focus();
     }
 });
 editBookmarkURL.addEventListener("keydown", event => {
@@ -1356,6 +1375,8 @@ bookmarkSidebar.addEventListener("keydown", event => {
 
 document.addEventListener("keydown", event => {
     trapBookmarkFocus(event);
+    // The confirm dialog owns the keyboard (Escape, arrow keys between its buttons) while it is open.
+    if (document.getElementById("prompt-modal-container")?.style.display === "flex") return;
     // A pending mutation means the delete confirmation owns Escape; cancelling it must not close the sidebar.
     if (event.key === "Escape" && bookmarkSidebar.classList.contains("open") && !editBookmarkModal.open && !bookmarkMutationPending) {
         event.preventDefault();

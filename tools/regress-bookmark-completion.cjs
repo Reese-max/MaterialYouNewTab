@@ -111,7 +111,7 @@ function harness({ kind = 'chrome', granted = true, hiddenApi = false, tree = fi
             if (!parent || !parent.children) throw new Error('Parent not found');
             const index = details.index ?? parent.children.length;
             if (index > parent.children.length) throw new Error('Index out of range');
-            const node = { ...details, id: String(nextId++), parentId: parent.id, index, dateAdded: 50 }; if (!details.url) node.children = [];
+            const node = { ...details, id: String(nextId++), parentId: parent.id, index, dateAdded: 50 }; if (!details.url && details.type !== 'separator') node.children = [];
             parent.children.splice(index, 0, node); parent.children.forEach((child, i) => { child.index = i; });
             api.onCreated.emit({ id: node.id }); return clone(node);
         }
@@ -403,6 +403,25 @@ async function testFoldersOpenAndMoves(kind) {
     assert.equal(await drag.context.moveBookmarkWithinFolder(node('11'), -1), false, 'The first item cannot move further up');
     drag.fail('move'); assert.equal(await drag.context.moveBookmarkWithinFolder(node('10'), 1), false); assert.equal(drag.id('bookmarkShortcutStatus').textContent, drag.context.bookmarkText('bookmarkMoveError'));
     assert.equal(drag.run('currentSortMethod'), 'manual'); assert.equal(drag.storage.get('bookmarkSortMethod'), 'manual');
+
+    // Review round 1: managed (policy) nodes offer no edits, drops or drags.
+    const managedTree = fixtureTree(); managedTree[0].children.push({ id: '3', parentId: '0', title: 'Managed', unmodifiable: 'managed', children: [
+        { id: '30', parentId: '3', index: 0, title: 'Policy folder', unmodifiable: 'managed', children: [] },
+        { id: '31', parentId: '3', index: 1, title: 'Policy', url: 'https://policy.example/', unmodifiable: 'managed' }] });
+    const managed = await harness({ kind, tree: managedTree }).ready(); const mnode = id => managed.run(`bookmarkNodeMap.get("${id}")`);
+    const actionClasses = target => managed.context.createBookmarkActions(target).children[1].children.map(button => button.className);
+    assert.deepEqual(actionClasses(mnode('30')).filter(name => /add-here|add-folder|edit|delete/u.test(name)), [], 'Managed folders take no new children and cannot be edited');
+    assert.deepEqual(actionClasses(mnode('31')).filter(name => /edit|delete/u.test(name)), [], 'Managed bookmarks cannot be edited or deleted');
+    assert.notEqual(managed.context.createBookmarkItem(mnode('31')).draggable, true, 'Managed bookmarks are not draggable');
+    managed.run('draggedBookmark = { id: "13", section: "bookmarkSectionFolders" }');
+    assert.equal(managed.context.resolveBookmarkDrop(mnode('30'), 'bookmarkSectionFolders'), null); assert.equal(managed.context.resolveBookmarkDrop(mnode('31'), 'bookmarkSectionFolders'), null);
+
+    // Review round 1: Firefox separators come back as separators, not empty folders.
+    const sepTree = fixtureTree(); sepTree[0].children[0].children[0].children.push({ id: '14', parentId: '10', index: 2, title: '', type: 'separator' });
+    const sep = await harness({ kind, tree: sepTree }).ready(); await sep.context.deleteBookmarkFolder(sep.run('bookmarkNodeMap.get("10")'));
+    assert.equal(await sep.context.undoBookmarkDelete(), true); const back = sep.find('1').children.find(child => child.title === '工作');
+    assert.deepEqual(back.children.map(child => child.type === 'separator' ? 'separator' : child.title), ['Alpha <script>fixture</script>', '繁體中文', 'separator']);
+    assert.equal(back.children[2].children, undefined, 'A separator is never recreated as a folder');
 }
 
 (async () => {
