@@ -450,6 +450,8 @@ async function testFoldersOpenAndMoves(kind) {
     const managed = await harness({ kind, tree: managedTree }).ready(); const mnode = id => managed.run(`bookmarkNodeMap.get("${id}")`);
     const actionClasses = target => managed.context.createBookmarkActions(target).children[1].children.map(button => button.className);
     assert.deepEqual(actionClasses(mnode('30')).filter(name => /add-here|add-folder|edit|delete/u.test(name)), [], 'Managed folders take no new children and cannot be edited');
+    const lockedNote = managed.context.createBookmarkActions(mnode('30')).children[1].children.find(button => button.className === 'bookmark-locked-button');
+    assert.ok(lockedNote?.disabled, 'Managed folders explain why they cannot be edited');
     assert.deepEqual(actionClasses(mnode('31')).filter(name => /edit|delete/u.test(name)), [], 'Managed bookmarks cannot be edited or deleted');
     assert.notEqual(managed.context.createBookmarkItem(mnode('31')).draggable, true, 'Managed bookmarks are not draggable');
     managed.run('draggedBookmark = { id: "13", section: "bookmarkSectionFolders" }');
