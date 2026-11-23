@@ -296,6 +296,10 @@ function applyLanguage(lang) {
         { id: "editBookmarkNameLabel", key: "editBookmarkName" },
         { id: "editBookmarkURLLabel", key: "editBookmarkURL" },
         { id: "editBookmarkFolderLabel", key: "editBookmarkFolder" },
+        { id: "bookmarkToolsHeading", key: "bookmarkToolsHeading" },
+        { id: "bookmarkFindDuplicates", key: "bookmarkFindDuplicates" },
+        { id: "editBookmarkTypeBookmark", key: "bookmarkTypeBookmark" },
+        { id: "editBookmarkTypeFolder", key: "bookmarkTypeFolder" },
         { id: "shortcutsSectionTitle", key: "shortcutsText" },
     ];
 
