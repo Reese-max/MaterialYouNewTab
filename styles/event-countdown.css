@@ -119,7 +119,8 @@ html.myntReducedMotion .event-countdown-card button, html.myntReducedMotion .eve
 .event-countdown-row[data-color=green] { --ec: #80ae93; }
 .event-countdown-row[data-color=peach] { --ec: #d9a17f; }
 .event-countdown-row[data-color=rose] { --ec: #ca8da2; }
-.event-countdown-row .event-countdown-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--ec); background: color-mix(in srgb, var(--ec) 26%, transparent); font-size: 1.125rem; }
+.event-countdown-row .event-countdown-icon { width: 36px; height: 36px; border-radius: 50%; box-sizing: border-box; background: color-mix(in srgb, var(--ec) 26%, transparent); font-size: 1.125rem; }
+@supports not (color: color-mix(in srgb, red 50%, blue)) { .event-countdown-row .event-countdown-icon { background: transparent; box-shadow: inset 0 0 0 2px var(--ec); } }
 .event-countdown-dialog .event-countdown-row { grid-template-columns: 36px minmax(0,1fr) auto; }
 .event-countdown-card .event-countdown-items { gap: 0; margin-top: 8px; }
 .event-countdown-card .event-countdown-row { grid-template-columns: 36px minmax(0,1fr) fit-content(45%); align-items: center; column-gap: 12px; padding: 12px 0; border-radius: 0; background: transparent; }
@@ -145,5 +146,7 @@ html.myntHighContrast .event-countdown-card .event-countdown-row[data-state=toda
   .event-countdown-card .event-countdown-row { border: 0; }
   .event-countdown-card .event-countdown-row + .event-countdown-row { border-top: 1px solid CanvasText; }
   .event-countdown-row .event-countdown-icon { border: 1px solid CanvasText; }
+  .event-countdown-dialog .event-countdown-row { border-inline-start: 1px solid CanvasText; }
+  .event-countdown-card .event-countdown-row[data-state=today] .event-countdown-days { text-decoration: underline; }
   .event-countdown-card .event-countdown-unit, .event-countdown-card .event-countdown-row[data-state=past] .event-countdown-num { opacity: 1; }
 }
