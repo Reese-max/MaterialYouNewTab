@@ -4692,7 +4692,8 @@ input:checked + .toggle:before {
 	align-items: center;
 	justify-content: center;
 	height: fit-content;
-	min-width: 240px;
+	/* Shrink with the row instead of forcing 240px, which overflowed the card below 360px wide. */
+	min-width: 0;
 	width: 100%;
 	border: 2px solid transparent;
 	/* adding transparent border on focus it will be turned to theme color*/
