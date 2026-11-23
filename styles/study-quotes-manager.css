@@ -123,6 +123,11 @@ textarea.sqInput { min-height: 76px; resize: vertical; line-height: 1.5; }
 /* The black theme's accent is light; keep the switch knob visible on it. */
 .black-theme .sqSwitch input:checked + .sqSwitchTrack::after { background: #1f2630; }
 
+/* Keep each tab label with its count on one line on the narrowest phones; the labels fit once the side padding shrinks. */
+@media (max-width: 360px) {
+    .sqTabs { gap: 0; }
+    .sqTab { flex: 1 1 auto; padding-inline: 4px; font-size: .875rem; white-space: nowrap; }
+}
 @media (prefers-reduced-motion: reduce) {
     .sqSwitchTrack, .sqSwitchTrack::after { transition: none; }
 }
