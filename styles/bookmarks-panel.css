@@ -241,7 +241,7 @@
     background: var(--whitishColor-blue);
     box-shadow: 0 4px 16px rgb(0 0 0 / .16);
 }
-#bookmarkSidebar .bookmark-action-popover :is(.bookmark-favorite-button, .bookmark-move-button, .bookmark-shortcut-button, .bookmark-edit-button, .bookmark-delete-button) {
+#bookmarkSidebar .bookmark-action-popover :is(.bookmark-open-button, .bookmark-copy-button, .bookmark-favorite-button, .bookmark-move-button, .bookmark-add-here-button, .bookmark-add-folder-button, .bookmark-shortcut-button, .bookmark-edit-button, .bookmark-delete-button) {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -437,4 +437,56 @@
 @media (forced-colors: active) {
 	#bookmarkSidebar :is(.bookmark-sort-button, .bookmark-view-as-button)[aria-pressed="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
 	#bookmarkSidebar #bookmarkSearch { border: 1px solid CanvasText !important; }
+}
+
+/* Search match, drag targets and the recent-list toggle. */
+#bookmarkSidebar mark {
+    padding-inline: 1px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--darkColor-blue) 24%, transparent);
+    color: inherit;
+}
+#bookmarkSidebar #bookmarkList .dragging { opacity: .5; }
+#bookmarkSidebar #bookmarkList .drop-into {
+    outline: 2px dashed var(--darkColor-blue);
+    outline-offset: -2px;
+    background: var(--bookmark-hover);
+}
+#bookmarkSidebar #bookmarkList .drop-before { box-shadow: inset 0 2px 0 var(--darkColor-blue); }
+#bookmarkSidebar .bookmark-recent-toggle {
+    min-block-size: 40px;
+    margin-block-start: 4px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 20px;
+    background: transparent;
+    color: inherit;
+    font-size: .8125rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+#bookmarkSidebar .bookmark-recent-toggle:hover { background: var(--bookmark-hover); }
+#bookmarkSidebar .bookmark-recent-toggle:focus-visible { outline: 2px solid var(--darkColor-blue); outline-offset: 2px; }
+
+/* Editor: folder picker, and fields a folder does not have. */
+#editBookmarkModal [hidden] { display: none !important; }
+#editBookmarkModal .bookmark-folder-field { display: flex; flex-direction: column; gap: 6px; }
+#editBookmarkModal .bookmark-folder-field label { padding-inline: 17px; font-size: .8rem; }
+#editBookmarkModal .bookmark-folder-field select {
+    inline-size: 100%;
+    min-block-size: 44px;
+    padding: 10px 16px;
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    color: inherit;
+    font: inherit;
+    font-size: .9rem;
+}
+#editBookmarkModal .bookmark-folder-field select:focus-visible { outline: 2px solid var(--darkColor-blue); outline-offset: 1px; }
+#editBookmarkModal .bookmark-folder-field option { background: var(--bg-color-blue); color: var(--textColorDark-blue); }
+@media (forced-colors: active) {
+    #bookmarkSidebar mark { background: Highlight; color: HighlightText; }
+    #bookmarkSidebar #bookmarkList .drop-into { outline-color: Highlight; }
+    #bookmarkSidebar #bookmarkList .drop-before { box-shadow: inset 0 2px 0 Highlight; }
 }

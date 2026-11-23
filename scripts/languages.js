@@ -239,6 +239,7 @@ function applyLanguage(lang) {
         "bookmarkSortBy",
         "sortAlphabetical",
         "sortTimeAdded",
+        "sortManual",
         "bookmarkViewAs",
         "bookmarkViewGrid",
         "bookmarkViewList",
@@ -294,6 +295,7 @@ function applyLanguage(lang) {
         { id: "settingsHintText", key: "openSettingsLabel" },
         { id: "editBookmarkNameLabel", key: "editBookmarkName" },
         { id: "editBookmarkURLLabel", key: "editBookmarkURL" },
+        { id: "editBookmarkFolderLabel", key: "editBookmarkFolder" },
         { id: "shortcutsSectionTitle", key: "shortcutsText" },
     ];
 

@@ -279,6 +279,7 @@
                             <div class="button-group">
                                 <button id="sortAlphabetical" class="bookmark-sort-button active" type="button" aria-pressed="true">A-Z</button>
                                 <button id="sortTimeAdded" class="bookmark-sort-button" type="button" aria-pressed="false">由舊到新</button>
+                                <button id="sortManual" class="bookmark-sort-button" type="button" aria-pressed="false">自訂順序</button>
                             </div>
                         </div>
 
@@ -309,9 +310,14 @@
                 <label for="editBookmarkName" id="editBookmarkNameLabel">書籤名稱</label>
             </div>
 
-            <div class="floating-label-field">
+            <div id="editBookmarkURLField" class="floating-label-field">
                 <input type="url" id="editBookmarkURL" autocomplete="off" placeholder=" " />
                 <label for="editBookmarkURL" id="editBookmarkURLLabel">書籤網址</label>
+            </div>
+
+            <div class="bookmark-folder-field">
+                <label id="editBookmarkFolderLabel" for="editBookmarkFolder">資料夾</label>
+                <select id="editBookmarkFolder"></select>
             </div>
 
             <p id="bookmarkEditorError" class="bookmark-editor-error" role="alert"></p>
