@@ -5130,19 +5130,21 @@ option:checked {
 	cursor: pointer;
 	border: none;
 	background-color: var(--bg-color-blue);
-	color: var(--darkerColor-blue);
+	/* Dark theme text keeps 7.4:1 or better on every colour theme's background; --darkerColor fell to 2.5:1 on yellow. */
+	color: var(--textColorDark-blue);
 	border-radius: 20px;
 	transition: background-color 0.3s ease;
 }
 
 .backupRestoreBtn:hover {
-	background-color: var(--darkColor-blue);
-	color: #fffffff5;
+	/* White on the accent ink stays at 5.2:1 or better; --darkColor under white dropped to 2.2:1 on bright themes. */
+	background-color: var(--mynt-accent-ink);
+	color: #ffffff;
 }
 
 .backupRestoreBtn:active {
-	background-color: var(--darkerColor-blue);
-	color: #fffffff5;
+	background-color: var(--mynt-accent-ink);
+	color: #ffffff;
 }
 
 /* <!-- ----Color Picker || ColorPicker---- --> */
