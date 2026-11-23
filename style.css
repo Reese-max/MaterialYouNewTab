@@ -5151,7 +5151,7 @@ option:checked {
 }
 
 .colorPickerLabel {
-	grid-column: span 3;
+	grid-column: 1 / -1;
 	width: 100%;
 	background: var(--accentLightTint-blue);
 	height: 100%;
