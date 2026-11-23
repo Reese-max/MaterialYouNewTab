@@ -157,7 +157,10 @@ html.myntHighContrast .event-countdown-card .event-countdown-row[data-state=toda
    card if three events do not fit. Windows too short for that band put the card below the fold, only
    while the page can scroll (award.css locks scrolling once a manual layout exists or is being edited).
    A card positioned with the layout editor keeps the original geometry its saved offset was measured from. */
-html.mynt-removed-features body:not(.mynt-layout-editing) #eventCountdownCard.event-countdown-card:not([data-mynt-layout]) { display: flex; flex-direction: column; max-height: calc(100vh - 238px); }
+html.mynt-removed-features body:not(.mynt-layout-editing) #eventCountdownCard.event-countdown-card:not([data-mynt-layout]) { display: flex; flex-direction: column; }
+@media (min-width: 1440px) {
+  html.mynt-removed-features body:not(.mynt-layout-editing) #eventCountdownCard.event-countdown-card:not([data-mynt-layout]) { max-height: calc(100vh - 238px); }
+}
 html.mynt-removed-features body:not(.mynt-layout-editing) #eventCountdownCard.event-countdown-card:not([data-mynt-layout]) > .event-countdown-items { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 @media (max-width: 1439.98px) and (min-height: 620px) {
   html.mynt-removed-features body:not(.mynt-layout-editing) #eventCountdownCard.event-countdown-card:not([data-mynt-layout]) { position: fixed; inset: 80px 20px auto auto; width: min(320px, calc(100vw - 32px)); max-width: none; margin: 0; max-height: calc(50vh - 188px); }
