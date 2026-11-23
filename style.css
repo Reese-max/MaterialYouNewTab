@@ -4703,11 +4703,11 @@ input:checked + .toggle:before {
 	padding: 12px;
 	color: var(--textColorDark-blue);
 	border-radius: 26px;
-	appearance: none;
-	-moz-appearance: none;
+	/* Native arrow and inherited size, like the export-scope select below, so it reads as a dropdown. */
+	appearance: auto;
 	cursor: pointer;
 	padding-inline-start: 20px;
-	font-size: 0.82rem;
+	font-size: inherit;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 	@-moz-document url-prefix() {
 		/* Scrollbar styles for Firefox */
