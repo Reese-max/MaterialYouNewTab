@@ -590,7 +590,7 @@ const en = {
     "editFolderHeading": "Edit Folder",
     "bookmarkFolderNameRequired": "Enter a folder name.",
     "bookmarkAddHere": "Add here…",
-    "bookmarkEditFolder": "Rename or move",
+    "bookmarkEditFolder": "Edit folder",
     "bookmarkDeleteFolder": "Delete folder",
     "deleteBookmarkFolder": "Delete the folder \"{title}\" and the {count} bookmarks in it?",
     "bookmarkFolderCreated": "Folder added.",
