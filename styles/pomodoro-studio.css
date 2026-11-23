@@ -123,12 +123,12 @@
 #myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) summary { display: list-item; min-height: 44px; box-sizing: border-box; padding: 12px 0; cursor: pointer; font-size: var(--pomo-type-body); line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
 #myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound)[open] { padding-bottom: 12px; }
 #myntPomoExtras .mynt-pomo-music { border: 0; padding: 0; margin: 0; border-radius: 0; }
-#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) label { display: grid; gap: 6px; font-size: var(--pomo-type-body); line-height: 1.4; margin: 10px 0; }
-#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) :is(button, input, select), #myntPomoExtras > button { box-sizing: border-box; font: inherit; font-size: var(--pomo-type-body); line-height: 1.4; min-height: 44px; max-width: 100%; color: var(--pomo-fg, #fff); }
-#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) button, #myntPomoExtras > button { border: 1px solid var(--pomo-border, #ffffff30); border-radius: 16px; background: var(--pomo-surface, #ffffff12); padding: 8px 10px; cursor: pointer; overflow-wrap: anywhere; }
-#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) :is(input:not([type=range]):not([type=checkbox]), select) { width: 100%; min-width: 0; border: 1px solid var(--pomo-border, #ffffff40); border-radius: 12px; padding: 8px; background: var(--pomo-surface, #0003); }
-#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) select option { background: var(--pomo-surface, #25313c); color: var(--pomo-fg, #fff); }
-#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) input[type=range] { width: 100%; accent-color: var(--pomo-accent, #bbd6fd); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) label:where(:not(#myntPomoMusicMount *)) { display: grid; gap: 6px; font-size: var(--pomo-type-body); line-height: 1.4; margin: 10px 0; }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) :is(button, input, select):where(:not(#myntPomoMusicMount *)), #myntPomoExtras > button { box-sizing: border-box; font: inherit; font-size: var(--pomo-type-body); line-height: 1.4; min-height: 44px; max-width: 100%; color: var(--pomo-fg, #fff); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) button:where(:not(#myntPomoMusicMount *)), #myntPomoExtras > button { border: 1px solid var(--pomo-border, #ffffff30); border-radius: 16px; background: var(--pomo-surface, #ffffff12); padding: 8px 10px; cursor: pointer; overflow-wrap: anywhere; }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) :is(input:not([type=range]):not([type=checkbox]), select):where(:not(#myntPomoMusicMount *)) { width: 100%; min-width: 0; border: 1px solid var(--pomo-border, #ffffff40); border-radius: 12px; padding: 8px; background: var(--pomo-surface, #0003); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) select option:where(:not(#myntPomoMusicMount *)) { background: var(--pomo-surface, #25313c); color: var(--pomo-fg, #fff); }
+#myntPomoExtras :is(.pomoStudioScenarios, .pomoStudioSound) input[type=range]:where(:not(#myntPomoMusicMount *)) { width: 100%; accent-color: var(--pomo-accent, #bbd6fd); }
 #myntPomoExtras .pomodoroAmbientRow { flex-wrap: wrap; margin: 0; }
 #myntPomoExtras .pomodoroAmbientSelect { flex: 1; }
 
