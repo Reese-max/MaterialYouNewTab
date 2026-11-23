@@ -444,7 +444,8 @@ html:has(
 	filter: invert(1) hue-rotate(180deg);
 	-webkit-filter: invert(1) hue-rotate(180deg);
 
-	& #darkTheme,
+	/* Theme swatches show their real colour under the inverted panel, not the inverted one. */
+	& #colorsContainer input.colorPlate,
 	& .favicon,
 	& #wIcon,
 	&:not(:has(#adaptiveIconToggle:checked))
@@ -486,7 +487,8 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	filter: invert(1) hue-rotate(180deg);
 	-webkit-filter: invert(1) hue-rotate(180deg);
 
-	& #darkTheme,
+	/* Theme swatches show their real colour under the inverted panel, not the inverted one. */
+	& #colorsContainer input.colorPlate,
 	& .favicon,
 	& #wIcon,
 	&:not(:has(#adaptiveIconToggle:checked))

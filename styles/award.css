@@ -627,8 +627,8 @@ html.black-theme #pomodoroPanel .pomodoro-bg-overlay {
 		& #menuCont #colorsContainer {
 			--award-swatch-gap: var(--award-filter-elevated);
 		}
-		/* 黑色色票原有抵銷反相，邊線與間隔環須直接指定深色顯示值。 */
-		& #menuCont #colorsContainer #darkTheme {
+		/* 色票（含黑色）都抵銷反相顯示原色，邊線與間隔環須直接指定深色顯示值。 */
+		& #menuCont #colorsContainer input.colorPlate {
 			--award-swatch-edge: #8b98a9;
 			--award-swatch-gap: #1b2533;
 			--award-swatch-ring: color-mix(in srgb, var(--darkColor-blue, #4382ec) 60%, #ffffff);
