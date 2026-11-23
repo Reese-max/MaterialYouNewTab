@@ -230,6 +230,13 @@
 	margin-top: 2px;
 }
 
+/* Section and row helper text in the newer panels uses the same size and grey as row descriptions, not a faded 0.78rem. */
+#menuCont :is(.controlSectionHeading p, .controlSettingRow small, .permissionRow small) {
+	font-size: 0.8125rem;
+	color: var(--menu-row-muted);
+	opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	#menuCont .switch .toggle,
 	#menuCont .switch .toggle::before {
