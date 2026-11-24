@@ -552,43 +552,18 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             return element;
         }
 
+        // Accent disc like the presets: a bare letter is unreadable on light shortcut pills.
         function createLetterFallback() {
-            let letter = "?";
-
-            const shortcutName = String(name || "").trim();
-            if (shortcutName) {
-                letter = shortcutName.charAt(0).toUpperCase();
-            } else {
-                letter = hostname.charAt(0).toUpperCase() || "?";
-            }
-
-            const safeLetter = letter.replace(/[&<>"']/g, character => ({
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&apos;",
-            }[character]));
-
-            // TODO: MutationObserver to update colors when theme changes
-            const selectedTheme = localStorage.getItem("selectedTheme");
-            const color = selectedTheme === "dark"
-                ? "#bfbfbf"
-                : localStorage.getItem("accentLightTintColor") || "#ffffff";
-            const svg = `
-                <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
-                    <text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle"
-                        font-size="30" font-family="Inter, Segoe UI, Arial, sans-serif" font-weight="700"
-                        fill="${color}">
-                        ${safeLetter}
-                    </text>
-                </svg>
-            `;
-
-            const img = document.createElement("img");
-            img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-            img.alt = "";
-            return img;
+            const ns = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(ns, "svg");
+            for (const [key, value] of [["viewBox", "0 0 24 24"], ["aria-hidden", "true"], ["focusable", "false"], ["data-icon-type", "letter"]]) svg.setAttribute(key, value);
+            const disc = document.createElementNS(ns, "circle");
+            for (const [key, value] of [["cx", "12"], ["cy", "12"], ["r", "12"], ["class", "accentColor shortcutDarkColor"]]) disc.setAttribute(key, value);
+            const text = document.createElementNS(ns, "text");
+            for (const [key, value] of [["x", "12"], ["y", "12"], ["text-anchor", "middle"], ["dominant-baseline", "central"], ["font-size", "13"], ["font-weight", "700"], ["class", "bgLightTint shortcutLetter"]]) text.setAttribute(key, value);
+            text.textContent = (MyntQuicklinkIcons.graphemes(String(name || "").trim())[0] || hostname.charAt(0) || "?").toLocaleUpperCase();
+            svg.append(disc, text);
+            return svg;
         }
 
         if (customIcon && isValidCustomIconUrl(customIcon)) {
@@ -599,8 +574,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             customIconImg.draggable = false;
             setIconType(customIconImg, "custom");
             customIconImg.addEventListener("error", () => {
-                customIconImg.src = createLetterFallback().src;
-                setIconType(customIconImg, "letter");
+                if (customIconImg.parentElement === container) container.replaceChildren(createLetterFallback());
             }, { once: true });
 
             container.appendChild(customIconImg);
@@ -635,26 +609,16 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 return;
             }
 
-            const image = document.createElement("img");
             if (localStorage.getItem("googleFaviconToggle") === "unchecked") {
-                // Accent disc like the presets: the plain letter image is unreadable on light shortcut pills.
-                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                for (const [key, value] of [["viewBox", "0 0 24 24"], ["aria-hidden", "true"], ["focusable", "false"], ["data-icon-type", "letter"]]) svg.setAttribute(key, value);
-                const disc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                for (const [key, value] of [["cx", "12"], ["cy", "12"], ["r", "12"], ["class", "accentColor shortcutDarkColor"]]) disc.setAttribute(key, value);
-                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                for (const [key, value] of [["x", "12"], ["y", "12"], ["text-anchor", "middle"], ["dominant-baseline", "central"], ["font-size", "13"], ["font-weight", "700"], ["class", "bgLightTint shortcutLetter"]]) text.setAttribute(key, value);
-                text.textContent = (MyntQuicklinkIcons.graphemes(String(name || "").trim())[0] || hostname.charAt(0) || "?").toLocaleUpperCase();
-                svg.append(disc, text);
-                container.appendChild(svg);
+                container.appendChild(createLetterFallback());
                 return;
             }
+            const image = document.createElement("img");
             image.src = `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${encodeURIComponent(hostname)}&sz=256`;
             image.alt = "";
             image.draggable = false;
             image.addEventListener("error", () => {
-                image.src = createLetterFallback().src;
-                setIconType(image, "letter");
+                if (image.parentElement === container) container.replaceChildren(createLetterFallback());
             }, { once: true });
             container.appendChild(image);
         }

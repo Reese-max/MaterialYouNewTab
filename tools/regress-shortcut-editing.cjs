@@ -429,6 +429,14 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
 console.log("SHORTCUT_EDITING_OK");
 
 (async () => {
+    const failing = harness({ storage: seed(1, { shortcutIcon0: "" }) });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const failingLogo = failing.el("shortcutsContainer").querySelector(".shortcutLogoContainer");
+    assert.match(failingLogo.children[0].src, /s2\.googleusercontent\.com/u);
+    failingLogo.children[0].emit("error");
+    assert.equal(failingLogo.children[0].getAttribute("data-icon-type"), "letter", "A failed Google favicon falls back to the readable letter badge");
+    assert.equal(failingLogo.children[0].children[1].textContent, "A");
+
     const h = harness({ storage: seed(1, { shortcutIcon0: "", shortcutName0: "\u{1F680} Rocket" }) });
     const logo = () => h.el("shortcutsContainer").querySelector(".shortcutLogoContainer");
     await new Promise(resolve => setTimeout(resolve, 0));
