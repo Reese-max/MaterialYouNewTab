@@ -5,7 +5,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
-const { chromium } = require('C:/Users/Administrator/node_modules/playwright');
+const { chromium } = require('playwright');
 const EXT = path.resolve(process.env.MYNT_EXTENSION || path.join(__dirname, '..'));
 const CHROME = process.env.CHROME_BIN || 'C:/Users/Administrator/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe';
 const weather = {

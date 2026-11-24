@@ -544,7 +544,7 @@ async function layoutAndKeyboard(page, touch) {
 }
 
 async function launch(extension, seed, mobile) {
-    const { chromium } = require('C:/Users/Administrator/node_modules/playwright');
+    const { chromium } = require('playwright');
     const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'mynt-settings-ia-'));
     const context = await chromium.launchPersistentContext(profile, {
         executablePath: CHROME, headless: true, acceptDownloads: true,
