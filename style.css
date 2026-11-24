@@ -3330,13 +3330,6 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	width: calc(100% * 0.7071) !important;
 }
 
-.adaptive-icons .shortcuts .shortcutLogoContainer img[data-icon-type="letter"] {
-	height: 100% !important;
-	width: 100% !important;
-	filter: none !important;
-	mix-blend-mode: normal !important;
-}
-
 /* ----------end of Shortcuts----------------- */
 
 /* -----------Ai-Tools----------------- */
@@ -6772,7 +6765,7 @@ html {
 	transform: scale(1.05);
 }
 
-.workspacePresetCard span {
+.workspacePresetCard .workspaceApplyBtn span {
 	font-size: 0.72rem;
 	opacity: 0.75;
 }
@@ -6966,6 +6959,8 @@ body[data-workspace-background="wallpaper"] {
 	background: rgba(255, 255, 255, 0.1);
 	border-color: rgba(255, 255, 255, 0.15);
 	color: #d0bcff;
+	/* Like dark mode: the 0.85 default fades this small label to 4.0:1 on black. */
+	opacity: 1;
 }
 
 .black-theme .controlCenterHeader {
