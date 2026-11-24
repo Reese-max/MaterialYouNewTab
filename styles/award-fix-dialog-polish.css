@@ -111,6 +111,14 @@ html:not(.black-theme, .myntHighContrast):not(:has(.menuBar .themeSegment[data-a
 	}
 }
 
+/* 一般深色模式是整頁 invert(1) hue-rotate(180deg) 反相：設定面板裡的工作區開啟鈕若沿用 #0b57d0，
+   反相後只剩 3.9:1，所以和淺色模式一樣用 --mynt-accent-ink 配色。黑色主題與高對比不經反相，不套用。 */
+html:not(.black-theme, .myntHighContrast) #menuCont .workspaceLaunchBtn:not(:hover) {
+	border-color: color-mix(in srgb, var(--mynt-accent-ink) 35%, transparent);
+	background: color-mix(in srgb, var(--mynt-accent-ink) 10%, transparent);
+	color: var(--mynt-accent-ink);
+}
+
 /* ==========================================================================
    第 16 輪：版面細節（所有主題）
    1. 工作模式卡片的 🚀 開啟網站鈕原本是接在卡片按鈕後的流內元素，貼在左下角邊框上（左側 0 間距、
