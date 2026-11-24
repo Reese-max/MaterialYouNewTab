@@ -189,6 +189,13 @@ html.mynt-removed-features body {
   /* Pomodoro panel base; the black theme swaps it so its light --pomo-fg text stays readable. */
   --mynt-pomo-panel-bg: #f7f7f7;
 }
+/* Light-mode card and text colours from Appearance > Surface colours (scripts/theme.js sets the attribute only
+   outside dark mode). Black theme, adaptive and high-contrast rules below still take precedence. */
+html.mynt-removed-features[data-mynt-surface-card] body {
+  --mynt-glass: color-mix(in srgb, var(--mynt-surface-card) var(--transparency, 90%), transparent);
+  --mynt-glass-strong: color-mix(in srgb, var(--mynt-surface-card) var(--transparency, 90%), transparent);
+}
+html.mynt-removed-features[data-mynt-surface-text] body { --mynt-ink: var(--mynt-surface-text); --mynt-ink-soft: var(--mynt-surface-text); }
 html.black-theme.mynt-removed-features body {
   --mynt-glass: rgb(32 34 40 / var(--transparency, 90%)); --mynt-glass-strong: rgb(32 34 40 / var(--transparency, 90%)); --mynt-glass-edge: rgba(255, 255, 255, .10);
   --mynt-ink: #e4e9f1; --mynt-ink-soft: #b4bfce;

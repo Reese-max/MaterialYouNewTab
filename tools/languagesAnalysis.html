@@ -245,9 +245,9 @@
         }
 
         .mynt-lka .key-item.missing {
-            background: var(--bg-color-red);
-            border-left: 4px solid var(--darkerColor-red);
-            color: var(--textColorDark-red);
+            background: var(--bg-color-red, #fdbdbd);
+            border-left: 4px solid var(--darkerColor-red, #b23535);
+            color: var(--textColorDark-red, #411b1b);
         }
 
         .mynt-lka .key-item.missing label {
@@ -266,10 +266,10 @@
         }
 
         .mynt-lka .key-item.complete {
-            background: var(--bg-color-green);
-            border-left: 4px solid var(--darkerColor-green);
-            color: var(--textColorDark-green);
-            fill: var(--darkerColor-green);
+            background: var(--bg-color-green, #c7e4c7);
+            border-left: 4px solid var(--darkerColor-green, #458245);
+            color: var(--textColorDark-green, #1b411b);
+            fill: var(--darkerColor-green, #458245);
         }
 
         .mynt-lka .key-item.checked {
@@ -293,7 +293,7 @@
             -webkit-appearance: none;
             width: 20px;
             height: 20px;
-            border: 2px solid var(--darkerColor-red);
+            border: 2px solid var(--darkerColor-red, #b23535);
             border-radius: 6px;
             cursor: pointer;
             flex-shrink: 0;
@@ -309,8 +309,8 @@
         }
 
         .mynt-lka input[type="checkbox"]:checked {
-            background: var(--darkerColor-red);
-            border-color: var(--darkerColor-red);
+            background: var(--darkerColor-red, #b23535);
+            border-color: var(--darkerColor-red, #b23535);
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23fff"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>');
             background-size: 14px 14px;
             background-position: center;
@@ -435,10 +435,10 @@
         }
 
         .mynt-lka .key-counts .missing-count {
-            color: var(--darkerColor-red);
+            color: var(--darkerColor-red, #b23535);
             padding: 0.16rem 0.6rem;
             border-radius: 20px;
-            outline: 1px solid var(--darkerColor-red);
+            outline: 1px solid var(--darkerColor-red, #b23535);
         }
 
         .mynt-lka .key-counts .extra-count {
@@ -485,9 +485,9 @@
         }
 
         .mynt-lka #incomplete-message {
-            background: var(--accentLightTint-red);
-            color: var(--textColorDark-red);
-            border-left: 4px solid var(--darkerColor-red);
+            background: var(--accentLightTint-red, #ffe7e7);
+            color: var(--textColorDark-red, #411b1b);
+            border-left: 4px solid var(--darkerColor-red, #b23535);
         }
 
         .mynt-lka #extra-keys-message {
@@ -505,7 +505,7 @@
         .mynt-lka.dark-mode #incomplete-message {
             background: rgba(178, 53, 53, 0.25);
             color: #ffb3b3;
-            border-left-color: var(--darkerColor-red);
+            border-left-color: var(--darkerColor-red, #b23535);
         }
 
         /* ── Results heading ── */

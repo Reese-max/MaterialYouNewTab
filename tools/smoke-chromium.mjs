@@ -673,13 +673,13 @@ async function main() {
         })()`);
     }
 
-    // Dialog text in the installed extension, in light mode, dark mode and the black theme: every visible text in
+    // Dialog text in the installed extension, in light mode, dark mode and the darkest (ink) palette: every visible text in
     // the settings workspace section (editor open), wallpaper gallery, encouragement lines, AI tools, bookmark editor,
     // keyboard help and command palette meets WCAG AA. Colours are painted on a canvas first, so any CSS colour syntax
     // is composited as rendered, with backgrounds, opacity and filters of every layer; disabled controls are exempt.
     // The original theme mode and colour are restored.
     const previousThemeMode = await evaluate(`localStorage.getItem('preferredTheme')`);
-    const previousColour = await evaluate(`document.querySelector('.colorPlate:checked')?.value || 'blue'`);
+    const previousColour = await evaluate(`document.querySelector('.colorPlate:checked')?.value || 'haze'`);
     const dialogContrast = {};
     const auditDialogs = `(async () => {
         const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
@@ -743,11 +743,12 @@ async function main() {
         for (const [mode, setup] of [
             ['light', `document.getElementById('lightThemed').click()`],
             ['dark', `document.getElementById('darkThemed').click()`],
-            ['black', `(() => { document.getElementById('lightThemed').click(); document.querySelector('.colorPlate[value="dark"]').click(); })()`],
+            // The black swatch was retired in 2026-11; ink is the darkest palette.
+            ['ink', `(() => { document.getElementById('lightThemed').click(); document.querySelector('.colorPlate[value="ink"]').click(); })()`],
         ]) {
             await evaluate(setup);
-            await waitForValue(mode === 'black'
-                ? `document.documentElement.classList.contains('black-theme')`
+            await waitForValue(mode === 'ink'
+                ? `localStorage.getItem('selectedTheme') === 'ink' && document.getElementById('themeSegment').dataset.active === 'light'`
                 : `document.getElementById('themeSegment').dataset.active === '${mode}' && !document.documentElement.classList.contains('black-theme')`, `${mode} theme did not turn on`);
             dialogContrast[mode] = await evaluate(auditDialogs);
             for (const [name, result] of Object.entries(dialogContrast[mode])) {

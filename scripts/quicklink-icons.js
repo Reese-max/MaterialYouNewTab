@@ -48,7 +48,7 @@
             if (pattern.test(normalized)) return null;
         }
         const storage = root.document ? root.localStorage : null;
-        const color = storage?.getItem('selectedTheme') === 'dark' ? '#bfbfbf' : storage?.getItem('accentLightTintColor') || '#e2eeff';
+        const color = storage?.getItem('accentLightTintColor') || '#e2eeff';
         return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(normalized.replace(/\bcurrentColor\b/g, /^#[\da-f]{6}$/i.test(color) ? color : '#e2eeff'));
     }
     function sanitizeSvgDataUrl(dataUrl) {
@@ -284,10 +284,9 @@
         const text = field(panels[3], 'quicklinkText'); text.value = parsed.type === 'text' ? parsed.text : (graphemes(options.label || '').slice(0, 2).join('') || 'A');
         const color = field(panels[3], 'quicklinkColor', 'color'); color.value = parsed.color || '#bbd6fd';
         const swatches = doc.createElement('div'); swatches.className = 'quicklinkIconSwatches';
-        for (const theme of ['blue', 'red', 'yellow', 'green', 'cyan', 'pink', 'orange', 'purple']) {
-            const fallback = { blue: '#bbd6fd', red: '#fdbdbd', yellow: '#ffed80', green: '#c7e4c7', cyan: '#9cefef', pink: '#f9c8d6', orange: '#ffd8b2', purple: '#dac2e8' }[theme];
-            const computed = root.getComputedStyle?.(doc.documentElement).getPropertyValue('--bg-color-' + theme).trim();
-            const value = /^#[\da-f]{6}$/i.test(computed || '') ? computed : fallback;
+        // Fixed badge colours: the --bg-color-<name> theme tokens they used to read were retired in 2026-11, and the
+        // active --bg-color-blue slot is now a near-white page colour.
+        for (const value of ['#bbd6fd', '#fdbdbd', '#ffed80', '#c7e4c7', '#9cefef', '#f9c8d6', '#ffd8b2', '#dac2e8']) {
             const swatch = button(doc, '', () => { color.value = value; update(readValue()); }); swatch.style.backgroundColor = value; swatch.dataset.color = value;
             const sample = doc.createElement('span'); sample.className = 'quicklinkSwatchPreview'; swatch.appendChild(sample);
             swatch.setAttribute('aria-label', t('quicklinkColor') + ' ' + value); swatch.setAttribute('title', value); swatches.appendChild(swatch);

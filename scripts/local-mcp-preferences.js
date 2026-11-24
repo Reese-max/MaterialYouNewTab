@@ -4,7 +4,9 @@
 const bool={type:'boolean'},str=n=>({type:'string',maxLength:n}),en=values=>({type:'string',enum:values});
 const obj=(properties,required=[])=>({type:'object',properties,required,additionalProperties:false});
 const IDS=['chatGPT','claude','youtube'];
-const PALETTES=['red','yellow','green','cyan','blue','pink','purple','orange','brown','silver','peach','indigo','teal','lime','amber','wine','magenta','slate','dark'];
+const PALETTES=['haze','mauve','midnight','sage','forest','ocean','latte','caramel','rose','graphite','pearl','ink'];
+// Retired 2026-11 ids read as their migrated palette (same table as LEGACY_PALETTES in preload.js; check-theme-palettes compares them).
+const LEGACY_PALETTES={blue:'haze',slate:'haze',indigo:'midnight',cyan:'ocean',teal:'ocean',green:'sage',lime:'sage',brown:'latte',orange:'caramel',amber:'caramel',yellow:'caramel',red:'rose',pink:'rose',wine:'rose',magenta:'rose',peach:'rose',purple:'mauve',silver:'pearl',dark:'ink'};
 const LOCALES=['en','pt','ne','es','hi','hu','zh','zh_TW','cs','it','tr','bn','vi','ru','uz','ja','ko','idn','mr','fr','az','sl','ur','de','fa','ar_SA','el','ta','th','pl','uk','sv'];
 const definitions=[
  ['mynt_clock_get','Read clock mode, 12-hour format and visibility.','clock'],
@@ -43,7 +45,9 @@ function get(domain,raw){
  if(domain==='search')return{engine:'google',supportedDefaultEngines:['google'],bangAliases:['!yt','!youtube','!gh','!github','!gpt','!chat','!claude','!maps','!npm','!b','!trans','!mail','!drive'],directUrlNavigationAvailableInBrowser:true,providerRowHidden:boolean(raw.showShortcutSwitch),aiModeVisible:boolean(raw.aiModeIconVisible,true)};
  if(domain==='ai'){value(raw.aiToolsDisplayStatus,['flex','none'],null);return{tools:aiSettings(raw.aiToolsSettings),visible:value(raw.aiToolsCheckboxState,['checked','unchecked'],'unchecked')==='checked'};}
  if(domain==='theme'){
-  const palette=value(raw.selectedTheme,PALETTES,'blue'),customColor=raw.customThemeColor;
+  const stored=Object.hasOwn(LEGACY_PALETTES,raw.selectedTheme??'')?LEGACY_PALETTES[raw.selectedTheme]:raw.selectedTheme;
+  const palette=value(stored,PALETTES,'haze'),short=/^#([a-fA-F0-9]{3})$/.exec(raw.customThemeColor??'');
+  const customColor=short?'#'+short[1].replace(/./g,'$&$&'):raw.customThemeColor;
   if(customColor!==null&&!/^#[a-fA-F0-9]{6}$/.test(customColor))fail('INVALID_STORAGE','Invalid custom palette preserved');return{palette,customColor};
  }
  return{language:value(raw.selectedLanguage,LOCALES,'zh_TW'),supportedLanguages:LOCALES,changeAvailable:false};
