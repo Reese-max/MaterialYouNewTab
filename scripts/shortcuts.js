@@ -84,6 +84,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         shortcutEditField: document.getElementById("shortcutEditField"),
         adaptiveIconField: document.getElementById("adaptiveIconField"),
         adaptiveIconToggle: document.getElementById("adaptiveIconToggle"),
+        googleFaviconToggle: document.getElementById("googleFaviconToggle"),
         shortcutSettingsContainer: document.getElementById("shortcutList"),
         shortcutsContainer: document.getElementById("shortcutsContainer"),
         newShortcutButton: document.getElementById("newShortcutButton"),
@@ -158,6 +159,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     function loadSettings() {
         loadCheckboxState("shortcutsCheckboxState", dom.shortcutsCheckbox);
         loadCheckboxState("adaptiveIconToggle", dom.adaptiveIconToggle);
+        dom.googleFaviconToggle.checked = localStorage.getItem("googleFaviconToggle") !== "unchecked";
         loadActiveStatus("shortcutEditField", dom.shortcutEditField);
         loadActiveStatus("adaptiveIconField", dom.adaptiveIconField);
         loadDisplayStatus("shortcutsDisplayStatus", dom.shortcuts);
@@ -175,6 +177,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         // Checkbox events
         dom.shortcutsCheckbox.addEventListener("change", handleShortcutsToggle);
         dom.adaptiveIconToggle.addEventListener("change", handleAdaptiveIconToggle);
+        dom.googleFaviconToggle.addEventListener("change", handleGoogleFaviconToggle);
 
         // Button events
         dom.newShortcutButton.addEventListener("click", handleNewShortcutClick);
@@ -633,6 +636,19 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             }
 
             const image = document.createElement("img");
+            if (localStorage.getItem("googleFaviconToggle") === "unchecked") {
+                // Accent disc like the presets: the plain letter image is unreadable on light shortcut pills.
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                for (const [key, value] of [["viewBox", "0 0 24 24"], ["aria-hidden", "true"], ["focusable", "false"], ["data-icon-type", "letter"]]) svg.setAttribute(key, value);
+                const disc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                for (const [key, value] of [["cx", "12"], ["cy", "12"], ["r", "12"], ["class", "accentColor shortcutDarkColor"]]) disc.setAttribute(key, value);
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                for (const [key, value] of [["x", "12"], ["y", "12"], ["text-anchor", "middle"], ["dominant-baseline", "central"], ["font-size", "13"], ["font-weight", "700"], ["class", "bgLightTint shortcutLetter"]]) text.setAttribute(key, value);
+                text.textContent = (MyntQuicklinkIcons.graphemes(String(name || "").trim())[0] || hostname.charAt(0) || "?").toLocaleUpperCase();
+                svg.append(disc, text);
+                container.appendChild(svg);
+                return;
+            }
             image.src = `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${encodeURIComponent(hostname)}&sz=256`;
             image.alt = "";
             image.draggable = false;
@@ -1167,6 +1183,12 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         } else {
             dom.shortcutsContainer.classList.remove("adaptive-icons");
         }
+    }
+
+    function handleGoogleFaviconToggle() {
+        saveCheckboxState("googleFaviconToggle", this);
+        renderAllShortcuts(shortcutsCache);
+        dom.shortcutSettingsContainer.querySelectorAll(".quicklinkChooseIcon").forEach(button => button.refreshIcon());
     }
 
     // Adds an unsaved draft row: nothing is stored or shown on the page until it has a valid URL.

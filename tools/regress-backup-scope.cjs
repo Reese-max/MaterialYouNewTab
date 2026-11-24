@@ -95,11 +95,13 @@ function fileEvent(env, expression = 'settingsFixture') {
 
 (async () => {
     const exporting = environment();
+    exporting.storage.setItem('googleFaviconToggle', 'unchecked');
     const beforeExport = localSnapshot(exporting), beforeStores = await storeSnapshot(exporting);
     const full = await exporting.run('createBackup()');
     assert.equal(full.backup.version, 3); assert.equal(full.backup.scope, 'full');
     assert.equal(full.estimatedBytes, new Blob([full.serialized]).size, 'preflight includes Unicode JSON, keys, separators and base64');
     assert.equal(full.backup.media.music.length, 1);
+    assert.equal(full.backup.localStorage.googleFaviconToggle, 'unchecked', 'Full backup includes the Google favicon preference.');
     assert(!full.serialized.includes('private fixture key')); assert(!full.serialized.includes('active fixture tab'));
     assert.equal(exporting.writes.length, 0); assert.deepEqual(localSnapshot(exporting), beforeExport); assert.deepEqual(await storeSnapshot(exporting), beforeStores);
 
@@ -318,6 +320,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     const sourceVisibility = componentCore.snapshot(origin.context.localStorage);
     const sourceCanonical = componentCore.definitions.map(item=>[item.key,origin.context.localStorage.getItem(item.key)]);
     const exportEnv = environment();
+    exportEnv.storage.setItem('googleFaviconToggle', 'unchecked');
     for(const [key,value] of origin.values) exportEnv.storage.setItem(key,value);
     for(const script of ['event-countdown-core.js','component-visibility-core.js']) exportEnv.run(fs.readFileSync(path.join(root,'scripts',script),'utf8'));
     const packed = await exportEnv.run('createBackup("settings")');
@@ -326,6 +329,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.equal(exportEnv.reads.length,0,'Settings export never opens a media database.');
     assert(!Object.hasOwn(packed.backup.localStorage,'myntWallpaperCurrent'));
     assert.equal(packed.backup.localStorage.myntHomeWidgetsVisible,String(desired.get('homeWidgets')),'Settings export includes the local homepage widget visibility preference.');
+    assert.equal(packed.backup.localStorage.googleFaviconToggle,'unchecked','Settings export includes the Google favicon preference.');
 
     const importEnv = environment();
     for(const script of ['event-countdown-core.js','component-visibility-core.js']) importEnv.run(fs.readFileSync(path.join(root,'scripts',script),'utf8'));
@@ -339,6 +343,7 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.equal(importEnv.confirmations.length,0);assert.equal(importEnv.reloads(),0,'Direct isolated restore invokes no browser confirmation or navigation.');
     assert.equal(importEnv.reads.length,0);assert.equal(importEnv.writes.length,0,'Settings restore neither reads nor writes media databases.');
     assert.deepEqual(await storeSnapshot(importEnv),destinationStores);
+    assert.equal(importEnv.storage.getItem('googleFaviconToggle'),'unchecked','Settings restore preserves the Google favicon preference.');
     for(const [key,value] of Object.entries(destinationMedia)) assert.equal(importEnv.storage.getItem(key),value,'Destination media reference remains unchanged: '+key);
     for(const [key,value] of sourceCanonical) assert.equal(importEnv.storage.getItem(key),value,'All '+canonicalKeys.length+' canonical keys survive serialized production restore: '+key);
     assert.deepEqual(componentCore.snapshot(importEnv.storage),sourceVisibility,'Visibility cache and legacy values also roundtrip exactly.');
