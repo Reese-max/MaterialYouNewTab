@@ -6959,6 +6959,8 @@ body[data-workspace-background="wallpaper"] {
 	background: rgba(255, 255, 255, 0.1);
 	border-color: rgba(255, 255, 255, 0.15);
 	color: #d0bcff;
+	/* Like dark mode: the 0.85 default fades this small label to 4.0:1 on black. */
+	opacity: 1;
 }
 
 .black-theme .controlCenterHeader {
