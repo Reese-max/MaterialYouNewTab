@@ -346,6 +346,20 @@ html.mynt-pomo-float-root.myntHighContrast .mynt-pomo-equalizer i { animation: n
 .mynt-pomo-dock .mynt-pomo-audio { width: 100%; }
 .mynt-pomo-float .mynt-pomo-audio button,
 .mynt-pomo-float .mynt-pomo-ambient-select { background: color-mix(in srgb, var(--pomo-surface) 45%, transparent); }
+/* Timer options sit in the control row's empty left slot as a ⋯ button mirroring Reset;
+   the summary text stays as its accessible name. Its panel shows below the sound row. */
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options { grid-column: 1; grid-row: 1; justify-self: center; }
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options summary {
+    display: grid; place-items: center; width: 2.75rem; height: 2.75rem; min-height: 2.75rem; padding: 0;
+    border-radius: 1.375rem; font-size: 0; color: var(--pomo-fg);
+}
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options summary::before { width: 1.25rem; height: 1.25rem; }
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options[open] summary { background: var(--pomo-surface); }
+.mynt-pomo-options-panel { text-align: start; }
+.mynt-pomo-dock:has(.mynt-pomo-options:not([open])) .mynt-pomo-options-panel { display: none; }
+.mynt-pomo-options-panel label { font-size: var(--pomo-type-body); line-height: 1.4; }
+.mynt-pomo-options-panel .mynt-pomo-note { color: var(--pomo-muted); margin: 12px 0; }
+.mynt-pomo-dock { padding-block: .75rem; }
 html.myntHighContrast .mynt-pomo-float * {
     -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
 }

@@ -338,6 +338,8 @@ async function checkPanelAnchor(delayedReady) {
     const cardChildren = last.document.querySelector('.mynt-pomo-context').children;
     assert.ok(cardChildren.indexOf(last.document.querySelector('.mynt-pomo-task-preview')) < cardChildren.indexOf(last.document.querySelector('.pomodoroRoundDisplay')), 'task is secondary to timer and comes before tertiary round statistics');
     assert.ok(!last.document.querySelector('.mynt-pomo-options').open, 'advanced controls start collapsed');
+    assert.equal(last.document.querySelector('.mynt-pomo-controls').children[0], last.document.querySelector('.mynt-pomo-options'), 'options fill the control row slot before Start, matching tab order');
+    assert.equal(last.document.querySelector('.mynt-pomo-options').querySelector('summary').getAttribute('aria-controls'), last.document.querySelector('.mynt-pomo-options-panel').id);
     assert.ok(!last.document.querySelector('.mynt-pomo-compact'), 'DocumentPiP sizing action is not shown in ordinary popup');
     assert.ok(last.document.querySelector('video').playCalls > 0, 'original mode plays packaged background in the miniwindow');
     assert.match(last.document.querySelector('video').src, /^https:\/\/example\.test\/videos\/pomodoro-bg\.mp4$/);

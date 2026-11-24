@@ -548,7 +548,10 @@
             controls.after(resetPrompt); cancel.focus();
         }
         const options = el(doc, 'details', '', 'mynt-pomo-options');
-        const summary = el(doc, 'summary', t('options')); options.append(summary);
+        const summary = el(doc, 'summary', t('options')); options.append(summary); summary.title = t('options');
+        // The disclosure fills the control row's empty slot; its content opens below the sound row.
+        const optionsPanel = el(doc, 'div', '', 'mynt-pomo-options-panel'); optionsPanel.id = 'myntPomoOptionsPanel';
+        summary.setAttribute('aria-controls', optionsPanel.id); controls.replaceChildren(options, toggle, reset);
         const taskLabel = el(doc, 'label'); const taskCaption = el(doc, 'span', t('task')); taskLabel.append(taskCaption); const task = el(doc, 'input'); task.type = 'text'; task.maxLength = 200; task.placeholder = t('task');
         taskLabel.append(task); task.addEventListener('change', () => run('setTask', task.value));
         const secondary = el(doc, 'div', '', 'mynt-pomo-secondary');
@@ -602,7 +605,7 @@
             label.append(caption, input); durations.append(label); durationFields[key] = { input, caption };
         }
         const optionsNote = el(doc, 'p', t('note'), 'mynt-pomo-note');
-        options.append(taskLabel, durations, durationError, secondary, optionsNote);
+        optionsPanel.append(taskLabel, durations, durationError, secondary, optionsNote);
         const audioRow = el(doc, 'div', '', 'mynt-pomo-audio');
         const musicRow = el(doc, 'div', '', 'mynt-pomo-music-row');
         const ambientRow = el(doc, 'div', '', 'mynt-pomo-ambient-row');
@@ -701,7 +704,7 @@
             renderTransport(ambientRow, ambientButton, ambientIndicator, ambientState?.playing, `${t(ambientState?.playing ? 'ambientPause' : 'ambientPlay')}: ${t('ambient_' + type)}`);
             audioRow.hidden = musicRow.hidden && ambientRow.hidden;
         }
-        dock.append(audioRow, options); main.append(note); doc.body.append(main);
+        dock.append(audioRow, optionsPanel); main.append(note); doc.body.append(main);
         const render = state => {
             if (!state || win.closed || disconnected) return;
             const seconds = Math.max(0, Math.ceil(state.timeRemaining));
@@ -727,7 +730,7 @@
             if (disconnected || win.closed) return;
             relabelAmbient(panelAmbientSelect);
             doc.documentElement.lang = document.documentElement.lang; doc.documentElement.dir = document.documentElement.dir;
-            doc.title = heading.textContent = t('float'); summary.textContent = t('options'); taskCaption.textContent = task.placeholder = t('task');
+            doc.title = heading.textContent = t('float'); summary.textContent = summary.title = t('options'); taskCaption.textContent = task.placeholder = t('task');
             for (const button of main.querySelectorAll('button')) {
                 const key = button.getAttribute('data-pomo-label');
                 if (button === toggle || button === musicButton || button === ambientButton || button === nextButton) continue;

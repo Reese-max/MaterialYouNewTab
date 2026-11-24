@@ -129,7 +129,7 @@ const watchdog = setTimeout(() => { console.error('FLOAT_SYNC_FAIL: unresolved a
     assert.match(q('.pomodoroRoundDisplay').textContent, /Today 2$/);
     today = 3; await document.emit('mynt:pomodoro-complete'); assert.match(q('.pomodoroRoundDisplay').textContent, /Today 3/);
     const options = q('.mynt-pomo-options'); assert.ok(!options.open);
-    assert.equal(options.querySelectorAll('button').find(b => b.getAttribute('data-pomo-label') === 'extend').textContent, dictionaries.en.pomoStudioExtend);
+    assert.equal(q('.mynt-pomo-options-panel').querySelectorAll('button').find(b => b.getAttribute('data-pomo-label') === 'extend').textContent, dictionaries.en.pomoStudioExtend);
     const fields = q('.mynt-pomo-durations').querySelectorAll('input');
     const error = q('#myntPomoDurationError'); assert.equal(error.getAttribute('role'), 'alert');
     for (const [index, max, key] of [[0,120,'workMinutes'],[1,60,'shortBreakMinutes'],[2,60,'longBreakMinutes']]) {
