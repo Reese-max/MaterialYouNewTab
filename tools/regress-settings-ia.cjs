@@ -117,13 +117,16 @@ async function fixtureCompatibility(page, fixture) {
         assert.equal(actual.visible, expected, `${id}: canonical state`);
     }
     for (const key of ['selectedLanguage', 'selectedTheme', 'preferredTheme', 'hideClockVisible', 'hideWeatherVisible', 'micIconVisible', 'aiModeIconVisible', 'hideWeatherCardState']) {
-        if (Object.hasOwn(fixture, key)) assert.equal(await page.evaluate(key => localStorage.getItem(key), key), fixture[key], `Fixture preference preserved: ${key}`);
+        // A palette retired in 2026-11 is migrated once to its nearest current palette.
+        const expected = key === 'selectedTheme' ? await page.evaluate(value => window.ThemeHelpers.LEGACY_PALETTES[value] || value, fixture[key]) : fixture[key];
+        if (Object.hasOwn(fixture, key)) assert.equal(await page.evaluate(key => localStorage.getItem(key), key), expected, `Fixture preference preserved: ${key}`);
     }
     // No selector remains; the stored language still drives the page.
     assert.equal(await page.locator('#languageSelector').count(), 0);
     assert.equal(await page.evaluate(() => document.documentElement.lang), fixture.selectedLanguage === 'zh_TW' ? 'zh-TW' : fixture.selectedLanguage.replace('_', '-'));
     if (fixture.preferredTheme) assert.equal(await page.locator('#themeSegment').getAttribute('data-active'), fixture.preferredTheme);
-    if (fixture.selectedTheme) assert.equal(await page.locator(`input[name="color"][value="${fixture.selectedTheme}"]`).isChecked(), true, 'Fixture theme colour');
+    if (fixture.selectedTheme) assert.equal(await page.locator('input[name="color"]:checked').getAttribute('value'),
+        await page.evaluate(() => localStorage.getItem('selectedTheme')), 'Fixture theme colour');
     if (fixture.micIconVisible) assert.equal(await page.locator('#micIcon').isVisible(), fixture.micIconVisible === 'true');
     if (fixture.aiModeIconVisible) assert.equal(await page.locator('#aiModeIcon').isVisible(), fixture.aiModeIconVisible !== 'false');
     if (fixture.hideWeatherCardState) assert.equal(await page.locator('#hideWeatherCard').isChecked(), fixture.hideWeatherCardState !== 'checked');
@@ -199,16 +202,17 @@ async function openSettingsFromShortcutEditor(page) {
 async function movedSettingsContrast(page) {
     const results = [];
     // The high-contrast setting was removed; a stale saved preference must no longer apply.
-    for (const [theme, color, mode, highContrast] of [
-        ['light', 'blue', 'light', false], ['dark', 'blue', 'dark', false],
-        ['black', 'dark', 'dark', false], ['stale-high-contrast', 'dark', 'dark', false]
+    // The black swatch was retired in 2026-11: a stored 'dark' migrates to the ink palette and dark mode inverts it.
+    for (const [theme, stored, mode, highContrast, color] of [
+        ['light', 'haze', 'light', false, 'haze'], ['dark', 'haze', 'dark', false, 'haze'],
+        ['legacy-black', 'dark', 'dark', false, 'ink'], ['stale-high-contrast', 'ink', 'dark', false, 'ink']
     ]) {
-        // Reload through the real theme initializers, including the radio that disables inversion.
-        await page.evaluate(({ color, mode, theme }) => {
-            localStorage.setItem('selectedTheme', color);
+        // Reload through the real theme initializers.
+        await page.evaluate(({ stored, mode, theme }) => {
+            localStorage.setItem('selectedTheme', stored);
             localStorage.setItem('preferredTheme', mode);
             localStorage.setItem('myntAccessibility', JSON.stringify(theme === 'stale-high-contrast' ? { highContrast: true, fontScale: 1.2 } : {}));
-        }, { color, mode, theme });
+        }, { stored, mode, theme });
         await page.reload();
         await page.waitForFunction(() => window.myntComponents && window.myntDashboard);
         await openMenu(page);
@@ -217,7 +221,8 @@ async function movedSettingsContrast(page) {
             mode: document.getElementById('themeSegment').dataset.active,
             highContrast: document.documentElement.classList.contains('myntHighContrast'),
             black: document.documentElement.classList.contains('black-theme')
-        })), { color, mode, highContrast, black: color === 'dark' }, `DARK: ${theme} initialized`);
+        })), { color, mode, highContrast, black: false }, `DARK: ${theme} initialized`);
+        assert.equal(await page.evaluate(() => localStorage.getItem('selectedTheme')), color, `DARK: ${theme} stored palette migrated`);
         assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--mynt-font-scale')), '', `${theme}: no saved font scale applied`);
         const measure = async selector => page.locator(selector).evaluateAll(nodes => {
             const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
@@ -277,16 +282,16 @@ async function movedSettingsContrast(page) {
         await select(page, 0); await expand(page, 'workspaceSectionContent');
         const cards = await measure('#workspacePresetGrid .workspaceApplyBtn strong');
         assert(cards.length >= 3, `DARK: ${theme} workspace titles exercised`);
-        results.push({ theme, samples: cards });
+        results.push({ theme, mode, samples: cards });
         console.log(`SETTINGS_IA_DARK_MEASURE ${theme} ${JSON.stringify({
             ratios: { cards: cards.map(x => x.ratio) },
             cards: cards.map(({ cardLuminance, panelLuminance }) => ({ cardLuminance, panelLuminance }))
         })}`);
     }
-    for (const { theme, samples } of results) for (const sample of samples) {
-        assert.equal(sample.filters, theme === 'dark' ? 1 : 0, `DARK: ${theme} actual inversion pipeline`);
+    for (const { theme, mode, samples } of results) for (const sample of samples) {
+        assert.equal(sample.filters, mode === 'dark' ? 1 : 0, `DARK: ${theme} actual inversion pipeline`);
         assert(sample.ratio >= 4.5, `DARK: ${theme} ${sample.label}: ${sample.fg} on ${sample.bg} = ${sample.ratio.toFixed(2)}:1`);
-        if (theme === 'dark' && 'cardLuminance' in sample) assert(sample.cardLuminance < .2, `DARK: inverted workspace card must stay dark: ${sample.cardLuminance} (panel ${sample.panelLuminance})`);
+        if (mode === 'dark' && 'cardLuminance' in sample) assert(sample.cardLuminance < .2, `DARK: inverted workspace card must stay dark: ${sample.cardLuminance} (panel ${sample.panelLuminance})`);
     }
 }
 async function componentToggles(page, context) {
@@ -472,7 +477,7 @@ async function backupRoundTrip(page) {
         const expected = backup.localStorage;
         localStorage.setItem('micIconVisible', 'false');
         localStorage.setItem('myntSearchVisible', 'false');
-        localStorage.setItem('selectedTheme', 'red');
+        localStorage.setItem('selectedTheme', 'rose');
         await restoreData(backup);
         const after = (await createBackup('settings')).backup.localStorage;
         return { expected, after, key: localStorage.getItem('weatherApiKey'), leaks: Object.hasOwn(backup.localStorage, 'weatherApiKey') };

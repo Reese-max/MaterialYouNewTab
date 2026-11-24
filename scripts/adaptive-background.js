@@ -57,7 +57,9 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
         if(selected) return {kind:'video',el:selected,key:`video:${selected.currentSrc||selected.src}`,position:getComputedStyle(selected).objectPosition};
         const value=getComputedStyle(body).backgroundImage,match=/url\(["']?(.*?)["']?\)/.exec(value);
         if(match){const url=match[1].replace(/["']$/,'');return {kind:'image',url,key:`image:${url}`,position:getComputedStyle(body).backgroundPosition};}
-        return {kind:'color',key:`color:${getComputedStyle(body).backgroundColor}`,color:getComputedStyle(body).backgroundColor};
+        // A plain theme background has no hue of its own to sample (the 2026-11 palettes are near-white), so keep the theme accent.
+        const themeAccent=getComputedStyle(document.documentElement).getPropertyValue('--darkColor-blue').trim();
+        return {kind:'color',key:`color:${getComputedStyle(body).backgroundColor}:${themeAccent}`,color:getComputedStyle(body).backgroundColor,accent:/^#[\da-f]{6}$/i.test(themeAccent)?themeAccent:null};
     }
     function coordinate(value,remaining){if(value==='left'||value==='top')return 0;if(value==='right'||value==='bottom')return remaining;if(value==='center')return remaining*.5;if(value?.endsWith('%'))return remaining*parseFloat(value)/100;if(value?.endsWith('px'))return parseFloat(value);return remaining*.5;}
     async function sample(src){
@@ -139,6 +141,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
         try{
             const next=await sample(src);if(token!==generation||document.hidden)return;frame=next;
             const result=core.analyze(next.data,next.width,next.height);if(!result.valid)throw Error('pixels');
+            if(src.accent)result.accent=src.accent;
             applyPalette(result,src.kind==='video'&&!changed);measureQuote();
             const where=t('adaptiveManual','保留手動位置');
             report(`${t('adaptiveReady','本機分析完成')} · ${palette.mode==='dark'?t('adaptiveDark','深色'):t('adaptiveLight','淺色')} · ${where}`);

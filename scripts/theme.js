@@ -7,10 +7,8 @@
 const themeStorageKey = "selectedTheme";
 const customThemeStorageKey = "customThemeColor";
 const darkModeCheckboxKey = "enableDarkModeCheckboxState";
-const storedTheme = localStorage.getItem(themeStorageKey);
-const storedCustomColor = localStorage.getItem(customThemeStorageKey);
-const radioButtons = document.querySelectorAll(".colorPlate");
-const colorPicker = document.getElementById("colorPicker");
+const themeHelpers = window.ThemeHelpers; // scripts/preload.js: palettes, migration, storage validation
+const radioButtons = document.querySelectorAll("input.colorPlate[name=color]");
 const colorPickerLabel = document.getElementById("rangColor");
 
 // MediaQuery for system theme detection
@@ -48,11 +46,14 @@ syncThemeChange(systemTheme);
         if (theme === "system") {
             syncThemeChange(systemTheme);
         }
+        // Surface overrides apply in light mode only; re-evaluate them (no-op before the page has loaded).
+        window.myntThemePreferences?.reload();
     }
 
     document.addEventListener('mynt:mcp-settings-refresh', () => {
         const theme = localStorage.getItem(preferredThemeKey) || 'light';
         segment.dataset.active = theme; moveIndicator(theme); if(theme==='system') syncThemeChange(systemTheme);
+        window.myntThemePreferences?.reload();
     });
 
     // Button click handlers
@@ -64,6 +65,7 @@ syncThemeChange(systemTheme);
 
     // System theme change listener
     systemTheme.addEventListener('change', syncThemeChange);
+    systemTheme.addEventListener('change', () => window.myntThemePreferences?.reload());
 
     function initializeThemeMode() {
         const darkModeCheckboxState = localStorage.getItem(darkModeCheckboxKey);
@@ -90,26 +92,8 @@ syncThemeChange(systemTheme);
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Check for custom color
-    const storedCustomColor = localStorage.getItem(customThemeStorageKey);
-    if (storedCustomColor) {
-        applyCustomTheme(storedCustomColor);
-        // Uncheck all radio buttons
-        radioButtons.forEach(radio => {
-            radio.checked = false;
-        });
-    }
-    // Check for regular theme
-    else {
-        const storedTheme = localStorage.getItem(themeStorageKey);
-        if (storedTheme) {
-            applySelectedTheme(storedTheme);
-            const selectedRadioButton = document.querySelector(`.colorPlate[value="${storedTheme}"]`);
-            if (selectedRadioButton) {
-                selectedRadioButton.checked = true;
-            }
-        }
-    }
+    // Apply the saved palette or custom colour (preload.js already painted it and migrated retired ids).
+    refreshTheme(true);
 
     // Remove Loading Screen when the DOM and the theme has loaded
     document.getElementById("LoadingScreen").style.display = "none";
@@ -124,59 +108,60 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 25);
 });
 
-// Function to load background color 
+// Function to load background color
 function ApplyLoadingColor(persist = true) {
     let LoadingScreenColor = getComputedStyle(document.body).getPropertyValue("background-color");
     if (persist) localStorage.setItem("LoadingScreenColor", LoadingScreenColor);
 }
 
 const resetDarkTheme = () => {
-    // Remove the dark theme class
+    // The black preset was retired in 2026-11; clear a class left over from it.
     document.documentElement.classList.remove("black-theme");
 };
 
-// Function to apply the selected theme
+// Dark mode inverts the whole page; surface overrides are light-mode only.
+function isDarkMode() {
+    const mode = localStorage.getItem("preferredTheme") || "light";
+    return mode === "dark" || (mode === "system" && systemTheme.matches);
+}
+
+// Function to apply the selected theme (unknown ids fall back to haze)
 const applySelectedTheme = (colorValue, persist = true) => {
-    const isDarkMode = colorValue === "dark";
-
-    // Reset dark theme if not in dark mode
-    if (!isDarkMode) resetDarkTheme();
-
-    // Reset color picker label border when switching to predefined theme
+    resetDarkTheme();
     colorPickerLabel.style.borderColor = "";
+    themeHelpers.applyPalette(document.documentElement, colorValue);
+    finishThemeApply(persist);
+};
 
-    // Set CSS variables based on the selected color theme
-    if (colorValue === "blue") {
-        document.documentElement.style.setProperty("--bg-color-blue", "#BBD6FD");
-        document.documentElement.style.setProperty("--accentLightTint-blue", "#E2EEFF");
-        document.documentElement.style.setProperty("--darkerColor-blue", "#3569B2");
-        document.documentElement.style.setProperty("--darkColor-blue", "#4382EC");
-        document.documentElement.style.setProperty("--textColorDark-blue", "#1B3041");
-        document.documentElement.style.setProperty("--whitishColor-blue", "#ffffff");
-    } else {
-        const prefix = isDarkMode ? "dark" : colorValue;
-        document.documentElement.style.setProperty("--bg-color-blue", `var(--bg-color-${prefix})`);
-        document.documentElement.style.setProperty("--accentLightTint-blue", `var(--accentLightTint-${prefix})`);
-        document.documentElement.style.setProperty("--darkerColor-blue", `var(--darkerColor-${prefix})`);
-        document.documentElement.style.setProperty("--darkColor-blue", `var(--darkColor-${prefix})`);
-        document.documentElement.style.setProperty("--textColorDark-blue", `var(--textColorDark-${prefix})`);
+const applyCustomTheme = (color, persist = true) => {
+    resetDarkTheme();
+    themeHelpers.applyCustom(document.documentElement, color);
+    colorPickerLabel.style.borderColor = themeHelpers.normalizeHex(color) || "";
+    radioButtons.forEach(radio => { radio.checked = false; });
+    finishThemeApply(persist);
+};
 
-        if (!isDarkMode) {
-            document.documentElement.style.setProperty("--whitishColor-blue", `var(--whitishColor-${colorValue})`);
-        } else {
-            document.documentElement.style.setProperty("--whitishColor-blue", `var(--whitishColor-dark)`);
-        }
-    }
-
-    // Handle dark mode specific changes
-    if (isDarkMode) {
-        document.documentElement.classList.add("black-theme");
-    }
-
+function finishThemeApply(persist) {
+    themeHelpers.applySurfaces(document.documentElement, isDarkMode());
     updateAccessibleActionColor();
     changeFaviconColor(persist);
     ApplyLoadingColor(persist);
-};
+    renderThemeStatus();
+}
+
+// Re-reads storage and applies it without writing anything (local MCP, mode changes). persist=true also
+// refreshes the favicon and loading-screen caches.
+function refreshTheme(persist = false) {
+    const custom = themeHelpers.normalizeHex(localStorage.getItem(customThemeStorageKey));
+    const palette = themeHelpers.resolvePalette();
+    if (custom) applyCustomTheme(custom, false);
+    else applySelectedTheme(palette, false);
+    radioButtons.forEach(radio => { radio.checked = !custom && radio.value === palette; });
+    if (persist) {
+        changeFaviconColor(true);
+        ApplyLoadingColor(true);
+    }
+}
 
 function changeFaviconColor(persist = true) {
     // Fetch colors from CSS variables
@@ -197,38 +182,8 @@ function changeFaviconColor(persist = true) {
     favicon.href = encodedSvg;
     favicon.setAttribute('type', 'image/svg+xml');
 }
-updateAccessibleActionColor();
-changeFaviconColor();
 
-// --------------------- Color Picker ---------------------
-function adjustHexColor(hex, factor, isLighten = true) {
-    hex = hex.replace("#", "");
-    if (hex.length === 3) {
-        hex = hex.split("").map(c => c + c).join("");
-    }
-    let r = parseInt(hex.substring(0, 2), 16);
-    let g = parseInt(hex.substring(2, 4), 16);
-    let b = parseInt(hex.substring(4, 6), 16);
-    if (isLighten) {
-        r = Math.floor(r + (255 - r) * factor);
-        g = Math.floor(g + (255 - g) * factor);
-        b = Math.floor(b + (255 - b) * factor);
-    } else {
-        r = Math.floor(r * (1 - factor));
-        g = Math.floor(g * (1 - factor));
-        b = Math.floor(b * (1 - factor));
-    }
-    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
-}
-
-function isNearWhite(hex, threshold = 240) {
-    hex = hex.replace("#", "");
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    return r > threshold && g > threshold && b > threshold;
-}
-
+// --------------------- Contrast helpers ---------------------
 function parseCssColor(value) {
     const hexMatch = /^#([\da-f]{6})$/iu.exec(value.trim());
     if (hexMatch) {
@@ -286,63 +241,89 @@ function updateAccessibleActionColor() {
     document.documentElement.style.setProperty("--onActionColor-blue", best.value);
 }
 
-const applyCustomTheme = (color, persist = true) => {
-    let adjustedColor = window.ThemeHelpers.isNearWhite(color) ? "#696969" : color;
+// --------------------- Name, surfaces and contrast status ---------------------
+const themeColorName = document.getElementById("themeColorName");
+const themeContrastWarning = document.getElementById("themeContrastWarning");
+const themePanel = document.getElementById("themeCustomPanel");
+const themePanelTitle = document.getElementById("themeCustomPanelTitle");
+const themePanelContrast = document.getElementById("themePanelContrast");
+const themeSliders = ["themeHue", "themeSaturation", "themeLightness"].map(id => document.getElementById(id));
+const themeHexInput = document.getElementById("themeHexInput");
+const themeHexError = document.getElementById("themeHexError");
+const themeHexPreview = document.getElementById("themeHexPreview");
+const themeRecent = document.getElementById("themeRecent");
+const themeRecentColors = document.getElementById("themeRecentColors");
+const surfaceLabels = { page: "themeSurfacePage", side: "themeSurfaceSide", card: "themeSurfaceCard", text: "themeSurfaceText" };
+let panelTarget = null;
+let panelTrigger = null;
 
-    const lighterColorHex = window.ThemeHelpers.adjustHexColor(adjustedColor, 0.7);
-    const lightTin = window.ThemeHelpers.adjustHexColor(adjustedColor, 0.9);
-    const darkerColorHex = window.ThemeHelpers.adjustHexColor(adjustedColor, 0.3, false);
-    const darkTextColor = window.ThemeHelpers.adjustHexColor(adjustedColor, 0.8, false);
+function themeText(key, values = {}) {
+    const lang = localStorage.getItem("selectedLanguage") || "zh_TW";
+    const text = (typeof translations !== "undefined" && (translations[lang]?.[key] || translations.en?.[key])) || key;
+    return text.replace(/\{(\w+)\}/g, (match, name) => (name in values ? values[name] : match));
+}
 
-    document.documentElement.style.setProperty("--bg-color-blue", lighterColorHex);
-    document.documentElement.style.setProperty("--accentLightTint-blue", lightTin);
-    document.documentElement.style.setProperty("--darkerColor-blue", darkerColorHex);
-    document.documentElement.style.setProperty("--darkColor-blue", adjustedColor);
-    document.documentElement.style.setProperty("--textColorDark-blue", darkTextColor);
-    document.documentElement.style.setProperty("--whitishColor-blue", "#ffffff");
-    colorPickerLabel.style.borderColor = color;
-    document.getElementById("dfChecked").checked = false;
-
-    updateAccessibleActionColor();
-    changeFaviconColor(persist);
-    ApplyLoadingColor(persist);
+const toHex = rgb => "#" + rgb.map(channel => Math.round(channel).toString(16).padStart(2, "0")).join("").toUpperCase();
+const tokenHex = token => {
+    const rgb = resolveCssColor(`var(${token})`);
+    return rgb ? toHex(rgb) : "#000000";
 };
 
-// Handle radio button changes
-const handleThemeChange = function () {
-    if (this.checked) {
-        const colorValue = this.value;
-        localStorage.setItem(themeStorageKey, colorValue);
-        localStorage.removeItem(customThemeStorageKey); // Clear custom theme
-        applySelectedTheme(colorValue);
+// Every text/background pair the page paints with these tokens, plus labels on the accent.
+function themeContrastFailures() {
+    const text = resolveCssColor("var(--textColorDark-blue)");
+    const pairs = Object.entries({ page: "--bg-color-blue", side: "--accentLightTint-blue", card: "--whitishColor-blue" })
+        .map(([name, token]) => [themeText("themeSurfaceText"), themeText(surfaceLabels[name]), contrastRatio(text, resolveCssColor(`var(${token})`))]);
+    pairs.push([themeText("themeAccentLabels"), themeText("themeAccentName"),
+        contrastRatio(resolveCssColor("var(--onActionColor-blue)"), resolveCssColor("var(--darkerColor-blue)"))]);
+    return pairs.filter(([, , ratio]) => ratio < 4.5)
+        .map(([textName, surface, ratio]) => themeText("themeContrastPair", { text: textName, surface, ratio: (Math.floor(ratio * 10) / 10).toFixed(1) }));
+}
+
+function renderThemeStatus() {
+    if (!document.body || !themeColorName) return;
+    const custom = themeHelpers.normalizeHex(localStorage.getItem(customThemeStorageKey));
+    const palette = themeHelpers.resolvePalette();
+    themeColorName.textContent = custom
+        ? `${themeText("themeCustomColor")} · ${custom}`
+        : `${themeText("themeColor" + palette.charAt(0).toUpperCase() + palette.slice(1))} · ${themeHelpers.PALETTES[palette]}`;
+
+    // Dark mode inverts the page and skips surface overrides, so their rows are read-only until light mode returns.
+    const surfaces = themeHelpers.readSurfaces(), dark = isDarkMode();
+    document.querySelectorAll(".themeSurfaceSwatch").forEach(button => {
+        const name = button.dataset.surface, value = surfaces[name] || tokenHex(themeHelpers.SURFACES[name]);
+        button.disabled = dark;
+        const chip = document.createElement("span"), label = document.createElement("span");
+        chip.className = "themeColorChip";
+        chip.style.backgroundColor = value;
+        label.textContent = value;
+        button.replaceChildren(chip, label);
+        button.setAttribute("aria-label", themeText(surfaces[name] ? "themeSurfaceCustom" : "themeSurfaceFollowing", { name: themeText(surfaceLabels[name]), value }));
+    });
+    document.querySelectorAll(".themeSurfaceReset").forEach(button => {
+        button.textContent = themeText("themeFollowTheme");
+        button.disabled = dark || !surfaces[button.dataset.surface];
+    });
+
+    const failures = themeContrastFailures();
+    const message = failures.length ? themeText("themeContrastLow", { pairs: failures.join("; ") }) : "";
+    for (const element of [themeContrastWarning, themePanelContrast]) {
+        element.textContent = message;
+        element.hidden = !message;
     }
-};
+}
 
-// Remove any previously attached listeners and add only one
-radioButtons.forEach(radioButton => {
-    radioButton.removeEventListener("change", handleThemeChange); // Remove if already attached
-    radioButton.addEventListener("change", handleThemeChange);    // Add fresh listener
+document.addEventListener("mynt:language-changed", () => {
+    renderThemeStatus();
+    if (panelTarget) themePanelTitle.textContent = panelTitleText(panelTarget);
 });
 
-// Handle color picker changes
-const handleColorPickerChange = function (event) {
-    const selectedColor = event.target.value;
-    resetDarkTheme(); // Clear dark theme if active
-    localStorage.setItem(customThemeStorageKey, selectedColor); // Save custom color
-    localStorage.removeItem(themeStorageKey); // Clear predefined theme
-    applyCustomTheme(selectedColor);
-
-    // Uncheck all radio buttons
-    radioButtons.forEach(radio => {
-        radio.checked = false;
-    });
-};
-
+// --------------------- Custom colour panel ---------------------
 // Throttle for performance optimization
 const throttle = (func, limit) => {
     let lastFunc;
     let lastRan;
-    return (...args) => {
+    const throttled = (...args) => {
         if (!lastRan) {
             func(...args);
             lastRan = Date.now();
@@ -356,17 +337,207 @@ const throttle = (func, limit) => {
             }, limit - (Date.now() - lastRan));
         }
     };
+    // Drops a pending trailing call so it cannot overwrite a colour chosen after it was scheduled.
+    throttled.cancel = () => clearTimeout(lastFunc);
+    return throttled;
 };
 
-// Add listeners for color picker
-colorPicker.removeEventListener("input", handleColorPickerChange); // Ensure no duplicate listeners
-colorPicker.addEventListener("input", throttle(handleColorPickerChange, 10));
+function panelTitleText(target) {
+    return themeText(target === "accent" ? "themeCustomPanelTitle" : surfaceLabels[target]);
+}
+
+function currentTargetColor(target) {
+    if (target === "accent") {
+        return themeHelpers.normalizeHex(localStorage.getItem(customThemeStorageKey))
+            || themeHelpers.PALETTES[themeHelpers.resolvePalette()];
+    }
+    return themeHelpers.readSurfaces()[target] || tokenHex(themeHelpers.SURFACES[target]);
+}
+
+function rememberRecentColor(hex) {
+    const colors = [hex, ...themeHelpers.readRecentColors().filter(color => color !== hex)].slice(0, themeHelpers.RECENT_LIMIT);
+    localStorage.setItem(themeHelpers.RECENT_STORE, JSON.stringify(colors));
+    renderRecentColors();
+}
+
+function renderRecentColors() {
+    const colors = themeHelpers.readRecentColors();
+    themeRecentColors.replaceChildren(...colors.map(color => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.color = color;
+        button.style.backgroundColor = color;
+        button.title = color;
+        button.setAttribute("aria-label", color);
+        return button;
+    }));
+    themeRecent.hidden = !colors.length;
+}
+
+// Writes and applies a colour for the panel's target. commit=true also records a recent custom colour.
+function setTargetColor(target, hex, commit) {
+    if (commit) applyLiveColor.cancel();
+    if (target === "accent") {
+        localStorage.setItem(customThemeStorageKey, hex);
+        localStorage.removeItem(themeStorageKey);
+        applyCustomTheme(hex);
+        if (commit) rememberRecentColor(hex);
+        return;
+    }
+    themeHelpers.writeSurfaces({ ...themeHelpers.readSurfaces(), [target]: hex });
+    refreshTheme(true);
+}
+
+function syncPanel(hex) {
+    const [hue, saturation, lightness] = themeHelpers.hexToHsl(hex);
+    themeSliders[0].value = Math.round(hue);
+    themeSliders[1].value = Math.round(saturation);
+    themeSliders[2].value = Math.round(lightness);
+    updateSliderOutputs();
+    themeHexInput.value = hex;
+    themeHexPreview.style.backgroundColor = hex;
+    showHexError(false);
+}
+
+function updateSliderOutputs() {
+    const [hue, saturation, lightness] = themeSliders.map(slider => slider.value);
+    document.getElementById("themeHueValue").textContent = `${hue}°`;
+    document.getElementById("themeSaturationValue").textContent = `${saturation}%`;
+    document.getElementById("themeLightnessValue").textContent = `${lightness}%`;
+}
+
+function showHexError(visible) {
+    themeHexError.textContent = visible ? themeText("themeHexInvalid") : "";
+    themeHexError.hidden = !visible;
+    if (visible) themeHexInput.setAttribute("aria-invalid", "true");
+    else themeHexInput.removeAttribute("aria-invalid");
+}
+
+function openThemePanel(target, trigger) {
+    applyLiveColor.cancel();
+    panelTarget = target;
+    panelTrigger = trigger;
+    (target === "accent" ? themeContrastWarning : trigger.closest(".themeSurfaceRow")).after(themePanel);
+    document.querySelectorAll('[aria-controls="themeCustomPanel"]').forEach(button => {
+        button.setAttribute("aria-expanded", String(button === trigger));
+    });
+    themePanelTitle.textContent = panelTitleText(target);
+    syncPanel(currentTargetColor(target));
+    renderRecentColors();
+    themePanel.hidden = false;
+    themeSliders[0].focus();
+}
+
+function closeThemePanel(returnFocus = true) {
+    applyLiveColor.cancel();
+    themePanel.hidden = true;
+    document.querySelectorAll('[aria-controls="themeCustomPanel"]').forEach(button => button.setAttribute("aria-expanded", "false"));
+    if (returnFocus) panelTrigger?.focus();
+    panelTarget = null;
+}
+
+function togglePanel(target, trigger) {
+    if (!themePanel.hidden && panelTrigger === trigger) closeThemePanel();
+    else openThemePanel(target, trigger);
+}
+
+const sliderHex = () => themeHelpers.hslToHex(...themeSliders.map(slider => Number(slider.value)));
+const applyLiveColor = throttle((target, hex) => { if (target) setTargetColor(target, hex, false); }, 30);
+
+themeSliders.forEach(slider => {
+    slider.addEventListener("input", () => {
+        const hex = sliderHex();
+        updateSliderOutputs();
+        themeHexInput.value = hex;
+        themeHexPreview.style.backgroundColor = hex;
+        showHexError(false);
+        applyLiveColor(panelTarget, hex);
+    });
+    // Releasing a slider commits the colour (and records it as recent).
+    slider.addEventListener("change", () => { if (panelTarget) setTargetColor(panelTarget, sliderHex(), true); });
+});
+
+// Enter commits (and records a recent colour). Leaving the field only applies the colour: rebuilding the recent row
+// on that blur would move the chip the pointer is about to click.
+function commitHexInput(commit) {
+    const hex = themeHelpers.normalizeHex(themeHexInput.value);
+    if (!hex) {
+        showHexError(true);
+        return;
+    }
+    const unchanged = !panelTarget || hex === currentTargetColor(panelTarget);
+    syncPanel(hex);
+    if (!unchanged) setTargetColor(panelTarget, hex, commit);
+}
+
+themeHexInput.addEventListener("change", () => commitHexInput(false));
+themeHexInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        commitHexInput(true);
+    }
+});
+
+themeRecentColors.addEventListener("click", event => {
+    const hex = themeHelpers.normalizeHex(event.target.closest("button")?.dataset.color);
+    if (!hex || !panelTarget) return;
+    syncPanel(hex);
+    setTargetColor(panelTarget, hex, true);
+    // The row was rebuilt with this colour first; keep keyboard focus on it.
+    themeRecentColors.querySelector(`[data-color="${hex}"]`)?.focus();
+});
+
+themePanel.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeThemePanel();
+    }
+});
+document.getElementById("themeCustomDone").addEventListener("click", () => closeThemePanel());
+
+colorPickerLabel.addEventListener("click", () => togglePanel("accent", colorPickerLabel));
+
+document.querySelectorAll(".themeSurfaceSwatch").forEach(button => {
+    button.addEventListener("click", () => togglePanel(button.dataset.surface, button));
+});
+
+document.querySelectorAll(".themeSurfaceReset").forEach(button => {
+    button.addEventListener("click", () => {
+        applyLiveColor.cancel();
+        const surfaces = themeHelpers.readSurfaces();
+        delete surfaces[button.dataset.surface];
+        themeHelpers.writeSurfaces(surfaces);
+        refreshTheme(true);
+        if (panelTarget === button.dataset.surface) syncPanel(currentTargetColor(panelTarget));
+        // The button disables itself; keep keyboard focus on the row's colour button.
+        button.parentElement.querySelector(".themeSurfaceSwatch").focus();
+    });
+});
+
+// Handle radio button changes
+const handleThemeChange = function () {
+    if (this.checked) {
+        const colorValue = this.value;
+        applyLiveColor.cancel();
+        localStorage.setItem(themeStorageKey, colorValue);
+        localStorage.removeItem(customThemeStorageKey); // Clear custom theme
+        applySelectedTheme(colorValue);
+        if (panelTarget) syncPanel(currentTargetColor(panelTarget));
+    }
+};
+
+// Remove any previously attached listeners and add only one
+radioButtons.forEach(radioButton => {
+    radioButton.removeEventListener("change", handleThemeChange); // Remove if already attached
+    radioButton.addEventListener("change", handleThemeChange);    // Add fresh listener
+});
 
 // Local palette refresh without cache writes, network fetches or external navigation.
+// An open editor follows the reload; a surface editor closes when dark mode takes over.
 window.myntThemePreferences = { reload() {
-    const custom = localStorage.getItem('customThemeColor');
-    const selected = localStorage.getItem('selectedTheme') || 'blue';
-    if (custom) { resetDarkTheme(); applyCustomTheme(custom, false); colorPicker.value = custom; }
-    else applySelectedTheme(selected, false);
-    radioButtons.forEach(radio => { radio.checked = !custom && radio.value === selected; });
+    refreshTheme(false);
+    if (!panelTarget) return;
+    if (panelTarget !== "accent" && isDarkMode()) closeThemePanel(false);
+    else syncPanel(currentTargetColor(panelTarget));
 } };

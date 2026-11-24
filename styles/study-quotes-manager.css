@@ -11,7 +11,8 @@
 .sqChip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 1px solid color-mix(in srgb, currentColor 24%, transparent); border-radius: 999px; cursor: pointer; overflow-wrap: anywhere; }
 .sqChip:has(input:checked) { border-color: var(--darkerColor-blue); background: color-mix(in srgb, var(--darkerColor-blue) 14%, transparent); }
 .sqChip input, .sqSelect, .sqCheck input { margin: 0; accent-color: var(--darkerColor-blue); }
-.sqChipCount { font-size: .78rem; opacity: .72; }
+/* .72 fell to 4.4:1 on a selected chip under the darkest (ink) palette. */
+.sqChipCount { font-size: .78rem; opacity: .85; }
 .sqWarning { margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, #b36b00 14%, transparent); color: #7a4600; font-size: .85rem; }
 .sqWarning[hidden] { display: none; }
 

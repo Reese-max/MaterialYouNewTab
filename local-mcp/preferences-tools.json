@@ -219,25 +219,18 @@
         "palette": {
           "type": "string",
           "enum": [
-            "red",
-            "yellow",
-            "green",
-            "cyan",
-            "blue",
-            "pink",
-            "purple",
-            "orange",
-            "brown",
-            "silver",
-            "peach",
-            "indigo",
-            "teal",
-            "lime",
-            "amber",
-            "wine",
-            "magenta",
-            "slate",
-            "dark"
+            "haze",
+            "mauve",
+            "midnight",
+            "sage",
+            "forest",
+            "ocean",
+            "latte",
+            "caramel",
+            "rose",
+            "graphite",
+            "pearl",
+            "ink"
           ]
         },
         "customColor": {

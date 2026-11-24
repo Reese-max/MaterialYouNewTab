@@ -1,5 +1,5 @@
 /* Run outside the sandbox: node tools/regress-theme-colors.cjs
- * MYNT_EXTENSION selects an unpacked checkout. Clicks each 2026-11 preset, checks the accent applies and persists,
+ * MYNT_EXTENSION selects an unpacked checkout. Clicks each of the 12 2026-11 palettes, checks the accent applies and persists,
  * that every swatch is named, and that the taller swatch grid no longer covers the wallpaper controls below it.
  */
 'use strict';
@@ -8,7 +8,8 @@ const fs = require('node:fs'), os = require('node:os'), path = require('node:pat
 const { chromium } = require('playwright');
 const EXT = path.resolve(process.env.MYNT_EXTENSION || path.join(__dirname, '..'));
 const CHROME = process.env.CHROME_BIN || 'C:/Users/Administrator/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe';
-const ADDED = { indigo: '#4249ae', teal: '#009485', lime: '#8cba36', amber: '#f09800', wine: '#9e2e4c', magenta: '#bf40bf', slate: '#5f7e95' };
+const PALETTES = { haze: '#526b85', mauve: '#8b7c9f', midnight: '#344760', sage: '#7b927f', forest: '#3e6655', ocean: '#508d91',
+    latte: '#a68b76', caramel: '#a47652', rose: '#af7885', graphite: '#555c66', pearl: '#9298a3', ink: '#25272b' };
 const hex = rgb => '#' + rgb.match(/\d+/g).slice(0, 3).map(n => (+n).toString(16).padStart(2, '0')).join('');
 
 async function run(language, viewport) {
@@ -37,8 +38,8 @@ async function run(language, viewport) {
         assert(palette.y + palette.height <= upload.y, `${tag}: swatch grid ends above the wallpaper upload button`);
 
         const names = await page.$$eval('.colorPlate[name=color]', nodes => nodes.map(node => node.getAttribute('aria-label')));
-        assert(names.every(Boolean), `${tag}: every swatch has an accessible name`);
-        for (const [color, swatch] of Object.entries(ADDED)) {
+        assert(names.length === 12 && names.every(Boolean), `${tag}: every swatch has an accessible name`);
+        for (const [color, swatch] of Object.entries(PALETTES)) {
             await page.locator(`.colorPlate[value="${color}"]`).click();
             const accent = await page.evaluate(() => {
                 const probe = document.createElement('span');
@@ -52,8 +53,8 @@ async function run(language, viewport) {
         }
         await page.reload();
         await page.waitForFunction(() => window.myntComponents);
-        assert.equal(await page.evaluate(() => localStorage.getItem('selectedTheme')), 'slate', `${tag}: last preset persisted`);
-        assert.equal(await page.locator('.colorPlate[value="slate"]').isChecked(), true, `${tag}: preset checked after reload`);
+        assert.equal(await page.evaluate(() => localStorage.getItem('selectedTheme')), 'ink', `${tag}: last preset persisted`);
+        assert.equal(await page.locator('.colorPlate[value="ink"]').isChecked(), true, `${tag}: preset checked after reload`);
         assert.deepEqual(errors, [], `${tag}: no console or page errors`);
         console.log(`THEME_COLORS_OK ${tag}`);
     } finally {
