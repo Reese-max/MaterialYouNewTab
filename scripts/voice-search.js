@@ -79,11 +79,7 @@ function initializeSpeechRecognition() {
         recognition.onstart = () => {
             isRecognizing = true; // Set the flag to indicate recognition is active
             micIcon.setAttribute("aria-pressed", "true");
-            const selectedRadio = document.querySelector(".colorPlate:checked");
-            if (selectedRadio.value !== "dark") {
-                micIcon.style.color = "var(--darkerColor-blue)";
-                // micIcon.style.transform = "scale(1.05)";
-            }
+            micIcon.style.color = "var(--darkerColor-blue)";
             searchInput.placeholder = `${translations[currentLanguage]?.listenPlaceholder || translations["en"].listenPlaceholder}`;
             micIcon.classList.add("micActive");
         };

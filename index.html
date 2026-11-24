@@ -1740,38 +1740,90 @@
                                         </div>
                                         <!-- -------- -->
                                         <div class="colorsContainer" id="colorsContainer">
-                                            <input class="colorPlate" name="color" type="radio" value="red">
-                                            <input class="colorPlate" name="color" type="radio" value="yellow">
-                                            <input class="colorPlate" name="color" type="radio" value="green">
-                                            <input class="colorPlate" name="color" type="radio" value="cyan">
-                                            <input id="dfChecked" class="colorPlate" name="color" type="radio" checked
-                                                value="blue">
+                                            <!-- Names and titles come from themeColor<Id> in the locales (scripts/languages.js). -->
+                                            <input id="dfChecked" class="colorPlate" name="color" type="radio" checked value="haze">
+                                            <input class="colorPlate" name="color" type="radio" value="mauve">
+                                            <input class="colorPlate" name="color" type="radio" value="midnight">
+                                            <input class="colorPlate" name="color" type="radio" value="sage">
+                                            <input class="colorPlate" name="color" type="radio" value="forest">
+                                            <input class="colorPlate" name="color" type="radio" value="ocean">
+                                            <input class="colorPlate" name="color" type="radio" value="latte">
+                                            <input class="colorPlate" name="color" type="radio" value="caramel">
+                                            <input class="colorPlate" name="color" type="radio" value="rose">
+                                            <input class="colorPlate" name="color" type="radio" value="graphite">
+                                            <input class="colorPlate" name="color" type="radio" value="pearl">
+                                            <input class="colorPlate" name="color" type="radio" value="ink">
 
-                                            <!-- -------- -->
-                                            <input class="colorPlate" name="color" type="radio" value="pink">
-                                            <input class="colorPlate" name="color" type="radio" value="purple">
-                                            <input class="colorPlate" name="color" type="radio" value="orange">
-                                            <input class="colorPlate" name="color" type="radio" value="brown">
-                                            <input class="colorPlate" name="color" type="radio" value="silver">
+                                            <!-- Opens the built-in custom colour panel below (scripts/theme.js). -->
+                                            <button id="rangColor" class="colorPlate colorPickerLabel" type="button"
+                                                aria-expanded="false" aria-controls="themeCustomPanel">Pick color</button>
+                                        </div>
+                                    </div>
+                                    <p class="themeColorName" id="themeColorName"></p>
+                                    <p class="themeContrastWarning" id="themeContrastWarning" role="status" hidden></p>
 
-                                            <!-- -------- -->
+                                    <div class="themeCustomPanel" id="themeCustomPanel" role="group"
+                                        aria-labelledby="themeCustomPanelTitle" hidden>
+                                        <p class="themePanelTitle" id="themeCustomPanelTitle">Custom theme colour</p>
+                                        <div class="themeSliderRow">
+                                            <label for="themeHue" id="themeHueLabel">Hue</label>
+                                            <input type="range" id="themeHue" min="0" max="360" step="1" value="210">
+                                            <output for="themeHue" id="themeHueValue"></output>
+                                        </div>
+                                        <div class="themeSliderRow">
+                                            <label for="themeSaturation" id="themeSaturationLabel">Saturation</label>
+                                            <input type="range" id="themeSaturation" min="0" max="100" step="1" value="24">
+                                            <output for="themeSaturation" id="themeSaturationValue"></output>
+                                        </div>
+                                        <div class="themeSliderRow">
+                                            <label for="themeLightness" id="themeLightnessLabel">Lightness</label>
+                                            <input type="range" id="themeLightness" min="0" max="100" step="1" value="42">
+                                            <output for="themeLightness" id="themeLightnessValue"></output>
+                                        </div>
+                                        <div class="themeHexRow">
+                                            <label for="themeHexInput" id="themeHexLabel">HEX code</label>
+                                            <input type="text" id="themeHexInput" maxlength="7" spellcheck="false"
+                                                autocomplete="off" aria-describedby="themeHexError">
+                                            <span class="themeColorChip" id="themeHexPreview" aria-hidden="true"></span>
+                                        </div>
+                                        <p class="themeFieldError" id="themeHexError" hidden></p>
+                                        <div class="themeRecent" id="themeRecent" hidden>
+                                            <p id="themeRecentLabel">Recent colours</p>
+                                            <div class="themeRecentColors" id="themeRecentColors" role="group"
+                                                aria-labelledby="themeRecentLabel"></div>
+                                        </div>
+                                        <p class="themePanelContrast" id="themePanelContrast" hidden></p>
+                                        <div class="themePanelActions">
+                                            <button class="settingsActionBtn" id="themeCustomDone" type="button">Done</button>
+                                        </div>
+                                    </div>
 
-                                            <input class="colorPlate" name="color" type="radio" value="indigo">
-                                            <input class="colorPlate" name="color" type="radio" value="teal">
-                                            <input class="colorPlate" name="color" type="radio" value="lime">
-                                            <input class="colorPlate" name="color" type="radio" value="amber">
-                                            <input class="colorPlate" name="color" type="radio" value="wine">
-                                            <input class="colorPlate" name="color" type="radio" value="magenta">
-                                            <input class="colorPlate" name="color" type="radio" value="slate">
-                                            <input class="colorPlate" name="color" type="radio" value="peach">
-                                            <input class="colorPlate" id="darkTheme" name="color" type="radio"
-                                                value="dark">
-
-                                            <!-- ----Color Picker || ColorPicker---- -->
-                                            <label id="rangColor" class="colorPlate colorPickerLabel"
-                                                for="colorPicker">Pick color</label>
-                                            <input type="color" id="colorPicker" autocomplete="off" value="#EA1010" />
-                                            <!-- ----End of Color Picker || ColorPicker---- -->
+                                    <div class="themeSurfaces" id="themeSurfaces" role="group" aria-labelledby="themeSurfacesTitle">
+                                        <p class="themeSurfacesTitle" id="themeSurfacesTitle">Surface colours</p>
+                                        <p class="themeSurfacesNote" id="themeSurfacesNote">Applies in light mode only.</p>
+                                        <div class="themeSurfaceRow">
+                                            <span class="themeSurfaceName" id="themeSurfacePage">Page background</span>
+                                            <button class="themeSurfaceSwatch" type="button" data-surface="page"
+                                                aria-expanded="false" aria-controls="themeCustomPanel"></button>
+                                            <button class="themeSurfaceReset" type="button" data-surface="page"></button>
+                                        </div>
+                                        <div class="themeSurfaceRow">
+                                            <span class="themeSurfaceName" id="themeSurfaceSide">Side panels</span>
+                                            <button class="themeSurfaceSwatch" type="button" data-surface="side"
+                                                aria-expanded="false" aria-controls="themeCustomPanel"></button>
+                                            <button class="themeSurfaceReset" type="button" data-surface="side"></button>
+                                        </div>
+                                        <div class="themeSurfaceRow">
+                                            <span class="themeSurfaceName" id="themeSurfaceCard">Cards</span>
+                                            <button class="themeSurfaceSwatch" type="button" data-surface="card"
+                                                aria-expanded="false" aria-controls="themeCustomPanel"></button>
+                                            <button class="themeSurfaceReset" type="button" data-surface="card"></button>
+                                        </div>
+                                        <div class="themeSurfaceRow">
+                                            <span class="themeSurfaceName" id="themeSurfaceText">Text</span>
+                                            <button class="themeSurfaceSwatch" type="button" data-surface="text"
+                                                aria-expanded="false" aria-controls="themeCustomPanel"></button>
+                                            <button class="themeSurfaceReset" type="button" data-surface="text"></button>
                                         </div>
                                     </div>
                                 </div>

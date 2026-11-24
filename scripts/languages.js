@@ -227,6 +227,18 @@ function applyLanguage(lang) {
         "todoListHover",
         "uploadWallpaperText",
         "rangColor",
+        "themeHueLabel",
+        "themeSaturationLabel",
+        "themeLightnessLabel",
+        "themeHexLabel",
+        "themeRecentLabel",
+        "themeCustomDone",
+        "themeSurfacesTitle",
+        "themeSurfacesNote",
+        "themeSurfacePage",
+        "themeSurfaceSide",
+        "themeSurfaceCard",
+        "themeSurfaceText",
         "bookmarksText",
         "bookmarksInfo",
         "bookmarksHeading",
@@ -344,11 +356,14 @@ function applyLanguage(lang) {
         { id: "resetButton", key: "resetShortcutsLabel", title: true },
         { id: "backButton", key: "shortcutBackLabel", title: true }
     ];
-    // Theme colour swatches are bare radios; name each one after its colour.
+    // Theme colour swatches are bare radios; name each one after its colour (accessible name and tooltip).
     document.querySelectorAll("input.colorPlate[name=color]").forEach(input => {
         const key = "themeColor" + input.value.charAt(0).toUpperCase() + input.value.slice(1);
         const label = translations[lang]?.[key] || translations.en?.[key];
-        if (label) input.setAttribute("aria-label", label);
+        if (label) {
+            input.setAttribute("aria-label", label);
+            input.title = label;
+        }
     });
     // Settings switches wrap only a decorative span; name them by their row title.
     document.querySelectorAll(".ttcont label.switch > input:not([aria-label]):not([aria-labelledby])").forEach(input => {

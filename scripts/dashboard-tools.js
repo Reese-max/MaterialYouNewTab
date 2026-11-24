@@ -605,14 +605,10 @@ if (typeof document !== "undefined") {
             { id: "ambientNight", label: "commandAmbientNight", info: "commandAmbientNightInfo", run: () => globalThis.myntAmbientAudio?.play("night") },
             { id: "ambientPink", label: "commandAmbientPink", info: "commandAmbientPinkInfo", run: () => globalThis.myntAmbientAudio?.play("pink") },
             { id: "ambientBrown", label: "commandAmbientBrown", info: "commandAmbientBrownInfo", run: () => globalThis.myntAmbientAudio?.play("brown") },
+            // The black swatch was retired in 2026-11; toggle the Light/Dark mode control instead.
             { id: "toggleTheme", label: "commandToggleTheme", info: "commandToggleThemeInfo", run: () => {
-                const darkRadio = document.getElementById("darkTheme");
-                const defaultRadio = document.getElementById("dfChecked");
-                if (document.documentElement.classList.contains("black-theme")) {
-                    if (defaultRadio) { defaultRadio.checked = true; defaultRadio.dispatchEvent(new Event("change")); }
-                } else {
-                    if (darkRadio) { darkRadio.checked = true; darkRadio.dispatchEvent(new Event("change")); }
-                }
+                const dark = document.getElementById("themeSegment")?.dataset.active === "dark";
+                document.getElementById(dark ? "lightThemed" : "darkThemed")?.click();
             } }
         ];
         let filteredCommands = [];
