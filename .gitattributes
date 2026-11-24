@@ -1,5 +1,5 @@
-# Normalize line endings: text stored as LF in the repo.
-* text=auto
+# Normalize line endings: stored as LF and checked out as LF on every OS (the static checks read LF source).
+* text=auto eol=lf
 
 # Upstream files that already contain mixed line endings; left as-is to avoid churn and merge conflicts.
 docs/Get_WeatherAPI_Key.html -text
