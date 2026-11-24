@@ -3330,13 +3330,6 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	width: calc(100% * 0.7071) !important;
 }
 
-.adaptive-icons .shortcuts .shortcutLogoContainer img[data-icon-type="letter"] {
-	height: 100% !important;
-	width: 100% !important;
-	filter: none !important;
-	mix-blend-mode: normal !important;
-}
-
 /* ----------end of Shortcuts----------------- */
 
 /* -----------Ai-Tools----------------- */
