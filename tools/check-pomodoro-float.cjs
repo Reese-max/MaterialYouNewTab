@@ -340,6 +340,7 @@ async function checkPanelAnchor(delayedReady) {
     assert.ok(!last.document.querySelector('.mynt-pomo-options').open, 'advanced controls start collapsed');
     assert.equal(last.document.querySelector('.mynt-pomo-controls').children[0], last.document.querySelector('.mynt-pomo-options'), 'options fill the control row slot before Start, matching tab order');
     assert.equal(last.document.querySelector('.mynt-pomo-options').querySelector('summary').getAttribute('aria-controls'), last.document.querySelector('.mynt-pomo-options-panel').id);
+    assert.equal(last.document.querySelector('.mynt-pomo-options-panel').hidden, true, 'closed options panel is hidden without relying on :has()');
     assert.ok(!last.document.querySelector('.mynt-pomo-compact'), 'DocumentPiP sizing action is not shown in ordinary popup');
     assert.ok(last.document.querySelector('video').playCalls > 0, 'original mode plays packaged background in the miniwindow');
     assert.match(last.document.querySelector('video').src, /^https:\/\/example\.test\/videos\/pomodoro-bg\.mp4$/);
@@ -514,6 +515,8 @@ async function checkPanelAnchor(delayedReady) {
     assert.doesNotMatch(css, /:is\([^)]*\.pomodoroTimeDisplay/, 'no later glass rule puts a pill back behind the digits');
     assert.match(css, /\.pomodoroCircleWrap::before \{[^}]*border-radius: 50%[^}]*background: var\(--pomo-surface\)/, 'digits sit on one face inside the ring');
     assert.match(css, /\.pomodoroTimeDisplay\.is-long \{ font-size/, 'three-digit minutes shrink to stay inside the face');
+    assert.match(css, /:is\(\.mynt-pomo-options summary, \.mynt-pomo-reset\) \{ width: max\(44px, 2\.75rem\); height: max\(44px, 2\.75rem\)/, 'control row targets stay 44px at small font scales');
+    assert.match(css, /summary::before \{ forced-color-adjust: none; background-color: CanvasText; \}/, 'forced colors keep the options icon visible');
     assert.match(fs.readFileSync(require.resolve('../scripts/pomodoro-float.js'), 'utf8'), /timer\.classList\.toggle\('is-long', timer\.textContent\.length > 5\)/);
     assert.match(css, /\.mynt-pomo-options\s*\{[^}]*border:\s*0[^}]*background:\s*transparent/, 'closed options are an unobtrusive text entry');
     assert.ok(css.indexOf('.mynt-pomo-float .mynt-pomo-static { background-image: var(--pomo-background') < css.indexOf('@media (forced-colors: active)'), 'single-scrim override cannot supersede forced-colors accessibility');

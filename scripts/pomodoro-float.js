@@ -552,6 +552,8 @@
         // The disclosure fills the control row's empty slot; its content opens below the sound row.
         const optionsPanel = el(doc, 'div', '', 'mynt-pomo-options-panel'); optionsPanel.id = 'myntPomoOptionsPanel';
         summary.setAttribute('aria-controls', optionsPanel.id); controls.replaceChildren(options, toggle, reset);
+        // hidden (not a :has() rule) keeps the closed panel out of tab order in every browser.
+        optionsPanel.hidden = true; options.addEventListener('toggle', () => { optionsPanel.hidden = !options.open; });
         const taskLabel = el(doc, 'label'); const taskCaption = el(doc, 'span', t('task')); taskLabel.append(taskCaption); const task = el(doc, 'input'); task.type = 'text'; task.maxLength = 200; task.placeholder = t('task');
         taskLabel.append(task); task.addEventListener('change', () => run('setTask', task.value));
         const secondary = el(doc, 'div', '', 'mynt-pomo-secondary');
