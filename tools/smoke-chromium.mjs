@@ -674,7 +674,7 @@ async function main() {
     }
 
     // Dialog text in the installed extension, in light mode, dark mode and the black theme: every visible text in
-    // the control center (workspace editor open), wallpaper gallery, encouragement lines, AI tools, bookmark editor,
+    // the settings workspace section (editor open), wallpaper gallery, encouragement lines, AI tools, bookmark editor,
     // keyboard help and command palette meets WCAG AA. Colours are painted on a canvas first, so any CSS colour syntax
     // is measured as rendered; disabled controls are exempt. The original theme mode and colour are restored.
     const previousThemeMode = await evaluate(`localStorage.getItem('preferredTheme')`);
@@ -702,10 +702,12 @@ async function main() {
             }
             return { count, failures }; };
         const out = {};
-        const centre = document.getElementById('controlCenterDialog'); centre.showModal();
-        centre.querySelector('.workspaceEditBtn')?.click(); centre.querySelectorAll('details').forEach(d => { d.open = true; });
-        await wait(300); out.controlCenter = audit(centre);
-        document.getElementById('workspaceCancelBtn')?.click(); centre.close();
+        // Workspaces are edited in the settings panel; the legacy control-center dialog is never opened by the UI.
+        window.myntSettings.open('workspaceSection'); await wait(400);
+        const workspace = document.getElementById('workspaceSection');
+        workspace.querySelector('.workspaceEditBtn')?.click(); workspace.querySelectorAll('details').forEach(d => { d.open = true; });
+        await wait(300); out.workspaceSettings = audit(workspace);
+        document.getElementById('workspaceCancelBtn')?.click(); document.getElementById('menuCloseButton')?.click(); await wait(300);
         window.myntWallpaper.open(); const gallery = document.getElementById('wallpaperGalleryDialog');
         gallery.querySelectorAll('details').forEach(d => { d.open = true; });
         await wait(500); out.wallpaperGallery = audit(gallery); gallery.close();
