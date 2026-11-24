@@ -28,16 +28,19 @@ const timer=require('../scripts/pomodoro-timer-core.js');
 for(const p of builtin)assert.deepEqual(timer.durations(p.durations),p.durations);
 console.log('POMODORO_PRESET_LIMITS_OK: unsupported durations are rejected before applying any settings');
 
-// Execute the settings-reset handler against disposable media. No destructive media path exists.
+// The settings reset (and backup/restore buttons) went with the System tab (owner decision 2026-11-24).
+// Loading the retained backup engine must bind no UI and never touch settings or Pomodoro media.
 (async()=>{
- const vm=require('node:vm'),buttons=new Map(),media={music:['local-song'],image:'local-image'},settings=new Map([['myntPomoStudioMode','full']]);
- let accepted=false,reloaded=0,confirmation='';
- const context={document:{getElementById(id){if(!buttons.has(id))buttons.set(id,{addEventListener(event,fn){this[event]=fn;}});return buttons.get(id);}},translations:{en:{confirmRestore:'Reset settings?',resetKeepsPomodoroMedia:'Resetting settings keeps imported music and timer images.',restorefailed:'Failed: '}},currentLanguage:'en',console,
- confirmPrompt:async text=>{confirmation=text;return accepted;},alertPrompt:async()=>{},localStorage:{clear(){settings.clear();}},location:{reload(){reloaded++;}},indexedDB:{open(){throw Error('Settings reset must not access Pomodoro media databases');}}};
- vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../scripts/backup-restore.js'),'utf8'),context);vm.runInContext('replaceIndexedDB = async () => {}',context);
- await buttons.get('resetsettings').click();assert.equal(settings.size,1);assert.equal(reloaded,0);assert.match(confirmation,/keeps imported/);
- accepted=true;await buttons.get('resetsettings').click();assert.equal(settings.size,0);assert.equal(reloaded,1);assert.deepEqual(media,{music:['local-song'],image:'local-image'});
- console.log('POMODORO_SETTINGS_RESET_OK: cancel preserves settings; confirmed reset restores default settings without touching local timer media');
+ const vm=require('node:vm'),media={music:['local-song'],image:'local-image'},settings=new Map([['myntPomoStudioMode','full']]);
+ let lookups=0,reloaded=0;
+ const fail=()=>{throw Error('Loading the backup engine must not write settings or open media');};
+ const context={document:{getElementById(){lookups++;return null;}},translations:{en:{}},currentLanguage:'en',console,
+ confirmPrompt:fail,alertPrompt:fail,localStorage:{getItem:key=>settings.get(key)??null,setItem:fail,removeItem:fail,clear:fail},location:{reload(){reloaded++;}},indexedDB:{open:fail}};
+ vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../scripts/backup-restore.js'),'utf8'),context);
+ assert.equal(lookups,0,'No backup/restore/reset controls are looked up');assert.equal(reloaded,0);
+ assert.equal(settings.size,1);assert.deepEqual(media,{music:['local-song'],image:'local-image'});
+ assert.equal(vm.runInContext('typeof validateAndRestoreData',context),'undefined','The file-picker restore handler was removed');
+ console.log('POMODORO_SETTINGS_RESET_REMOVED_OK: backup engine loads without UI bindings, settings writes or timer media access');
 })().catch(error=>{console.error(error);process.exitCode=1;});
 const timerSource=fs.readFileSync(path.join(__dirname,'../scripts/pomodoro.js'),'utf8');
 assert.ok(!timerSource.includes('indexedDB'),'Timer reset must not clear local media');

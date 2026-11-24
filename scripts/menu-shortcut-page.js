@@ -160,7 +160,7 @@ const settingsGroupButtons = [...document.querySelectorAll("[data-settings-group
 let activeSettingsGroup = "home";
 
 function selectSettingsGroup(group, resetScroll = true) {
-    group = ({ personal: "appearance", tools: "work", advanced: "system" })[group] || group;
+    group = ({ personal: "appearance", tools: "work" })[group] || group;
     if (!settingsGroupButtons.some(button => button.dataset.settingsGroupButton === group)) group = "home";
     activeSettingsGroup = group;
     settingsGroupButtons.forEach(button => {
@@ -197,7 +197,7 @@ window.myntSettings = {
         });
         selectSettingsGroup(activeSettingsGroup, false);
     },
-    open(sectionId = "accessibilitySection") {
+    open(sectionId = "workspaceSection") {
         const target = document.getElementById(sectionId);
         if (!target) return;
         if (shortcutEditPage.style.display === "block") {
@@ -205,7 +205,7 @@ window.myntSettings = {
             pageReset();
         }
         if (menuButton.getAttribute("aria-expanded") !== "true") openMenuBar();
-        selectSettingsGroup(target.closest("[data-settings-group]")?.dataset.settingsGroup || "system");
+        selectSettingsGroup(target.closest("[data-settings-group]")?.dataset.settingsGroup || "home");
         queueMenu(() => {
             const section = target.closest(".section");
             if (section && !section.classList.contains("expanded")) section.querySelector(".sectionHeader").click();

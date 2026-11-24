@@ -10,7 +10,7 @@ const centre = dark.slice(centreAt);
 assert.ok(centre.length > 0, 'Dark-mode control center block exists and leaves the black theme and high contrast alone');
 const centreBlock = centre.slice(0, centre.indexOf('\n}\n'));
 for (const part of ['.controlSection', '.workspacePresetCard', '.workspaceEditBtn', '.workspaceLaunchBtn', '.workspaceWidgetChoices',
-    '.workspaceEditorActions button', '.permissionControls button', '.serviceRow', '.controlSettingRow select', '.workspaceEditorField textarea'])
+    '.workspaceEditorActions button', '.workspaceEditorField textarea'])
     assert.ok(centreBlock.includes(part), `Dark-mode control center covers ${part}`);
 assert.match(centreBlock, /& \.controlSection \{\s*background: #232833;/);
 assert(!centreBlock.includes('#menuCont'), 'Inverted settings keep light surfaces in ordinary dark mode');
@@ -24,16 +24,16 @@ const status = dark.slice(statusAt);
 const statusBlock = status.slice(0, status.indexOf('\n}\n'));
 assert.ok(dark.slice(dark.lastIndexOf(':is(', statusAt), statusAt).includes('html.black-theme'), 'Status colours also apply to the black theme');
 assert(!dark.includes('):not(.myntHighContrast) :is(#controlCenterDialog, #menuCont)'), 'Dark status colours never target ordinary inverted settings');
-assert.match(statusBlock, /em\.granted, \.serviceState\.ok\) \{\s*color: #81c995;/);
-assert.match(statusBlock, /em\.denied, \.serviceState\.error, \.serviceState\.offline\) \{\s*color: #f28b82;/);
+// Permission and service status rows were removed with the System tab (owner decision 2026-11-24).
+assert.doesNotMatch(dark + css, /permissionControls|permissionRow|serviceState|serviceRow|controlSettingRow/, 'No styles remain for removed System rows');
 assert.match(statusBlock, /\.workspaceEditorActions \.workspaceDangerBtn \{\s*background: transparent;\s*color: #f28b82;/, 'Workspace Delete keeps its danger colour on dark surfaces');
 
 // Dark-mode dialog headers, and the bundle that ships these rules.
 assert.match(dark, /\):not\(\.black-theme\) dialog\.myntDialog > \.controlCenterHeader \{\s*background: #232833;/);
-for (const marker of ['#81c995', '#f28b82', 'background: #232833;']) assert.ok(bundle.includes(marker), `Award bundle carries ${marker}`);
+for (const marker of ['#f28b82', 'background: #232833;']) assert.ok(bundle.includes(marker), `Award bundle carries ${marker}`);
 
 // Black theme + high contrast: black-theme surfaces must not leave white fields on Canvas or black text on dark rows.
-assert.match(css, /html\.myntHighContrast\.black-theme :is\(\.controlSettingRow select, \.workspaceEditorField input, \.workspaceEditorField select, \.workspaceEditorField textarea, \.serviceRow\) \{\s*background: Canvas;\s*color: CanvasText;/);
+assert.match(css, /html\.myntHighContrast\.black-theme :is\(\.workspaceEditorField input, \.workspaceEditorField select, \.workspaceEditorField textarea\) \{\s*background: Canvas;\s*color: CanvasText;/);
 assert.match(css, /html\.myntHighContrast\.black-theme :is\(\.controlSectionHeading a, \.sectionStatus\) \{\s*color: LinkText;/);
 // Black theme: the workspace URL list matches the other editor fields.
 assert.match(css, /\.black-theme \.workspaceEditorField select,\n\.black-theme \.workspaceEditorField textarea \{\s*background: rgba\(255, 255, 255, 0\.08\);/);

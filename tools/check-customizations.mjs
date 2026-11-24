@@ -43,8 +43,8 @@ assert.match(html, /id=["']videoBg["'][^>]*preload=["']none["']/i);
 assert.match(html, /<source\b[^>]*data-src=["']\.\/videos\/bg\.mp4\?v=2["']/i);
 assert.doesNotMatch(html, /<source\b[^>]*\ssrc=["']\.\/videos\/bg\.mp4\?v=2["']/i);
 assert.doesNotMatch(html, /\bonerror\s*=/i, "Inline error handlers violate the extension CSP");
-// Four settings tabs now reuse the same disclosure for moved tools and control-center sections.
-assert.equal((html.match(/<button\b[^>]*\bclass=["'][^"']*\bsectionHeader\b[^"']*["']/gi) || []).length, 18);
+// Three settings tabs reuse the same disclosure; the System tab and its four sections were removed (owner decision 2026-11-24).
+assert.equal((html.match(/<button\b[^>]*\bclass=["'][^"']*\bsectionHeader\b[^"']*["']/gi) || []).length, 14);
 assert.doesNotMatch(html, /<(?:div|span)\b[^>]*\bclass=["'][^"']*\bsectionHeader\b/i);
 assert.match(html, /<h1\s+id=["']menuTitle["']>My New Tab<\/h1>/i);
 assert.doesNotMatch(html, />\s*Material You New Tab\s*</i, "Legacy product name remains visible in the new-tab UI");
@@ -65,15 +65,27 @@ for (const script of ["scripts/pomodoro.js", "scripts/dashboard-tools.js", "scri
 }
 
 for (const id of [
-    "commandPaletteDialog", "controlCenterDialog", "serviceStatusList",
+    "commandPaletteDialog", "controlCenterDialog",
     "workspacePresetGrid", "workspaceEditorForm",
     "pomodoroAmbientRow",
     "shortcutsHelpDialog", "bookmarksSubtitle", "bookmarkShortcutStatus",
     "settingsGroupTabs",
-    "settingsGroupPersonal", "settingsGroupWork", "settingsGroupAdvanced", "settingsHintText"
+    "settingsGroupPersonal", "settingsGroupWork", "settingsHintText"
 ]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `Missing custom UI: ${id}`);
 }
+for (const id of ["settingsGroupAdvanced", "languageSelector", "backupBtn", "restoreBtn", "fileInput", "resetsettings",
+    "accessibilitySection", "privacySection", "serviceSection", "serviceStatusPillCheckbox", "serviceStatusList"]) {
+    assert.ok(!htmlIds.includes(id), `Removed System tab UI returned: ${id}`);
+}
+assert.doesNotMatch(html, /data-settings-group(?:-button)?=["']system["']/, "System settings group returned");
+// The language selector is gone; the saved (or default) language is still applied on load.
+const languagesCode = read("scripts/languages.js");
+assert.doesNotMatch(languagesCode + read("scripts/local-recovery-controls.js"), /languageSelector/);
+assert.match(languagesCode, /window\.onload = function \(\) \{\s*const savedLanguage = getLanguageStatus\("selectedLanguage"\) \|\| DEFAULT_LANGUAGE;\s*applyLanguage\(savedLanguage\);/);
+// Saved accessibility preferences no longer apply; reduced motion follows only the OS media query.
+assert.doesNotMatch(dashboardCode, /"myntAccessibility"|KEYS\.accessibility|myntHighContrast|--mynt-font-scale|reduceMotionCheckbox|data-permission-action/);
+assert.match(dashboardCode, /function effectiveReducedMotion\(\) \{\s*return reducedMotionQuery\.matches;/);
 for (const id of [
     "todayWorkPanel", "todayGoalInput", "todayPriorityList", "todayStartFocusBtn",
     "todayCommandButton", "todayQuickAddForm", "todayProgressBar", "pomodoroFocusTask", "focusTaskResults"

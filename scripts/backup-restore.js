@@ -5,6 +5,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+// The backup/restore/reset buttons were removed with the System settings tab. This engine stays
+// loaded so a restore journal interrupted by an older version is still rolled back at startup.
 // Scoped local backups. Keep the old wallpaper field for v1/v2 compatibility.
 // A v3 file without scope is a legacy full export. Settings-only files omit media
 // entirely (rather than claiming an empty library), so older readers reject them.
@@ -52,44 +54,12 @@ const BACKUP_WORDS = {
     backupRollbackFailed: ["Restore and recovery could not finish. Keep this tab open and retain your backup file. Details: ", "還原及回復未能完成。請保留此分頁及備份檔。詳細資訊："]
 };
 
-const backupButton = document.getElementById("backupBtn");
-const restoreButton = document.getElementById("restoreBtn");
-const backupFileInput = document.getElementById("fileInput");
-const resetButton = document.getElementById("resetsettings");
-const backupScopeSelect = document.getElementById("backupScopeSelect");
-let backupOperationBusy = false;
-backupButton.addEventListener("click", backupData);
-restoreButton.addEventListener("click", () => { if (!backupOperationBusy) backupFileInput.click(); });
-backupFileInput.addEventListener("change", validateAndRestoreData);
-backupScopeSelect?.addEventListener("change", () => { refreshBackupScope(); setBackupStatus(""); });
-
 function getTranslatedText(key) {
     const lang = typeof currentLanguage !== "undefined" ? currentLanguage : "en";
     const dictionary = typeof translations !== "undefined" ? translations : {};
     return dictionary[lang]?.[key] || dictionary.en?.[key] || BACKUP_WORDS[key]?.[lang === "zh_TW" ? 1 : 0] || key;
 }
 
-function refreshBackupScope() {
-    const scope = document.getElementById("backupScopeText");
-    const settingsOnly = backupScopeSelect?.value === "settings";
-    if (scope) scope.textContent = getTranslatedText(settingsOnly ? "backupScopeSettingsShort" : "backupScopeFullShort");
-    const details = document.getElementById("backupScopeDetailsText");
-    if (details) details.textContent = getTranslatedText(settingsOnly ? "backupScopeSettingsText" : "backupScopeText");
-    for (const id of ["backupScopeLabel", "backupScopeFull", "backupScopeSettings", "backupDetailsLabel"]) {
-        const element = document.getElementById(id);
-        if (element) element.textContent = getTranslatedText(id);
-    }
-}
-function setBackupStatus(text) {
-    const status = document.getElementById("backupStatus");
-    if (status) status.textContent = text;
-}
-function setBackupBusy(value) {
-    backupOperationBusy = value;
-    backupButton.disabled = restoreButton.disabled = resetButton.disabled = value;
-    if (backupScopeSelect) backupScopeSelect.disabled = value;
-}
-refreshBackupScope();
 function getErrorMessage(error) { return error instanceof Error ? error.message : String(error); }
 function isPlainRecord(value) {
     if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
@@ -217,31 +187,6 @@ async function createBackup(scope = "full", onEstimate) {
     if (!isValidBackupFile(backup)) throw new Error("The stored data cannot be represented safely in this backup format. Nothing was exported.");
     return { backup, serialized, estimatedBytes };
 }
-async function backupData() {
-    if (backupOperationBusy) return;
-    let objectUrl;
-    const scope = backupScopeSelect ? backupScopeSelect.value : "full";
-    setBackupBusy(true);
-    setBackupStatus(getTranslatedText(scope === "settings" ? "backupSettingsWorking" : "backupWorking"));
-    try {
-        const { serialized } = await createBackup(scope, bytes => setBackupStatus(getTranslatedText("backupEstimate").replace("{size}", (bytes / 1024 / 1024).toFixed(2))));
-        const date = new Date();
-        const formattedDate = `${String(date.getDate()).padStart(2, "0")}${String(date.getMonth() + 1).padStart(2, "0")}${date.getFullYear()}`;
-        const link = document.createElement("a");
-        objectUrl = URL.createObjectURL(new Blob([serialized], { type: "application/json" }));
-        link.href = objectUrl; link.download = `MYNT_Backup_${scope === "settings" ? "Settings_" : ""}${formattedDate}.json`;
-        document.body.appendChild(link); link.click(); link.remove();
-        setBackupStatus(getTranslatedText(scope === "settings" ? "backupSettingsReady" : "backupReady"));
-    } catch (error) {
-        const message = getTranslatedText("failedbackup") + getErrorMessage(error);
-        setBackupStatus(message); await alertPrompt(message);
-    } finally {
-        // Let the browser start consuming the download before releasing its URL.
-        if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-        setBackupBusy(false);
-    }
-}
-
 function blobDescriptorInfo(value) {
     if (!isPlainRecord(value) || value.isBlob !== true || typeof value.blob !== "string" || value.blob.length > MAX_BACKUP_FILE_SIZE ||
         Object.keys(value).some(key => key !== "blob" && key !== "isBlob")) return null;
@@ -514,70 +459,16 @@ async function restoreData(backup) {
     const prepared = prepareBackupForRestore(backup); // Invalid imports make ZERO writes.
     return restoreLock(() => applyRestore(prepared));
 }
-function backupScopePreview(backup) {
-    const counts = { settings: Object.keys(backup.localStorage).filter(key => !SENSITIVE_LOCAL_STORAGE_KEYS.has(key) && !TRANSIENT_LOCAL_STORAGE_KEYS.has(key) &&
-            (backup.version === 3 && backup.scope !== "settings" || !isMediaLocalStorageKey(key))).length,
-        wallpaper: backup.indexedDB.backgroundImage ? 1 : 0, gallery: backup.media?.gallery.length ?? "—", timerImage: backup.media?.timerImage.length ?? "—", music: backup.media?.music.length ?? "—" };
-    if (backup.scope === "settings") return [getTranslatedText("backupRestoreSettingsPreview"),
-        getTranslatedText("backupSettingsCounts").replace("{settings}", String(counts.settings))].join("\n\n");
-    return [getTranslatedText("backupRestorePreview"), getTranslatedText(backup.version === 3 ? "backupRestoreFullMedia" : "backupRestoreLegacyMedia"),
-        getTranslatedText("backupScopeCounts").replace(/\{(\w+)\}/gu, (_, key) => String(counts[key]))].join("\n\n");
-}
-async function validateAndRestoreData(event) {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (!file || backupOperationBusy) return;
-    setBackupBusy(true);
-    try {
-        if (file.size > MAX_BACKUP_FILE_SIZE) throw new Error(getTranslatedText("backupFileTooLarge"));
-        const backup = JSON.parse(await file.text());
-        // Decode everything before confirmation and before the first storage write.
-        prepareBackupForRestore(backup);
-        if (!(await confirmPrompt(backupScopePreview(backup)))) { setBackupStatus(getTranslatedText("backupRestoreCancelled")); return; }
-        setBackupStatus(getTranslatedText("backupRestoreWorking"));
-        await restoreData(backup);
-        setBackupStatus(getTranslatedText("restorecompleted"));
-        await alertPrompt(getTranslatedText("restorecompleted"));
-        location.reload();
-    } catch (error) {
-        const message = getTranslatedText("restorefailed") + getErrorMessage(error);
-        setBackupStatus(message);
-        if (globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) {
-            if (typeof alert === 'function') alert(message);
-        } else await alertPrompt(message);
-    } finally {
-        setBackupBusy(Boolean(globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null));
-        input.value = "";
-    }
-}
-
-// Existing reset remains distinct from full restore: timer/gallery media is kept.
-resetButton.addEventListener("click", async () => {
-    if (backupOperationBusy || !(await confirmPrompt(getTranslatedText("confirmRestore") + "\n\n" + getTranslatedText("resetKeepsPomodoroMedia")))) return;
-    setBackupBusy(true);
-    try {
-        await replaceIndexedDB([]);
-        localStorage.clear();
-        location.reload();
-    } catch (error) {
-        setBackupBusy(false);
-        await alertPrompt(getTranslatedText("restorefailed") + getErrorMessage(error));
-    }
-});
-
 // An interrupted restore is undone under the same cross-tab owner lock. The
 // early admission guard keeps UI and every normal storage writer closed until
 // recovery succeeds; reload then initializes all domains from recovered data.
 if (globalThis.MyntRestoreGuard && localStorage.getItem(RESTORE_JOURNAL_KEY) !== null) {
-    setBackupBusy(true);
-    setBackupStatus(getTranslatedText('backupRestoreWorking'));
     globalThis.myntRestoreReady = restoreLock(async () => {
         const conflict = await recoverInterruptedRestore();
         if (conflict && typeof alert === 'function') alert(getTranslatedText('backupRestoreConflict'));
         location.reload();
     }).catch(error => {
         const message = getTranslatedText('backupRollbackFailed') + getErrorMessage(error);
-        setBackupStatus(message);
         // Native alert remains accessible while ordinary page controls are inert.
         if (typeof alert === 'function') alert(message);
     });

@@ -137,7 +137,7 @@ function settingsBackup(recovery = todo) {
     const translated = uiFixture("todos", todo, "zh_TW");
     assert.equal(translated.button.textContent, "復原待辦刪除");
     translated.storage.setItem("selectedLanguage", "fr");
-    await translated.document.emit("change", { target: { id: "languageSelector" } });
+    await translated.storageEvent("selectedLanguage");
     assert.equal(translated.button.textContent, "Undo task deletion", "Other locales fall back to English");
     translated.storage.removeItem("myntTodoRecoveryV1"); await translated.storageEvent(null); assert(translated.row.hidden);
     translated.storage.setItem("myntTodoRecoveryV1", JSON.stringify(todo)); await translated.storageEvent("myntTodoRecoveryV1"); assert(!translated.row.hidden);

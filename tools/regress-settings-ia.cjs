@@ -20,7 +20,11 @@ const fixturePath = process.env.MYNT_FIXTURE || [
 const read = name => fs.readFileSync(path.join(EXT, name), 'utf8');
 const words = language => vm.runInNewContext(read(`locales/${language}.js`) + `\n;${language}`);
 const dictionaries = { en: words('en'), zh_TW: words('zh_TW') };
-const tabs = { zh_TW: ['首頁', '外觀', '工具', '系統'], en: ['Home', 'Appearance', 'Tools', 'System'] };
+// The System tab (language, backup, accessibility, permissions, service status) was removed (owner decision 2026-11-24).
+const tabs = { zh_TW: ['首頁', '外觀', '工具'], en: ['Home', 'Appearance', 'Tools'] };
+const removedSystemIds = ['settingsGroupAdvanced', 'settingsSectionTitle', 'languageSelector', 'backupScopeSelect', 'backupBtn', 'restoreBtn',
+    'fileInput', 'resetsettings', 'accessibilitySection', 'reduceMotionCheckbox', 'highContrastCheckbox', 'fontScaleSelect',
+    'privacySection', 'privacyPolicyLink', 'serviceSection', 'serviceStatusPillCheckbox', 'serviceStatusList'];
 const components = [
     ['clock', 'hideClockVisible', 'inverse', true], ['search', 'myntSearchVisible', 'boolean', true],
     ['searchProvider', 'showShortcutSwitch', 'inverse', true], ['shortcuts', 'shortcutsCheckboxState', 'checked', false],
@@ -28,10 +32,10 @@ const components = [
     ['bookmarks', 'bookmarksCheckboxState', 'checked', false], ['pomodoro', 'pomodoroCheckboxState', 'checked', false],
     ['homeWidgets', 'myntHomeWidgetsVisible', 'boolean', true], ['studyQuote', 'myntStudyQuoteEnabled', 'string01', true],
     ['countdowns', 'myntEventCountdownsV1', 'events', true],
-    ['galleryEntry', 'myntGalleryEntryVisible', 'boolean', true], ['serviceStatus', 'myntServiceStatusPillVisible', 'boolean', true]
+    ['galleryEntry', 'myntGalleryEntryVisible', 'boolean', true]
 ];
 const compatibilityInputs = ['hideClock', 'hideWeatherCheckbox', 'shortcut_switchcheckbox', 'shortcutsCheckbox',
-    'bookmarksCheckbox', 'aiToolsCheckbox', 'googleAppsCheckbox', 'pomodoroCheckbox', 'studyQuoteCheckbox', 'serviceStatusPillCheckbox'];
+    'bookmarksCheckbox', 'aiToolsCheckbox', 'googleAppsCheckbox', 'pomodoroCheckbox', 'studyQuoteCheckbox'];
 
 function storedVisibility(data, [, key, kind, fallback]) {
     const value = data[key];
@@ -44,14 +48,15 @@ function staticChecks() {
     const html = read('index.html');
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
     assert.equal(new Set(ids).size, ids.length, 'Unique DOM IDs');
-    assert.equal((html.match(/data-settings-group-button=/g) || []).length, 4, 'Exactly four tabs');
+    assert.equal((html.match(/data-settings-group-button=/g) || []).length, 3, 'Exactly three tabs');
+    assert(!/data-settings-group(?:-button)?="system"/.test(html), 'No System tab or System section remains');
+    for (const id of removedSystemIds) assert(!ids.includes(id), `${id}: removed with the System tab`);
     const sectionIds = ['shortcutsSectionContent', 'aiToolSectionContent', 'pomodoroSectionContent', 'pomodoroDurationsContent',
         'pomodoroAdvancedContent', 'studySectionContent', 'countdownSectionContent', 'clockSectionContent', 'searchSectionContent',
-        'weatherSectionContent', 'weatherAdvancedContent', 'layoutSectionContent', 'workspaceSectionContent', 'settingsSectionContent',
-        'accessibilitySectionContent', 'privacySectionContent', 'serviceSectionContent', 'appearanceSectionContent'];
-    assert.deepEqual([...html.matchAll(/<button\b[^>]*class="sectionHeader"[^>]*aria-controls="([^"]+)"/g)].map(match => match[1]).sort(), sectionIds.sort(), 'All 18 sections use a keyboard-operable disclosure with its own content ID');
+        'weatherSectionContent', 'weatherAdvancedContent', 'layoutSectionContent', 'workspaceSectionContent', 'appearanceSectionContent'];
+    assert.deepEqual([...html.matchAll(/<button\b[^>]*class="sectionHeader"[^>]*aria-controls="([^"]+)"/g)].map(match => match[1]).sort(), sectionIds.sort(), 'All 14 sections use a keyboard-operable disclosure with its own content ID');
     for (const lang of ['en', 'zh_TW']) assert.deepEqual(
-        ['settingsGroupPersonal', 'settingsGroupAppearance', 'settingsGroupWork', 'settingsGroupAdvanced'].map(key => dictionaries[lang][key]), tabs[lang]);
+        ['settingsGroupPersonal', 'settingsGroupAppearance', 'settingsGroupWork'].map(key => dictionaries[lang][key]), tabs[lang]);
     for (const lang of ['en', 'zh_TW']) for (const key of ['hideWeatherTitle', 'hideWeatherBox', 'hideSearchWith', 'micIconTitle', 'aiModeIconTitle']) {
         assert(!/^(?:隱藏|Hide\b)/i.test(dictionaries[lang][key]), `${lang}:${key} is positive`);
     }
@@ -64,7 +69,7 @@ function staticChecks() {
         'scripts/languages.js', 'styles/component-manager.css', 'style.css']) assert(!read(name).includes('\r'), `${name}: LF`);
     // pomodoro.js is -text with intentional mixed line endings; never normalize it.
     assert(!/<details\b[^>]*class="settingsTool"/.test(html), 'Moved tools use the shared section component');
-    console.log(`SETTINGS_IA_STATIC_OK localeKeys=${Object.keys(dictionaries.en).length} tabs=4 LF=ok (pomodoro mixed preserved)`);
+    console.log(`SETTINGS_IA_STATIC_OK localeKeys=${Object.keys(dictionaries.en).length} tabs=3 LF=ok (pomodoro mixed preserved)`);
 }
 
 async function poll(fn, expected, label) {
@@ -92,7 +97,7 @@ async function openMenu(page) {
     await page.waitForTimeout(650);
 }
 async function noDuplicateSwitches(page) {
-    for (let tab = 0; tab < 4; tab++) {
+    for (let tab = 0; tab < tabs.en.length; tab++) {
         await select(page, tab);
         for (const id of compatibilityInputs) {
             assert.equal(await page.locator(`#${id}`).count(), 1, `${id}: compatibility DOM retained`);
@@ -114,7 +119,9 @@ async function fixtureCompatibility(page, fixture) {
     for (const key of ['selectedLanguage', 'selectedTheme', 'preferredTheme', 'hideClockVisible', 'hideWeatherVisible', 'micIconVisible', 'aiModeIconVisible', 'hideWeatherCardState']) {
         if (Object.hasOwn(fixture, key)) assert.equal(await page.evaluate(key => localStorage.getItem(key), key), fixture[key], `Fixture preference preserved: ${key}`);
     }
-    assert.equal(await page.locator('#languageSelector').inputValue(), fixture.selectedLanguage);
+    // No selector remains; the stored language still drives the page.
+    assert.equal(await page.locator('#languageSelector').count(), 0);
+    assert.equal(await page.evaluate(() => document.documentElement.lang), fixture.selectedLanguage === 'zh_TW' ? 'zh-TW' : fixture.selectedLanguage.replace('_', '-'));
     if (fixture.preferredTheme) assert.equal(await page.locator('#themeSegment').getAttribute('data-active'), fixture.preferredTheme);
     if (fixture.selectedTheme) assert.equal(await page.locator(`input[name="color"][value="${fixture.selectedTheme}"]`).isChecked(), true, 'Fixture theme colour');
     if (fixture.micIconVisible) assert.equal(await page.locator('#micIcon').isVisible(), fixture.micIconVisible === 'true');
@@ -176,59 +183,32 @@ async function openSettingsFromShortcutEditor(page) {
         await page.locator('#shortcutEditButton').click();
         await poll(() => page.locator('#shortcutEditPage').evaluate(node => node.style.display), 'block', 'L1: editor opens');
         if (delay) await page.waitForTimeout(delay);
-        await page.evaluate(() => window.myntSettings.open('privacySection'));
+        await page.evaluate(() => window.myntSettings.open('workspaceSection'));
         await poll(() => page.locator('#overviewPage').isVisible(), true, 'L1: overview restored');
-        await poll(() => page.evaluate(() => document.activeElement.id), 'privacySection', 'L1: target focused');
+        await poll(() => page.evaluate(() => document.activeElement.id), 'workspaceSection', 'L1: target focused');
         await page.waitForTimeout(700);
         assert.equal(await page.locator('#shortcutEditPage').isVisible(), false, 'L1: editor stays hidden after pending animations');
-        assert.equal(await page.locator('#privacySection').isVisible(), true, 'L1: target stays visible');
-        assert.equal(await page.locator('[data-settings-group-button]').nth(3).getAttribute('aria-selected'), 'true');
-        assert.equal(await page.locator('#privacySection').evaluate(node => {
+        assert.equal(await page.locator('#workspaceSection').isVisible(), true, 'L1: target stays visible');
+        assert.equal(await page.locator('[data-settings-group-button]').nth(0).getAttribute('aria-selected'), 'true');
+        assert.equal(await page.locator('#workspaceSection').evaluate(node => {
             const target = node.getBoundingClientRect(), panel = document.getElementById('optCont').getBoundingClientRect();
             return target.top < panel.bottom && target.bottom > panel.top;
         }), true, 'L1: target scrolled into the panel');
     }
 }
-async function blackThemeStatusContrast(page) {
-    const previous = await page.evaluate(() => {
-        const color = document.querySelector('input[name="color"]:checked').value;
-        applySelectedTheme('dark', false);
-        return color;
-    });
-    try {
-        await select(page, 3); await expand(page, 'serviceSectionContent');
-        assert.equal(await page.evaluate(() => document.documentElement.classList.contains('black-theme') && !document.documentElement.classList.contains('myntHighContrast')), true, 'M4: actual black theme without high contrast');
-        const contrasts = await page.locator('#menuCont #serviceSection .serviceState').first().evaluate(node => {
-            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            const rgba = color => { ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1); return [...ctx.getImageData(0, 0, 1, 1).data]; };
-            const luminance = rgb => rgb.slice(0, 3).map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
-            const original = node.className;
-            try {
-                return ['ok', 'error'].map(state => {
-                    // Reuse the real service row and its opaque black-theme surface; only select the state being measured.
-                    node.className = `serviceState ${state}`;
-                    const color = getComputedStyle(node).color, background = getComputedStyle(node.closest('.serviceRow')).backgroundColor;
-                    const foreground = rgba(color), surface = rgba(background), a = luminance(foreground), b = luminance(surface);
-                    return { state, color, background, opaque: foreground[3] === 255 && surface[3] === 255, ratio: (Math.max(a, b) + .05) / (Math.min(a, b) + .05) };
-                });
-            } finally { node.className = original; }
-        });
-        for (const result of contrasts) assert(result.opaque && result.ratio >= 4.5, `M4: ${result.state} ${result.color} on ${result.background} = ${result.ratio.toFixed(2)}:1`);
-    } finally { await page.evaluate(color => applySelectedTheme(color, false), previous); }
-}
 async function movedSettingsContrast(page) {
     const results = [];
+    // The high-contrast setting was removed; a stale saved preference must no longer apply.
     for (const [theme, color, mode, highContrast] of [
         ['light', 'blue', 'light', false], ['dark', 'blue', 'dark', false],
-        ['black', 'dark', 'dark', false], ['high-contrast', 'dark', 'dark', true]
+        ['black', 'dark', 'dark', false], ['stale-high-contrast', 'dark', 'dark', false]
     ]) {
-        // Reload through the real theme/accessibility initializers, including the radio that disables inversion.
-        await page.evaluate(({ color, mode, highContrast }) => {
+        // Reload through the real theme initializers, including the radio that disables inversion.
+        await page.evaluate(({ color, mode, theme }) => {
             localStorage.setItem('selectedTheme', color);
             localStorage.setItem('preferredTheme', mode);
-            localStorage.setItem('myntAccessibility', JSON.stringify({ highContrast }));
-        }, { color, mode, highContrast });
+            localStorage.setItem('myntAccessibility', JSON.stringify(theme === 'stale-high-contrast' ? { highContrast: true, fontScale: 1.2 } : {}));
+        }, { color, mode, theme });
         await page.reload();
         await page.waitForFunction(() => window.myntComponents && window.myntDashboard);
         await openMenu(page);
@@ -238,6 +218,7 @@ async function movedSettingsContrast(page) {
             highContrast: document.documentElement.classList.contains('myntHighContrast'),
             black: document.documentElement.classList.contains('black-theme')
         })), { color, mode, highContrast, black: color === 'dark' }, `DARK: ${theme} initialized`);
+        assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--mynt-font-scale')), '', `${theme}: no saved font scale applied`);
         const measure = async selector => page.locator(selector).evaluateAll(nodes => {
             const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -280,8 +261,7 @@ async function movedSettingsContrast(page) {
             return nodes.flatMap(node => {
                 const original = node.className;
                 try {
-                    return (node.classList.contains('serviceState') ? ['ok', 'error'] : [null]).map(state => {
-                        if (state) node.className = `serviceState ${state}`;
+                    return [null].map(state => {
                         const values = filters(node), background = surface(node);
                         const fg = effective(over(rgba(getComputedStyle(node).color), background), values);
                         const bg = effective(background, values), a = luminance(fg), b = luminance(bg);
@@ -297,20 +277,9 @@ async function movedSettingsContrast(page) {
         await select(page, 0); await expand(page, 'workspaceSectionContent');
         const cards = await measure('#workspacePresetGrid .workspaceApplyBtn strong');
         assert(cards.length >= 3, `DARK: ${theme} workspace titles exercised`);
-        await select(page, 3); await expand(page, 'privacySectionContent');
-        const grant = page.locator('[data-permission-action="bookmarks"]');
-        assert.equal(await grant.getAttribute('data-permission-state'), 'prompt', 'DARK: actual Grant button');
-        assert.equal(await grant.isEnabled(), true);
-        const permissions = await measure('#menuCont [data-permission-action="bookmarks"]');
-        assert.equal(permissions.length, 1);
-        await expand(page, 'serviceSectionContent');
-        const names = await measure('#menuCont .serviceRow > span:first-child');
-        const states = await measure('#menuCont .serviceRow .serviceState');
-        assert.equal(names.length, 2, `DARK: ${theme} all service names exercised`);
-        assert.equal(states.length, 4, `DARK: ${theme} ok/error on all service rows`);
-        results.push({ theme, samples: [...cards, ...permissions, ...names, ...states] });
+        results.push({ theme, samples: cards });
         console.log(`SETTINGS_IA_DARK_MEASURE ${theme} ${JSON.stringify({
-            ratios: { cards: cards.map(x => x.ratio), grant: permissions.map(x => x.ratio), names: names.map(x => x.ratio), states: states.map(x => x.ratio) },
+            ratios: { cards: cards.map(x => x.ratio) },
             cards: cards.map(({ cardLuminance, panelLuminance }) => ({ cardLuminance, panelLuminance }))
         })}`);
     }
@@ -334,7 +303,8 @@ async function componentToggles(page, context) {
     await context.setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event('offline')));
     await select(page, 0);
-    await poll(() => page.locator('#myntComponentManager input[type="checkbox"]').count(), 13, '13 manager switches (weather removed)');
+    await poll(() => page.locator('#myntComponentManager input[type="checkbox"]').count(), 12, '12 manager switches (weather and service alert removed)');
+    assert.equal(await page.locator('#myntComponent-serviceStatus').count(), 0, 'Service alert switch removed with the System tab');
     assert.equal(await page.locator('#myntComponentManager fieldset').count(), 4, 'Four component groups');
     // Enable the search parent before checking its provider row.
     await page.locator('#myntComponent-search').check();
@@ -465,50 +435,15 @@ async function controlCenterFunctions(page, language) {
     await page.locator('.workspacePresetCard').filter({ hasText: 'IA edited' }).locator('.workspaceEditBtn').click();
     await page.locator('#workspaceDeleteBtn').click();
     await poll(() => page.locator('.workspacePresetCard').filter({ hasText: 'IA edited' }).count(), 0, 'Delete test mode');
-    await select(page, 3);
-    for (const id of ['accessibilitySection', 'privacySection', 'serviceSection']) assert.equal(await page.locator(`#${id}`).isVisible(), true, `${id}: system`);
-    for (const [id, field] of [['reduceMotionCheckbox', 'reduceMotion'], ['highContrastCheckbox', 'highContrast']]) {
-        // reduceMotion defaults to following the media query (already checked under
-        // reducedMotion:'reduce'); a same-value setChecked fires no change and writes nothing.
-        const initiallyOn = await page.locator(`#${id}`).isChecked();
-        for (const checked of initiallyOn ? [false, true] : [true, false]) {
-            await page.locator(`#${id}`).setChecked(checked);
-            assert.equal(await page.evaluate(field => JSON.parse(localStorage.getItem('myntAccessibility'))[field], field), checked);
-        }
+    // Removed System commands no longer appear in the command palette.
+    await page.keyboard.press('Control+k');
+    for (const key of ['commandPrivacy', 'commandAccessibility', 'commandSystemSettings']) {
+        await page.locator('#commandPaletteInput').fill(t[key]);
+        await poll(() => page.locator('.commandPaletteItem').filter({ has: page.locator('strong', { hasText: t[key] }) }).count(), 0, `${key}: command removed`);
     }
-    await page.locator('#fontScaleSelect').selectOption('1.2');
-    assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--mynt-font-scale')), '1.2');
-    assert.equal(await page.locator('#privacyPolicyLink').getAttribute('href'), 'privacy-policy.html');
-    assert.equal(await page.locator('.privacyDisclosureList li:visible').count(), 1);
-    assert.equal(await page.locator('[data-permission-action="location"]').isVisible(), false);
-    assert.equal(await page.locator('#serviceStatusList .serviceRow').count(), 2);
-    // Stub only permission boundaries; real handlers and status refresh still execute.
-    await page.evaluate(() => {
-        window.__iaPermissions = [];
-        // Modern Chromium aliases browser to chrome, so the page prefers
-        // browser.permissions and calls it Promise-style. A callback-only stub throws.
-        for (const api of new Set([globalThis.chrome?.permissions, globalThis.browser?.permissions].filter(Boolean))) {
-            api.contains = (spec, callback) => typeof callback === 'function' ? (callback(false), undefined) : Promise.resolve(false);
-            api.request = (spec, callback) => {
-                window.__iaPermissions.push('bookmarks');
-                return typeof callback === 'function' ? (callback(false), undefined) : Promise.resolve(false);
-            };
-        }
-        Object.defineProperty(Notification, 'permission', { configurable: true, get: () => 'default' });
-        Notification.requestPermission = async () => { window.__iaPermissions.push('notifications'); return 'denied'; };
-        navigator.permissions.query = async () => ({ state: 'prompt' });
-        navigator.geolocation.getCurrentPosition = (_, error) => { window.__iaPermissions.push('location'); error({ code: 1 }); };
-        window.dispatchEvent(new Event('offline'));
-        document.dispatchEvent(new Event('visibilitychange'));
-    });
-    for (const permission of ['bookmarks', 'notifications']) {
-        const button = page.locator(`[data-permission-action="${permission}"]`);
-        await poll(() => button.isEnabled(), true, `${permission}: request available`);
-        await button.click();
-    }
-    assert.deepEqual(await page.evaluate(() => window.__iaPermissions), ['bookmarks', 'notifications']);
+    await page.evaluate(() => document.getElementById('commandPaletteDialog').close());
     // Exercise the actual command entry points that formerly opened the dialog.
-    for (const [key, section, group] of [['commandWorkspaces', 'workspaceSection', 0], ['commandPrivacy', 'privacySection', 3], ['commandAccessibility', 'accessibilitySection', 3], ['commandOpenControl', 'accessibilitySection', 3]]) {
+    for (const [key, section, group] of [['commandWorkspaces', 'workspaceSection', 0]]) {
         await page.keyboard.press('Control+k');
         await page.locator('#commandPaletteInput').fill(t[key]);
         await page.locator('.commandPaletteItem').filter({ has: page.locator('strong', { hasText: t[key] }) }).first().click();
@@ -520,17 +455,16 @@ async function controlCenterFunctions(page, language) {
     assert.equal(await page.locator('#controlCenterDialog #workspaceSection').count(), 1, 'Legacy direct open reuses controls');
     await page.locator('#closeControlCenterBtn').click();
     await poll(() => page.locator('#overviewPage #workspaceSection').count(), 1, 'Legacy close returns controls to settings');
-    await page.locator('#menuCloseButton').click(); await page.waitForTimeout(650);
-    await page.locator('#serviceStatusPill').click();
-    await poll(() => page.locator('[data-settings-group-button]').nth(3).getAttribute('aria-selected'), 'true', 'Service pill opens system');
+    // A stored service failure no longer raises the home-page alert (behaves as if the alert toggle were off).
+    await page.evaluate(() => { localStorage.setItem('myntServiceStatus', JSON.stringify({ wallpaper: { status: 'error', code: 503, at: Date.now() } })); window.dispatchEvent(new Event('online')); });
+    assert.equal(await page.locator('#serviceStatusPill').isVisible(), false, 'Service alert stays hidden');
 }
 
 async function backupRoundTrip(page) {
-    await select(page, 3); await expand(page, 'settingsSectionContent');
     for (const id of ['backupBtn', 'restoreBtn', 'resetsettings', 'backupScopeSelect']) {
-        assert.equal(await page.locator(`#${id}`).isVisible(), true, `${id}: system backup controls`);
+        assert.equal(await page.locator(`#${id}`).count(), 0, `${id}: backup controls removed`);
     }
-    // Exercise the shipped backup and atomic restore functions used by the UI, not a copied serializer.
+    // The retained engine (kept for interrupted-restore recovery) still round-trips exactly.
     const result = await page.evaluate(async () => {
         await window.myntPomodoro.pause();
         localStorage.setItem('weatherApiKey', 'ia-test-secret');
@@ -551,10 +485,10 @@ async function layoutAndKeyboard(page, touch) {
     await openMenu(page); await select(page, 0);
     await page.locator('[data-settings-group-button]').first().focus();
     await page.keyboard.press('ArrowLeft');
-    assert.equal(await page.locator('[data-settings-group-button]').nth(3).getAttribute('aria-selected'), 'true', 'Left wraps');
+    assert.equal(await page.locator('[data-settings-group-button]').nth(tabs.en.length - 1).getAttribute('aria-selected'), 'true', 'Left wraps');
     await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator('[data-settings-group-button]').first().getAttribute('aria-selected'), 'true', 'Right wraps');
-    for (let index = 0; index < 4; index++) {
+    for (let index = 0; index < tabs.en.length; index++) {
         const button = page.locator('[data-settings-group-button]').nth(index);
         if (touch) await button.tap(); else await button.click();
         assert.equal(await button.getAttribute('aria-selected'), 'true');
@@ -593,11 +527,6 @@ async function layoutAndKeyboard(page, touch) {
         if (index === 2) {
             const border = await page.locator('#aiModeIconCheckbox').evaluate(input => getComputedStyle(input.closest('.ttcont')).borderBottomWidth);
             assert.equal(border, '0px', 'Search has no trailing divider before hidden compatibility row');
-        }
-        if (index === 3) {
-            assert.deepEqual(await page.locator('[data-settings-group="system"] > .sectionOuter > .sectionHeader').evaluateAll(headers => headers.map(h => h.getAttribute('aria-controls'))),
-                ['settingsSectionContent', 'accessibilitySectionContent', 'privacySectionContent', 'serviceSectionContent'], 'System section order');
-            for (const id of ['reduceMotionCheckbox', 'highContrastCheckbox']) assert.equal(await page.locator(`#${id}`).evaluate(input => Boolean(input.closest('.ttcont') && input.closest('.switch'))), true, `${id}: shared switch row`);
         }
         // Each shared disclosure updates ARIA and makes its own content inert; nested sections keep their state.
         for (const header of await page.locator('#overviewPage [data-settings-group]:not([hidden]) > .sectionOuter > .sectionHeader:visible').all()) {
@@ -660,7 +589,7 @@ async function fixtureSnapshot(page, fixture) {
                 return { selector, display: css.display, visibility: css.visibility };
             })];
         }));
-        return { roots, language: document.getElementById('languageSelector').value,
+        return { roots, language: document.documentElement.lang,
             theme: { mode: document.getElementById('themeSegment').dataset.active,
                 color: document.querySelector('input[name="color"]:checked')?.value,
                 background: document.body.dataset.bg,
@@ -672,7 +601,7 @@ async function fixtureSnapshot(page, fixture) {
 }
 async function run(language, mobile) {
     if (REVIEW_CASE) {
-        const cases = { M1: clockOptionsAfterManager, M3: settingsTouchTargets, M4: blackThemeStatusContrast, L1: openSettingsFromShortcutEditor, DARK: movedSettingsContrast };
+        const cases = { M1: clockOptionsAfterManager, M3: settingsTouchTargets, L1: openSettingsFromShortcutEditor, DARK: movedSettingsContrast };
         assert(cases[REVIEW_CASE], `Unknown review case: ${REVIEW_CASE}`);
         const { context, page, errors } = await launch(EXT, { selectedLanguage: language }, mobile);
         try {
@@ -708,9 +637,11 @@ async function run(language, mobile) {
     try {
         await openMenu(page);
         assert.deepEqual(await page.locator('[data-settings-group-button]').allTextContents().then(values => values.map(value => value.trim())), tabs[language]);
-        await select(page, 3);
-        assert.equal(await page.locator('[aria-controls="settingsSectionContent"]').getAttribute('aria-expanded'), 'true', 'Language and backup initially expanded');
-        assert.equal(await page.locator('#settingsSectionTitle').textContent(), dictionaries[language].settingsLanguageBackupTitle);
+        // Tabs above are translated from the stored language without any language selector.
+        assert.equal(await page.locator('[data-settings-group-button="system"]').count(), 0, 'System tab removed');
+        // A stale "advanced"/"system" group request falls back to an existing tab without errors.
+        await page.evaluate(() => { window.myntSettings.selectGroup('advanced'); window.myntSettings.selectGroup('system'); });
+        assert.equal(await page.locator('[data-settings-group-button="home"]').getAttribute('aria-selected'), 'true', 'Unknown group falls back to Home');
         await noDuplicateSwitches(page);
         await clockOptionsAfterManager(page);
         const testedComponents = await componentToggles(page, context);
@@ -718,7 +649,6 @@ async function run(language, mobile) {
         await settingsTouchTargets(page);
         await openSettingsFromShortcutEditor(page);
         await controlCenterFunctions(page, language);
-        await blackThemeStatusContrast(page);
         await backupRoundTrip(page);
         await layoutAndKeyboard(page, mobile);
         // componentToggles left the context offline; DARK reloads online to measure settings surfaces.

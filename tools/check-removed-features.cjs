@@ -5,7 +5,8 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-const ids = ['todo', 'exam', 'profilesEntry', 'adaptiveEntry', 'weather'];
+// serviceStatus: its settings toggle went with the System tab (owner decision 2026-11-24), so the home alert stays hidden.
+const ids = ['todo', 'exam', 'profilesEntry', 'adaptiveEntry', 'weather', 'serviceStatus'];
 const removed = read('scripts/removed-features.js');
 const match = removed.match(/Object\.freeze\(\[([^\]]+)\]\)/);
 assert.ok(match, 'removed component list must be frozen');
@@ -32,15 +33,15 @@ assert.ok(css.includes('[data-workspace-widget="todoListCheckbox"]'));
 assert.ok(css.includes('label:has(> [data-workspace-widget="todoListCheckbox"])'), 'The workspace editor hides the whole To-Do choice, not only its checkbox');
 const displayRule = css.slice(0, css.indexOf('\n}'));
 assert.match(displayRule, /display:\s*none\s*!important/);
-for (const selector of ['#todoListCont', '#examDaily', '#myntProfilesPanel', '#myntAdaptivePanel']) assert.ok(displayRule.includes(selector), `other removed feature must retain display:none: ${selector}`);
+for (const selector of ['#todoListCont', '#examDaily', '#myntProfilesPanel', '#myntAdaptivePanel', '#serviceStatusPill']) assert.ok(displayRule.includes(selector), `other removed feature must retain display:none: ${selector}`);
 assert.match(read('scripts/layout-editor.js'), /MYNT_REMOVED_LAYOUT_IDS\.has\(id\)/);
 assert.ok(read('index.html').indexOf('scripts/removed-features.js') < read('index.html').indexOf('style.css'));
 const weatherRule = css.slice(css.indexOf('html.mynt-removed-weather'));
 assert.match(weatherRule, /display:\s*none\s*!important/);
 for (const selector of ['#hideWeather#hideWeather#hideWeather', '#hideWeather .lrectangle', '#hideWeather .rAndakar',
-    '[data-settings-component="weather"]', '.permissionRow:has([data-permission-action="location"])',
-    '#privacyDisclosureWeather', '#privacyDisclosureIp']) assert.ok(weatherRule.includes(selector), `weather hide rule: ${selector}`);
-assert.match(weatherRule, /\.permissionRow:has\(\[data-permission-action="notifications"\]\)\s*\{\s*border-bottom: 0;/, 'No trailing divider after the last visible permission');
+    '[data-settings-component="weather"]']) assert.ok(weatherRule.includes(selector), `weather hide rule: ${selector}`);
+// The permission rows and privacy disclosures were removed with the System tab.
+assert.doesNotMatch(css, /permissionRow|privacyDisclosure/);
 assert.match(read('scripts/menu-shortcut-page.js'), /componentEnabled = String\(item\?\.visible === true && !\(window\.MYNT_REMOVED_COMPONENT_IDS/);
 assert.match(read('scripts/dashboard-tools.js'), /weather: \["weather"\]/);
 
@@ -75,7 +76,8 @@ assert.match(read('scripts/dashboard-tools.js'), /weather: \["weather"\]/);
     // Saved weather failures stay stored but cannot raise the service alert.
     const dashboard = read('scripts/dashboard-tools.js');
     const definitions = dashboard.slice(dashboard.indexOf('        const weatherRemoved ='), dashboard.indexOf('        function serviceFromRequest'));
-    const alert = dashboard.slice(dashboard.indexOf('        function updateServiceAlert()'), dashboard.indexOf('        const serviceAlertCheckbox'));
+    const alert = dashboard.slice(dashboard.indexOf('        function updateServiceAlert()'), dashboard.indexOf('        window.addEventListener("online", updateServiceAlert);'));
+    assert.ok(alert.length > 0 && !alert.includes('addEventListener'), 'Service alert source boundary');
     for (const removed of [true, false]) {
         const pill = { classList: { toggle() {} } }, text = {};
         const state = { weather: { status: 'error', at: Date.now() }, location: { status: 'error', at: Date.now() } };

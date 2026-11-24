@@ -21,11 +21,8 @@ const blocks = Object.fromEntries(['clock','search','searchWith','aiTools','shor
 const layout = object({version:{const:2},snap:bool,locked:bool,blocks:object(blocks)},['version','snap','locked','blocks']);
 const workspaceWidgets=object(Object.fromEntries(['shortcutsCheckbox','bookmarksCheckbox','todoListCheckbox','pomodoroCheckbox','aiToolsCheckbox','googleAppsCheckbox'].map(key=>[key,bool])));
 const workspacePatch=object({name:str(30),widgets:workspaceWidgets,background:enumeration(['video','wallpaper','color']),focusMinutes:{type:'number',minimum:1,maximum:120},urls:{type:'array',maxItems:10,items:str(2048)}});
-const accessibilityPatch=object({reduceMotion:bool,highContrast:bool,fontScale:{type:'number',enum:[0.9,1,1.1,1.2],minimum:.9,maximum:1.2}});
 const definitions = [
  ['mynt_workspaces_mutate','Create or update workspace presets without applying them or opening URLs.',{operation:enumeration(['create','update']),id:{type:'string',pattern:'^[A-Za-z0-9_-]{1,64}$',maxLength:64},patch:workspacePatch}],
- ['mynt_accessibility_get','Read reduced-motion, contrast and text-scale preferences.',null],
- ['mynt_accessibility_update','Update accessibility preferences without starting media or requesting permissions.',{patch:accessibilityPatch}],
  ['mynt_dashboard_get','Read dashboard counts, excluding task titles, notes and credentials.',null],
  ['mynt_shortcuts_mutate','Create, update, recoverably trash or restore a shortcut; keep at least one as required by the browser UI. IDs change after edits; icons stay private and new icons are local-only.',{operation:enumeration(['create','update','trash','undo']),id:str(80),name:str(200),url:str(2048)}],
  ['mynt_shortcuts_get','Read persisted shortcut titles and HTTP(S) URLs without credentials, query strings, fragments or icon data.',null],
@@ -39,7 +36,7 @@ const definitions = [
  ['mynt_settings_get','Read only explicitly safe preference whitelist.',null],
  ['mynt_settings_update','Update explicitly safe preferences; never credentials or security permissions.',{patch:object(settings)}],
  ['mynt_workspaces_get','Read named workspace presets; applying modes and opening URLs require existing UI.',null],
- ['mynt_backup_preview','Return backup scope metadata only. Export/restore/reset require existing browser UI.',null]
+ ['mynt_backup_preview','Return backup scope metadata only. MYNT no longer has export/restore/reset controls.',null]
 ];
 const tools = definitions.map(([name,description,fields])=>({name,description,readOnly:!fields,annotations:{readOnlyHint:!fields,destructiveHint:false,openWorldHint:false},inputSchema:object(fields?{...fields,expectedRevision:revision,requestId:str(100)}:{},fields?['expectedRevision']:[])}));
 const fail = (code,message) => {const e=new Error(message);e.code=code;throw e;};
@@ -63,7 +60,7 @@ async function token(expected,context) {
  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(expected)));
  return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
 }
-const keys = {accessibility:['myntAccessibility'],events:['myntEventCountdownsV1','myntExamDate'],todos:['todoList','myntTodoRecoveryV1'],layouts:['myntLayoutProfiles','myntLayout'],settings:Object.keys(readSettings),workspaces:['myntWorkspacePresets','myntWorkspacePreset']};
+const keys = {events:['myntEventCountdownsV1','myntExamDate'],todos:['todoList','myntTodoRecoveryV1'],layouts:['myntLayoutProfiles','myntLayout'],settings:Object.keys(readSettings),workspaces:['myntWorkspacePresets','myntWorkspacePreset']};
 function todoState(raw) {
  const data=parse(raw,{});if(!plain(data)||Object.keys(data).length>500)fail('invalid_storage','Invalid or excessive tasks preserved');
  const out={};for(const [key,value] of Object.entries(data)) {
@@ -91,11 +88,6 @@ function state(domain,values,context) {
   const clean=workspaceState(values[0],context,false);
   return {active:values[1],presets:clean.map(({urls,...v})=>({...v,urlCount:urls.length})),defaultsNotPersisted:values[0]===null};
  }
- if(domain==='accessibility') {
-  const value=parse(values[0],{reduceMotion:null,highContrast:false,fontScale:1});
-  if(!plain(value)||Object.keys(value).some(k=>!['reduceMotion','highContrast','fontScale'].includes(k))||!(value.reduceMotion===null||typeof value.reduceMotion==='boolean')||typeof value.highContrast!=='boolean'||![.9,1,1.1,1.2].includes(value.fontScale))fail('invalid_storage','Invalid accessibility settings preserved');
-  return value;
- }
 }
 function workspaceState(raw,context,required) {
  let value;
@@ -116,7 +108,7 @@ function workspaceState(raw,context,required) {
  const clean=normalize(value);if(clean.length!==value.length)fail('invalid_storage','Invalid workspace IDs preserved');return clean;
 }
 const familyMatrix = Object.freeze([
- ['events','read-write','upsert, visibility, recoverable trash/undo'],['todos','read-write','create, edit, complete, pin, recoverable trash and undo'],['manual-layouts','read-write','wide/narrow profiles, revisions, recoverable trash/undo'],['settings','limited-write','explicit safe whitelist only'],['workspaces','read-write','create/update presets; bounded apply through UI adapter; never launch URLs'],['backup','metadata-only','export, file preview, restore and reset require browser UI'],['pomodoro','separate-adapter','timer and studio'],['music','separate-adapter','metadata/playback/settings and durable recoverable remove/restore; file picker and autoplay browser constraints'],['wallpapers','separate-adapter','gallery metadata/select/rename/cancel/recoverable remove; bundled hide/restore; file picker browser constraints'],['ambient-sound','separate-adapter','ambient playback and bounded volume through UI adapter'],['bookmarks','permission-gated-read-write','read, create, update, move and recoverable trash/restore through browser adapter'],['shortcuts','read-write','create/update and recoverable trash/undo; at least one active shortcut required by existing browser UI; opaque IDs change after edits; icons private'],['search','limited-write','search row and AI-mode visibility through preferences adapter; fixed Google default and bang metadata; navigation and voice permissions browser-only'],['ai-tools','limited-write','three built-in tools visibility/order through preferences adapter; external navigation browser-only'],['weather','browser-only','location and credentials never exposed'],['quotes','separate-adapter','study quote controls through UI adapter'],['daily-exam','browser-only','exam card'],['accessibility','read-write','reduced motion, contrast and text scale; no remote autoplay'],['google-apps','browser-only','launcher'],['clock','read-write','mode, 12-hour format and visibility through preferences adapter; hidden-at-start closure may require browser initialization'],['adaptive-background','separate-adapter','palette, contrast and opacity through UI adapter; no automatic positioning'],['language','action-required','supported locales read; change explicitly requires browser reload and may refetch quotes'],['permissions','browser-only','no remote grants'],['command-palette','browser-only','interactive command palette']
+ ['events','read-write','upsert, visibility, recoverable trash/undo'],['todos','read-write','create, edit, complete, pin, recoverable trash and undo'],['manual-layouts','read-write','wide/narrow profiles, revisions, recoverable trash/undo'],['settings','limited-write','explicit safe whitelist only'],['workspaces','read-write','create/update presets; bounded apply through UI adapter; never launch URLs'],['backup','metadata-only','export, restore and reset controls were removed from MYNT'],['pomodoro','separate-adapter','timer and studio'],['music','separate-adapter','metadata/playback/settings and durable recoverable remove/restore; file picker and autoplay browser constraints'],['wallpapers','separate-adapter','gallery metadata/select/rename/cancel/recoverable remove; bundled hide/restore; file picker browser constraints'],['ambient-sound','separate-adapter','ambient playback and bounded volume through UI adapter'],['bookmarks','permission-gated-read-write','read, create, update, move and recoverable trash/restore through browser adapter'],['shortcuts','read-write','create/update and recoverable trash/undo; at least one active shortcut required by existing browser UI; opaque IDs change after edits; icons private'],['search','limited-write','search row and AI-mode visibility through preferences adapter; fixed Google default and bang metadata; navigation and voice permissions browser-only'],['ai-tools','limited-write','three built-in tools visibility/order through preferences adapter; external navigation browser-only'],['weather','browser-only','location and credentials never exposed'],['quotes','separate-adapter','study quote controls through UI adapter'],['daily-exam','browser-only','exam card'],['google-apps','browser-only','launcher'],['clock','read-write','mode, 12-hour format and visibility through preferences adapter; hidden-at-start closure may require browser initialization'],['adaptive-background','separate-adapter','palette, contrast and opacity through UI adapter; no automatic positioning'],['language','read-only','saved locale read; MYNT has no language selector'],['permissions','browser-only','no remote grants'],['command-palette','browser-only','interactive command palette']
 ].map(([family,support,detail])=>Object.freeze({family,support,detail})));
 function shortcutItem(value) {
  if(!plain(value)||Object.keys(value).some(k=>!['name','url','icon'].includes(k))||typeof value.name!=='string'||value.name.length>200||typeof value.url!=='string'||!value.url||value.url.length>2048||typeof value.icon!=='string'||value.icon.length>150000)fail('invalid_storage','Invalid shortcut preserved');
@@ -213,7 +205,7 @@ async function execute(name,args={},context={}) {
   if(name==='mynt_dashboard_get')return await overview(name,context);
   if(name==='mynt_shortcuts_get'||name==='mynt_shortcuts_mutate')return await shortcutExecute(name,args,context);
   if(name==='mynt_data_inventory')return {ok:true,families:familyMatrix,mutationPolicy:'Expected revision and coordinated commit required; browser-only capabilities are not silently executed.'};
-  if(name==='mynt_backup_preview')return {ok:true,format:'material-you-newtab',version:3,maxBytes:33554432,scopes:['settings','full'],excluded:['credentials','pairing','browser permissions','browser bookmarks'],actionRequired:true,reason:'Use browser backup controls to export or select/validate a restore file. MCP does not export raw storage or execute restore/reset.'};
+  if(name==='mynt_backup_preview')return {ok:true,format:'material-you-newtab',version:3,maxBytes:33554432,scopes:['settings','full'],excluded:['credentials','pairing','browser permissions','browser bookmarks'],actionRequired:false,reason:'Backup, restore and reset controls were removed from MYNT. MCP does not export raw storage or execute restore/reset.'};
   const domain=name.split('_')[1];const storage=context.storage||root.localStorage;if(!storage)fail('unavailable','Storage unavailable');
   const expected=keys[domain].map(key=>({key,value:storage.getItem(key)}));
   const current=state(domain,expected.map(e=>e.value),context);const expectedToken=await token(expected,context);
@@ -277,9 +269,6 @@ async function execute(name,args={},context={}) {
    if(index<0)all.push(candidate);else all[index]=candidate;
    const checked=workspaceState(JSON.stringify(all),context,true);writes=[{key:keys.workspaces[0],value:JSON.stringify(checked)}];
    next={active:current.active,presets:checked.map(({urls,...v})=>({...v,urlCount:urls.length})),defaultsNotPersisted:false,applied:false};
-  } else if(domain==='accessibility') {
-   if(!args.patch||!Object.keys(args.patch).length)fail('invalid_arguments','Nonempty patch required');
-   next={...next,...args.patch};writes=[{key:keys.accessibility[0],value:JSON.stringify(next)}];
   } else if(domain==='settings') {
    if(!args.patch||!Object.keys(args.patch).length)fail('invalid_arguments','Nonempty patch required');for(const [key,value] of Object.entries(args.patch)){next[key]=value;writes.push({key,value:String(value)});}
   }
