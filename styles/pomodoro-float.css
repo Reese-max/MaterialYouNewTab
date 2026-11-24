@@ -346,6 +346,23 @@ html.mynt-pomo-float-root.myntHighContrast .mynt-pomo-equalizer i { animation: n
 .mynt-pomo-dock .mynt-pomo-audio { width: 100%; }
 .mynt-pomo-float .mynt-pomo-audio button,
 .mynt-pomo-float .mynt-pomo-ambient-select { background: color-mix(in srgb, var(--pomo-surface) 45%, transparent); }
+/* Timer options sit in the control row's empty left slot as a ⋯ button mirroring Reset;
+   the summary text stays as its accessible name. Its panel shows below the sound row. */
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options { grid-column: 1; grid-row: 1; justify-self: center; }
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options summary {
+    display: flex; align-items: center; justify-content: center; gap: 0; padding: 0;
+    border-radius: 1.375rem; font-size: 0; color: var(--pomo-fg);
+}
+/* Small font scales shrink rem; touch targets in the control row never drop below 44px. */
+.mynt-pomo-float .mynt-pomo-controls { grid-template-columns: max(44px, 2.75rem) minmax(0, 8rem) max(44px, 2.75rem); }
+.mynt-pomo-float .mynt-pomo-controls :is(.mynt-pomo-options summary, .mynt-pomo-reset) { width: max(44px, 2.75rem); height: max(44px, 2.75rem); min-height: 44px; }
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-primary { height: max(44px, 2.75rem); min-height: 44px; }
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options summary::before { width: 1.25rem; height: 1.25rem; }
+.mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options[open] summary { background: var(--pomo-surface); }
+.mynt-pomo-options-panel { text-align: start; }
+.mynt-pomo-options-panel label { font-size: var(--pomo-type-body); line-height: 1.4; }
+.mynt-pomo-options-panel .mynt-pomo-note { color: var(--pomo-muted); margin: 12px 0; }
+.mynt-pomo-dock { padding-block: .75rem; }
 html.myntHighContrast .mynt-pomo-float * {
     -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
 }
@@ -353,5 +370,10 @@ html.myntHighContrast .mynt-pomo-float .pomodoroCircleWrap::before { background:
 @media (forced-colors: active) {
     .mynt-pomo-float * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
     .mynt-pomo-float .pomodoroCircleWrap::before { background: Canvas; }
+    /* The ⋯ mask is the summary's only visible content; keep it drawn in text color. */
+    .mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options summary { border: 1px solid CanvasText; }
+    .mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options summary::before { forced-color-adjust: none; background-color: CanvasText; }
+    /* Text backplates are Canvas, so a Canvas-colored label would vanish on the primary button. */
+    .mynt-pomo-float .mynt-pomo-primary { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
     .mynt-pomo-float :is(.pomodoroPhaseLabel, .mynt-pomo-dock) { border: 1px solid CanvasText; }
 }
