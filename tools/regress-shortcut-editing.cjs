@@ -206,7 +206,7 @@ function seed(count, overrides = {}) {
 }
 
 const IDS = ["shortcuts-section", "shortcutsCheckbox", "shortcutEditField", "adaptiveIconField",
-    "adaptiveIconToggle", "shortcutList", "shortcutsContainer", "newShortcutButton", "resetButton",
+    "adaptiveIconToggle", "googleFaviconToggle", "shortcutList", "shortcutsContainer", "newShortcutButton", "resetButton",
     "prompt-modal-container"];
 
 function harness({ language = "zh_TW", storage: initial = {} } = {}) {
@@ -237,8 +237,9 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
         myntDialog: { prompt: (message, value) => { alerts.push(String(message)); drafts.push(String(value)); return Promise.resolve(null); } },
         confirmPrompt: async () => true,
         localizeNumbers: value => String(value),
-        loadCheckboxState() {}, saveCheckboxState() {}, loadActiveStatus() {}, saveActiveStatus() {},
-        loadDisplayStatus() {}, saveDisplayStatus() {},
+        loadCheckboxState(key, checkbox) { checkbox.checked = storage.getItem(key) === "checked"; },
+        saveCheckboxState(key, checkbox) { storage.setItem(key, checkbox.checked ? "checked" : "unchecked"); },
+        loadActiveStatus() {}, saveActiveStatus() {}, loadDisplayStatus() {}, saveDisplayStatus() {},
         location: { href: "", protocol: "chrome-extension:" },
         MyntMcpData: adapter,
         addEventListener(type, fn) { (windowListeners.get(type) || windowListeners.set(type, []).get(type)).push(fn); },
@@ -426,3 +427,32 @@ function harness({ language = "zh_TW", storage: initial = {} } = {}) {
 }
 
 console.log("SHORTCUT_EDITING_OK");
+
+(async () => {
+    const failing = harness({ storage: seed(1, { shortcutIcon0: "" }) });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const failingLogo = failing.el("shortcutsContainer").querySelector(".shortcutLogoContainer");
+    assert.match(failingLogo.children[0].src, /s2\.googleusercontent\.com/u);
+    failingLogo.children[0].emit("error");
+    assert.equal(failingLogo.children[0].getAttribute("data-icon-type"), "letter", "A failed Google favicon falls back to the readable letter badge");
+    assert.equal(failingLogo.children[0].children[1].textContent, "A");
+
+    const h = harness({ storage: seed(1, { shortcutIcon0: "", shortcutName0: "\u{1F680} Rocket" }) });
+    const logo = () => h.el("shortcutsContainer").querySelector(".shortcutLogoContainer");
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(h.el("googleFaviconToggle").checked, true, "Missing preference keeps Google favicon enabled");
+    assert.match(logo().children[0].src, /s2\.googleusercontent\.com\/s2\/favicons/u);
+    const previous = logo().children[0];
+    h.el("googleFaviconToggle").checked = false;
+    h.el("googleFaviconToggle").emit("change");
+    assert.equal(h.storage.getItem("googleFaviconToggle"), "unchecked");
+    assert.notEqual(logo().children[0], previous, "Changing the switch re-renders shortcuts");
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(logo().children[0].getAttribute("data-icon-type"), "letter");
+    assert.equal(logo().children[0].children[1].textContent, "\u{1F680}", "Letter keeps a whole grapheme, not a lone surrogate");
+    const allElements = [];
+    const collect = node => { allElements.push(node); node.children.forEach(collect); };
+    collect(h.document.body);
+    const googleRefs = allElements.flatMap(node => [node.src, node.href, ...Object.values(node.attributes)]).filter(value => /(?:s2\.googleusercontent\.com|google\.com\/s2)/u.test(String(value || "")));
+    assert.deepEqual(googleRefs, [], "Off state leaves no Google favicon URL in the rendered DOM");
+})().catch(error => { console.error(error); process.exitCode = 1; });

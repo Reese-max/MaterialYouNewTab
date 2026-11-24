@@ -719,6 +719,11 @@ const zh_TW = {
     "menuCloseText": "關閉",
     "openSettingsLabel": "開啟設定",
     "voiceSearchLabel": "語音搜尋",
+    "toastCloseLabel": "關閉通知",
+    "shortcutEditLabel": "編輯捷徑",
+    "aiToolsEditLabel": "編輯 AI 工具",
+    "googleFaviconText": "從 Google 取得網站圖示",
+    "googleFaviconInfo": "捷徑圖示透過 Google 圖示服務下載；關閉後改用內建或首字圖示",
 
     // Tips
     "switchSearchModes": "切換搜尋模式",

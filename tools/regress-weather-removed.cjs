@@ -76,12 +76,12 @@ async function run(language, viewport) {
             }
             await page.waitForFunction(() => window.myntComponents && window.myntSettings && window.myntDashboard);
             await page.waitForTimeout(5100);
-            await page.evaluate(async () => {
+            // weather.js is no longer loaded; its in-file zero-network guard stays covered by check-removed-features.cjs.
+            assert.deepEqual(await page.evaluate(() => {
                 document.dispatchEvent(new Event('visibilitychange'));
                 window.dispatchEvent(new Event('online'));
-                await getWeatherData({ allowNetwork: true });
-                await initializeWeather({ allowNetwork: true });
-            });
+                return [typeof window.getWeatherData, typeof window.initializeWeather, !!document.querySelector('script[src*="weather.js"]')];
+            }), ['undefined', 'undefined', false], `${mode}: weather.js is not loaded`);
             await page.waitForTimeout(250);
             assert.deepEqual(requests, [], `${mode}: zero WeatherAPI/IPinfo requests`);
             assert.equal(await page.evaluate(() => window.__weatherGPSCalls), 0, `${mode}: no geolocation request`);
