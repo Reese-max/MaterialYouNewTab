@@ -89,6 +89,8 @@ test('notes-ai#5', () => {
         MYNT_WORKSPACE_WIDGETS: [], workspaceDefaults: base, myntNormalizeWorkspaces: dashboard.myntNormalizeWorkspaces,
         readJSON: (key, fallback) => JSON.parse(storage.getItem(key) || 'null') || fallback,
         t: (key, fallback) => fallback, format: (key, fallback) => fallback, requestAnimationFrame() {}, syncDecorativeVideo() {} });
+    // The editor excerpt calls this production helper, which lives above it in the same closure.
+    h.run(between('scripts/dashboard-tools.js', '        function workspaceBackgroundFor(background) {', '        function canPlayDecorativeVideo() {'));
     h.run(between('scripts/dashboard-tools.js', '        let workspaces =', '        document.addEventListener("visibilitychange", () => {'));
     h.c.myntDashboard = { reloadWorkspaces: () => h.run('workspaces = myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null), workspaceDefaults); workspaceBaseline = localStorage.getItem(KEYS.workspaces);') };
     h.run('openWorkspaceEditor()');
