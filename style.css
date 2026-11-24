@@ -5832,7 +5832,8 @@ html.myntHighContrast.black-theme #searchIconDark {
 	fill: var(--accentLightTint-dark) !important;
 }
 
-.black-theme #darkLightTint {
+.black-theme #darkLightTint,
+.black-theme .shortcutLetter {
 	fill: #bfbfbf !important;
 }
 

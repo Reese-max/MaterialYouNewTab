@@ -61,7 +61,7 @@
     <script defer src="scripts/quote-contrast.js"></script>
     <script defer src="scripts/widgets-transparency.js"></script>
     <script defer src="scripts/clock.js"></script>
-    <script defer src="scripts/weather.js"></script>
+    <!-- scripts/weather.js is not loaded: weather was removed on 2026-11-23 (code kept). Re-add this tag to restore it. -->
     <script defer src="scripts/exam-daily.js"></script>
     <script defer src="scripts/layout-profiles.js"></script>
     <script defer src="scripts/centered-layout.js"></script>
@@ -128,7 +128,7 @@
     <!-- ToDo Icon -->
     <button class="todoListCont" id="todoListCont" type="button" aria-controls="todoContainer" aria-expanded="false">
         <svg id="todoIcon" xmlns="http://www.w3.org/2000/svg" class="dot-icon" width="36" height="36"
-            viewBox="0 0 36 36">
+            viewBox="0 0 36 36" focusable="false" aria-hidden="true">
             <path style="transform: scale(0.9); transform-origin: center;"
                 d="M7 4C5.3 4 4 5.3 4 7v6c0 1.7 1.3 3 3 3h6c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3Zm12 2c-.6 0-1 .4-1 1s.4 1 1 1h12c.6 0 1-.4 1-1s-.4-1-1-1Zm-6 1c.25 0 .5.1.7.3.4.4.4 1 0 1.4l-3 3c-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3l-2-2c-.4-.4-.4-1 0-1.4.4-.4 1-.4 1.4 0L10 9.6l2.3-2.3c.2-.2.45-.3.7-.3Zm6 3c-.6 0-1 .4-1 1s.4 1 1 1h7c.6 0 1-.4 1-1s-.4-1-1-1zM7 20c-1.7 0-3 1.3-3 3v6c0 1.7 1.3 3 3 3h6c1.7 0 3-1.3 3-3v-6c0-1.7-1.3-3-3-3zm12 2c-.6 0-1 .4-1 1s.4 1 1 1h12c.6 0 1-.4 1-1s-.4-1-1-1zm0 4c-.6 0-1 .4-1 1s.4 1 1 1h7c.6 0 1-.4 1-1s-.4-1-1-1z" />
         </svg>
@@ -153,7 +153,7 @@
 
     <!-- Pomodoro Timer Widget -->
     <button class="pomodoroCont" id="pomodoroCont" type="button" aria-controls="pomodoroPanel" aria-expanded="false" style="display: none;">
-        <svg id="pomodoroIcon" xmlns="http://www.w3.org/2000/svg" class="dot-icon pomodoro-clock-icon" width="36" height="36" viewBox="0 0 24 24">
+        <svg id="pomodoroIcon" xmlns="http://www.w3.org/2000/svg" class="dot-icon pomodoro-clock-icon" width="36" height="36" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
             <circle class="pomodoro-clock-face" cx="12" cy="12" r="10"/>
             <circle cx="12" cy="3.2" r="0.7"/>
             <circle cx="20.8" cy="12" r="0.7"/>
@@ -175,7 +175,7 @@
         <div id="pomodoroDragHandle" class="pomodoro-drag-handle"></div>
         <div class="pomodoroPhaseLabel" id="pomodoroPhaseLabel">Work</div>
         <div class="pomodoroCircleWrap">
-            <svg class="pomodoroProgressRing" width="160" height="160" viewBox="0 0 160 160">
+            <svg class="pomodoroProgressRing" width="160" height="160" viewBox="0 0 160 160" focusable="false" aria-hidden="true">
                 <circle class="pomodoroRingBg" cx="80" cy="80" r="70" />
                 <circle class="pomodoroRingFg" id="pomodoroRingFg" cx="80" cy="80" r="70" />
             </svg>
@@ -184,13 +184,13 @@
         <div class="pomodoroRoundDisplay" id="pomodoroRoundDisplay">1 / 4</div>
         <div class="pomodoroControls">
             <button class="pomodoroBtn" id="pomodoroStartBtn" title="Start">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
             </button>
             <button class="pomodoroBtn" id="pomodoroPauseBtn" title="Pause" style="display:none;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
             </button>
             <button class="pomodoroBtn pomodoroResetBtn" id="pomodoroResetBtn" title="Reset">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
             </button>
         </div>
         <div class="pomodoroAmbientRow" id="pomodoroAmbientRow">
@@ -225,7 +225,7 @@
 
     <!-- --------------------- Bookmark System --------------------- -->
     <div style="display: none;">
-        <svg id="folderIconTemplate" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+        <svg id="folderIconTemplate" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
             <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 6v10.8c0 1.12 0 1.68.218 2.108a2 2 0 0 0 .874.874c.427.218.987.218 2.105.218h11.606c1.118 0 1.677 0 2.104-.218c.377-.192.683-.498.875-.874C21 18.48 21 17.92 21 16.8V9.2c0-1.12 0-1.68-.218-2.108a2 2 0 0 0-.874-.874C19.48 6 18.92 6 17.8 6H12M3 6h9M3 6a2 2 0 0 1 2-2h3.675c.489 0 .734 0 .964.055q.308.075.578.24c.202.124.375.297.72.643L12 6" />
         </svg>
@@ -236,7 +236,7 @@
             aria-labelledby="bookmarksHeading" aria-hidden="true" inert>
 
             <div class="topOutRoundCorner">
-                <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                     <path class="lessDark" d="M30 0L0 0C16.5685 0 30 13.4315 30 30L30 0Z" />
                 </svg>
             </div>
@@ -248,23 +248,23 @@
                 </div>
                 <div class="bookmark-header-actions">
                     <button id="bookmarkAddButton" type="button" aria-label="新增書籤" title="新增書籤">
-                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
                     </button>
                     <button id="bookmarkCloseButton" type="button" aria-label="關閉書籤" title="關閉書籤">
-                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
                     </button>
                 </div>
             </div>
             <div class="bookmark-search-container">
                 <input type="text" id="bookmarkSearch" placeholder="搜尋書籤" aria-label="搜尋書籤" />
                 <button id="clearSearchButton" type="button" hidden aria-label="清除書籤搜尋" title="清除書籤搜尋">
-                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m7.05 5.636 4.95 4.95 4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95z"/></svg>
                 </button>
             </div>
             <p id="bookmarkShortcutStatus" class="bookmark-shortcut-status" role="status" aria-live="polite"></p>
 
             <div id="bookmarkState" class="bookmark-state" role="status" aria-live="polite" hidden>
-                <svg class="bookmark-state-icon" aria-hidden="true" viewBox="0 0 24 24">
+                <svg class="bookmark-state-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
                     <path d="M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14.1l-6.5-3.7-6.5 3.7V5A1.5 1.5 0 0 1 7 3.5Z"/>
                 </svg>
                 <div class="bookmark-state-copy">
@@ -361,7 +361,7 @@
     <!-- 9 Dot Icon -->
     <div class="homeToolbar" id="homeToolbar">
     <button class="googleAppsCont" id="googleAppsCont" type="button" aria-controls="iconContainer" aria-expanded="false">
-        <svg class="dot-icon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24">
+        <svg class="dot-icon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
             <path
                 d="M8 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0m0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0m-2 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4m8-14a2 2 0 1 1-4 0 2 2 0 0 1 4 0m-2 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4m2 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4-10a2 2 0 1 0 0-4 2 2 0 0 0 0 4m2 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0m-2 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4" />
         </svg>
@@ -369,7 +369,7 @@
         <span class="tooltip-text" id="googleAppsHover">Google Apps</span>
     </button>
     <button class="bookmark-button" id="bookmarkButton" type="button" aria-controls="bookmarkSidebar" aria-expanded="false" aria-label="書籤">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M7 2a3 3 0 0 0-3 3v15.138a1.5 1.5 0 0 0 2.244 1.303l5.26-3.006a1 1 0 0 1 .992 0l5.26 3.006A1.5 1.5 0 0 0 20 20.138V5a3 3 0 0 0-3-3z" clip-rule="evenodd" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path fill-rule="evenodd" d="M7 2a3 3 0 0 0-3 3v15.138a1.5 1.5 0 0 0 2.244 1.303l5.26-3.006a1 1 0 0 1 .992 0l5.26 3.006A1.5 1.5 0 0 0 20 20.138V5a3 3 0 0 0-3-3z" clip-rule="evenodd" /></svg>
         <span class="tooltip-text homeActionHint" id="bookmarksHover">書籤</span>
     </button>
     </div>
@@ -378,7 +378,7 @@
     <div id="iconContainer" class="icon-container" style="display: none;">
         <a href="https://myaccount.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.2 -0.2 24.39 24.39" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M12 4c-4.42 0-8 3.58-8 8c0 1.95.7 3.73 1.86 5.12a9.95 9.95 0 0 1 12.28 0A7.96 7.96 0 0 0 20 12c0-4.42-3.58-8-8-8m0 9c-1.93 0-3.5-1.57-3.5-3.5S10.07 6 12 6s3.5 1.57 3.5 3.5S13.93 13 12 13"
                         opacity="0.3" />
@@ -392,7 +392,7 @@
         </a>
         <a href="https://google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" viewBox="-2 -2 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-2.2 -2.2 24.39 24.39" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M4.376 8.068A6 6 0 0 0 4.056 10c0 .734.132 1.437.376 2.086a5.946 5.946 0 0 0 8.57 3.045h.001a5.96 5.96 0 0 0 2.564-3.043H10.22V8.132h9.605a10 10 0 0 1-.044 3.956a10 10 0 0 1-3.52 5.71A9.96 9.96 0 0 1 10 20A9.998 9.998 0 0 1 1.118 5.401A10 10 0 0 1 10 0c2.426 0 4.651.864 6.383 2.302l-3.24 2.652a5.948 5.948 0 0 0-8.767 3.114" />
                 </svg>
@@ -401,7 +401,7 @@
         </a>
         <a href="https://www.youtube.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="47" height="47" viewBox="1 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="1.09 1.09 21.82 21.82" focusable="false" aria-hidden="true">
                     <g fill="none" fill-rule="evenodd">
                         <path
                             d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z" />
@@ -414,7 +414,7 @@
         </a>
         <a href="https://mail.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="1 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="1.09 1.09 21.82 21.82" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M20 18h-2V9.25L12 13L6 9.25V18H4V6h1.2l6.8 4.25L18.8 6H20m0-2H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2" />
                 </svg>
@@ -423,7 +423,7 @@
         </a>
         <a href="https://music.youtube.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.1 -0.11 24.21 24.21" focusable="false" aria-hidden="true">
                     <g fill="currentColor" fill-rule="evenodd" clip-rule="evenodd">
                         <path
                             d="M8.217 8.286C9.265 7.254 10.514 6.743 12 6.743s2.735.51 3.783 1.543s1.562 2.258 1.562 3.714s-.514 2.68-1.562 3.713s-2.297 1.543-3.783 1.543s-2.735-.51-3.783-1.543S6.655 13.455 6.655 12s.514-2.682 1.562-3.714m6.977 3.715L10 14.91V9.088z" />
@@ -436,7 +436,7 @@
         </a>
         <a href="https://maps.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M4.456 12.367c-.515-1.143-.829-2.42-.83-3.994.001-2.05.739-3.927 1.962-5.383A8.354 8.354 0 0 1 12 0c.882 0 1.732.137 2.53.39a8.393 8.393 0 0 1 4.9 4.124c-.006.008 0 0 0 0a8.334 8.334 0 0 1 .943 3.859c0 5.078-3.256 7.061-6.05 11.429C12.625 22.426 13.096 24 12 24c-1.096 0-.625-1.574-2.323-4.198-1.955-3.058-4.057-4.854-5.221-7.435Zm5.096-6.059-.008.01a3.202 3.202 0 0 0 4.893 4.133l.03-.035a3.202 3.202 0 0 0-4.915-4.107z" />
                 </svg>
@@ -445,7 +445,7 @@
         </a>
         <a href="https://play.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 16 16">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-1.13 -1.13 18.25 18.25" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M14.222 9.374c1.037-.61 1.037-2.137 0-2.748L11.528 5.04 8.32 8l3.207 2.96zm-3.595 2.116L7.583 8.68 1.03 14.73c.201 1.029 1.36 1.61 2.303 1.055zM1 13.396V2.603L6.846 8zM1.03 1.27l6.553 6.05 3.044-2.81L3.333.215C2.39-.341 1.231.24 1.03 1.27" />
                 </svg>
@@ -454,7 +454,7 @@
         </a>
         <a href="https://drive.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-1.7 -1.7 27.4 27.4" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M12.01 1.485c-2.082 0-3.754.02-3.743.047.01.02 1.708 3.001 3.774 6.62l3.76 6.574h3.76c2.081 0 3.753-.02 3.742-.047-.005-.02-1.708-3.001-3.775-6.62l-3.76-6.574zm-4.76 1.73a789.828 789.861 0 0 0-3.63 6.319L0 15.868l1.89 3.298 1.885 3.297 3.62-6.335 3.618-6.33-1.88-3.287C8.1 4.704 7.255 3.22 7.25 3.214zm2.259 12.653-.203.348c-.114.198-.96 1.672-1.88 3.287a423.93 423.948 0 0 1-1.698 2.97c-.01.026 3.24.042 7.222.042h7.244l1.796-3.157c.992-1.734 1.85-3.23 1.906-3.323l.104-.167h-7.249z" />
                 </svg>
@@ -463,7 +463,7 @@
         </a>
         <a href="https://photos.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 256 256">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-8.59 -8.59 273.17 273.17" focusable="false" aria-hidden="true">
                     <g fill="currentColor">
                         <path
                             d="M192 88a63.7 63.7 0 0 1-14 40h-50V24a64 64 0 0 1 64 64M64 168a64 64 0 0 0 64 64V128H78a63.7 63.7 0 0 0-14 40"
@@ -477,7 +477,7 @@
         </a>
         <a href="https://translate.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.2 -0.2 24.39 24.39" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="m12 22-1-3H4q-.825 0-1.412-.587T2 17V4q0-.825.588-1.412T4 2h6l.875 3H20q.875 0 1.438.563T22 7v13q0 .825-.562 1.413T20 22zm-4.85-7.4q1.725 0 2.838-1.112T11.1 10.6q0-.2-.012-.362t-.063-.338h-3.95v1.55H9.3q-.2.7-.763 1.088t-1.362.387q-.975 0-1.675-.7T4.8 10.5t.7-1.725 1.675-.7q.45 0 .85.163t.725.487L9.975 7.55Q9.45 7 8.712 6.7T7.15 6.4q-1.675 0-2.863 1.188T3.1 10.5t1.188 2.913T7.15 14.6m6.7.5.55-.525q-.35-.425-.637-.825t-.563-.85zm1.25-1.275q.7-.825 1.063-1.575t.487-1.175h-3.975l.3 1.05h1q.2.375.475.813t.65.887M13 21h7q.45 0 .725-.288T21 20V7q0-.45-.275-.725T20 6h-8.825l1.175 4.05h1.975V9h1.025v1.05H19v1.025h-1.275q-.25.95-.75 1.85T15.8 14.6l2.725 2.675L17.8 18l-2.7-2.7-.9.925L15 19z" />
                 </svg>
@@ -486,7 +486,7 @@
         </a>
         <a href="https://calendar.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-2.63 -2.63 29.27 29.27" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M18.316 5.684H24v12.632h-5.684zM5.684 24h12.632v-5.684H5.684zM18.316 5.684V0H1.895A1.894 1.894 0 0 0 0 1.895v16.421h5.684V5.684zm-7.207 6.25v-.065q.407-.216.687-.617c.28-.401.279-.595.279-.982q0-.568-.3-1.025a2.05 2.05 0 0 0-.832-.714 2.7 2.7 0 0 0-1.197-.257q-.9 0-1.481.467-.579.467-.793 1.078l1.085.452q.13-.374.413-.633.284-.258.767-.257.495 0 .816.264a.86.86 0 0 1 .322.703q0 .495-.36.778t-.886.284h-.567v1.085h.633q.611 0 1.02.327.407.327.407.843 0 .505-.387.832c-.387.327-.565.327-.924.327q-.527 0-.897-.311-.372-.312-.521-.881l-1.096.452q.268.923.977 1.401.707.479 1.538.477a2.84 2.84 0 0 0 1.293-.291q.574-.29.902-.794.327-.505.327-1.149 0-.643-.344-1.105a2.07 2.07 0 0 0-.881-.689m2.093-1.931.602.913L15 10.045v5.744h1.187V8.446h-.827zM22.105 0h-3.289v5.184H24V1.895A1.894 1.894 0 0 0 22.105 0m-3.289 23.5 4.684-4.684h-4.684zM0 22.105C0 23.152.848 24 1.895 24h3.289v-5.184H0z" />
                 </svg>
@@ -495,7 +495,7 @@
         </a>
         <a href="https://meet.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="41" height="41">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.27 -0.77 51.54 51.54" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M2 18L2 32 12 32 12 18zM39 9v4.31l-10 9V16H14V6h22C37.66 6 39 7.34 39 9zM29 27.69l10 9V41c0 1.66-1.34 3-3 3H14V34h15V27.69zM12 34v10H5c-1.657 0-3-1.343-3-3v-7H12zM12 6L12 16 2 16zM29 25L39 16 39 34zM49 9.25v31.5c0 .87-1.03 1.33-1.67.75L41 35.8V14.2l6.33-5.7C47.97 7.92 49 8.38 49 9.25z" />
                 </svg>
@@ -504,7 +504,7 @@
         </a>
         <a href="https://chat.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-2.63 -2.63 29.27 29.27" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M1.637 0C.733 0 0 .733 0 1.637v16.5c0 .904.733 1.636 1.637 1.636h3.955v3.323c0 .804.97 1.207 1.539.638l3.963-3.96h11.27c.903 0 1.636-.733 1.636-1.637V5.592L18.408 0Zm3.955 5.592h12.816v8.59H8.455l-2.863 2.863Z" />
                 </svg>
@@ -513,7 +513,7 @@
         </a>
         <a href="https://news.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-1.23 -1.23 26.47 26.47" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M21.267 21.2a.614.614 0 0 1-.613.613H3.344a.614.614 0 0 1-.612-.613V8.115a.614.614 0 0 1 .613-.613h17.309a.614.614 0 0 1 .613.613zm-3.032-3.42v-1.195a.08.08 0 0 0-.08-.08h-5.373v1.361h5.373a.08.08 0 0 0 .08-.083zm.817-2.587v-1.201a.08.08 0 0 0-.079-.082h-6.19v1.362h6.189a.08.08 0 0 0 .08-.078v-.004zm-.817-2.588V11.4a.08.08 0 0 0-.08-.08h-5.373v1.361h5.373a.08.08 0 0 0 .08-.079zM8.15 14.045v1.226h1.77c-.145.748-.804 1.292-1.77 1.292a1.976 1.976 0 0 1 0-3.95 1.77 1.77 0 0 1 1.253.49l.934-.932a3.14 3.14 0 0 0-2.187-.853 3.268 3.268 0 1 0 0 6.537c1.89 0 3.133-1.328 3.133-3.197a4 4 0 0 0-.052-.619zM2.27 7.654a.616.616 0 0 1 .613-.613h12.154l-1.269-3.49a.595.595 0 0 0-.743-.383L.368 7.775a.594.594 0 0 0-.323.775l2.225 6.112za.616.616 0 0 1 .613-.613h12.154l-1.269-3.49a.595.595 0 0 0-.743-.383L.368 7.775a.594.594 0 0 0-.323.775l2.225 6.112zm21.312-.31-8.803-2.37.751 2.067h5.584a.614.614 0 0 1 .613.613v8.794l2.247-8.365a.59.59 0 0 0-.392-.74m-4.496-1.675V2.795a.61.61 0 0 0-.611-.608H5.524a.61.61 0 0 0-.616.605v2.837l8.39-3.052a.594.594 0 0 1 .743.39l.544 1.497z" />
                 </svg>
@@ -522,7 +522,7 @@
         </a>
         <a href="https://contacts.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0.8 0.81 22.37 22.37" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M4.625 22q-.4 0-.725-.325t-.325-.725v-2.625q0-2.25 1.4-3.975t3.6-2.2q-1 .7-1.55 1.762t-.55 2.288v4.75q0 .275.075.55t.25.5zM8.3 22q-.425 0-.737-.312t-.313-.738V16.2q0-1.75 1.238-2.975T11.475 12H16.2q1.75 0 2.975 1.225T20.4 16.2v1.6q0 1.75-1.225 2.975T16.2 22zM12 9.9q-1.65 0-2.8-1.15t-1.15-2.8 1.15-2.8T12 2t2.8 1.15 1.15 2.8-1.15 2.8T12 9.9" />
                 </svg>
@@ -531,7 +531,7 @@
         </a>
         <a href="https://myadcenter.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M10.275 12q-.7 0-1.15-.525T8.8 10.25l.3-1.8q.2-1.075 1.013-1.763T12 6q1.1 0 1.913.688t1.012 1.762l.3 1.8q.125.7-.325 1.225T13.75 12zm.6-2h2.275l-.2-1.225q-.05-.35-.325-.562T12 8t-.612.213-.313.562zM3.1 12.975q-.575.025-.988-.225t-.537-.775q-.05-.225-.025-.45t.125-.425q0 .025-.025-.1-.05-.05-.25-.6-.05-.3.075-.575T1.8 9.35l.05-.05q.05-.475.388-.8t.837-.325q.075 0 .475.1l.075-.025q.125-.125.325-.187T4.375 8q.275 0 .488.088t.337.262q.025 0 .038.013t.037.012q.35.025.612.212t.388.513q.05.175.038.338t-.063.312q0 .025.025.1.175.175.275.388t.1.437q0 .1-.15.525-.025.05 0 .1l.05.4q0 .525-.437.9t-1.063.375zM20 13q-.825 0-1.412-.587T18 11q0-.3.088-.562t.237-.513l-.7-.625q-.25-.2-.088-.5T18 8.5h2q.825 0 1.413.588T22 10.5v.5q0 .825-.587 1.413T20 13M0 17v-.575q0-1.1 1.113-1.763T4 14q.325 0 .625.013t.575.062q-.35.5-.525 1.075T4.5 16.375V18H1q-.425 0-.712-.288T0 17m6 0v-.625q0-1.625 1.663-2.625t4.337-1q2.7 0 4.35 1T18 16.375V17q0 .425-.288.713T17 18H7q-.425 0-.712-.288T6 17m14-3q1.8 0 2.9.663t1.1 1.762V17q0 .425-.288.713T23 18h-3.5v-1.625q0-.65-.162-1.225t-.488-1.075q.275-.05.563-.062T20 14m-8 .75q-1.425 0-2.55.375T8.125 16H15.9q-.225-.5-1.338-.875T12 14.75M12.025 9" />
                 </svg>
@@ -541,7 +541,7 @@
         </a>
         <a href="https://business.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.2 -0.2 24.39 24.39" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M22 8.5c0 1.37-1.12 2.5-2.5 2.5S17 9.87 17 8.5c0 1.37-1.12 2.5-2.5 2.5S12 9.87 12 8.5c0 1.37-1.12 2.5-2.5 2.5S7 9.87 7 8.5C7 9.87 5.88 11 4.5 11S2 9.87 2 8.5l1.39-5.42S3.68 2 4.7 2h14.6c1.02 0 1.31 1.08 1.31 1.08zm-1 3.7V20c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2v-7.8a3.96 3.96 0 0 0 4-.58c.69.55 1.56.88 2.5.88.95 0 1.82-.33 2.5-.88.69.55 1.56.88 2.5.88.95 0 1.82-.33 2.5-.88.68.55 1.56.88 2.5.88.53 0 1.04-.11 1.5-.3m-2 5.13c0-.2 0-.41-.05-.63l-.03-.16h-2.97v1.17h1.81c-.06.22-.14.44-.31.62-.33.33-.78.51-1.26.51-.5 0-.99-.21-1.35-.56-.69-.71-.69-1.86.02-2.58.69-.7 1.83-.7 2.55-.03l.14.13.84-.85-.16-.14c-.56-.52-1.3-.81-2.08-.81h-.01c-.81 0-1.57.31-2.14.87-.59.58-.92 1.34-.92 2.13 0 .8.31 1.54.88 2.09a3.2 3.2 0 0 0 2.22.91h.02c.8 0 1.51-.29 2.03-.8.47-.48.77-1.2.77-1.87" />
                 </svg>
@@ -551,7 +551,7 @@
         </a>
         <a href="https://google.com/shopping/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="39" height="39" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.18 -0.19 24.38 24.38" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M11.175 22q-.375 0-.75-.15t-.675-.45L2.6 14.25q-.3-.3-.438-.663t-.137-.737t.138-.75t.437-.675L11.4 2.6q.275-.275.65-.438T12.825 2H20q.825 0 1.413.587T22 4v7.175q0 .4-.15.763t-.425.637L12.6 21.4q-.3.3-.675.45t-.75.15M17.5 8q.625 0 1.063-.437T19 6.5t-.437-1.062T17.5 5t-1.062.438T16 6.5t.438 1.063T17.5 8" />
                 </svg>
@@ -563,7 +563,7 @@
 
         <a href="https://docs.google.com/document/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="39" height="39" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M14.727 6.727H14V0H4.91c-.905 0-1.637.732-1.637 1.636v20.728c0 .904.732 1.636 1.636 1.636h14.182c.904 0 1.636-.732 1.636-1.636V6.727zm-.545 10.455H7.09v-1.364h7.09v1.364zm2.727-3.273H7.091v-1.364h9.818zm0-3.273H7.091V9.273h9.818zM14.727 6h6l-6-6z" />
                 </svg>
@@ -572,7 +572,7 @@
         </a>
         <a href="https://docs.google.com/spreadsheets/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="39" height="39" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6zm1.363 10.636h-3.41v1.91h3.41zm0 3.273h-3.41v1.91h3.41zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z" />
                 </svg>
@@ -581,7 +581,7 @@
         </a>
         <a href="https://docs.google.com/presentation/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="39" height="39" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M16.09 15.273H7.91v-4.637h8.18zm1.728-8.523h2.91v15.614c0 .904-.733 1.636-1.637 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.068v6.75zm-.363 2.523H6.545v7.363h10.91zm-2.728-5.979V6h6.001l-6-6v3.294z" />
                 </svg>
@@ -590,7 +590,7 @@
         </a>
         <a href="https://docs.google.com/forms/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="39" height="39" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M14.727 6h6l-6-6zm0 .727H14V0H4.91c-.905 0-1.637.732-1.637 1.636v20.728c0 .904.732 1.636 1.636 1.636h14.182c.904 0 1.636-.732 1.636-1.636V6.727zM7.91 17.318a.819.819 0 1 1 .001-1.638.819.819 0 0 1 0 1.638zm0-3.273a.819.819 0 1 1 .001-1.637.819.819 0 0 1 0 1.637zm0-3.272a.819.819 0 1 1 .001-1.638.819.819 0 0 1 0 1.638zm9 6.409h-6.818v-1.364h6.818zm0-3.273h-6.818v-1.364h6.818zm0-3.273h-6.818V9.273h6.818z" />
                 </svg>
@@ -599,7 +599,7 @@
         </a>
         <a href="https://keep.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="39" height="39" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M4.908 0c-.904 0-1.635.733-1.635 1.637v20.726c0 .904.732 1.637 1.635 1.637H19.09c.904 0 1.637-.733 1.637-1.637V6.5h-6.5V0zm9.819 0v6h6zM11.97 8.229c.224 0 .571.031.765.072.2.04.576.185.842.312.828.414 1.467 1.164 1.774 2.088.168.511.188 1.34.05 1.865a3.75 3.75 0 0 1-1.277 1.952l-.25.193h-1.87c-2.134 0-1.931.042-2.478-.494a3.35 3.35 0 0 1-.984-1.844c-.148-.766-.053-1.437.32-2.203.19-.399.303-.556.65-.899.68-.679 1.513-1.037 2.458-1.042m-1.866 7.863h3.781v1.328h-3.779v-1.328z" />
                 </svg>
@@ -608,7 +608,7 @@
         </a>
         <a href="https://google.com/finance/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0.9 -0.08 23.2 23.2" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M8 11.75V7.5q0-.625.438-1.062T9.5 6t1.063.438T11 7.5v4.25q0 .625-.437 1.063T9.5 13.25t-1.062-.437T8 11.75m5-.225V3.5q0-.625.438-1.062T14.5 2t1.063.438T16 3.5v8.025q0 .75-.462 1.125t-1.038.375-1.037-.375T13 11.525m-10 3.45V11.5q0-.625.438-1.062T4.5 10t1.063.438T6 11.5v3.475q0 .75-.462 1.125t-1.038.375-1.037-.375T3 14.975m2.4 6.075q-.65 0-.913-.612T4.7 19.35l4.1-4.1q.275-.275.663-.3t.687.25L13 17.65l5.6-5.6H18q-.425 0-.712-.288T17 11.05t.288-.712.712-.288h3q.425 0 .713.288t.287.712v3q0 .425-.288.713T21 15.05t-.712-.288T20 14.05v-.6l-6.25 6.25q-.275.275-.663.3t-.687-.25L9.55 17.3 6.1 20.75q-.125.125-.312.213t-.388.087" />
                 </svg>
@@ -617,7 +617,7 @@
         </a>
         <a href="https://ads.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 48 48">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-5.27 -5.27 58.54 58.54" focusable="false" aria-hidden="true">
                     <defs>
                         <mask id="ipTGoogleAds0">
                             <g fill="none" stroke="#fff" stroke-width="4">
@@ -637,7 +637,7 @@
         </a>
         <a href="https://analytics.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-1.95 -1.93 27.85 27.85" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M22.84 2.998v17.999a2.983 2.983 0 0 1-2.967 2.998 3 3 0 0 1-.368-.02 3.06 3.06 0 0 1-2.61-3.1V3.12A3.06 3.06 0 0 1 19.51.02a2.983 2.983 0 0 1 3.329 2.978zM4.133 18.055a2.973 2.973 0 1 0 0 5.945 2.973 2.973 0 0 0 0-5.945m7.872-9.01h-.05a3.06 3.06 0 0 0-2.892 3.126v7.985c0 2.167.954 3.482 2.35 3.763a2.978 2.978 0 0 0 3.57-2.927v-8.959a2.983 2.983 0 0 0-2.978-2.988" />
                 </svg>
@@ -647,7 +647,7 @@
         </a>
         <a href="https://passwords.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.77 -0.77 25.53 25.53" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M6.545 14.182c.6 0 1.109-.21 1.528-.627.436-.436.654-.954.654-1.555s-.218-1.109-.654-1.528a2.036 2.036 0 0 0-1.528-.654c-.6 0-1.118.218-1.555.654A2.079 2.079 0 0 0 4.363 12c0 .6.21 1.118.627 1.555.436.418.954.627 1.555.627zm0 4.363c-1.818 0-3.363-.636-4.636-1.909C.636 15.363 0 13.818 0 12s.636-3.363 1.909-4.637c1.273-1.272 2.818-1.908 4.636-1.908a6.39 6.39 0 0 1 3.409.954 6.22 6.22 0 0 1 2.4 2.59h9.464c.6 0 1.109.22 1.527.655.436.418.655.927.655 1.528v5.18c0 .6-.219 1.119-.655 1.556a2.079 2.079 0 0 1-1.527.627h-4.91a2.17 2.17 0 0 1-1.554-.627 2.17 2.17 0 0 1-.627-1.555v-1.364h-2.374a6.009 6.009 0 0 1-2.373 2.618 6.676 6.676 0 0 1-3.435.928Zm4.31-5.727h6.054v3.545h1.636v-1.364a.775.775 0 0 1 .219-.574.816.816 0 0 1 .6-.246.73.73 0 0 1 .573.246.73.73 0 0 1 .246.574v1.364h1.635v-5.181H10.855a4.336 4.336 0 0 0-1.528-2.537 4.193 4.193 0 0 0-2.782-1.008 4.202 4.202 0 0 0-3.081 1.281C2.61 9.772 2.182 10.8 2.182 12c0 1.2.428 2.228 1.282 3.081a4.202 4.202 0 0 0 3.081 1.282c1.055 0 1.982-.327 2.782-.982a4.461 4.461 0 0 0 1.528-2.563z" />
                 </svg>
@@ -657,7 +657,7 @@
         </a>
         <a href="https://one.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.13 1.36 21.26 21.26" focusable="false" aria-hidden="true">
                     <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="2">
                         <path d="M11 5v13.982a2 2 0 0 0 4 0V5a2 2 0 1 0-4 0" />
@@ -671,7 +671,7 @@
         </a>
         <a href="https://google.com/travel/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="1.36 1.36 21.28 21.28" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M11 6h2V4h-2zm1 6q-1.9 0-3.625-.788T5 9.45V8q0-.825.588-1.412T7 6h2V3q0-.425.288-.712T10 2h4q.425 0 .713.288T15 3v3h2q.825 0 1.413.588T19 8v1.45q-1.65.975-3.375 1.763T12 12m-5 9q-.825 0-1.412-.587T5 19v-7.3q1.4.85 2.888 1.45t3.112.8V14q0 .425.288.713T12 15t.713-.288T13 14v-.05q1.625-.2 3.113-.8T19 11.7V19q0 .825-.587 1.413T17 21q0 .425-.288.713T16 22q-.4 0-.562-.363T15 21H9q0 .425-.288.713T8 22q-.4 0-.562-.363T7 21" />
                 </svg>
@@ -680,7 +680,7 @@
         </a>
         <a href="https://classroom.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-1.6 -1.6 27.2 27.2" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M1.637 1.637C.732 1.637 0 2.369 0 3.273v17.454c0 .904.732 1.636 1.637 1.636h20.726c.905 0 1.637-.732 1.637-1.636V3.273c0-.904-.732-1.636-1.637-1.636zm.545 2.181h19.636v16.364h-2.726v-1.09h-4.91v1.09h-12zM12 8.182a1.636 1.636 0 1 0 0 3.273 1.636 1.636 0 1 0 0-3.273m-4.363 1.91c-.678 0-1.229.55-1.229 1.226a1.228 1.228 0 0 0 2.455 0c0-.677-.549-1.226-1.226-1.226m8.726 0a1.227 1.227 0 1 0 0 2.453 1.227 1.227 0 0 0 0-2.453M12 12.545c-1.179 0-2.413.401-3.148 1.006a4.1 4.1 0 0 0-1.215-.188c-1.314 0-2.729.695-2.729 1.559v.896h14.184v-.896c0-.864-1.415-1.559-2.729-1.559-.41 0-.83.068-1.215.188-.735-.605-1.969-1.006-3.148-1.006" />
                 </svg>
@@ -689,7 +689,7 @@
         </a>
         <a href="https://books.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="41" height="41" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="1.09 1.09 21.82 21.82" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M18 22a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-6v7L9.5 7.5 7 9V2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z" />
                 </svg>
@@ -698,7 +698,7 @@
         </a>
         <a href="https://blogger.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="37" height="37" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-2.63 -2.63 29.27 29.27" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M21.976 24H2.026C.9 24 0 23.1 0 21.976V2.026C0 .9.9 0 2.025 0H22.05C23.1 0 24 .9 24 2.025v19.95C24 23.1 23.1 24 21.976 24M12 3.975H9A5.025 5.025 0 0 0 3.975 9v6A5.025 5.025 0 0 0 9 20.024h6A5.025 5.025 0 0 0 20.024 15v-3.975c0-.6-.45-1.05-1.05-1.05H18a.995.995 0 0 1-.976-.976A5.025 5.025 0 0 0 12 3.973zm3.074 12H9c-.525 0-.975-.45-.975-.975s.45-.976.975-.976h6.074c.526 0 .977.45.977.976s-.45.976-.975.976zm-2.55-7.95c.527 0 .976.45.976.975s-.45.975-.975.975h-3.6c-.525 0-.976-.45-.976-.975s.45-.975.975-.975z" />
                 </svg>
@@ -707,7 +707,7 @@
         </a>
         <a href="https://earth.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.2 -0.2 24.39 24.39" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M12 12.14c-.91-1.37-1.86-2.36-2.86-2.95-1-.6-1.87-.81-2.64-.64-.73.18-1.36.59-1.86 1.25-.44.59-.64 1.26-.64 2.01V12c0 .78.11 1.58.36 2.39.09.25.14.25.19 0 .12-.62.41-1.08.86-1.36.46-.28 1.06-.27 1.81.02.75.3 1.48.95 2.2 1.9 1.28 1.72 2.78 2.77 4.5 3.14 2.22.32 3.89-.39 5.02-2.09.31-.61.56-1.14.7-1.61.09-.31.05-.34-.14-.09-.47.62-1.1 1.03-1.9 1.2-.8.2-1.71 0-2.74-.5-1.03-.57-1.98-1.5-2.86-2.86m4.97-3.98c-1.56-2.35-3.25-3.66-5.06-3.99-1.44-.22-3 .28-4.69 1.5-.22.16-.32.24-.31.26.02.02.15-.04.4-.16 2.5-1.22 4.91.06 7.22 3.84.5.84 1.02 1.5 1.57 1.97s1.06.75 1.55.84c.48.08.92.08 1.31-.04.39-.13.74-.33 1.04-.61 0-.6-.09-1.27-.31-1.97-.5.12-.95.08-1.34-.12-.39-.18-.85-.71-1.38-1.52M12 2c2.75 0 5.1 1 7.05 2.95S22 9.25 22 12s-1 5.1-2.95 7.05S14.75 22 12 22s-5.1-1-7.05-2.95S2 14.75 2 12s1-5.1 2.95-7.05S9.25 2 12 2" />
                 </svg>
@@ -716,7 +716,7 @@
         </a>
         <a href="https://artsandculture.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-0.2 -0.2 24.39 24.39" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2m5 15H7v-2h10zm-9-3v-3h2v3zm3 0v-3h2v3zm3 0v-3h2v3zm3-4H7V8.5L12 6l5 2.5z" />
                 </svg>
@@ -726,7 +726,7 @@
         </a>
         <a href="https://google.com/save/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="2.12 1.91 19.75 19.75" focusable="false" aria-hidden="true">
                     <path fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                         d="M6 6.2c0-1.12 0-1.68.218-2.108a2 2 0 0 1 .874-.874C7.52 3 8.08 3 9.2 3h5.6c1.12 0 1.68 0 2.108.218a2 2 0 0 1 .874.874C18 4.52 18 5.08 18 6.2v13.305c0 .486 0 .729-.101.862a.5.5 0 0 1-.37.198c-.167.01-.369-.125-.773-.394L12 17l-4.756 3.17c-.404.27-.606.405-.774.395a.5.5 0 0 1-.369-.198C6 20.234 6 19.991 6 19.505z" />
                 </svg>
@@ -735,7 +735,7 @@
         </a>
         <a href="https://chromewebstore.google.com/" class="icon-item">
             <div class="menuicon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-1.6 -1.6 27.2 27.2" focusable="false" aria-hidden="true">
                     <path fill="currentColor"
                         d="M0 1.637v19.09c0 .9.736 1.636 1.636 1.636h.131a10.4 10.4 0 0 1-.13-1.636 10.3 10.3 0 0 1 1.667-5.64l4.202 7.276h1.128A3.77 3.77 0 0 1 12 16.958a3.77 3.77 0 0 1 3.366 5.406h1.048a4.7 4.7 0 0 0-1.587-5.406h6.83a10.34 10.34 0 0 1 .577 5.406h.13c.9 0 1.636-.737 1.636-1.637V1.637Zm9.273 2.181h5.454a1.09 1.09 0 1 1 0 2.182H9.273a1.09 1.09 0 1 1 0-2.182M12 10.364a10.36 10.36 0 0 1 9.233 5.652H12a4.71 4.71 0 0 0-4.677 4.149L3.91 14.25A10.34 10.34 0 0 1 12 10.364" />
                 </svg>
@@ -752,7 +752,7 @@
             <!-- ____________clock___________ -->
             <div class="clock" id="analogClock">
 
-                <svg fill="none" height="100%" viewBox="0 0 461 461" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <svg fill="none" height="100%" viewBox="0 0 461 461" width="100%" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                     <path class="bgLightTint" clip-rule="evenodd" fill-rule="evenodd"
                         d="M93.6379 63.9405C89.7543 78.4344 78.4333 89.7554 63.9394 93.639l-7.4405 1.9937c-22.4055 6.0033-35.702 29.0333-29.6984 51.4393l1.9196 7.164c3.8837 14.494-.2601 29.959-10.8704 40.569l-5.5482 5.548c-16.402 16.402-16.402 42.995 0 59.397l5.6221 5.622c10.6102 10.611 14.754 26.075 10.8704 40.569l-1.9936 7.441c-6.0036 22.405 7.2929 45.435 29.6985 51.439l7.4406 1.994c14.4939 3.883 25.8149 15.204 29.6985 29.698l1.9942 7.443c6.0038 22.405 29.0338 35.702 51.4388 29.698l7.442-1.994c14.494-3.883 29.959.26 40.569 10.871l5.271 5.271c16.402 16.402 42.995 16.402 59.397 0l5.347-5.347c10.61-10.61 26.075-14.754 40.569-10.87l7.717 2.068c22.405 6.003 45.435-7.293 51.439-29.699l1.993-7.439c3.884-14.494 15.205-25.815 29.699-29.699l7.441-1.994c22.406-6.003 35.702-29.033 29.699-51.439l-2.068-7.718c-3.884-14.493.26-29.958 10.87-40.569l5.346-5.346c16.402-16.402 16.402-42.995 0-59.397l-5.272-5.272c-10.61-10.61-14.754-26.075-10.87-40.569l1.994-7.441c6.003-22.406-7.293-45.436-29.699-51.4398l-7.441-1.9939c-14.494-3.8836-25.815-15.2046-29.699-29.6984l-1.993-7.4395c-6.004-22.4056-29.034-35.702-51.439-29.6985l-7.441 1.9937c-14.494 3.8836-29.959-.2601-40.569-10.8704l-5.623-5.6227c-16.402-16.402-42.995-16.402-59.397 0l-5.547 5.5476c-10.61 10.6102-26.075 14.754-40.569 10.8704l-7.166-1.92c-22.405-6.0036-45.435 7.2929-51.4388 29.6985l-1.9943 7.4425Z" />
                 </svg>
@@ -763,7 +763,7 @@
                 </div>
             </div>
             <div class="clock" id="digitalClock">
-                <svg fill="none" height="100%" viewBox="60 0 460 450" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <svg fill="none" height="100%" viewBox="60 0 460 450" width="100%" xmlns="http://www.w3.org/2000/svg" focusable="false">
                     <!-- Background oval shape -->
                     <rect class="bgLightTint" height="350" rx="180" width="460" x="60" y="40"></rect>
 
@@ -806,7 +806,7 @@
                         <div class="tilesContainer">
                             <div class="tiles">
                                 <div class="icon">
-                                    <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                                    <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                                         <path id="darkFeelsLikeIcon" class="accentColor"
                                             d="M8 10.255V5a4 4 0 0 1 8 0v5.255a7 7 0 1 1-8 0ZM8 16a4 4 0 1 0 8 0H8Z" />
                                     </svg>
@@ -828,7 +828,7 @@
                 <!-- -----rAndakar-------- -->
                 <div class="rAndakar">
                     <svg fill="none" height="100%" viewBox="0 0 288 288" width="100%"
-                        xmlns="http://www.w3.org/2000/svg">
+                        xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                         <rect class="bgLightTint" fill="#E2EEFF" height="304.742" rx="123.401"
                             transform="rotate(45 164.485 -51)" width="246.801" x="164.485" y="-51" />
                     </svg>
@@ -844,7 +844,7 @@
             <div class="searchbar bgLightTint" id="searchbar">
 
                 <div class="searchIcon">
-                    <svg fill="none" height="100%" viewBox="0 0 45 45" width="100%" xmlns="http://www.w3.org/2000/svg">
+                    <svg fill="none" height="100%" viewBox="0 0 45 45" width="100%" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                         <path id="searchIconDark" class="accentColor"
                             d="M20.012 0A20.02 20.02 0 0 0 3.729 8.38a20.01 20.01 0 0 0 2.417 26.063 20.02 20.02 0 0 0 17.547 5.245 20 20 0 0 0 8.592-3.864L40.76 44.3a2.502 2.502 0 0 0 3.539-3.54l-8.475-8.472a20.01 20.01 0 0 0 2.166-21.074A20.02 20.02 0 0 0 20.014 0zm.002 5.004A15 15 0 0 1 30.629 9.4a15 15 0 0 1 4.394 10.614 15 15 0 0 1-4.394 10.615 15.01 15.01 0 0 1-21.23 0 15 15 0 0 1-4.397-10.615H5A15 15 0 0 1 9.398 9.4a15 15 0 0 1 10.616-4.396m-.463 5.014a10.01 10.01 0 0 0-9.545 9.996A10.007 10.007 0 0 0 20.012 30.02h.002a10 10 0 0 0 7.076-2.93 10.007 10.007 0 0 0 0-14.152 10 10 0 0 0-7.54-2.92" />
                     </svg>
@@ -857,7 +857,7 @@
                             aria-label="Google Search">
                             <div id="google-dropdown" data-default data-engine-name="google" data-engine="1"
                                 class="dropdown-item">
-                                <svg width="30" height="30">
+                                <svg width="30" height="30" focusable="false" aria-hidden="true">
                                     <use href="#google-engine-icon" />
                                 </svg>
                                 <span class="engine-name" id="googleEngineDD">
@@ -873,15 +873,15 @@
 
                     <div class="searchControls">
                         <!-- Mic Icon -->
-                        <button class="micIcon" id="micIcon" type="button" aria-pressed="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -1 24 24" height="100%" width="100%">
+                        <button class="micIcon" id="micIcon" type="button" aria-label="Voice search" aria-pressed="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -1 24 24" height="100%" width="100%" focusable="false" aria-hidden="true">
                                 <path id="micIconPath" class="accentColor"
                                     d="M12 14q-1.25 0-2.125-.875T9 11V5q0-1.25.875-2.125T12 2t2.125.875T15 5v6q0 1.25-.875 2.125T12 14m-1 7v-3.075q-2.6-.35-4.3-2.325T5 11h2q0 2.075 1.463 3.538T12 16t3.538-1.463T17 11h2q0 2.625-1.7 4.6T13 17.925V21z" />
                             </svg>
                         </button>
                         <!-- AI Mode Icon (upstream #247) -->
                         <button class="aiModeIcon hidden" id="aiModeIcon" type="button" tabindex="-1" aria-label="Google AI Mode" title="Google AI Mode">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="100%" width="100%" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="100%" width="100%" aria-hidden="true" focusable="false">
                                 <path class="accentColor" d="M17.518 1a.254.254 0 0 0-.245.201 5.75 5.75 0 0 1-1.56 2.86 5.75 5.75 0 0 1-2.902 1.57.24.24 0 0 0-.196.236.246.246 0 0 0 .196.237 5.75 5.75 0 0 1 2.902 1.568 5.75 5.75 0 0 1 1.568 2.902.246.246 0 0 0 .237.196.246.246 0 0 0 .236-.196 5.75 5.75 0 0 1 1.57-2.902 5.75 5.75 0 0 1 2.86-1.56.254.254 0 0 0 .2-.245.254.254 0 0 0-.2-.246 5.75 5.75 0 0 1-2.862-1.56 5.75 5.75 0 0 1-1.558-2.86.25.25 0 0 0-.246-.201M9.5 2.8c-3.754 0-6.7 2.946-6.7 6.7s2.946 6.7 6.7 6.7c.556 0 2.22-.081 3.771-1.249l6.188 6.19a.2.2 0 0 0 .281 0l1.4-1.4a.2.2 0 0 0 0-.282l-6.185-6.184a6.2 6.2 0 0 0 .883-1.627 6.1 6.1 0 0 0 .322-1.634.2.2 0 0 0-.2-.213h-2a.2.2 0 0 0-.198.18 4.06 4.06 0 0 1-1.213 2.566c-.847.837-1.846 1.254-3.049 1.254-2.366 0-4.3-1.836-4.3-4.301 0-2.366 1.835-4.3 4.3-4.3.437 0 .848.075 1.244.19a.2.2 0 0 0 .197-.05L12.5 3.78a.2.2 0 0 0-.053-.32A6.6 6.6 0 0 0 9.5 2.8" />
                             </svg>
                         </button>
@@ -893,7 +893,7 @@
             <!-- ----------end of searchbar-------------- -->
 
             <!-- Search Engine SVG Definitions -->
-            <svg style="display: none;">
+            <svg style="display: none;" focusable="false" aria-hidden="true">
                 <symbol id="google-engine-icon" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M24.805 12.0177c.1309.7383.1961 1.4863.195 2.2357 0 3.3466-1.2204 6.1763-3.3441 8.0916h.0028C19.8016 24.0265 17.2487 25 14.2216 25c-2.9761 0-5.8304-1.1589-7.9349-3.2217C4.1823 19.7154 3 16.9176 3 14.0004c0-2.9173 1.1823-5.7151 3.2867-7.778 2.1045-2.0628 4.9588-3.2217 7.9349-3.2217 2.7857-.032 5.476.9939 7.5073 2.8627l-3.2038 3.1404c-1.1581-1.0822-2.7037-1.6747-4.3035-1.65-2.9274 0-5.4144 1.936-6.301 4.5429a6.4654 6.4654 0 0 0 0 4.2115h.0043c.8907 2.6028 3.3735 4.5387 6.3009 4.5387 1.5121 0 2.811-.3795 3.8182-1.0505h-.0042a5.1412 5.1412 0 0 0 1.4705-1.4462 5.0327 5.0327 0 0 0 .7724-1.8963h-6.0611v-4.2348l10.5834-.0014Z" />
@@ -908,7 +908,7 @@
                 <div class="searchEnginesContainer">
 
                     <div class="search-engine bgLightTint">
-                        <svg width="30" height="30" class="search-engine-icon">
+                        <svg width="30" height="30" class="search-engine-icon" focusable="false" aria-hidden="true">
                             <use href="#google-engine-icon" />
                         </svg>
                         <label class="engine-name" id="googleEngine">Google</label>
@@ -940,7 +940,7 @@
 
         <button class="hangno" id="aiToolsIcon" type="button" aria-controls="toolsCont" aria-expanded="false">
             <span class="icon">
-                <svg height="100%" viewBox="0 0 280 280" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <svg height="100%" viewBox="0 0 280 280" width="100%" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                     <path id="aiIcon" class="accentColor"
                         d="M152 178c0-14.359 11.641-26 26-26h76c14.359 0 26.275 11.76 23.393 25.827-10.238 49.97-49.596 89.328-99.566 99.566C163.76 280.275 152 268.359 152 254v-76Zm-24 5.26c0 23.163-28.006 34.764-44.385 18.385L8.782 126.811c-5.35-5.35-8.252-12.794-6.994-20.255 8.778-52.04 48.96-93.412 100.382-103.949C116.237-.275 128 11.641 128 26v157.26ZM0 214.74c0-23.163 28.006-34.764 44.385-18.385l83.609 83.609c.004.004.006.01.006.015a.02.02 0 0 1-.021.021H26c-14.36 0-26-11.641-26-26v-39.26ZM152 26c0-14.36 11.641-26 26-26h76c14.359 0 26 11.64 26 26v76c0 14.359-11.641 26-26 26h-76c-14.359 0-26-11.641-26-26V26Z" />
                 </svg>
@@ -953,7 +953,7 @@
             <!-- ---------------- -->
             <a href="https://chatgpt.com/">
                 <div class="tIcon">
-                    <svg height="100%" viewBox="0 0 24 24" width="100%" xmlns="http://www.w3.org/2000/svg">
+                    <svg height="100%" viewBox="0 0 24 24" width="100%" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                         <rect class="accentColor aiDarkIcons" width="100%" height="100%" rx="50%" />
                         <path class="bgLightTint notTargeted" style="transform: scale(0.7); transform-origin: center;"
                             d="M9.205 8.765v-2.26c0-.19.071-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.567 0 .166 0 .356-.024.547l-4.71-2.76a.797.797 0 0 0-.856 0zm10.609 8.801v-5.4c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 0 1 .476 0l4.544 2.617c1.308.761 2.188 2.378 2.188 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.809l-1.95-1.142c-.167-.095-.239-.238-.239-.428V6.006c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.174c-.285.166-.428.404-.428.737v6.898zM12 15.235l-2.795-1.57v-3.33L12 8.765l2.795 1.57v3.33zm1.796 7.23a4.452 4.452 0 0 1-2.712-.927l4.686-2.711c.285-.167.428-.405.428-.738v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 0 1 4.21 6.434v5.423c0 .334.143.571.428.738l5.947 3.449-1.95 1.118a.433.433 0 0 1-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71a.796.796 0 0 0 .857 0l5.97-3.448v2.26c0 .19-.072.333-.238.428l-4.543 2.616c-.619.357-1.356.523-2.117.523Zm5.899 2.83a5.947 5.947 0 0 0 5.827-4.756c2.664-.69 4.377-3.188 4.377-5.733 0-1.665-.714-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.946-5.946-5.946-.642 0-1.26.095-1.88.309A5.961 5.961 0 0 0 10.205.107a5.947 5.947 0 0 0-5.827 4.757C1.713 5.554 0 8.052 0 10.597c0 1.665.714 3.282 1.998 4.448-.119.5-.19.999-.19 1.498 0 3.401 2.759 5.947 5.946 5.947.642 0 1.26-.095 1.88-.31a5.96 5.96 0 0 0 4.162 1.713z" />
@@ -964,7 +964,7 @@
             <!-- ---------------- -->
             <a href="https://claude.ai/new/">
                 <div class="tIcon">
-                    <svg height="100%" width="100%" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg height="100%" width="100%" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                         <rect class="accentColor aiDarkIcons" height="100%" rx="50%" width="100%" />
                         <path class="bgLightTint notTargeted" style="transform: scale(0.8); transform-origin: center;"
                             d="m5.92 15.3 3.94-2.2.06-.2-.06-.1h-.2L9 12.76l-2.24-.06-1.96-.1-1.9-.1-.48-.1-.42-.6.04-.3.4-.26.58.04 1.26.1 1.9.12 1.38.08 2.04.24h.32l.04-.14-.1-.08-.08-.08L7.8 10.2 5.68 8.8l-1.12-.82-.6-.4-.3-.4-.12-.84.54-.6.74.06.18.04.74.58 1.6 1.22L9.4 9.2l.3.24.12-.08.02-.06-.14-.22L8.6 7 7.4 4.92l-.54-.86-.14-.52c-.06-.2-.08-.4-.08-.6l.6-.84.36-.1.84.12.32.28.52 1.2.82 1.86 1.3 2.52.4.76.2.68.06.2h.14v-.1l.1-1.44.2-1.74.2-2.24.06-.64.32-.76.6-.4.52.22.4.58-.06.36L14.32 5l-.52 2.42-.3 1.64h.18l.2-.22.82-1.08 1.38-1.72.6-.7.72-.74.46-.36h.86l.62.94-.28.98-.88 1.12-.74.94-1.06 1.42-.64 1.14.06.08h.14l2.4-.52 1.28-.22 1.52-.26.7.32.08.32-.28.68-1.64.4-1.92.4-2.86.66-.04.02.04.06 1.28.12.56.04h1.36l2.52.2.66.4.38.54-.06.4-1.02.52-1.36-.32-3.2-.76-1.08-.26h-.16v.08l.92.9 1.66 1.5 2.12 1.94.1.48-.26.4-.28-.04-1.84-1.4-.72-.6-1.6-1.36h-.1v.14l.36.54 1.96 2.94.1.9-.14.28-.52.2-.54-.12-1.16-1.6-1.2-1.8-.94-1.64-.1.08-.58 6.04-.26.3-.6.24-.5-.4-.28-.6.28-1.24.32-1.6.26-1.28.24-1.58.14-.52v-.04h-.14l-1.2 1.66-1.8 2.46-1.44 1.52-.34.14-.6-.3.06-.56.32-.46 2-2.56 1.2-1.58.8-.92-.02-.1h-.06l-5.28 3.44-.94.12-.4-.4.04-.6.2-.2 1.6-1.1z" />
@@ -975,7 +975,7 @@
             <!-- ---------------- -->
             <a href="https://www.youtube.com/">
                 <div class="tIcon">
-                    <svg height="100%" width="100%" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg height="100%" width="100%" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                         <rect class="accentColor aiDarkIcons" height="100%" rx="50%" width="100%" />
                         <path class="bgLightTint notTargeted" style="transform: scale(0.7); transform-origin: center;"
                             d="M21.582 6.186a2.506 2.506 0 0 0-1.768-1.768C18.254 4 12 4 12 4s-6.254 0-7.814.418a2.506 2.506 0 0 0-1.768 1.768C2 7.746 2 12 2 12s0 4.254.418 5.814a2.506 2.506 0 0 0 1.768 1.768C5.746 20 12 20 12 20s6.254 0 7.814-.418a2.506 2.506 0 0 0 1.768-1.768C22 16.254 22 12 22 12s0-4.254-.418-5.814zM10 15.464V8.536L16 12l-6 3.464z" />
@@ -995,7 +995,7 @@
                 <h3 id="aiSettingsHeader">AI Tools Settings</h3>
                 <button id="closeAISettingsBtn" type="button" class="ai-close-button" aria-label="關閉 AI 工具設定" autofocus>
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -1043,9 +1043,9 @@
                 </div>
             </div>
 
-            <button class="toast-close" id="toastClose">
+            <button class="toast-close" id="toastClose" aria-label="Close notification">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.33" stroke-linecap="round" stroke-linejoin="round">
+                    stroke-width="2.33" stroke-linecap="round" stroke-linejoin="round" focusable="false" aria-hidden="true">
                     <line x1="20" y1="4" x2="4" y2="20"></line>
                     <line x1="4" y1="4" x2="20" y2="20"></line>
                 </svg>
@@ -1054,7 +1054,7 @@
     </div>
 
     <!-- Liquid Distortion Filter -->
-    <svg width="0" height="0">
+    <svg width="0" height="0" focusable="false" aria-hidden="true">
         <filter id="glass-distortion">
             <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise" />
             <feDisplacementMap in="SourceGraphic" in2="noise" scale="14" />
@@ -1065,7 +1065,7 @@
     <div class="menuBar" id="menuBar" style="display: none;">
         <div class="menuCont" id="menuCont">
             <div class="topRounder">
-                <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                     <path class="lessDark" d="M30 0L0 0C16.5685 0 30 13.4315 30 30L30 0Z" />
                 </svg>
             </div>
@@ -1075,7 +1075,7 @@
                     <button id="menuCloseButton" type="button" aria-label="Close settings">
                         <div class="icon">
                             <svg id="closeBtnX" height="30px" viewBox="0 0 34 34" width="30px"
-                                xmlns="http://www.w3.org/2000/svg">
+                                xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                                 <path id="menuCloseBtnIcon" class="accentColor"
                                     d="m19.404 17 4.81-4.808a1.7 1.7 0 1 0-2.406-2.405L17 14.597l-4.808-4.81a1.7 1.7 0 1 0-2.405 2.405L14.597 17l-4.81 4.808a1.7 1.7 0 1 0 2.405 2.405L17 19.403l4.808 4.81a1.7 1.7 0 1 0 2.405-2.405L19.403 17ZM17 34C7.61 34 0 26.39 0 17S7.61 0 17 0s17 7.61 17 17-7.61 17-17 17Z" />
                             </svg>
@@ -1125,14 +1125,25 @@
                                                 shown</div>
                                         </div>
                                         <label class="switch">
-                                            <button id="shortcutEditButton">
+                                            <button id="shortcutEditButton" aria-label="Edit shortcuts">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                     viewBox="0 0 24 24"
-                                                    style="transform: scale(1.1); transform-origin: center;">
+                                                    style="transform: scale(1.1); transform-origin: center;" focusable="false" aria-hidden="true">
                                                     <path
                                                         d="M12 21q-.425 0-.712-.288T11 20v-4q0-.425.288-.712T12 15t.713.288T13 16v1h7q.425 0 .713.288T21 18t-.288.713T20 19h-7v1q0 .425-.288.713T12 21m-8-2q-.425 0-.712-.288T3 18t.288-.712T4 17h4q.425 0 .713.288T9 18t-.288.713T8 19zm4-4q-.425 0-.712-.288T7 14v-1H4q-.425 0-.712-.288T3 12t.288-.712T4 11h3v-1q0-.425.288-.712T8 9t.713.288T9 10v4q0 .425-.288.713T8 15m4-2q-.425 0-.712-.288T11 12t.288-.712T12 11h8q.425 0 .713.288T21 12t-.288.713T20 13zm4-4q-.425 0-.712-.288T15 8V4q0-.425.288-.712T16 3t.713.288T17 4v1h3q.425 0 .713.288T21 6t-.288.713T20 7h-3v1q0 .425-.288.713T16 9M4 7q-.425 0-.712-.288T3 6t.288-.712T4 5h8q.425 0 .713.288T13 6t-.288.713T12 7z" />
                                                 </svg>
                                             </button>
+                                        </label>
+                                    </div>
+
+                                    <div class="ttcont" id="googleFaviconField">
+                                        <div class="texts">
+                                            <div class="bigText" id="googleFaviconText">Website icons from Google</div>
+                                            <div class="infoText" id="googleFaviconInfo">Fetch icons for shortcuts from Google's favicon service</div>
+                                        </div>
+                                        <label class="switch">
+                                            <input id="googleFaviconToggle" type="checkbox">
+                                            <span class="toggle"></span>
                                         </label>
                                     </div>
 
@@ -1203,10 +1214,10 @@
                                                 display</div>
                                         </div>
                                         <label class="switch">
-                                            <button id="aiToolsEditButton">
+                                            <button id="aiToolsEditButton" aria-label="Edit AI tools">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                     viewBox="0 0 24 24"
-                                                    style="transform: scale(1.1); transform-origin: center;">
+                                                    style="transform: scale(1.1); transform-origin: center;" focusable="false" aria-hidden="true">
                                                     <path
                                                         d="M12 21q-.425 0-.712-.288T11 20v-4q0-.425.288-.712T12 15t.713.288T13 16v1h7q.425 0 .713.288T21 18t-.288.713T20 19h-7v1q0 .425-.288.713T12 21m-8-2q-.425 0-.712-.288T3 18t.288-.712T4 17h4q.425 0 .713.288T9 18t-.288.713T8 19zm4-4q-.425 0-.712-.288T7 14v-1H4q-.425 0-.712-.288T3 12t.288-.712T4 11h3v-1q0-.425.288-.712T8 9t.713.288T9 10v4q0 .425-.288.713T8 15m4-2q-.425 0-.712-.288T11 12t.288-.712T12 11h8q.425 0 .713.288T21 12t-.288.713T20 13zm4-4q-.425 0-.712-.288T15 8V4q0-.425.288-.712T16 3t.713.288T17 4v1h3q.425 0 .713.288T21 6t-.288.713T20 7h-3v1q0 .425-.288.713T16 9M4 7q-.425 0-.712-.288T3 6t.288-.712T4 5h8q.425 0 .713.288T13 6t-.288.713T12 7z" />
                                                 </svg>
@@ -1314,7 +1325,7 @@
                                             <div class="infoText" id="pomodoroResetPosInfo">Reset icon &amp; panel position</div>
                                         </div>
                                         <button class="pomodoroNumBtn" id="pomodoroResetPosBtn" title="Reset Position">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" focusable="false" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                                         </button>
                                     </div></div>
     </div>
@@ -1722,7 +1733,7 @@
                                         <!-- ⚫🟣🔵🔴🟡🟢🟠⚪ -->
                                         <div class="btn" id="themeButton">
                                             <svg fill="none" height="100%" viewBox="0 0 20 20" width="100%"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                                xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
                                                 <path id="themeIconSvg" class="accentColor"
                                                     d="M14.2778 10a1.1668 1.1668 0 0 1-.825-1.9916 1.1668 1.1668 0 0 1 1.9916.825A1.1666 1.1666 0 0 1 14.2778 10Zm-2.3334-3.1111a1.1666 1.1666 0 1 1 0-2.3332 1.1666 1.1666 0 0 1 0 2.3332Zm-3.8888 0a1.1667 1.1667 0 1 1 0-2.3334 1.1667 1.1667 0 0 1 0 2.3334ZM5.7222 10a1.1667 1.1667 0 1 1 0-2.3334 1.1667 1.1667 0 0 1 0 2.3334ZM10 3a7 7 0 0 0 0 14 1.1668 1.1668 0 0 0 1.1667-1.1667c0-.3033-.1167-.5755-.3034-.7777-.1789-.21-.2955-.4823-.2955-.7778a1.1668 1.1668 0 0 1 1.1666-1.1667h1.3767A3.889 3.889 0 0 0 17 9.2222C17 5.7844 13.8656 3 10 3Z" />
                                             </svg>
@@ -1771,7 +1782,7 @@
                                         <!-- Upload Wallpaper Button -->
                                         <button class="uploadButton" id="uploadTrigger">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24">
+                                                viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                                                 <path fill="currentColor"
                                                     d="m11.558 13.646l-.084.071l-6.927 6.8a3.23 3.23 0 0 0 1.703.481h4.914l.356-1.423c.162-.648.497-1.24.97-1.712l2.11-2.11l-2.075-2.036l-.094-.078a.75.75 0 0 0-.873.007m4.945-5.394a.752.752 0 1 0-1.504 0a.752.752 0 0 0 1.504 0m-.843 6.441l-2.085-2.046l-.128-.117a2.25 2.25 0 0 0-2.888-.006l-.136.123l-6.938 6.81A3.23 3.23 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h11.499a3.25 3.25 0 0 1 3.25 3.25v4.762a3.28 3.28 0 0 0-2.608.95zM13.5 8.252a2.252 2.252 0 1 0 4.503 0a2.252 2.252 0 0 0-4.504 0m5.598 4.417l-5.901 5.901a2.7 2.7 0 0 0-.707 1.248l-.457 1.83c-.2.797.522 1.518 1.318 1.319l1.83-.458a2.7 2.7 0 0 0 1.248-.706L22.33 15.9a2.286 2.286 0 0 0-3.233-3.232" />
                                             </svg>
@@ -1779,9 +1790,9 @@
                                         </button>
 
                                         <!-- Random Wallpaper Button -->
-                                        <button class="randomButton" id="randomImageTrigger">
+                        <button class="randomButton" id="randomImageTrigger" aria-label="Random wallpaper">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24">
+                                                viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                                                 <path fill="currentColor"
                                                     style="transform: scale(0.9); transform-origin: center;"
                                                     d="M8.92 7.3c-.537.82-1.148 2.04-1.836 3.655-.723-1.48-1.584-3.24-3.656-3.24h-3A.41.41 0 0 1 0 7.284v-2.57a.41.41 0 0 1 .429-.429h3c2.231 0 4.062 1.004 5.49 3.013m14.96 11.009-4.286 4.285c-.26.26-.737.077-.737-.308v-2.571c-.056 0-2.52.03-3.2.007-1.604-.054-3.816-.29-5.706-3.02.527-.83 1.134-2.05 1.822-3.656.726 1.485 1.588 3.24 3.656 3.24h3.428v-2.57c0-.367.4-.587.75-.295l4.272 4.272a.45.45 0 0 1 0 .616zm0-12-4.286 4.286c-.256.256-.737.08-.737-.308V7.714h-3.428c-1.99 0-2.882 1.312-4.42 4.956-1.38 3.14-3.098 7.044-7.58 7.044h-3A.41.41 0 0 1 0 19.285v-2.571a.41.41 0 0 1 .429-.429h3c3.675 0 3.907-5.574 6.662-9.187.804-1.055 2.353-2.812 5.337-2.812h3.428V1.715c0-.371.404-.583.75-.295l4.272 4.272a.45.45 0 0 1 0 .616z" />
@@ -1839,20 +1850,20 @@
                 <!-- end of page 1 -->
                 <div class="page" id="shortcutEditPage">
                     <div class="topBar">
-                        <button id="backButton">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <button id="backButton" aria-label="Back to settings">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                                 <path
                                     d="M21 11H6.414l5.293-5.293l-1.414-1.414L2.586 12l7.707 7.707l1.414-1.414L6.414 13H21z" />
                             </svg>
                         </button>
                         <div class="rightButtons">
                             <button id="newShortcutButton" type="button" aria-label="新增捷徑" title="新增捷徑">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                                     <path d="M3 13h8v8h2v-8h8v-2h-8V3h-2v8H3z" />
                                 </svg>
                             </button>
                             <button id="resetButton" type="button" aria-label="重設捷徑" title="重設捷徑">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                                     <path
                                         d="M13 15.75v-1.5h4v1.5zM14.5 21v-1.25H13v-1.5h1.5V17H16v4zm2.5-1.25v-1.5h4v1.5zM18 17v-4h1.5v1.25H21v1.5h-1.5V17zm2.775-7H18.7q-.65-2.2-2.475-3.6T12 5Q9.075 5 7.037 7.038T5 12q0 1.8.813 3.3T8 17.75V15h2v6H4v-2h2.35Q4.8 17.75 3.9 15.938T3 12q0-1.875.713-3.512t1.924-2.85t2.85-1.925T12 3q3.225 0 5.663 1.988T20.775 10" />
                                 </svg>
@@ -2007,7 +2018,7 @@
 
     <div class="wallpaperQuickActions" id="wallpaperQuickActions">
         <button id="wallpaperGalleryBtn" class="wallpaperQuickBtn" type="button" aria-controls="wallpaperGalleryDialog" aria-label="Wallpaper gallery">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/></svg>
             <span class="tooltip-text" id="wallpaperGalleryHint">Wallpaper gallery</span>
         </button>
     </div>

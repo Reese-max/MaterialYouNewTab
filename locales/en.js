@@ -719,6 +719,11 @@ const en = {
     "menuCloseText": "Close",
     "openSettingsLabel": "Open settings",
     "voiceSearchLabel": "Voice search",
+    "toastCloseLabel": "Close notification",
+    "shortcutEditLabel": "Edit shortcuts",
+    "aiToolsEditLabel": "Edit AI tools",
+    "googleFaviconText": "Website icons from Google",
+    "googleFaviconInfo": "Fetch icons for shortcuts from Google's favicon service",
 
     // Tips
     "switchSearchModes": "Switch Search Modes",
