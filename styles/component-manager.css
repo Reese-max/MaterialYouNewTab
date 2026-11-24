@@ -32,15 +32,11 @@
 #menuCont :is(.settingsActionBtn, .workspaceEditorActions button) { min-height: 44px; }
 
 #overviewPage [data-settings-group][hidden] { display: none !important; }
-#menuCont .settingsGroupTabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 #myntComponentManager fieldset { min-width: 0; margin: 0; padding: 8px; border: 1px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 12px; }
 #myntComponentManager legend { padding-inline: 6px; font-weight: 600; }
 #menuCont .controlSectionHeading { flex-wrap: wrap; }
 #menuCont #workspaceSection :is(input, select, textarea) { max-width: 100%; box-sizing: border-box; }
-#menuCont :is(.controlSettingRow, .permissionRow) { flex-wrap: wrap; }
-#menuCont .permissionControls { flex-wrap: wrap; }
-#menuCont :is(.controlSettingRow, .permissionRow) > span:first-child { min-width: 140px; }
-#menuCont :is(.permissionControls button, .controlSettingRow select, .workspaceEditBtn) { min-height: 44px; }
+#menuCont :is(.workspaceEditBtn) { min-height: 44px; }
 #menuCont .workspacePresetGrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
 #menuCont .workspaceEditorFields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); }
 #menuCont .workspaceEditorActions { display: flex; flex-wrap: wrap; }

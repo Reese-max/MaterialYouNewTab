@@ -39,7 +39,6 @@ if (typeof module !== "undefined") {
 if (typeof document !== "undefined") {
     (() => {
         const KEYS = {
-            accessibility: "myntAccessibility",
             serviceStatus: "myntServiceStatus",
             serviceAlert: "myntServiceStatusPillVisible",
             workspace: "myntWorkspacePreset",
@@ -78,15 +77,7 @@ if (typeof document !== "undefined") {
                 "workspaceWidgetAi", "workspaceWidgetGoogle",
                 "workspaceBackgroundLabel", "workspaceBackgroundVideo",
                 "workspaceBackgroundWallpaper", "workspaceBackgroundColor", "workspaceFocusMinutesLabel",
-                "workspaceDeleteBtn", "workspaceCancelBtn", "workspaceSaveBtn", "accessibilityTitle",
-                "accessibilityInfo", "reduceMotionText", "reduceMotionInfo", "highContrastText",
-                "highContrastInfo", "fontScaleText", "fontScaleInfo", "privacyCenterTitle",
-                "privacyCenterInfo", "privacyPolicyLink", "permissionBookmarksTitle",
-                "permissionBookmarksInfo",
-                "permissionNotificationsTitle", "permissionNotificationsInfo", "permissionLocationTitle",
-                "permissionLocationInfo", "privacyDisclosureWeather", "privacyDisclosureIp",
-                "privacyDisclosureLocal", "serviceStatusTitle",
-                "serviceStatusInfo", "serviceAlertToggleText", "serviceAlertToggleInfo",
+                "workspaceDeleteBtn", "workspaceCancelBtn", "workspaceSaveBtn",
                 "commandPaletteTitle", "commandPaletteEmpty"
             ];
             sameKeyIds.forEach(id => {
@@ -127,7 +118,7 @@ if (typeof document !== "undefined") {
             if (!id) return;
             serviceState[id] = { status, code: Number(code) || 0, at: Date.now() };
             localStorage.setItem(KEYS.serviceStatus, JSON.stringify(serviceState));
-            renderServiceStatus();
+            updateServiceAlert();
         }
 
         if (!window.fetch.__myntTracked) {
@@ -136,7 +127,7 @@ if (typeof document !== "undefined") {
                 const service = serviceFromRequest(args[0]);
                 if (service) {
                     serviceState[service] = { status: "checking", at: Date.now(), code: 0 };
-                    renderServiceStatus();
+                    updateServiceAlert();
                 }
                 try {
                     const response = await nativeFetch(...args);
@@ -151,54 +142,12 @@ if (typeof document !== "undefined") {
             window.fetch = trackedFetch;
         }
 
-        function serviceStatusText(saved) {
-            if (!navigator.onLine) return t("serviceOffline", "Unavailable offline");
-            if (!saved) return t("serviceNotChecked", "Not checked");
-            if (saved.status === "checking") return t("serviceChecking", "Checking...");
-
-            const time = new Intl.DateTimeFormat(lang === "zh_TW" ? "zh-TW" : "en", {
-                hour: "2-digit",
-                minute: "2-digit"
-            }).format(new Date(saved.at));
-            const result = saved.status === "ok"
-                ? t("serviceAvailable", "Available")
-                : saved.code
-                    ? format("serviceHttpError", "HTTP {code}", { code: saved.code })
-                    : t("serviceError", "Request failed");
-            return `${result} · ${time}`;
-        }
-
-        function renderServiceStatus() {
-            const list = document.getElementById("serviceStatusList");
-            if (!list) return;
-            list.replaceChildren();
-
-            serviceDefinitions.forEach(([id, labelKey]) => {
-                const row = document.createElement("div");
-                row.className = "serviceRow";
-                const label = document.createElement("span");
-                label.textContent = t(labelKey, id);
-                const state = document.createElement("span");
-                const saved = id === "network"
-                    ? { status: navigator.onLine ? "ok" : "offline", at: Date.now() }
-                    : serviceState[id];
-                state.className = `serviceState ${navigator.onLine ? saved?.status || "unknown" : "offline"}`;
-                state.textContent = id === "network"
-                    ? (navigator.onLine ? t("serviceOnline", "Online") : t("serviceOfflineMode", "Offline mode"))
-                    : serviceStatusText(saved);
-                row.append(label, state);
-                list.appendChild(row);
-            });
-
-            updateServiceAlert();
-        }
-
         function serviceAlertEnabled() {
             // 只有明確的 "false" 會關閉；缺值或格式異常時維持預設顯示，且不改寫資料。
             try { return localStorage.getItem(KEYS.serviceAlert) !== "false"; } catch { return true; }
         }
 
-        // 首頁提示只讀取既有狀態，不重建控制中心清單（避免 aria-live 重複朗讀）。
+        // 首頁提示只讀取既有狀態；元件已列入 removed-features.js，預設不顯示。
         function updateServiceAlert() {
             const pill = document.getElementById("serviceStatusPill");
             const pillText = document.getElementById("serviceStatusPillText");
@@ -207,7 +156,6 @@ if (typeof document !== "undefined") {
                 ["error", "offline"].includes(serviceState[id]?.status) && Date.now() - serviceState[id].at < 15 * 60 * 1000
             );
 
-            // 使用者可在元件管理或控制中心關閉首頁提示；狀態清單與本機紀錄照常更新。
             pill.hidden = !serviceAlertEnabled() || (navigator.onLine && !recentError);
             pill.classList.toggle("serviceWarning", navigator.onLine && recentError);
             pillText.textContent = navigator.onLine
@@ -215,32 +163,15 @@ if (typeof document !== "undefined") {
                 : t("serviceOfflineMode", "Offline mode");
         }
 
-        const serviceAlertCheckbox = document.getElementById("serviceStatusPillCheckbox");
-        if (serviceAlertCheckbox) {
-            serviceAlertCheckbox.checked = serviceAlertEnabled();
-            // 元件管理會監聽 document change 事件並同步首頁與設定中的勾選狀態。
-            serviceAlertCheckbox.addEventListener("change", () => {
-                localStorage.setItem(KEYS.serviceAlert, String(serviceAlertCheckbox.checked));
-                updateServiceAlert();
-            });
-        }
+        window.addEventListener("online", updateServiceAlert);
+        window.addEventListener("offline", updateServiceAlert);
 
-        window.addEventListener("online", renderServiceStatus);
-        window.addEventListener("offline", renderServiceStatus);
-
-        // Accessibility settings use native media preferences by default.
+        // Reduced motion follows the OS preference only. The in-app accessibility settings were removed;
+        // the saved myntAccessibility record is kept but no longer read.
         const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
-        const savedAccessibility = readJSON(KEYS.accessibility, {});
-        let accessibility = {
-            reduceMotion: typeof savedAccessibility.reduceMotion === "boolean" ? savedAccessibility.reduceMotion : null,
-            highContrast: savedAccessibility.highContrast === true,
-            fontScale: [0.9, 1, 1.1, 1.2].includes(Number(savedAccessibility.fontScale))
-                ? Number(savedAccessibility.fontScale)
-                : 1
-        };
 
         function effectiveReducedMotion() {
-            return accessibility.reduceMotion === null ? reducedMotionQuery.matches : accessibility.reduceMotion;
+            return reducedMotionQuery.matches;
         }
 
         const decorativeVideo = document.getElementById("videoBg");
@@ -271,7 +202,6 @@ if (typeof document !== "undefined") {
                 && document.body.dataset.workspaceBackground === "video"
                 && document.body.dataset.galleryVideo !== "on"
                 && !effectiveReducedMotion()
-                && !accessibility.highContrast
                 && networkConnection?.saveData !== true;
         }
 
@@ -325,11 +255,6 @@ if (typeof document !== "undefined") {
         function applyAccessibility(allowResume = true) {
             const reduceMotion = effectiveReducedMotion();
             document.documentElement.classList.toggle("myntReducedMotion", reduceMotion);
-            document.documentElement.classList.toggle("myntHighContrast", accessibility.highContrast);
-            document.documentElement.style.setProperty("--mynt-font-scale", accessibility.fontScale);
-            document.getElementById("reduceMotionCheckbox").checked = reduceMotion;
-            document.getElementById("highContrastCheckbox").checked = accessibility.highContrast;
-            document.getElementById("fontScaleSelect").value = String(accessibility.fontScale);
 
             document.querySelectorAll("video:not(#videoBg)").forEach(video => {
                 if (reduceMotion && !video.paused) {
@@ -344,34 +269,13 @@ if (typeof document !== "undefined") {
             else if (reduceMotion) decorativeVideo?.pause();
         }
 
-        function saveAccessibility() {
-            localStorage.setItem(KEYS.accessibility, JSON.stringify(accessibility));
-            applyAccessibility();
-        }
-
-        document.getElementById("reduceMotionCheckbox").addEventListener("change", event => {
-            accessibility.reduceMotion = event.target.checked;
-            saveAccessibility();
-        });
-        document.getElementById("highContrastCheckbox").addEventListener("change", event => {
-            accessibility.highContrast = event.target.checked;
-            saveAccessibility();
-        });
-        document.getElementById("fontScaleSelect").addEventListener("change", event => {
-            accessibility.fontScale = [0.9, 1, 1.1, 1.2].includes(Number(event.target.value))
-                ? Number(event.target.value)
-                : 1;
-            saveAccessibility();
-        });
         document.addEventListener("play", event => {
             if (!(event.target instanceof HTMLMediaElement)) return;
             if (effectiveReducedMotion() || (event.target === decorativeVideo && !canPlayDecorativeVideo())) {
                 event.target.pause();
             }
         }, true);
-        reducedMotionQuery.addEventListener?.("change", () => {
-            if (accessibility.reduceMotion === null) applyAccessibility();
-        });
+        reducedMotionQuery.addEventListener?.("change", () => applyAccessibility());
         networkConnection?.addEventListener?.("change", syncDecorativeVideo);
 
         // Existing widget toggles remain the source of truth for editable work modes.
@@ -597,96 +501,6 @@ if (typeof document !== "undefined") {
             });
         }
 
-        // Optional extension and browser permissions.
-        const permissionApi = globalThis.browser?.permissions || globalThis.chrome?.permissions;
-        const isFirefoxPermissionApi = Boolean(globalThis.browser?.permissions);
-
-        function callPermission(method, spec) {
-            if (!permissionApi?.[method]) return Promise.resolve(null);
-            if (isFirefoxPermissionApi) return permissionApi[method](spec).catch(() => false);
-            return new Promise(resolve => {
-                permissionApi[method](spec, result => {
-                    const failed = Boolean(globalThis.chrome?.runtime?.lastError);
-                    resolve(failed ? false : result);
-                });
-            });
-        }
-
-        function setPermissionRow(name, state, actionable = true) {
-            const status = document.getElementById(`permission${name}Status`);
-            const button = document.querySelector(`[data-permission-action="${name.toLowerCase()}"]`);
-            const labels = {
-                granted: t("permissionGranted", "Granted"),
-                prompt: t("permissionNotGranted", "Not granted"),
-                denied: t("permissionDenied", "Denied"),
-                unsupported: t("permissionUnsupported", "Unavailable")
-            };
-            status.textContent = labels[state] || labels.prompt;
-            status.className = state;
-            button.disabled = !actionable;
-            button.dataset.permissionState = state;
-            button.textContent = state === "granted" && name === "Bookmarks"
-                ? t("permissionRemove", "Remove")
-                : state === "prompt"
-                    ? t("permissionGrant", "Grant")
-                    : labels[state] || t("permissionManage", "Manage");
-        }
-
-        async function renderPermissions() {
-            if (permissionApi) {
-                const bookmarkPermissions = isFirefoxPermissionApi ? ["bookmarks"] : ["bookmarks", "favicon"];
-                const bookmarksGranted = await callPermission("contains", { permissions: bookmarkPermissions });
-                setPermissionRow("Bookmarks", bookmarksGranted ? "granted" : "prompt");
-            } else {
-                setPermissionRow("Bookmarks", "unsupported", false);
-            }
-
-            if ("Notification" in window) {
-                const state = Notification.permission === "default" ? "prompt" : Notification.permission;
-                setPermissionRow("Notifications", state, state === "prompt");
-            } else {
-                setPermissionRow("Notifications", "unsupported", false);
-            }
-
-            if (weatherRemoved) return;
-            if (!navigator.geolocation) {
-                setPermissionRow("Location", "unsupported", false);
-            } else {
-                try {
-                    const result = await navigator.permissions.query({ name: "geolocation" });
-                    setPermissionRow("Location", result.state, result.state === "prompt");
-                } catch {
-                    setPermissionRow("Location", "prompt", true);
-                }
-            }
-        }
-
-        document.querySelectorAll("[data-permission-action]").forEach(button => {
-            button.addEventListener("click", async () => {
-                button.disabled = true;
-                const action = button.dataset.permissionAction;
-                const state = button.dataset.permissionState;
-                if (action === "bookmarks") {
-                    const permissions = isFirefoxPermissionApi ? ["bookmarks"] : ["bookmarks", "favicon"];
-                    await callPermission(state === "granted" ? "remove" : "request", { permissions });
-                    if (state === "granted") {
-                        const checkbox = document.getElementById("bookmarksCheckbox");
-                        if (checkbox.checked) checkbox.click();
-                    }
-                } else if (action === "notifications" && Notification.permission === "default") {
-                    await Notification.requestPermission();
-                } else if (action === "location" && !weatherRemoved) {
-                    await new Promise(resolve => navigator.geolocation.getCurrentPosition(resolve, resolve, {
-                        enableHighAccuracy: false,
-                        timeout: 6000,
-                        maximumAge: 300000
-                    }));
-                }
-                await renderPermissions();
-            });
-        });
-        permissionApi?.onAdded?.addListener(renderPermissions);
-        permissionApi?.onRemoved?.addListener(renderPermissions);
         document.addEventListener("visibilitychange", () => {
             if(document.hidden){
                 resumeDecorativeAfterHidden=Boolean(decorativeVideo&&!decorativeVideo.paused);
@@ -694,7 +508,6 @@ if (typeof document !== "undefined") {
             }else if(resumeDecorativeAfterHidden||startDecorativeWhenVisible){
                 resumeDecorativeAfterHidden=false;startDecorativeWhenVisible=false;syncDecorativeVideo();
             }
-            if (document.visibilityState === "visible") renderPermissions();
         });
 
         // Native dialogs provide focus trapping, Escape handling, and keyboard semantics.
@@ -704,9 +517,7 @@ if (typeof document !== "undefined") {
         function openControlCenter(sectionId) {
             if (commandDialog.open) commandDialog.close();
             renderWorkspace();
-            renderServiceStatus();
-            renderPermissions();
-            window.myntSettings.open(sectionId || "accessibilitySection");
+            window.myntSettings.open(sectionId || "workspaceSection");
         }
 
         // Legacy clients (including the contrast smoke test) may call showModal directly.
@@ -716,14 +527,14 @@ if (typeof document !== "undefined") {
         controlDialog.showModal = () => {
             if (controlDialog.open) return;
             const content = controlDialog.querySelector('.controlCenterContent');
-            controlCenterPlacements = ['workspaceSection', 'accessibilitySection', 'privacySection', 'serviceSection'].map(id => {
+            controlCenterPlacements = ['workspaceSection'].map(id => {
                 const section = document.getElementById(id), marker = document.createComment(id);
                 section.before(marker); content.append(section);
                 section.hidden = false; section.removeAttribute('inert');
                 return { section, marker };
             });
             controlDialog.hidden = false; controlDialog.inert = false;
-            renderWorkspace(); renderServiceStatus(); renderPermissions();
+            renderWorkspace();
             legacyShowControlCenter();
         };
         controlDialog.addEventListener('close', () => {
@@ -749,7 +560,6 @@ if (typeof document !== "undefined") {
             }
         });
         document.getElementById("closeControlCenterBtn").addEventListener("click", () => controlDialog.close());
-        document.getElementById("serviceStatusPill").addEventListener("click", () => openControlCenter("serviceSection"));
         controlDialog.addEventListener("click", event => {
             if (event.target === controlDialog) controlDialog.close();
         });
@@ -771,10 +581,7 @@ if (typeof document !== "undefined") {
             { id: "wallpaperNext", label: "commandWallpaperNext", info: "commandWallpaperNextInfo", run: () => window.myntWallpaper?.next() },
             { id: "wallpaperGallery", label: "commandWallpaperGallery", info: "commandWallpaperGalleryInfo", run: () => window.myntWallpaper?.open() },
             { id: "wallpaperRandom", label: "commandWallpaperRandom", info: "commandWallpaperRandomInfo", run: () => window.myntWallpaper?.random() },
-            { id: "control", label: "commandSystemSettings", info: "commandSystemSettingsInfo", run: () => openControlCenter() },
             { id: "workspaces", label: "commandWorkspaces", info: "commandWorkspacesInfo", run: () => openControlCenter("workspaceSection") },
-            { id: "privacy", label: "commandPrivacy", info: "commandPrivacyInfo", run: () => openControlCenter("privacySection") },
-            { id: "accessibility", label: "commandAccessibility", info: "commandAccessibilityInfo", run: () => openControlCenter("accessibilitySection") },
             { id: "settings", label: "commandSettings", info: "commandSettingsInfo", run: () => {
                 const menu = document.getElementById("menuBar");
                 if (!menu || getComputedStyle(menu).display === "none") document.getElementById("menuButton").click();
@@ -1082,7 +889,6 @@ if (typeof document !== "undefined") {
             getRemoteWorkspaceState: remoteWorkspaceState, applyWorkspaceRemote,
             getWorkspacePresets: () => JSON.parse(JSON.stringify(workspaces)),
             reloadWorkspaces: () => { workspaces=myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null),workspaceDefaults); workspaceBaseline=localStorage.getItem(KEYS.workspaces); renderWorkspace(); },
-            reloadAccessibility: () => { const saved=JSON.parse(localStorage.getItem(KEYS.accessibility)); if(!saved || typeof saved!=='object')throw Error('Invalid accessibility'); accessibility={...saved};applyAccessibility(false); },
             refreshServiceAlert: updateServiceAlert
         };
         window.MyntStorageSync?.watch([KEYS.workspaces, KEYS.workspace], () => {
@@ -1092,7 +898,6 @@ if (typeof document !== "undefined") {
         saveWorkspaces();
         applyAccessibility();
         renderWorkspace();
-        renderServiceStatus();
-        renderPermissions();
+        updateServiceAlert();
     })();
 }

@@ -184,7 +184,6 @@ if (require.main === module) (async () => {
 
     const empty = environment(); loadFixture(empty);
     empty.run('fixture.media.gallery=[];fixture.media.timerImage=[];fixture.media.music=[]');
-    assert(empty.run('backupScopePreview(fixture)').includes('Files not present in the backup will be removed'));
     await empty.run('restoreData(fixture)');
     for (const key of ['MYNTWallpaperGallery', 'MyntPomodoroAppearance', 'myntPomodoroMusicV1']) assert.equal(empty.databases.get(key).entries.size, 0);
 
@@ -210,31 +209,16 @@ if (require.main === module) (async () => {
     for (const key of ['MYNTWallpaperGallery', 'MyntPomodoroAppearance', 'myntPomodoroMusicV1']) {
         assert.deepEqual((await snapshot(legacy)).stores[key], beforeLegacy.stores[key], 'legacy backup cannot clear media absent from its file');
     }
-    assert(legacy.run('backupScopePreview({version:2,localStorage:{},indexedDB:{}})').includes('older backup'));
     assert(legacy.run('isValidBackupFile({localStorage:{},indexedDB:{}})'), 'unversioned legacy backup remains accepted');
-
-    const cancelled = environment(); loadFixture(cancelled); cancelled.accept(false);
-    const input = { files: [{ size: 1000, text: async () => cancelled.run('JSON.stringify(fixture)') }], value: 'fixture.json' };
-    cancelled.context.event = { currentTarget: input };
-    const beforeCancel = await snapshot(cancelled);
-    await cancelled.run('validateAndRestoreData(event)');
-    assert.equal(cancelled.confirmations.length, 1);
-    assert(cancelled.confirmations[0].includes('gallery entries: 2'));
-    assert.deepEqual(await snapshot(cancelled), beforeCancel);
-    assert.equal(cancelled.reloads(), 0); assert.equal(input.value, '');
-    assert(!cancelled.nodes.restoreBtn.disabled); assert(cancelled.nodes.backupStatus.textContent.includes('cancelled'));
-    cancelled.accept(true); await cancelled.run('validateAndRestoreData(event)');
-    assert.equal(cancelled.reloads(), 1); assert(cancelled.alerts.includes('Restored.'));
 
     const oversized = environment();
     oversized.run(`seed('myntPomodoroMusicV1','tracks','id',[['large',{id:'large',name:'large.mp3',blob:new Blob([new Uint8Array(25*1024*1024)],{type:'audio/mpeg'})}]]);`);
     const beforeOversized = await snapshot(oversized);
-    await oversized.run('backupData()');
-    assert.equal(oversized.downloads.length, 0); assert(oversized.alerts[0].includes('exceeds 32 MiB'));
+    await assert.rejects(oversized.run('createBackup()'), /exceeds 32 MiB/);
+    assert.equal(oversized.downloads.length, 0);
     assert.deepEqual(await snapshot(oversized), beforeOversized);
-    assert(!oversized.nodes.backupBtn.disabled);
     assert.equal(oversized.writes.length, 0);
-    console.log('BACKUP_COMPLETION_OK: full v3 export/restore, exact media bytes, layout/tasks/notes, removed gallery, safe timer pause, exclusions, legacy media preservation, schema/version/size/security rejection, confirmation/cancel/reload, all-store rollback, synchronous transaction abort and oversized export without omission. Isolated fixtures only.');
+    console.log('BACKUP_COMPLETION_OK: full v3 export/restore, exact media bytes, layout/tasks/notes, removed gallery, safe timer pause, exclusions, legacy media preservation, schema/version/size/security rejection, all-store rollback, synchronous transaction abort and oversized export without omission. Isolated fixtures only.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 module.exports = { environment, loadFixture, snapshot };

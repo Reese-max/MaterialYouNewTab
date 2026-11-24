@@ -96,8 +96,9 @@ async function run(language, viewport) {
         }
         await page.locator('#menuButton').click();
         await page.locator('#menuCloseButton').waitFor({ state: 'visible' });
-        assert.equal(await page.locator('[data-settings-group-button]').count(), 4);
-        for (let tab = 0; tab < 4; tab++) {
+        // The System tab (permissions, privacy and service status) was removed (owner decision 2026-11-24).
+        assert.equal(await page.locator('[data-settings-group-button]').count(), 3);
+        for (let tab = 0; tab < 3; tab++) {
             await page.locator('[data-settings-group-button]').nth(tab).click();
             // Exercise open sections so hidden assertions cannot pass just because an ancestor is collapsed.
             const sections = await page.locator('#overviewPage .sectionHeader:visible').evaluateAll(nodes => nodes.map(node => node.getAttribute('aria-controls')));
@@ -107,19 +108,12 @@ async function run(language, viewport) {
             }
             for (const selector of ['#myntComponent-weather', '#hideWeatherCheckbox', '[data-settings-component="weather"]',
                 '#weatherAdvanced', '#weatherAdvancedContent', '#useGPScheckbox', '#userAPI',
-                '.permissionRow:has([data-permission-action="location"])', '#privacyDisclosureWeather', '#privacyDisclosureIp',
                 'a[href*="Get_WeatherAPI_Key.html"]', '[data-workspace-widget="hideWeatherCheckbox"]']) await hidden(page, selector);
             assert.equal(await page.locator('#myntComponent-weather').count(), 0, 'Weather absent from manager');
         }
-        assert.equal(await page.locator('#serviceStatusList .serviceRow').count(), 2, 'Only network and random wallpaper');
-        const labels = await page.evaluate(() => {
-            const t = translations[localStorage.getItem('selectedLanguage')] || translations.en;
-            return [t.serviceNetwork, t.serviceWallpaper];
-        });
-        assert.deepEqual(await page.locator('#serviceStatusList .serviceRow > span:first-child').allTextContents(), labels);
-        assert.equal(await page.locator('.permissionRow:has([data-permission-action="notifications"])').evaluate(node => getComputedStyle(node).borderBottomWidth), '0px', 'No orphan permission divider');
+        assert.equal(await page.locator('#serviceStatusList, [data-permission-action]').count(), 0, 'Service list and permission rows removed');
         const other = page.locator('#myntComponentManager fieldset').filter({ has: page.locator('#myntComponent-galleryEntry') });
-        assert.equal(await other.locator('input').count(), 2, 'Other group keeps gallery and service alert');
+        assert.equal(await other.locator('input').count(), 1, 'Other group keeps the gallery entry; the service alert was removed');
         await page.locator('[data-settings-group-button]').first().click();
         await page.locator('#workspaceAddBtn').click();
         await hidden(page, '[data-workspace-widget="hideWeatherCheckbox"]');

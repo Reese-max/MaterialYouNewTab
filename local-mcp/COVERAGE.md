@@ -48,7 +48,7 @@ An inventory entry is not an implementation of its operations. `ACTION_REQUIRED`
 - Media adapters with isolated API doubles; actual timer core delayed-lock revocation/conflict tests; long bookmark output bounds.
 - Official MCP SDK real stdio subprocess: initialize, tools/list, schema validation and explicit offline errors.
 - Eight transport tests: native framing, official SDK stdio, unsafe runtime rejection, replay retention and four Windows route/source guards, without a listening socket.
-- Workspace/accessibility validation, timer persistence/readback and hidden-video deferral; task/shortcut recovery and normal-UI undo; exact preference mappings and pure UI hooks; persistent music recovery/quotas/playback locks and bundled wallpaper visibility; studio appearance/scenario guards; gallery transaction rollback, stale revisions and recoverable media retention; bookmark API doubles; ambient/appearance/study-quote adapters.
+- Workspace validation, timer persistence/readback and hidden-video deferral; task/shortcut recovery and normal-UI undo; exact preference mappings and pure UI hooks; persistent music recovery/quotas/playback locks and bundled wallpaper visibility; studio appearance/scenario guards; gallery transaction rollback, stale revisions and recoverable media retention; bookmark API doubles; ambient/appearance/study-quote adapters.
 - Real dot cloud browser web preview: settings entry, disclosure expansion, keyboard focus, connect action reporting unavailable without prompting/granting permissions, Escape close and 400px viewport at 125% zoom plus latest 500px normal-zoom reload with no horizontal page overflow. Write/private checkboxes remain unchecked after reload. This is not a live MCP connection.
 
 ## Blocked or not tested

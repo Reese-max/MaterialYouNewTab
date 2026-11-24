@@ -97,74 +97,6 @@
     }
   },
   {
-    "name": "mynt_accessibility_get",
-    "description": "Read reduced-motion, contrast and text-scale preferences.",
-    "readOnly": true,
-    "annotations": {
-      "readOnlyHint": true,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "mynt_accessibility_update",
-    "description": "Update accessibility preferences without starting media or requesting permissions.",
-    "readOnly": false,
-    "annotations": {
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "openWorldHint": false
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "patch": {
-          "type": "object",
-          "properties": {
-            "reduceMotion": {
-              "type": "boolean"
-            },
-            "highContrast": {
-              "type": "boolean"
-            },
-            "fontScale": {
-              "type": "number",
-              "enum": [
-                0.9,
-                1,
-                1.1,
-                1.2
-              ],
-              "minimum": 0.9,
-              "maximum": 1.2
-            }
-          },
-          "required": [],
-          "additionalProperties": false
-        },
-        "expectedRevision": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$",
-          "maxLength": 64
-        },
-        "requestId": {
-          "type": "string",
-          "maxLength": 100
-        }
-      },
-      "required": [
-        "expectedRevision"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
     "name": "mynt_dashboard_get",
     "description": "Read dashboard counts, excluding task titles, notes and credentials.",
     "readOnly": true,
@@ -1105,7 +1037,7 @@
   },
   {
     "name": "mynt_backup_preview",
-    "description": "Return backup scope metadata only. Export/restore/reset require existing browser UI.",
+    "description": "Return backup scope metadata only. MYNT no longer has export/restore/reset controls.",
     "readOnly": true,
     "annotations": {
       "readOnlyHint": true,

@@ -50,8 +50,8 @@
         entry('galleryEntry', '桌布圖庫入口', 'Wallpaper gallery entry', 'myntGalleryEntryVisible', 'boolean', true, null, ['#wallpaperQuickActions'], { newPreference: true }),
         entry('profilesEntry', '排版設定檔入口', 'Layout profiles entry', 'myntProfilesEntryVisible', 'boolean', true, null, ['#myntProfilesPanel'], { newPreference: true }),
         entry('adaptiveEntry', '自動外觀入口', 'Adaptive appearance entry', 'myntAdaptiveEntryVisible', 'boolean', true, null, ['#myntAdaptivePanel'], { newPreference: true }),
-        // 只隱藏首頁右下角的提示；控制中心的服務狀態清單與本機紀錄不受影響。
-        entry('serviceStatus', '服務狀態提示', 'Service status alert', 'myntServiceStatusPillVisible', 'boolean', true, 'serviceStatusPillCheckbox', ['#serviceStatusPill'], { newPreference: true })
+        // 只控制首頁右下角的提示；系統分頁已移除，此元件列在 removed-features.js，本機紀錄不受影響。
+        entry('serviceStatus', '服務狀態提示', 'Service status alert', 'myntServiceStatusPillVisible', 'boolean', true, null, ['#serviceStatusPill'], { newPreference: true })
     ];
     for (const item of definitions) {
         item.keys = [item.key, ...item.caches.map(value => value.key), ...(item.legacyKeys || [])];
