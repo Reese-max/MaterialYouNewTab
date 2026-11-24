@@ -719,6 +719,9 @@ const en = {
     "menuCloseText": "Close",
     "openSettingsLabel": "Open settings",
     "voiceSearchLabel": "Voice search",
+    "toastCloseLabel": "Close notification",
+    "shortcutEditLabel": "Edit shortcuts",
+    "aiToolsEditLabel": "Edit AI tools",
 
     // Tips
     "switchSearchModes": "Switch Search Modes",
