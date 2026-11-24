@@ -676,7 +676,8 @@ async function main() {
     // Dialog text in the installed extension, in light mode, dark mode and the black theme: every visible text in
     // the settings workspace section (editor open), wallpaper gallery, encouragement lines, AI tools, bookmark editor,
     // keyboard help and command palette meets WCAG AA. Colours are painted on a canvas first, so any CSS colour syntax
-    // is measured as rendered; disabled controls are exempt. The original theme mode and colour are restored.
+    // is composited as rendered, with backgrounds, opacity and filters of every layer; disabled controls are exempt.
+    // The original theme mode and colour are restored.
     const previousThemeMode = await evaluate(`localStorage.getItem('preferredTheme')`);
     const previousColour = await evaluate(`document.querySelector('.colorPlate:checked')?.value || 'blue'`);
     const dialogContrast = {};
@@ -686,7 +687,22 @@ async function main() {
         const rgba = colour => { paint.clearRect(0, 0, 1, 1); paint.fillStyle = '#000'; paint.fillStyle = colour; paint.fillRect(0, 0, 1, 1); const d = paint.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
         const lum = c => { const a = c.slice(0, 3).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return a[0] * .2126 + a[1] * .7152 + a[2] * .0722; };
         const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
-        const behind = el => { const layers = []; for (let e = el; e && e !== document.documentElement; e = e.parentElement) { const c = rgba(getComputedStyle(e).backgroundColor); if (c[3] > 0) layers.push(c); if (c[3] >= 0.99) break; } return layers.reverse().reduce((out, c) => out.map((v, i) => v * (1 - c[3]) + c[i] * c[3]), [0, 0, 0]); };
+        // Contrast as rendered: from the text outward, each layer puts its background under what is above it, then its
+        // filter (dark mode inverts the page), then its opacity. A modal dialog is in the top layer, out of reach of
+        // ancestor filters and opacity; it is drawn over its ::backdrop and the page beneath. The same walk without the
+        // text gives the backdrop colour the text is read against.
+        const over = (top, under) => { const a = top[3] + under[3] * (1 - top[3]); return a ? [0, 1, 2].map(i => (top[i] * top[3] + under[i] * under[3] * (1 - top[3])) / a).concat(a) : [0, 0, 0, 0]; };
+        const filtered = (c, filter) => { if (filter === 'none' || !c[3]) return c; paint.clearRect(0, 0, 1, 1); paint.filter = filter; paint.fillStyle = 'rgba(' + c.slice(0, 3).join(',') + ',' + c[3] + ')'; paint.fillRect(0, 0, 1, 1); paint.filter = 'none'; const d = paint.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
+        const layers = (content, from) => {
+            for (let e = from; e; e = e.parentElement) {
+                const s = getComputedStyle(e);
+                content = filtered(over(content, rgba(s.backgroundColor)), s.filter);
+                content[3] *= Number(s.opacity);
+                if (e.matches(':modal, :popover-open')) return over(content, over(rgba(getComputedStyle(e, '::backdrop').backgroundColor), layers([0, 0, 0, 0], e.parentElement)));
+            }
+            return over(content, [255, 255, 255, 1]);
+        };
+        const measure = (el, style) => ratio(layers(rgba(style.color), el), layers([0, 0, 0, 0], el));
         const wait = ms => new Promise(r => setTimeout(r, ms));
         const audit = dialog => { const failures = []; let count = 0;
             for (const el of dialog.querySelectorAll('*')) {
@@ -697,7 +713,7 @@ async function main() {
                 if (!ownText && !field) continue;
                 count++;
                 const size = parseFloat(style.fontSize), need = size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700) ? 3 : 4.5;
-                const r = ratio(rgba(style.color), behind(el));
+                const r = measure(el, style);
                 if (r < need) failures.push((el.id || el.className || el.tagName) + ' ' + r.toFixed(2));
             }
             return { count, failures }; };
