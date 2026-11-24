@@ -350,7 +350,7 @@ html.mynt-pomo-float-root.myntHighContrast .mynt-pomo-equalizer i { animation: n
    the summary text stays as its accessible name. Its panel shows below the sound row. */
 .mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options { grid-column: 1; grid-row: 1; justify-self: center; }
 .mynt-pomo-float .mynt-pomo-controls .mynt-pomo-options summary {
-    display: flex; align-items: center; justify-content: center; padding: 0;
+    display: flex; align-items: center; justify-content: center; gap: 0; padding: 0;
     border-radius: 1.375rem; font-size: 0; color: var(--pomo-fg);
 }
 /* Small font scales shrink rem; touch targets in the control row never drop below 44px. */
