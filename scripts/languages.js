@@ -127,7 +127,6 @@ function applyLanguage(lang) {
         "eventCountdownSettingInfo",
         "eventCountdownManage",
         "feedback",
-        "resetsettings",
         "shortcutsText",
         "enableShortcutsText",
         "editShortcutsText",
@@ -225,12 +224,6 @@ function applyLanguage(lang) {
         "googleAppsHover",
         "todoListHover",
         "uploadWallpaperText",
-        "backupText",
-        "backupScopeText",
-        "backupScopeLabel",
-        "backupScopeFull",
-        "backupScopeSettings",
-        "restoreText",
         "rangColor",
         "bookmarksText",
         "bookmarksInfo",
@@ -256,14 +249,12 @@ function applyLanguage(lang) {
         { id: "settingsGroupPersonal", key: "settingsHomeTab" }, { id: "settingsGroupAppearance", key: "settingsAppearanceTab" }, "layoutSectionTitle",
         "pomodoroDurationsLabel", "pomodoroAdvancedLabel", "weatherAdvancedLabel",
         { id: "settingsGroupWork", key: "settingsToolsTab" },
-        { id: "settingsGroupAdvanced", key: "settingsSystemTab" },
         "personalizationSectionTitle",
         "aiToolSectionTitle", "pomodoroSectionTitle", "studySectionTitle", "countdownSectionTitle",
         "clockSectionTitle",
         "searchSectionTitle",
         "weatherSectionTitle",
         "appearanceSectionTitle",
-        { id: "settingsSectionTitle", key: "settingsLanguageBackupTitle" },
         "iconFileTooLargeMessage",
         "iconStorageQuotaMessage"
     ];
@@ -422,39 +413,12 @@ function applyLanguage(lang) {
     // Save the selected language in localStorage
     document.documentElement.lang = lang === "zh_TW" ? "zh-TW" : lang.replace("_", "-");
     saveLanguageStatus("selectedLanguage", lang);
-    if (typeof refreshBackupScope === "function") refreshBackupScope();
     document.dispatchEvent(new CustomEvent("mynt:language-changed"));
 }
-
-// Detect language from navigator.language
-let languageRequest = 0;
-const localeLoads = new Map();
-document.getElementById("languageSelector").addEventListener("change", async (event) => {
-    const lang = event.target.value, request = ++languageRequest;
-    if (!Object.hasOwn(localeSources, lang)) return;
-    // Live switching only keeps an open floating timer connected; a reload relabels every main-page module.
-    if (!window.myntPomoFloat?.isOpen()) { saveLanguageStatus("selectedLanguage", lang); location.reload(); return; }
-    try {
-        if (!translations[lang]) {
-            if (!localeLoads.has(lang)) localeLoads.set(lang, new Promise((resolve, reject) => {
-                const script = document.createElement("script");
-                script.src = "locales/" + lang + ".js";
-                script.onload = resolve; script.onerror = reject; document.head.append(script);
-            }).finally(() => localeLoads.delete(lang)));
-            await localeLoads.get(lang);
-            translations[lang] = { ...en, ...readLocaleSources()[lang] };
-        }
-        if (request !== languageRequest) return;
-        currentLanguage = lang;
-        isRTL = rtlLanguages.includes(lang);
-        applyLanguage(lang);
-    } catch (_) { if (request === languageRequest) event.target.value = currentLanguage; }
-});
 
 // Function to apply the language when the page loads
 window.onload = function () {
     const savedLanguage = getLanguageStatus("selectedLanguage") || DEFAULT_LANGUAGE;
-    document.getElementById("languageSelector").value = savedLanguage;
     applyLanguage(savedLanguage);
 };
 

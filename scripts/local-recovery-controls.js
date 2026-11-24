@@ -112,9 +112,6 @@
                 refresh();
             }
         });
-        document.addEventListener("change", event => {
-            if (event.target?.id === "languageSelector") refresh();
-        });
         refresh();
         return Object.freeze({ refresh });
     }

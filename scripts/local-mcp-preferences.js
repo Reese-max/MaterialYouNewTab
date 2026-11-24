@@ -15,8 +15,8 @@ const definitions=[
  ['mynt_ai_settings_update','Reorder/hide the three built-in AI tools and their container without opening sites.','ai',{tools:{type:'array',minItems:3,maxItems:3,items:obj({id:en(IDS),visible:bool},['id','visible'])},visible:bool}],
  ['mynt_theme_get','Read local preset/custom palette, separate from automatic appearance settings.','theme'],
  ['mynt_theme_update','Change a preset palette or local custom hex color; no images or remote services.','theme',{palette:en(PALETTES),customColor:{type:'string',pattern:'^#[a-fA-F0-9]{6}$',maxLength:7}}],
- ['mynt_language_get','Read supported language and explain browser reload requirements.','language'],
- ['mynt_language_update','Preview language change requirements; cannot reload or refetch quotes through MCP.','language',{language:en(LOCALES)}]
+ ['mynt_language_get','Read the saved language; MYNT has no language selector.','language'],
+ ['mynt_language_update','Language selection was removed from MYNT; always reports UNAVAILABLE and changes nothing.','language',{language:en(LOCALES)}]
 ];
 const tools=definitions.map(([name,description,domain,patch])=>({name,description,readOnly:!patch,annotations:{readOnlyHint:!patch,destructiveHint:false,openWorldHint:false},inputSchema:obj(patch?{...patch,expectedRevision:{type:'string',pattern:'^[a-f0-9]{64}$',maxLength:64},requestId:str(100)}:{},patch?['expectedRevision']:[])}));
 const KEY={clock:['clocktype','hourformat','hideClockVisible','digitalCheckboxState','hourcheckboxState','timeformatField'],search:['showShortcutSwitch','aiModeIconVisible'],ai:['aiToolsSettings','aiToolsCustom','aiToolsCheckboxState','aiToolsDisplayStatus'],theme:['selectedTheme','customThemeColor'],language:['selectedLanguage']};
@@ -46,7 +46,7 @@ function get(domain,raw){
   const palette=value(raw.selectedTheme,PALETTES,'blue'),customColor=raw.customThemeColor;
   if(customColor!==null&&!/^#[a-fA-F0-9]{6}$/.test(customColor))fail('INVALID_STORAGE','Invalid custom palette preserved');return{palette,customColor};
  }
- return{language:value(raw.selectedLanguage,LOCALES,'zh_TW'),supportedLanguages:LOCALES,changeRequiresBrowser:true};
+ return{language:value(raw.selectedLanguage,LOCALES,'zh_TW'),supportedLanguages:LOCALES,changeAvailable:false};
 }
 async function revision(expected,context){const crypto=context.crypto||root.crypto;if(!crypto?.subtle)fail('UNAVAILABLE','Revision hashing unavailable');return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(expected)))),b=>b.toString(16).padStart(2,'0')).join('');}
 async function execute(name,args={},context={}){
@@ -59,7 +59,7 @@ async function execute(name,args={},context={}){
   context.assertAccess?.();if(tool.readOnly)return{ok:true,revision:rev,data:current};
   if(args.expectedRevision!==rev)fail('CONFLICT','Preferences changed; read them again');
   const patch=Object.fromEntries(Object.entries(args).filter(([k])=>!['expectedRevision','requestId'].includes(k)));if(!Object.keys(patch).length)fail('INVALID_ARGUMENT','At least one preference is required');
-  if(domain==='language')fail('ACTION_REQUIRED','Use the browser language selector. This build loads only English and the saved locale at startup, then reloads on change; reloading may run quote initialization/refetch. No language, quote cache or page was changed.');
+  if(domain==='language')fail('UNAVAILABLE','Language selection was removed from MYNT; the saved locale stays in use. No language, quote cache or page was changed.');
   if(domain==='search'&&args.engine&&args.engine!=='google')fail('ACTION_REQUIRED','This fork uses Google for ordinary searches and has no alternate default-engine selector or persistence; browser bang shortcuts such as !b remain available. No provider was changed and no search was performed.');
   const next={...raw};
   if(domain==='clock'){
