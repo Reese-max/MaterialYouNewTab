@@ -6765,7 +6765,7 @@ html {
 	transform: scale(1.05);
 }
 
-.workspacePresetCard span {
+.workspacePresetCard .workspaceApplyBtn span {
 	font-size: 0.72rem;
 	opacity: 0.75;
 }
