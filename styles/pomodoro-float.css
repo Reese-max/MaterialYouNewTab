@@ -304,20 +304,20 @@ html.mynt-pomo-float-root.myntHighContrast .mynt-pomo-equalizer i { animation: n
     .mynt-pomo-float .mynt-pomo-context { margin: 4px 0 8px; }
 }
 /* Floating window over a photo or video: keep the picture clear and put text only on
-   frosted surfaces — a phase chip, a pill behind the time, and one sheet for the rest. */
+   frosted surfaces — a phase chip, a face inside the ring, and one sheet for the rest. */
 .mynt-pomo-float .mynt-pomo-card {
     --pomo-glass: color-mix(in srgb, var(--pomo-surface) 76%, transparent);
     --pomo-ring-size: clamp(120px, min(56vw, 36vh), 340px);
 }
 .mynt-pomo-float .mynt-pomo-card::before { background: none; }
-.mynt-pomo-float :is(.pomodoroPhaseLabel, .pomodoroTimeDisplay, .mynt-pomo-dock, .mynt-pomo-card > .mynt-pomo-note:not(:empty)) {
+.mynt-pomo-float :is(.pomodoroPhaseLabel, .mynt-pomo-dock, .mynt-pomo-card > .mynt-pomo-note:not(:empty)) {
     background: var(--pomo-glass);
     -webkit-backdrop-filter: blur(14px) saturate(1.15);
     backdrop-filter: blur(14px) saturate(1.15);
     text-shadow: none;
 }
 .mynt-pomo-float .pomodoroPhaseLabel { margin: auto auto 12px; padding: .25rem .875rem; border-radius: 999px; }
-.mynt-pomo-float .pomodoroTimeDisplay { width: auto; padding: .04em .32em; border-radius: 999px; }
+.mynt-pomo-float .pomodoroTimeDisplay { width: auto; text-shadow: none; }
 .mynt-pomo-float .pomodoroRingBg { stroke: color-mix(in srgb, var(--pomo-surface) 55%, transparent); stroke-width: 6; }
 .mynt-pomo-float .pomodoroRingFg { stroke-width: 6; }
 .mynt-pomo-float .mynt-pomo-context { text-shadow: none; }
@@ -334,10 +334,24 @@ html.mynt-pomo-float-root.myntHighContrast .mynt-pomo-equalizer i { animation: n
 @media (max-height: 360px) {
     .mynt-pomo-dock { margin-top: 8px; padding-top: .5rem; }
 }
+/* Ring and time read as one dial: the digits sit on a solid face inside the ring, not on a pill across it. */
+.mynt-pomo-float .pomodoroCircleWrap::before {
+    content: ""; position: absolute; inset: 8%; border-radius: 50%; pointer-events: none;
+    background: var(--pomo-surface);
+}
+.mynt-pomo-float .pomodoroTimeDisplay { font-size: calc(var(--pomo-ring-size) * .2 * var(--mynt-font-scale, 1)); }
+.mynt-pomo-float .pomodoroTimeDisplay.is-long { font-size: calc(var(--pomo-ring-size) * .16 * var(--mynt-font-scale, 1)); }
+/* Every dock row shares the control group's width and columns, so edges line up. */
+.mynt-pomo-dock { width: min(100%, 16.25rem); padding-inline: .875rem; }
+.mynt-pomo-dock .mynt-pomo-audio { width: 100%; }
+.mynt-pomo-float .mynt-pomo-audio button,
+.mynt-pomo-float .mynt-pomo-ambient-select { background: color-mix(in srgb, var(--pomo-surface) 45%, transparent); }
 html.myntHighContrast .mynt-pomo-float * {
     -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
 }
+html.myntHighContrast .mynt-pomo-float .pomodoroCircleWrap::before { background: Canvas; }
 @media (forced-colors: active) {
     .mynt-pomo-float * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    .mynt-pomo-float .pomodoroCircleWrap::before { background: Canvas; }
     .mynt-pomo-float :is(.pomodoroPhaseLabel, .mynt-pomo-dock) { border: 1px solid CanvasText; }
 }

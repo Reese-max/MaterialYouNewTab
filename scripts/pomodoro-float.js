@@ -706,6 +706,7 @@
             if (!state || win.closed || disconnected) return;
             const seconds = Math.max(0, Math.ceil(state.timeRemaining));
             timer.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+            timer.classList.toggle('is-long', timer.textContent.length > 5);
             phase.textContent = t(state.phase);
             phase.classList.toggle('break-phase', state.phase !== 'work');
             progress.classList.toggle('break-ring', state.phase !== 'work');

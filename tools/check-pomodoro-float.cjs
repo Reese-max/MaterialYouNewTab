@@ -509,6 +509,10 @@ async function checkPanelAnchor(delayedReady) {
     assert.ok(!css.includes('linear-gradient(#0006, #0006)'), 'independent backgrounds no longer get a blanket dark filter');
     assert.ok(!css.includes('myntPomoPulse'), 'PiP ring does not pulse distractingly');
     assert.match(css, /\.mynt-pomo-float \.pomodoroTimeDisplay\s*\{[^}]*background:\s*transparent/, 'digits have no separate opaque pill');
+    assert.doesNotMatch(css, /:is\([^)]*\.pomodoroTimeDisplay/, 'no later glass rule puts a pill back behind the digits');
+    assert.match(css, /\.pomodoroCircleWrap::before \{[^}]*border-radius: 50%[^}]*background: var\(--pomo-surface\)/, 'digits sit on one face inside the ring');
+    assert.match(css, /\.pomodoroTimeDisplay\.is-long \{ font-size/, 'three-digit minutes shrink to stay inside the face');
+    assert.match(fs.readFileSync(require.resolve('../scripts/pomodoro-float.js'), 'utf8'), /timer\.classList\.toggle\('is-long', timer\.textContent\.length > 5\)/);
     assert.match(css, /\.mynt-pomo-options\s*\{[^}]*border:\s*0[^}]*background:\s*transparent/, 'closed options are an unobtrusive text entry');
     assert.ok(css.indexOf('.mynt-pomo-float .mynt-pomo-static { background-image: var(--pomo-background') < css.indexOf('@media (forced-colors: active)'), 'single-scrim override cannot supersede forced-colors accessibility');
     console.log('Pomodoro float lifecycle, progressive thumbnail choices, synchronized palette, accessibility, and recoverable deletion tests passed');
