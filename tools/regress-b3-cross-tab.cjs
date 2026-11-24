@@ -89,7 +89,7 @@ test('notes-ai#5', () => {
         MYNT_WORKSPACE_WIDGETS: [], workspaceDefaults: base, myntNormalizeWorkspaces: dashboard.myntNormalizeWorkspaces,
         readJSON: (key, fallback) => JSON.parse(storage.getItem(key) || 'null') || fallback,
         t: (key, fallback) => fallback, format: (key, fallback) => fallback, requestAnimationFrame() {}, syncDecorativeVideo() {} });
-    h.run(between('scripts/dashboard-tools.js', '        let workspaces =', '        // Optional extension'));
+    h.run(between('scripts/dashboard-tools.js', '        let workspaces =', '        document.addEventListener("visibilitychange", () => {'));
     h.c.myntDashboard = { reloadWorkspaces: () => h.run('workspaces = myntNormalizeWorkspaces(readJSON(KEYS.workspaces, null), workspaceDefaults); workspaceBaseline = localStorage.getItem(KEYS.workspaces);') };
     h.run('openWorkspaceEditor()');
     storage.setItem('myntWorkspacePresets', JSON.stringify([...base, { ...base[0], id: 'other', name: 'Other tab' }]));

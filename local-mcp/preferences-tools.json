@@ -263,7 +263,7 @@
   },
   {
     "name": "mynt_language_get",
-    "description": "Read supported language and explain browser reload requirements.",
+    "description": "Read the saved language; MYNT has no language selector.",
     "readOnly": true,
     "annotations": {
       "readOnlyHint": true,
@@ -279,7 +279,7 @@
   },
   {
     "name": "mynt_language_update",
-    "description": "Preview language change requirements; cannot reload or refetch quotes through MCP.",
+    "description": "Language selection was removed from MYNT; always reports UNAVAILABLE and changes nothing.",
     "readOnly": false,
     "annotations": {
       "readOnlyHint": false,

@@ -45,6 +45,7 @@ function environment() {
         alertPrompt: async text => { alerts.push(text); }, confirmPrompt: async text => { confirmations.push(text); return accepted; }, location: { reload() { reloads++; } }
     });
     vm.runInContext(source, context);
+    if (Object.values(nodes).some(node => Object.keys(node.handlers).length)) throw Error('backup-restore.js must not bind removed controls');
     const run = code => vm.runInContext(code, context);
     run(`
         globalThis.stores = {
@@ -87,11 +88,6 @@ async function canonical(value) {
 const localSnapshot = env => JSON.parse(JSON.stringify(env.storage));
 const storeSnapshot = env => canonical(env.run('stores'));
 const clone = value => JSON.parse(JSON.stringify(value));
-function fileEvent(env, expression = 'settingsFixture') {
-    const input = { value: 'fixture.json', files: [{ size: 1000, text: async () => env.run(`JSON.stringify(${expression})`) }] };
-    env.context.fileEvent = { currentTarget: input };
-    return input;
-}
 
 (async () => {
     const exporting = environment();
@@ -121,19 +117,10 @@ function fileEvent(env, expression = 'settingsFixture') {
     await assert.rejects(oversized.run('createBackup()'), /exceeds 32 MiB/);
     assert.equal(oversized.blobReads.length, 0, 'preflight rejects a large final track before encoding even the first wallpaper');
     assert.equal(oversized.writes.length, 0); assert.deepEqual(localSnapshot(oversized), beforeLarge);
-    oversized.nodes.backupScopeSelect.value = 'settings';
-    oversized.nodes.backupScopeSelect.handlers.change();
-    assert(oversized.nodes.backupScopeText.textContent.includes('No media or media-linked preferences. Maximum 32 MiB.'));
-    assert(oversized.nodes.backupScopeDetailsText.textContent.includes('Settings only:'));
-    assert(oversized.nodes.backupScopeDetailsText.textContent.includes('Those media and preferences stay unchanged on restore.'));
-    assert.equal(oversized.nodes.backupDetailsLabel.textContent, 'What does this backup include?');
     oversized.reads.length = 0; oversized.faults.database = true;
-    await oversized.run('backupData()');
-    assert.equal(oversized.downloads.length, 1); assert.match(oversized.downloads[0], /MYNT_Backup_Settings_/);
-    assert(oversized.nodes.backupStatus.textContent.includes('Settings-only backup prepared'));
-    assert.equal(oversized.reads.length, 0, 'settings-only must work without opening any media database');
-    assert.equal(oversized.blobReads.length, 0); assert(!oversized.nodes.backupScopeSelect.disabled);
     const small = await oversized.run('createBackup("settings")');
+    assert.equal(oversized.reads.length, 0, 'settings-only must work without opening any media database');
+    assert.equal(oversized.blobReads.length, 0);
     assert.equal(small.backup.scope, 'settings'); assert(!Object.hasOwn(small.backup, 'media')); assert.deepEqual(clone(small.backup.indexedDB), {});
     assert.equal(small.estimatedBytes, new Blob([small.serialized]).size);
     assert.equal(small.backup.localStorage.todoList, '{"texisting":{"title":"existing tasks","status":"pending","pinned":false}}');
@@ -169,26 +156,10 @@ function fileEvent(env, expression = 'settingsFixture') {
     restored.run('settingsFixture.localStorage.pomodoroState=JSON.stringify({phase:"work",totalTime:120,timeRemaining:120,currentRound:1,isRunning:true,lastTick:Date.parse(settingsFixture.createdAt)-30000});');
     await restored.run('restoreData(settingsFixture)');
     assert.equal(JSON.parse(restored.storage.pomodoroState).timeRemaining, 90); assert.equal(JSON.parse(restored.storage.pomodoroState).isRunning, false);
-    const preview = restored.run('backupScopePreview(settingsFixture)');
-    assert(preview.includes('settings-only backup')); assert(preview.includes('stay unchanged')); assert(!preview.includes('Files not present'));
     const noPreferences = environment();
     noPreferences.run('Object.keys(localStorage).filter(isMediaLocalStorageKey).forEach(key=>localStorage.removeItem(key))');
     await noPreferences.run('restoreData(settingsFixture)');
     assert.deepEqual(Object.keys(noPreferences.storage).filter(key => key.startsWith('myntWallpaper') || key === 'myntPomoMusicSettingsV1'), [], 'absent destination media preferences stay absent');
-
-    // A file's validated scope, not the current export selector, controls restore.
-    const viaUi = environment(); viaUi.nodes.backupScopeSelect.value = 'full';
-    const uiStores = await storeSnapshot(viaUi); fileEvent(viaUi);
-    await viaUi.run('validateAndRestoreData(fileEvent)');
-    assert.equal(viaUi.reloads(), 1); assert(viaUi.confirmations[0].includes('settings-only backup'));
-    assert.deepEqual(await storeSnapshot(viaUi), uiStores); assert.equal(viaUi.writes.length, 0); assert.equal(viaUi.reads.length, 0);
-    const fullUi = environment(); fullUi.nodes.backupScopeSelect.value = 'settings';
-    fullUi.context.fullString = JSON.stringify({ format:'material-you-newtab',version:3,scope:'full',localStorage:{todoList:'{"tfull":{"title":"full replacement","status":"pending","pinned":false}}'},indexedDB:{},media:{version:1,gallery:[],timerImage:[],music:[]} });
-    fullUi.run('globalThis.fullFixture=JSON.parse(fullString)'); fileEvent(fullUi, 'fullFixture');
-    await fullUi.run('validateAndRestoreData(fileEvent)');
-    assert(fullUi.confirmations[0].includes('Files not present in the backup will be removed'));
-    assert.equal(fullUi.run('stores.gallery.length+stores.timerImage.length+stores.music.length'), 0);
-    assert.equal(fullUi.reloads(), 1);
 
     for (const value of [null, false, {}, [], '', 'media', 'FULL', 0]) {
         const env = environment(); env.context.badScope = value;
@@ -208,11 +179,9 @@ function fileEvent(env, expression = 'settingsFixture') {
         await assert.rejects(env.run('restoreData(settingsFixture)'), /Invalid backup/);
         assert.deepEqual(localSnapshot(env), before); assert.equal(env.reads.length, 0); assert.equal(env.writes.length, 0);
     }
-    const invalidSelection = environment(); invalidSelection.nodes.backupScopeSelect.value = 'other';
-    await invalidSelection.run('backupData()');
-    assert.equal(invalidSelection.downloads.length, 0); assert.equal(invalidSelection.blobReads.length, 0); assert.equal(invalidSelection.reads.length, 0);
-    assert(invalidSelection.alerts[0].includes('Invalid backup scope'));
-    assert(!invalidSelection.nodes.backupScopeSelect.disabled);
+    const invalidSelection = environment();
+    await assert.rejects(invalidSelection.run('createBackup("other")'), /Invalid backup scope/);
+    assert.equal(invalidSelection.blobReads.length, 0); assert.equal(invalidSelection.reads.length, 0);
 
     for (const version of [undefined, 1, 2]) {
         const legacy = environment(), before = localSnapshot(legacy), media = await storeSnapshot(legacy);
@@ -241,23 +210,13 @@ function fileEvent(env, expression = 'settingsFixture') {
     await assert.rejects(unavailable.run('createBackup()'), /blocked database/);
     assert.equal(unavailable.blobReads.length, 0); assert.equal(unavailable.writes.length, 0);
     const exportFailure = environment(); exportFailure.faults.get = 'todoList';
-    await exportFailure.run('backupData()');
-    assert.equal(exportFailure.downloads.length, 0); assert.equal(exportFailure.writes.length, 0); assert(!exportFailure.nodes.backupBtn.disabled);
+    await assert.rejects(exportFailure.run('createBackup()'), /storage unavailable/);
+    assert.equal(exportFailure.writes.length, 0);
     const recoveryFailure = environment(); recoveryFailure.run('delete settingsFixture.localStorage.todoList');
     recoveryFailure.faults.set = 'selectedLanguage'; recoveryFailure.faults.permanentSet = 'todoList';
     await assert.rejects(recoveryFailure.run('restoreData(settingsFixture)'), /Restore and recovery could not finish/);
     assert.equal(recoveryFailure.reads.length, 0); assert.equal(recoveryFailure.writes.length, 0);
 
-    const cancelled = environment(); cancelled.accept(false);
-    const cancelledLocal = localSnapshot(cancelled), cancelledStores = await storeSnapshot(cancelled), input = fileEvent(cancelled);
-    await cancelled.run('validateAndRestoreData(fileEvent)');
-    assert.deepEqual(localSnapshot(cancelled), cancelledLocal); assert.deepEqual(await storeSnapshot(cancelled), cancelledStores);
-    assert.equal(cancelled.reloads(), 0); assert.equal(input.value, ''); assert(!cancelled.nodes.backupScopeSelect.disabled);
-    const hugeFile = environment(); let fileReads = 0;
-    hugeFile.context.fileEvent = { currentTarget:{ value:'huge.json', files:[{ size:LIMIT+1,text:async()=>{fileReads++;return '{}';} }] } };
-    await hugeFile.run('validateAndRestoreData(fileEvent)');
-    assert.equal(fileReads, 0); assert.equal(hugeFile.confirmations.length, 0); assert.equal(hugeFile.writes.length, 0);
-    assert(hugeFile.alerts[0].includes('32 MiB restore limit'));
 
     const componentBackup = environment();
     componentBackup.context.MYNTComponentVisibilityCore = require('../scripts/component-visibility-core.js');
@@ -385,5 +344,5 @@ function fileEvent(env, expression = 'settingsFixture') {
     assert.deepEqual(JSON.parse(cold.values.get('myntEventCountdownsV1')).events,eventState.events);
     console.log('COMPONENT_BACKUP_ROUNDTRIP_OK: all '+componentCore.definitions.length+' canonical visibility keys and caches survive real settings export/serialization/validation/restore/cold-start; real late clock initialization and cross-tab mode/hour/search sync; exact layout/note/todo/event preservation; distinct destination media references and blobs untouched; zero real browser/profile/permission/confirmation operations.');
 
-    console.log('BACKUP_SCOPE_OK: explicit full/settings scope; oversized and blocked media escape route; pre-encoding total and boundary estimates; Unicode/base64 accounting; omitted media/preferences preserved; v1/v2/v3 compatibility; malformed scopes fail before writes; file scope wins over export UI; imported active timer states stay paused; confirmation/cancellation; local read/write rollback and recovery errors. Isolated fixtures only.');
+    console.log('BACKUP_SCOPE_OK: explicit full/settings scope; oversized and blocked media escape route; pre-encoding total and boundary estimates; Unicode/base64 accounting; omitted media/preferences preserved; v1/v2/v3 compatibility; malformed scopes fail before writes; imported active timer states stay paused; no UI bindings; local read/write rollback and recovery errors. Isolated fixtures only.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

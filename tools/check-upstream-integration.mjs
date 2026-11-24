@@ -94,7 +94,8 @@ for (const code of localeCodes) {
     assert.ok(existsSync(resolve(root, path)), "Missing locale file: " + path);
     assert.match(html, /src=["']scripts\/locale-loader\.js["']/);
     assert.match(read("scripts/locale-loader.js"), new RegExp('"' + code + '"'));
-    assert.match(html, new RegExp("<option value=[\"']" + code + "[\"']"));
+    // The System tab's language selector was removed (owner decision 2026-11-24); a stored code still loads its strings.
+    assert.match(languages, new RegExp("\\b" + code + ": typeof " + code + " !== \"undefined\""));
     const localeSource = read(path);
     const declaredLocaleKeys = [...localeSource.matchAll(/^\s*"([^"]+)"\s*:/gm)].map(match => match[1]);
     const duplicateLocaleKeys = [...new Set(

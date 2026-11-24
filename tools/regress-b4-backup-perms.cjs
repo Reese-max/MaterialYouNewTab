@@ -29,7 +29,6 @@ async function until(predicate) {
         ['myntLayout', '{"version":2,"snap":true,"locked":true,"blocks":{"search":{"x":8,"y":0,"s":1}}}'],
         ['myntLayoutProfiles', '{broken json'], ['myntLayoutProfiles', '{}'],
         ['myntWorkspacePresets', '{broken json'],
-        ['myntAccessibility', '{broken json'],
         ['pomodoroState', '{broken json'], ['aiToolsSettings', '{broken json'],
         ['myntPomoScenarios', '{broken json'], ['myntPomoMusicSettingsV1', '{broken json'],
         [KEY, '{"version":1,"phase":"snapshot"}']
@@ -42,8 +41,8 @@ async function until(predicate) {
         await assert.rejects(env.run('restoreData(fixture)'), /Invalid backup/);
         assert.deepEqual(await snapshot(env), before); assert.equal(writes(), 0); assert.equal(env.writes.length, 0);
     }
-    // Keys of features removed on 2026-11-17 are inert: old backups holding them still restore.
-    for (const key of ['myntHabits', 'myntHabitRecoveryV1', 'myntDailyFocus', 'myntFocusLog', 'myntFocusHistory']) {
+    // Keys of removed features (2026-11-17; accessibility settings 2026-11-24) are inert: old backups holding them still restore.
+    for (const key of ['myntHabits', 'myntHabitRecoveryV1', 'myntDailyFocus', 'myntFocusLog', 'myntFocusHistory', 'myntAccessibility']) {
         const env = environment(); loadFixture(env); env.context.badKey = key;
         env.run('fixture.localStorage[badKey]="{broken json"');
         assert.equal(env.run('isValidBackupFile(fixture)'), true, key);
@@ -93,7 +92,7 @@ async function until(predicate) {
         assert.equal(JSON.parse(env.storage[KEY]).phase, 'apply');
         assert(!env.storage[KEY].includes('fixture-secret-do-not-export'), 'journal must not duplicate preserved credentials');
         const next = environment({ local: { ...env.storage }, databases: env.databases });
-        assert.equal(next.nodes.restoreBtn.disabled, true, 'startup must close normal controls');
+        assert.ok(typeof next.context.myntRestoreReady?.then === 'function', 'startup schedules interrupted-restore recovery');
         await next.context.myntRestoreReady;
         assert.equal(next.reloads(), 1, stop); assert.deepEqual(await snapshot(next), before, stop);
     }
@@ -110,15 +109,6 @@ async function until(predicate) {
     assert(failed.storage[KEY]);
     const retry = environment({ local: { ...failed.storage }, databases: failed.databases });
     await retry.context.myntRestoreReady; assert.deepEqual(await snapshot(retry), failedBefore);
-    const failedUi = environment(); loadFixture(failedUi); const fatalAlerts = [];
-    failedUi.context.MyntRestoreGuard = { allow: fn => fn(), lock: fn => Promise.resolve().then(fn) };
-    failedUi.context.alert = message => fatalAlerts.push(message);
-    failedUi.faults.failWrites = new Set(['myntPomodoroMusicV1:1', 'MYNTWallpaperGallery:2']);
-    failedUi.context.fileEvent = { currentTarget: { value: 'fixture.json', files: [{ size: 1000, text: async () => failedUi.run('JSON.stringify(fixture)') }] } };
-    await failedUi.run('validateAndRestoreData(fileEvent)');
-    assert.equal(fatalAlerts.length, 1, 'fatal recovery uses an accessible native alert while page controls are inert');
-    assert.equal(failedUi.alerts.length, 0); assert.equal(failedUi.nodes.restoreBtn.disabled, true);
-    assert.equal(failedUi.context.document.documentElement.inert, true); assert(failedUi.storage[KEY]);
 
     // Exercise the REAL early guard in two independent page realms, sharing
     // persistent storage. Normal UI and MCP use these same native entry points.
