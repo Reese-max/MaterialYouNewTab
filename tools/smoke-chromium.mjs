@@ -864,5 +864,9 @@ try {
         await delay(500);
         if (chrome.exitCode === null) chrome.kill("SIGKILL");
     }
-    rmSync(profileDir, { recursive: true, force: true });
+    // Windows releases the profile a moment after Chrome exits; rmSync's own retry did not cover it here.
+    for (let attempt = 0; ; attempt++) {
+        try { rmSync(profileDir, { recursive: true, force: true }); break; }
+        catch (error) { if (attempt >= 20) throw error; await delay(500); }
+    }
 }
