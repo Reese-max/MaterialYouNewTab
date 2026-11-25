@@ -20,8 +20,6 @@ const ja = {
     "shortcutsInfoText": "表示するショートカットを選択",
     "editShortcutsList": "保存されたショートカット",
     "editShortcutsListInfo": "\"+\" アイコンをクリックして新しいショートカットを追加したり、名前やURLをクリックして既存のものを編集できます。\nアイコンをリセットするには、画像のURLを空にしてください。",
-    "adaptiveIconText": "アダプティブアイコン",
-    "adaptiveIconInfoText": "ショートカットアイコンをテーマに適応させます",
     "bookmarksText": "ブックマーク",
     "bookmarksInfo": "ブックマークのサイドバーを表示",
     "ai_tools_button": "AIツール",

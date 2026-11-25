@@ -11,8 +11,6 @@ const pl = {
     "shortcutsInfoText": "Wybierz pokazywane skróty",
     "editShortcutsList": "Zapisane skróty",
     "editShortcutsListInfo": "Możesz dodać nowe skróty klikając ikonę \"+\" lub edytować istniejące klikając na nazwę lub adres URL skrótu.",
-    "adaptiveIconText": "Adaptacyjne ikony",
-    "adaptiveIconInfoText": "Ikony skrótów będą dostosowywać się do motywu",
     "bookmarksText": "Zakładki",
     "bookmarksInfo": "Pokaż pasek boczny zakładek",
     "ai_tools_button": "Narzędzia AI",

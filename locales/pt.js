@@ -11,8 +11,6 @@ const pt = {
     "shortcutsInfoText": "Escolha quais atalhos serão exibidos",
     "editShortcutsList": "Atalhos Salvos",
     "editShortcutsListInfo": "Você pode adicionar novos atalhos clicando no ícone \"+\" ou editar os existentes clicando no nome ou URL do atalho",
-    "adaptiveIconText": "Ícones Adaptativos",
-    "adaptiveIconInfoText": "Os ícones de atalho aparecerão redondos",
     "bookmarksText": "Favoritos",
     "bookmarksInfo": "Mostrar barra lateral de favoritos",
     "ai_tools_button": "Ferramentas de IA",

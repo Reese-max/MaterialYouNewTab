@@ -5,13 +5,13 @@ const vm = require('node:vm');
 const core = require('../scripts/component-visibility-core.js');
 
 const rows = {
-    shortcuts: ['shortcutEditField', 'adaptiveIconField'],
+    shortcuts: ['shortcutEditField'],
     aiTools: ['aiToolsEditField']
 };
 const preferences = { shortcuts: 'shortcutsCheckboxState', aiTools: 'aiToolsCheckboxState' };
 const preserved = {
     shortcutAmount: '1', shortcutName0: 'Saved shortcut', shortcutURL0: 'https://example.org/',
-    shortcutIcon0: 'data:image/png;base64,fixture', adaptiveIconToggle: 'checked',
+    shortcutIcon0: 'data:image/png;base64,fixture',
     aiToolsSettings: '[{"chatGPT":true},{"gemini":false},{"claude":true}]',
     myntLayoutProfilesV1: 'saved-layout', myntPomoTimerV1: 'running-timer',
     myntScratchpadContent: 'saved-note'
@@ -97,7 +97,7 @@ function assertState(app, id, visible) {
 
 for (const id of Object.keys(rows)) {
     const key = preferences[id];
-    const app = fixture({ [key]: 'unchecked', shortcutEditField: 'inactive', adaptiveIconField: 'inactive' });
+    const app = fixture({ [key]: 'unchecked', shortcutEditField: 'inactive' });
     assertState(app, id, false);
     assert.equal(app.writes.length, 0, 'Initial refresh does not write storage.');
     for (const visible of [true, false]) {
@@ -138,7 +138,7 @@ for (const id of Object.keys(rows)) {
     assert.equal(app.writes.length, 0);
 }
 
-const coldEnabled = fixture({ shortcutsCheckboxState: 'checked', aiToolsCheckboxState: 'checked', shortcutEditField: 'inactive', adaptiveIconField: 'inactive' });
+const coldEnabled = fixture({ shortcutsCheckboxState: 'checked', aiToolsCheckboxState: 'checked', shortcutEditField: 'inactive' });
 for (const id of Object.keys(rows)) assertState(coldEnabled, id, true);
 assert.equal(coldEnabled.writes.length, 0, 'Cold initialization reconciles stale row caches without writing data.');
 

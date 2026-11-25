@@ -75,8 +75,7 @@ assert.ok(!core.storageKeys.includes('myntServiceStatus'), 'Hiding the alert nev
 assert.deepEqual(core.plan(storage(), 'shortcuts', true).writes, [
     { key: 'shortcutsCheckboxState', value: 'checked' },
     { key: 'shortcutsDisplayStatus', value: 'flex' },
-    { key: 'shortcutEditField', value: 'active' },
-    { key: 'adaptiveIconField', value: 'active' }
+    { key: 'shortcutEditField', value: 'active' }
 ]);
 assert.deepEqual(core.plan(storage(), 'studyQuote', false).writes, [{ key: 'myntStudyQuoteEnabled', value: '0' }]);
 const mismatch = storage({ aiToolsCheckboxState: 'checked', aiToolsDisplayStatus: 'none' });

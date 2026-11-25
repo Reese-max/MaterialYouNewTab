@@ -13,8 +13,6 @@ const az = {
     "shortcutsInfoText": "Göstəriləcək qısayolları seçin",
     "editShortcutsList": "Saxlanmış Qısayollar",
     // "editShortcutsListInfo": "You can add new shortcuts by clicking the \"+\" icon or edit existing ones by clicking on the shortcut name or URL.",
-    "adaptiveIconText": "Adaptiv ikona formaları",
-    "adaptiveIconInfoText": "Qısayol nişanları dairəvi görünəcək",
     // "bookmarksText": "Bookmarks",
     // "bookmarksInfo": "Show bookmarks sidebar",
     "ai_tools_button": "AI Alətləri",

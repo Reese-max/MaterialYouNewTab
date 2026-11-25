@@ -10,8 +10,6 @@ const ur = {
     "shortcutsInfoText": "انتخاب کریں کہ کون سے شارٹ کٹس دکھائے جائیں",
     "editShortcutsList": "محفوظ کردہ شارٹ کٹس",
     "editShortcutsListInfo": "آپ '+' آئیکن پر کلک کرکے نئے شارٹ کٹس شامل کرسکتے ہیں، یا موجودہ شارٹ کٹس کے نام یا یو آر ایل پر کلک کرکے ترمیم کرسکتے ہیں۔",
-    "adaptiveIconText": "موافقت پذیر آئیکن کی شکلیں",
-    "adaptiveIconInfoText": "شارٹ کٹ آئیکنز چھوٹے نظر آئیں گے",
     "ai_tools_button": "اے آئی ٹولز",
     "enable_ai_tools": "اے آئی ٹولز کے لیے شارٹ کٹس دکھائیں",
     //"googleAppsMenuText": "Google Apps",

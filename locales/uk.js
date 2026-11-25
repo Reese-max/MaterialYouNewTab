@@ -20,8 +20,6 @@ const uk = {
     "shortcutsInfoText": "Оберіть ярлики для відображення",
     "editShortcutsList": "Збережені ярлики",
     "editShortcutsListInfo": "Ви можете додати нові ярлики, натиснувши значок «+», або редагувати існуючі, натиснувши на назву ярлика або URL-адресу.",
-    "adaptiveIconText": "Адаптивні іконки",
-    "adaptiveIconInfoText": "Ярлики будуть адаптуватись до теми",
     "bookmarksText": "Закладки",
     "bookmarksInfo": "Показати панель закладок",
     "ai_tools_button": "AI Інструменти",

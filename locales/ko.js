@@ -11,8 +11,6 @@ const ko = {
     "shortcutsInfoText": "표시할 바로가기를 선택하세요",
     "editShortcutsList": "저장된 바로가기",
     "editShortcutsListInfo": "\"+\" 아이콘을 클릭해서 새 바로가기를 추가하거나, 이름 또는 URL을 클릭해서 수정할 수 있어요.",
-    "adaptiveIconText": "테마 적용 아이콘",
-    "adaptiveIconInfoText": "바로가기 아이콘이 테마에 맞춰 변해요",
     "bookmarksText": "즐겨찾기",
     "bookmarksInfo": "즐겨찾기 사이드바 표시",
     "ai_tools_button": "AI 도구",

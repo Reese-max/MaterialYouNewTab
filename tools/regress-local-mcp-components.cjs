@@ -63,7 +63,6 @@ const allEntries = map => [...map.entries()].sort(([a], [b]) => a.localeCompare(
     assert.equal(f.storage.getItem('shortcutsCheckboxState'), 'checked');
     assert.equal(f.storage.getItem('shortcutsDisplayStatus'), 'flex');
     assert.equal(f.storage.getItem('shortcutEditField'), 'active');
-    assert.equal(f.storage.getItem('adaptiveIconField'), 'active');
     assert.equal(f.refreshes[0].domain, 'components');
     assert.deepEqual(await f.call('mynt_components_update', { id: 'shortcuts', visible: true, expectedRevision: current.revision }, 'replay-shortcuts'), result);
     assert.equal(f.refreshes.length, 1, 'Replay must not refresh or write twice');

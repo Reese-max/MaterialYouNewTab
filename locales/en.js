@@ -401,8 +401,6 @@ const en = {
     "shortcutsInfoText": "Choose which shortcuts get shown",
     "editShortcutsList": "Saved Shortcuts",
     "editShortcutsListInfo": "Drag to reorder. Use + to add a site, or pin any bookmark from the bookmarks panel. Changes are saved locally.",
-    "adaptiveIconText": "Adaptive Icons",
-    "adaptiveIconInfoText": "Shortcut icons will adapt to theme",
     "bookmarksText": "Bookmarks",
     "bookmarksInfo": "Show bookmarks sidebar",
     "ai_tools_button": "AI Tools",

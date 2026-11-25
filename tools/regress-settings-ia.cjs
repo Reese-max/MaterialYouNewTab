@@ -522,12 +522,7 @@ async function layoutAndKeyboard(page, touch) {
             assert(buttons.length >= 3 && buttons.every(item => item.editSize && item.launchSize && !item.overlap), 'Workspace actions: 44px and no overlap');
         }
         if (index === 1) {
-            assert.equal(await page.locator('#appearanceSectionContent .innerSurface #adaptiveIconField .switch').count(), 1, 'Adaptive icon switch inside surface');
-            const inline = await page.locator('#adaptiveIconField').evaluate(row => {
-                const text = row.querySelector('.texts').getBoundingClientRect(), control = row.querySelector('.switch').getBoundingClientRect();
-                return text.right <= control.left && text.top < control.bottom && text.bottom > control.top;
-            });
-            assert(inline, 'Adaptive icon label and switch share a row');
+            assert.equal(await page.locator('#adaptiveIconField, #adaptiveIconToggle').count(), 0, 'Adaptive icon setting is removed');
         }
         if (index === 2) {
             const border = await page.locator('#aiModeIconCheckbox').evaluate(input => getComputedStyle(input.closest('.ttcont')).borderBottomWidth);

@@ -11,8 +11,6 @@ const it = {
     "shortcutsInfoText": "Scegli quali scorciatoie mostrare",
     "editShortcutsList": "Scorciatoie Salvate",
     "editShortcutsListInfo": "Puoi aggiungere nuove scorciatoie cliccando l'icona \"+\" o modificiare le esistenti cliccando il nome della scorciatoia o dell'URL.",
-    "adaptiveIconText": "Forme di Icona Adattiva",
-    "adaptiveIconInfoText": "Le icone delle scorciatoie saranno sempre rotonde",
     "bookmarksText": "Segnalibri",
     "bookmarksInfo": "Mostra segnalibri sulla barra laterale",
     "ai_tools_button": "Strumenti IA",

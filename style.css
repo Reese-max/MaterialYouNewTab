@@ -419,9 +419,7 @@ html:has(
 	& :is(.themeColorChip, .themeRecentColors button),
 	& .favicon,
 	& #wIcon,
-	&:not(:has(#adaptiveIconToggle:checked))
-		.shortcutLogoContainer
-		img[data-icon-type="default"] {
+	& .shortcutLogoContainer img[data-icon-type="default"] {
 		filter: invert(1) hue-rotate(180deg);
 		-webkit-filter: invert(1) hue-rotate(180deg);
 	}
@@ -463,9 +461,7 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	& :is(.themeColorChip, .themeRecentColors button),
 	& .favicon,
 	& #wIcon,
-	&:not(:has(#adaptiveIconToggle:checked))
-		.shortcutLogoContainer
-		img[data-icon-type="default"] {
+	& .shortcutLogoContainer img[data-icon-type="default"] {
 		filter: invert(1) hue-rotate(180deg);
 		-webkit-filter: invert(1) hue-rotate(180deg);
 	}
@@ -3227,44 +3223,6 @@ body[data-bg="wallpaper"] .shortcuts .shortcut-name {
 	mix-blend-mode: normal;
 }
 
-/* Adaptive Icons styling */
-.adaptive-icons
-	.shortcuts
-	.shortcutLogoContainer
-	img[data-icon-type="default"] {
-	height: calc(100% * 0.7071) !important;
-	width: calc(100% * 0.7071) !important;
-	filter: grayscale(1);
-	mix-blend-mode: screen;
-}
-
-html:has(.themeSegment[data-active="dark"]):not(:has(#darkTheme:checked))
-	.adaptive-icons
-	.shortcuts
-	.shortcutLogoContainer
-	img[data-icon-type="default"],
-html:has(body[sysTheme="systemDark"] .themeSegment[data-active="system"]):not(
-		:has(#darkTheme:checked)
-	)
-	.adaptive-icons
-	.shortcuts
-	.shortcutLogoContainer
-	img[data-icon-type="default"],
-body[data-bg="wallpaper"]:has(.themeSegment[data-active="dark"]):not(
-		:has(#darkTheme:checked)
-	)
-	.adaptive-icons
-	.shortcutLogoContainer
-	img[data-icon-type="default"],
-body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
-		.themeSegment[data-active="system"]
-	):not(:has(#darkTheme:checked))
-	.adaptive-icons
-	.shortcutLogoContainer
-	img[data-icon-type="default"] {
-	filter: grayscale(1) invert(1) !important;
-}
-
 .shortcutLogoContainer img[data-icon-type="custom"] {
 	filter: none !important;
 	mix-blend-mode: normal !important;
@@ -3295,11 +3253,6 @@ body[data-bg="wallpaper"][sysTheme="systemDark"]:has(
 	img[data-icon-type="custom"] {
 	filter: invert(1) hue-rotate(180deg) !important;
 	mix-blend-mode: normal !important;
-}
-
-.adaptive-icons .shortcuts .shortcutLogoContainer img[data-icon-type="custom"] {
-	height: calc(100% * 0.7071) !important;
-	width: calc(100% * 0.7071) !important;
 }
 
 /* ----------end of Shortcuts----------------- */

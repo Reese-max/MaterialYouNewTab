@@ -82,8 +82,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         shortcuts: document.getElementById("shortcuts-section"),
         shortcutsCheckbox: document.getElementById("shortcutsCheckbox"),
         shortcutEditField: document.getElementById("shortcutEditField"),
-        adaptiveIconField: document.getElementById("adaptiveIconField"),
-        adaptiveIconToggle: document.getElementById("adaptiveIconToggle"),
         googleFaviconToggle: document.getElementById("googleFaviconToggle"),
         shortcutSettingsContainer: document.getElementById("shortcutList"),
         shortcutsContainer: document.getElementById("shortcutsContainer"),
@@ -158,25 +156,15 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     // Loads all settings from localStorage and applies them
     function loadSettings() {
         loadCheckboxState("shortcutsCheckboxState", dom.shortcutsCheckbox);
-        loadCheckboxState("adaptiveIconToggle", dom.adaptiveIconToggle);
         dom.googleFaviconToggle.checked = localStorage.getItem("googleFaviconToggle") !== "unchecked";
         loadActiveStatus("shortcutEditField", dom.shortcutEditField);
-        loadActiveStatus("adaptiveIconField", dom.adaptiveIconField);
         loadDisplayStatus("shortcutsDisplayStatus", dom.shortcuts);
-
-        // Apply adaptive icon style if enabled
-        if (dom.adaptiveIconToggle.checked) {
-            dom.shortcutsContainer.classList.add("adaptive-icons");
-        } else {
-            dom.shortcutsContainer.classList.remove("adaptive-icons");
-        }
     }
 
     // Sets up all event listeners
     function setupEventListeners() {
         // Checkbox events
         dom.shortcutsCheckbox.addEventListener("change", handleShortcutsToggle);
-        dom.adaptiveIconToggle.addEventListener("change", handleAdaptiveIconToggle);
         dom.googleFaviconToggle.addEventListener("change", handleGoogleFaviconToggle);
 
         // Button events
@@ -1134,19 +1122,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
         dom.shortcutEditField.classList.toggle("inactive", !isChecked);
         saveActiveStatus("shortcutEditField", isChecked ? "active" : "inactive");
-
-        dom.adaptiveIconField.classList.toggle("inactive", !isChecked);
-        saveActiveStatus("adaptiveIconField", isChecked ? "active" : "inactive");
-    }
-
-    // Handles the adaptive icon toggle checkbox change
-    function handleAdaptiveIconToggle() {
-        saveCheckboxState("adaptiveIconToggle", this);
-        if (this.checked) {
-            dom.shortcutsContainer.classList.add("adaptive-icons");
-        } else {
-            dom.shortcutsContainer.classList.remove("adaptive-icons");
-        }
     }
 
     function handleGoogleFaviconToggle() {

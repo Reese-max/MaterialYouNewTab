@@ -20,8 +20,6 @@ const zh = {
     "shortcutsInfoText": "选择要显示的快捷方式",
     "editShortcutsList": "已保存的快捷方式",
     "editShortcutsListInfo": "点击“+”图标添加新快捷方式，或点击名称/URL编辑现有快捷方式",
-    "adaptiveIconText": "自适应图标",
-    "adaptiveIconInfoText": "快捷方式图标随主题变化",
     "bookmarksText": "书签",
     "bookmarksInfo": "显示书签侧边栏",
     "ai_tools_button": "AI工具",
