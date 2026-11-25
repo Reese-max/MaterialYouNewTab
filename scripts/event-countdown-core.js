@@ -8,6 +8,9 @@
     const MAX_EVENTS = 30;
     const COLORS = Object.freeze(['lavender', 'blue', 'green', 'peach', 'rose']);
     const CATEGORIES = Object.freeze(['exam', 'anniversary', 'custom']);
+    // Line icons a countdown may store as `mynt-icon:<name>`; drawn by MyntQuicklinkIcons. Other values are legacy emoji text.
+    const ICON_PREFIX = 'mynt-icon:';
+    const ICONS = Object.freeze(['book', 'notes', 'school', 'heart', 'star', 'work', 'map', 'home', 'music', 'photo', 'game']);
     const DAY = 86400000;
     const fail = message => { throw new TypeError('Invalid countdown: ' + message); };
     function record(value, keys) {
@@ -38,7 +41,7 @@
         if (typeof input.id !== 'string' || !/^e[A-Za-z0-9_-]{1,79}$/.test(input.id)) fail('id');
         parseDate(input.date);
         if (!CATEGORIES.includes(input.category) || !COLORS.includes(input.color) || typeof input.annual !== 'boolean') fail('event options');
-        return { id: input.id, name: text(input.name, 80, true), date: input.date, category: input.category, emoji: text(input.emoji, 8, false), color: input.color, annual: input.annual };
+        return { id: input.id, name: text(input.name, 80, true), date: input.date, category: input.category, emoji: typeof input.emoji === 'string' && input.emoji.startsWith(ICON_PREFIX) && ICONS.includes(input.emoji.slice(ICON_PREFIX.length)) ? input.emoji : text(input.emoji, 8, false), color: input.color, annual: input.annual };
     }
     function defaultState() { return { version: 1, revision: 0, enabled: true, events: [], deleted: null }; }
     function validate(input) {
@@ -97,5 +100,5 @@
             return difference || (a.item.id < b.item.id ? -1 : a.item.id > b.item.id ? 1 : 0);
         }).map(entry => entry.item);
     }
-    return Object.freeze({ KEY, MAX_EVENTS, COLORS, CATEGORIES, defaultState, validate, migrateLegacy, parseDate, dayInfo, sortEvents });
+    return Object.freeze({ KEY, MAX_EVENTS, COLORS, CATEGORIES, ICON_PREFIX, ICONS, defaultState, validate, migrateLegacy, parseDate, dayInfo, sortEvents });
 });
