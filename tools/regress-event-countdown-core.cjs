@@ -9,6 +9,13 @@ const state = () => ({ ...core.defaultState(), events: [item()] });
 const bad = change => { const value = state(); change(value); assert.throws(() => core.validate(value), TypeError); };
 assert.equal(core.KEY, 'myntEventCountdownsV1');
 assert.equal(core.defaultState().enabled, true);
+// Line icons are stored as mynt-icon:<name>; only names the shortcut icon library can draw are accepted.
+const quicklinkGlyphs = require('../scripts/quicklink-icons.js').glyphs;
+for (const name of core.ICONS) {
+    assert.ok(Object.hasOwn(quicklinkGlyphs, name), `icon ${name} exists in the shortcut icon library`);
+    assert.equal(core.validate({ ...core.defaultState(), events: [{ ...item(), emoji: core.ICON_PREFIX + name }] }).events[0].emoji, core.ICON_PREFIX + name);
+}
+bad(value => { value.events[0].emoji = 'mynt-icon:mail'; });
 const source = state();
 const validated = core.validate(source);
 assert.deepEqual(validated, source);
