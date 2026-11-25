@@ -10,7 +10,7 @@
     const CATEGORIES = Object.freeze(['exam', 'anniversary', 'custom']);
     // Line icons a countdown may store as `mynt-icon:<name>`; drawn by MyntQuicklinkIcons. Other values are legacy emoji text.
     const ICON_PREFIX = 'mynt-icon:';
-    const ICONS = Object.freeze(['book', 'notes', 'school', 'heart', 'star', 'work', 'map', 'home', 'music', 'photo', 'game']);
+    const ICONS = Object.freeze(['book', 'notes', 'school', 'heart', 'cake', 'star', 'work', 'plane', 'map', 'hospital', 'home', 'music', 'photo', 'game']);
     const DAY = 86400000;
     const fail = message => { throw new TypeError('Invalid countdown: ' + message); };
     function record(value, keys) {
