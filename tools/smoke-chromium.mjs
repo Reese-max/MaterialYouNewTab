@@ -704,7 +704,9 @@ async function main() {
         };
         const measure = (el, style) => ratio(layers(rgba(style.color), el), layers([0, 0, 0, 0], el));
         const wait = ms => new Promise(r => setTimeout(r, ms));
-        const audit = dialog => { const failures = []; let count = 0;
+        // Opening and theme transitions dim text until they end; skip endless or paused ones, and never wait past 2 s.
+        const settled = () => Promise.race([wait(2000), Promise.all(document.getAnimations().filter(a => a.playState === 'running' && a.effect?.getComputedTiming().endTime !== Infinity).map(a => a.finished.catch(() => {})))]);
+        const audit = async dialog => { await settled(); const failures = []; let count = 0;
             for (const el of dialog.querySelectorAll('*')) {
                 const box = el.getBoundingClientRect(), style = getComputedStyle(el);
                 if (box.width < 1 || box.height < 1 || style.visibility === 'hidden' || Number(style.opacity) === 0 || el.closest(':disabled')) continue;
@@ -722,21 +724,21 @@ async function main() {
         window.myntSettings.open('workspaceSection'); await wait(400);
         const workspace = document.getElementById('workspaceSection');
         workspace.querySelector('.workspaceEditBtn')?.click(); workspace.querySelectorAll('details').forEach(d => { d.open = true; });
-        await wait(300); out.workspaceSettings = audit(workspace);
+        await wait(300); out.workspaceSettings = await audit(workspace);
         document.getElementById('workspaceCancelBtn')?.click(); document.getElementById('menuCloseButton')?.click(); await wait(300);
         window.myntWallpaper.open(); const gallery = document.getElementById('wallpaperGalleryDialog');
         gallery.querySelectorAll('details').forEach(d => { d.open = true; });
-        await wait(500); out.wallpaperGallery = audit(gallery); gallery.close();
+        await wait(500); out.wallpaperGallery = await audit(gallery); gallery.close();
         window.myntStudyQuotesManager.open(); await wait(300);
-        out.studyQuotes = audit(document.getElementById('studyQuotesDialog')); window.myntStudyQuotesManager.close();
+        out.studyQuotes = await audit(document.getElementById('studyQuotesDialog')); window.myntStudyQuotesManager.close();
         showAIToolsSettings(); await wait(300); const ai = document.getElementById('aiToolsSettingsModal');
-        out.aiTools = audit(ai); ai.close();
+        out.aiTools = await audit(ai); ai.close();
         const bookmark = document.getElementById('editBookmarkModal');
         document.getElementById('editBookmarkName').value = 'Example'; document.getElementById('editBookmarkURL').value = 'https://example.com/';
-        bookmark.showModal(); await wait(200); out.bookmarkEditor = audit(bookmark); bookmark.close();
-        const help = document.getElementById('shortcutsHelpDialog'); help.showModal(); await wait(200); out.keyboardHelp = audit(help); help.close();
+        bookmark.showModal(); await wait(200); out.bookmarkEditor = await audit(bookmark); bookmark.close();
+        const help = document.getElementById('shortcutsHelpDialog'); help.showModal(); await wait(200); out.keyboardHelp = await audit(help); help.close();
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', code: 'KeyK', ctrlKey: true, bubbles: true }));
-        await wait(300); const palette = document.getElementById('commandPaletteDialog'); out.commandPalette = audit(palette); palette.close();
+        await wait(300); const palette = document.getElementById('commandPaletteDialog'); out.commandPalette = await audit(palette); palette.close();
         return out;
     })()`;
     try {
