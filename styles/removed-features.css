@@ -8,6 +8,12 @@ html.mynt-removed-features body :is(
     display: none !important;
 }
 
+/* Clock: the faces and date are already hidden in centered-home.css; this also hides the Clock settings section
+   (digital clock and 12-hour toggles), which no longer changed anything visible. */
+html.mynt-removed-features body :is(#analogClock, #digitalClock, #date, .section:has(> .sectionOuter > #clockSectionContent)) {
+    display: none !important;
+}
+
 /* Weather has its own switch so removing one ID restores every retained entry point. */
 html.mynt-removed-weather body :is(
     #hideWeather#hideWeather#hideWeather, #hideWeather .lrectangle, #hideWeather .rAndakar,
