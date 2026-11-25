@@ -25,7 +25,10 @@
         link: 'M10 14l4-4M8 16l-2 2a4 4 0 0 1-6-6l6-6a4 4 0 0 1 6 0M16 8l2-2a4 4 0 0 1 6 6l-6 6a4 4 0 0 1-6 0',
         folder: 'M2 5h8l2 3h10v13H2z',
         settings: 'M9 2h6l1 4 4 1 3 5-3 5-4 1-1 4H9l-1-4-4-1-3-5 3-5 4-1zM16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
-        translate: 'M2 5h13M8 2v3M4 5c0 6 7 10 10 11M12 5c0 6-7 10-10 11M13 22l5-12 5 12M15 18h6'
+        translate: 'M2 5h13M8 2v3M4 5c0 6 7 10 10 11M12 5c0 6-7 10-10 11M13 22l5-12 5 12M15 18h6',
+        cake: 'M4 12h16v9H4zM4 16c2.7 1.6 5.3 1.6 8 0s5.3-1.6 8 0M12 12V8M12 3c1.2 1.3 1.2 2.4 0 3.2-1.2-.8-1.2-1.9 0-3.2',
+        plane: 'M12 2c1 0 1.6 1 1.6 2.6V9l8 5v2l-8-2.4V19l2.6 2v1L12 21.2 7.8 22v-1l2.6-2v-5.4l-8 2.4v-2l8-5V4.6C10.4 3 11 2 12 2z',
+        hospital: 'M5 21V4h14v17M2 21h20M12 7v6M9 10h6M10 21v-4h4v4'
     });
     const graphemes = value => typeof Intl.Segmenter === 'function'
         ? [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value)].map(part => part.segment) : Array.from(value);

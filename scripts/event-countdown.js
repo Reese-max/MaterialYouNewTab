@@ -133,7 +133,7 @@
         // A group of one-tap choices; the hidden input keeps the value the submit handler already reads.
         const wrapper=el('div','event-countdown-field'); wrapper.dataset.field=key; wrapper.setAttribute('role','group'); wrapper.setAttribute('aria-labelledby','eventCountdownIconLabel');
         const head=el('span','event-countdown-icon-head'), label=el('span','',t(key)); label.id='eventCountdownIconLabel'; iconName=el('span','event-countdown-meta'); iconName.id='eventCountdownIconName'; head.append(label,iconName);
-        iconPicker=el('div','event-countdown-icon-choices'); const input=el('input'); input.type='hidden'; input.maxLength=16; input.id='eventCountdown-emoji'; fields[key]=input;
+        iconPicker=el('div','event-countdown-icon-choices'); const input=el('input'); input.type='hidden'; input.maxLength=24; input.id='eventCountdown-emoji'; fields[key]=input;
         wrapper.append(head,iconPicker,input); form.append(wrapper); return;
       }
       const wrapper=el('label',key==='annual'?'event-countdown-toggle':'event-countdown-field'); wrapper.dataset.field = key; const label=el('span','',t(key)); let input;

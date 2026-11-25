@@ -782,7 +782,8 @@ function sectionOf(element) {
 
 // "before" means: insert in front of the node now at beforeIndex. Chromium counts that index before the moved
 // node leaves a shared folder; Firefox counts the final position.
-// The Firefox branch matches Bookmarks.sys.mjs update() (same-folder moves store position = index); not run in Firefox.
+// The Firefox branch matches Bookmarks.sys.mjs update() (same-folder moves store position = index); checked in
+// Firefox 153 with real drags and up/down moves, also across a separator.
 function bookmarkMoveIndex(node, parentId, beforeIndex) {
     const sameParent = String(node.parentId) === String(parentId);
     // Not bookmarkApiUsesPromises: Chromium also exposes the promise-based browser namespace.

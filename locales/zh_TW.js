@@ -1236,5 +1236,8 @@ const zh_TW = {
     "quicklinkGlyph_folder": "資料夾",
     "quicklinkGlyph_settings": "設定",
     "quicklinkGlyph_translate": "翻譯",
+    "quicklinkGlyph_cake": "蛋糕",
+    "quicklinkGlyph_plane": "飛機",
+    "quicklinkGlyph_hospital": "醫院",
     "quicklinkConflict": "其他分頁已變更連結，已保留此分頁的草稿；請重新開啟編輯器載入最新資料。",
 };
