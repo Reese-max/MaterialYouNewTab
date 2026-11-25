@@ -21,8 +21,6 @@ const cs = {
     "shortcutsInfoText": "Vyberte, které zkratky se mají zobrazit",
     "editShortcutsList": "Uložené zkratky",
     "editShortcutsListInfo": "Nové zkratky můžete přidat klepnutím na ikonku „+“. Upravit existující můžete klepnutím na název nebo URL adresu zkratky.\nVlastní ikonu resetujete jednoduše smazáním URL adresy obrázku.",
-    "adaptiveIconText": "Adaptivní ikony",
-    "adaptiveIconInfoText": "Ikony zkratek se adaptují vzhledem k motivu",
     "bookmarksText": "Záložky",
     "bookmarksInfo": "Zobrazí boční panel se záložkami",
     "ai_tools_button": "AI nástroje",

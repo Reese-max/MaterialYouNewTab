@@ -20,8 +20,6 @@ const es = {
     "shortcutsInfoText": "Elige qué accesos directos mostrar",
     "editShortcutsList": "Accesos directos guardados",
     "editShortcutsListInfo": "Puedes añadir nuevos atajos haciendo click en \"+\" o editando los existentes, haciendo click en el atajo o URL.",
-    "adaptiveIconText": "Iconos adaptativos",
-    "adaptiveIconInfoText": "Los iconos de accesos directos se adaptarán al tema",
     "bookmarksText": "Marcadores",
     "bookmarksInfo": "Mostrar barra lateral de marcadores",
     "ai_tools_button": "Herramientas de IA",

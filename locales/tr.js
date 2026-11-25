@@ -13,8 +13,6 @@ const tr = {
     "shortcutsInfoText": "Hangi kısayolların gösterileceğini seçin",
     "editShortcutsList": "Kaydedilen Kısayollar",
     "editShortcutsListInfo": "\"+\" simgesine tıklayarak yeni kısayollar ekleyebilir veya kısayol adına ya da URL'ye tıklayarak mevcut kısayolları düzenleyebilirsiniz.",
-    "adaptiveIconText": "Uyarlanabilir İkon Şekilleri",
-    "adaptiveIconInfoText": "Kısayol ikonları tema rengine göre uyarlanacak ve daha küçük görünecektir",
     "bookmarksText": "Yer İmleri",
     "bookmarksInfo": "Yer imleri kenar çubuğunu göster",
     "ai_tools_button": "Yapay Zeka Araçları",

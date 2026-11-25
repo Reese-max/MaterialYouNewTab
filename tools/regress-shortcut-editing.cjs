@@ -205,8 +205,8 @@ function seed(count, overrides = {}) {
     return { ...storage, ...overrides };
 }
 
-const IDS = ["shortcuts-section", "shortcutsCheckbox", "shortcutEditField", "adaptiveIconField",
-    "adaptiveIconToggle", "googleFaviconToggle", "shortcutList", "shortcutsContainer", "newShortcutButton", "resetButton",
+const IDS = ["shortcuts-section", "shortcutsCheckbox", "shortcutEditField",
+    "googleFaviconToggle", "shortcutList", "shortcutsContainer", "newShortcutButton", "resetButton",
     "prompt-modal-container"];
 
 function harness({ language = "zh_TW", storage: initial = {} } = {}) {

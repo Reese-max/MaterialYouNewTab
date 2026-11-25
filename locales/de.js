@@ -11,8 +11,6 @@ const de = {
     "shortcutsInfoText": "Wählen Sie, welche Verknüpfungen angezeigt werden",
     "editShortcutsList": "Gespeicherte Shortcuts",
     "editShortcutsListInfo": "Sie können neue Verknüpfungen hinzufügen, indem Sie auf das Symbol „+“ klicken, oder vorhandene Verknüpfungen bearbeiten, indem Sie auf den Namen oder die URL der Verknüpfung klicken.",
-    "adaptiveIconText": "Adaptive Symbole",
-    "adaptiveIconInfoText": "Verknüpfungssymbole passen sich der Farbe des Themas an und erscheinen kleiner",
     "bookmarksText": "Lesezeichen",
     "bookmarksInfo": "Lesezeichen-Seitenleiste anzeigen",
     "ai_tools_button": "KI-Werkzeuge",

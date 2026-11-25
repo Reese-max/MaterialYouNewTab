@@ -133,8 +133,6 @@ function applyLanguage(lang) {
         "shortcutsInfoText",
         "editShortcutsList",
         "editShortcutsListInfo",
-        "adaptiveIconText",
-        "adaptiveIconInfoText",
         "googleFaviconText",
         "googleFaviconInfo",
         "ai_tools_button",

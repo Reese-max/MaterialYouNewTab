@@ -22,7 +22,7 @@
         // 保留版面位置，因此這裡不登錄 selector，避免與「搜尋列」的 display 隱藏互相覆寫。
         entry('searchProvider', '搜尋服務列', 'Search provider row', 'showShortcutSwitch', 'inverse', true, 'shortcut_switchcheckbox', []),
         entry('shortcuts', '網站捷徑', 'Site shortcuts', 'shortcutsCheckboxState', 'checked', false, 'shortcutsCheckbox', ['#shortcuts-section'], {
-            display: 'flex', caches: [cache('shortcutsDisplayStatus'), cache('shortcutEditField', 'active', 'inactive'), cache('adaptiveIconField', 'active', 'inactive')]
+            display: 'flex', caches: [cache('shortcutsDisplayStatus'), cache('shortcutEditField', 'active', 'inactive')]
         }),
         entry('aiTools', 'AI 工具', 'AI tools', 'aiToolsCheckboxState', 'checked', false, 'aiToolsCheckbox', ['#aiToolsCont'], {
             display: 'flex', caches: [cache('aiToolsDisplayStatus')], panelSelectors: ['#toolsCont', '#aiToolsOverflowMenu']

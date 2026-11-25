@@ -20,8 +20,6 @@ const mr = {
     "shortcutsInfoText": "कोणते शॉर्टकट दाखवायचे ते निवडा",
     "editShortcutsList": "जतन केलेले शॉर्टकट्स",
     'editShortcutsListInfo': "आपण \"+\" आयकॉनवर क्लिक करून नवीन शॉर्टकट्स जोडू शकता किंवा शॉर्टकटच्या नावावर किंवा URL वर क्लिक करून विद्यमान शॉर्टकट्स संपादित करू शकता.",
-    "adaptiveIconText": "अनुकूल आयकॉन",
-    "adaptiveIconInfoText": "शॉर्टकट आयकॉन थीमनुसार जुळतील",
     "bookmarksText": "बुकमार्क्स",
     "bookmarksInfo": "बुकमार्क्स साइडबार दाखवा",
     "ai_tools_button": "AI साधने",

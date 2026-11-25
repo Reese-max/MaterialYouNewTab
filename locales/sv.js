@@ -18,8 +18,6 @@ const sv = {
     "shortcutsInfoText": "Välj vilka genvägar som ska visas",
     "editShortcutsList": "Sparade genvägar",
     "editShortcutsListInfo": "Du kan lägga till genvägar genom att klicka på \"+\"-ikonen eller ändra befintliga genvägar genom att klicka på deras namn eller adress.",
-    "adaptiveIconText": "Adaptiva ikoner",
-    "adaptiveIconInfoText": "Genvägarnas ikoner anpassas efter temat.",
     "bookmarksText": "Bokmärken",
     "bookmarksInfo": "Visa bokmärkespanel",
     "ai_tools_button": "AI-verktyg",

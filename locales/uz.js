@@ -19,8 +19,6 @@ const uz = {
     "shortcutsInfoText": "Qaysi yorliqlar ko'rsatilishini tanlang",
     "editShortcutsList": "Saqlangan yorliqlar",
     "editShortcutsListInfo": "\"+\" tugmasi bilan yangi yorliq qo'shish yoki mavjudlarini nomi yoki URL orqali tahrirlash mumkin.",
-    "adaptiveIconText": "Moslashuvchan ikonlar",
-    "adaptiveIconInfoText": "Yorliq ikonlar mavzuga moslashadi",
     "bookmarksText": "Xatcho'plar",
     "bookmarksInfo": "Xatcho'plar panelini ko'rsatish",
     "ai_tools_button": "AI vositalari",

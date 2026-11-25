@@ -401,8 +401,6 @@ const zh_TW = {
     "shortcutsInfoText": "選擇要顯示的捷徑",
     "editShortcutsList": "已儲存的捷徑",
     "editShortcutsListInfo": "拖曳即可排序；按「＋」新增網站，也可以從書籤側欄一鍵加入。所有變更只儲存在本機。",
-    "adaptiveIconText": "自適應圖示形狀",
-    "adaptiveIconInfoText": "捷徑圖示將依主題色顯示，且以較小尺寸呈現",
     "bookmarksText": "書籤",
     "bookmarksInfo": "顯示書籤側邊欄",
     "ai_tools_button": "AI 工具",

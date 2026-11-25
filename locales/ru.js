@@ -20,8 +20,6 @@ const ru = {
     "shortcutsInfoText": "Выберите, какие ярлыки будут отображаться",
     "editShortcutsList": "Сохранённые ярлыки",
     'editShortcutsListInfo': 'Вы можете добавить новые ярлыки, нажав на "+", или отредактировать существующие, щёлкнув по ярлыку или URL.',
-    "adaptiveIconText": "Адаптивные значки",
-    "adaptiveIconInfoText": "Значки всегда будут круглыми",
     "bookmarksText": "Закладки",
     "bookmarksInfo": "Показать боковую панель закладок",
     "ai_tools_button": "Инструменты ИИ",

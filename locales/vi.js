@@ -13,8 +13,6 @@ const vi = {
     "shortcutsInfoText": "Chọn các phím tắt muốn hiển thị",
     "editShortcutsList": "Chỉnh sửa danh sách Phím tắt",
     "editShortcutsListInfo": "Bạn có thể thêm phím tắt mới bằng cách nhấp vào biểu tượng \"+\" hoặc chỉnh sửa phím tắt hiện có bằng cách nhấp vào tên phím tắt hoặc URL.",
-    "adaptiveIconText": "Hình dạng biểu tượng Thích ứng",
-    "adaptiveIconInfoText": "Biểu tượng phím tắt sẽ luôn là hình tròn",
     "bookmarksText": "Dấu trang",
     "bookmarksInfo": "Hiển thị thanh bên dấu trang",
     "ai_tools_button": "Công cụ AI",
