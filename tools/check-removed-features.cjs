@@ -6,7 +6,8 @@ const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
 // serviceStatus: its settings toggle went with the System tab (owner decision 2026-11-24), so the home alert stays hidden.
-const ids = ['todo', 'exam', 'profilesEntry', 'adaptiveEntry', 'weather', 'serviceStatus'];
+// clock: the faces were already hidden (2026-11-05); its settings section went too (owner decision 2026-11-25).
+const ids = ['todo', 'exam', 'profilesEntry', 'adaptiveEntry', 'weather', 'serviceStatus', 'clock'];
 const removed = read('scripts/removed-features.js');
 const match = removed.match(/Object\.freeze\(\[([^\]]+)\]\)/);
 assert.ok(match, 'removed component list must be frozen');
@@ -42,6 +43,7 @@ for (const selector of ['#hideWeather#hideWeather#hideWeather', '#hideWeather .l
     '[data-settings-component="weather"]']) assert.ok(weatherRule.includes(selector), `weather hide rule: ${selector}`);
 // The permission rows and privacy disclosures were removed with the System tab.
 assert.doesNotMatch(css, /permissionRow|privacyDisclosure/);
+assert.ok(css.includes('.section:has(> .sectionOuter > #clockSectionContent)'), 'Clock settings section is hidden with the clock');
 assert.match(read('scripts/menu-shortcut-page.js'), /componentEnabled = String\(item\?\.visible === true && !\(window\.MYNT_REMOVED_COMPONENT_IDS/);
 assert.match(read('scripts/dashboard-tools.js'), /weather: \["weather"\]/);
 

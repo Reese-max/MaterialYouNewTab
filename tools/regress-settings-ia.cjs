@@ -111,7 +111,8 @@ async function noDuplicateSwitches(page) {
 async function fixtureCompatibility(page, fixture) {
     for (const item of components) {
         const [id] = item, expected = storedVisibility(fixture, item);
-        assert.equal(await page.locator(`#myntComponent-${id}`).isChecked(), expected, `Old fixture visibility: ${id}`);
+        // The removed clock has no manager row; its saved preference is still read unchanged.
+        if (id !== 'clock') assert.equal(await page.locator(`#myntComponent-${id}`).isChecked(), expected, `Old fixture visibility: ${id}`);
         const actual = await page.evaluate(id => MYNTComponentVisibilityCore.read(localStorage).find(item => item.id === id), id);
         assert(actual.valid, `${id}: valid old data`);
         assert.equal(actual.visible, expected, `${id}: canonical state`);
@@ -132,23 +133,16 @@ async function fixtureCompatibility(page, fixture) {
     if (fixture.hideWeatherCardState) assert.equal(await page.locator('#hideWeatherCard').isChecked(), fixture.hideWeatherCardState !== 'checked');
 }
 async function clockOptionsAfterManager(page) {
-    // Reproduce a saved hidden clock on load, rather than only toggling an initialized clock.
-    await page.evaluate(() => { localStorage.setItem('hideClockVisible', 'true'); localStorage.setItem('clocktype', 'analog'); localStorage.setItem('hourformat', 'false'); });
+    // The clock was removed (owner decision 2026-11-25): even a saved, shown digital clock leaves no clock or clock setting on screen.
+    await page.evaluate(() => { localStorage.setItem('hideClockVisible', 'false'); localStorage.setItem('clocktype', 'digital'); localStorage.setItem('hourformat', 'true'); });
     await page.reload();
     await page.waitForFunction(() => window.myntComponents && window.myntSettings);
     await openMenu(page); await select(page, 0);
-    assert.equal(await page.locator('.clockOptions').evaluate(node => node.classList.contains('not-applicable')), page.viewportSize().width > 500, 'Hidden clock keeps the existing narrow-screen exception');
-    await page.locator('#myntComponent-clock').check();
-    assert.equal(await page.evaluate(() => localStorage.getItem('hideClockVisible')), 'false');
-    await select(page, 1); await expand(page, 'clockSectionContent');
-    assert.equal(await page.locator('.clockOptions').evaluate(node => node.classList.contains('not-applicable')), false, 'M1: manager restores clock options');
-    assert.notEqual(await page.locator('.clockOptions').evaluate(node => getComputedStyle(node).pointerEvents), 'none', 'M1: clock options accept clicks');
-    for (const [id, key, expected] of [['digitalCheckbox', 'clocktype', 'digital'], ['12hourcheckbox', 'hourformat', 'true']]) {
-        // '12hourcheckbox' starts with a digit, so '#id' is not a valid CSS selector.
-        await page.locator(`[id="${id}"]`).locator('..').click();
-        assert.equal(await page.locator(`[id="${id}"]`).isChecked(), true, `M1: ${id} is clickable`);
-        await poll(() => page.evaluate(key => localStorage.getItem(key), key), expected, `M1: ${key} persists`);
-    }
+    assert.equal(await page.locator('#myntComponent-clock').count(), 0, 'M1: no clock toggle in the component list');
+    await select(page, 1);
+    assert.equal(await page.locator('#clockSectionContent').isVisible(), false, 'M1: Clock settings section hidden');
+    assert.equal(await page.locator('[id="12hourcheckbox"], #digitalCheckbox').evaluateAll(nodes => nodes.some(node => node.checkVisibility())), false, 'M1: clock switches hidden');
+    for (const id of ['analogClock', 'digitalClock', 'date']) assert.equal(await page.locator(`#${id}`).isVisible(), false, `M1: #${id} hidden`);
 }
 async function touchTargets(page, selector, expectedCount) {
     const sizes = await page.locator(selector).evaluateAll(nodes => nodes.map(node => {
@@ -308,15 +302,16 @@ async function componentToggles(page, context) {
     await context.setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event('offline')));
     await select(page, 0);
-    await poll(() => page.locator('#myntComponentManager input[type="checkbox"]').count(), 12, '12 manager switches (weather and service alert removed)');
+    await poll(() => page.locator('#myntComponentManager input[type="checkbox"]').count(), 11, '11 manager switches (weather, service alert and clock removed)');
     assert.equal(await page.locator('#myntComponent-serviceStatus').count(), 0, 'Service alert switch removed with the System tab');
+    assert.equal(await page.locator('#myntComponent-clock').count(), 0, 'Clock switch removed with the clock');
     assert.equal(await page.locator('#myntComponentManager fieldset').count(), 4, 'Four component groups');
     // Enable the search parent before checking its provider row.
     await page.locator('#myntComponent-search').check();
     const tested = [];
     // Only homeWidgets is intentionally hidden by centered-home.css; every other row must be operable.
     assert.equal(await page.locator('#myntComponent-homeWidgets').isVisible(), false, 'homeWidgets: centered-home.css exception');
-    for (const [id, key, kind] of components.filter(([id]) => id !== 'homeWidgets')) {
+    for (const [id, key, kind] of components.filter(([id]) => id !== 'homeWidgets' && id !== 'clock')) {
         assert.equal(await page.locator(`#myntComponent-${id}`).isVisible(), true, `${id}: required manager row visible`);
         // Every step must be a real change: setting an already-matching state fires no change event and writes nothing.
         const initiallyOn = await page.locator(`#myntComponent-${id}`).isChecked();
@@ -330,9 +325,6 @@ async function componentToggles(page, context) {
             const rendered = await page.evaluate(id => {
                 const item = MYNTComponentVisibilityCore.definitions.find(item => item.id === id);
                 if (id === 'searchProvider') return getComputedStyle(document.getElementById('search-with-container')).visibility !== 'hidden';
-                // Clock nodes stay display:none on the base build too (removed-features, centered layout and video CSS own them),
-                // so assert the manager's hidden marker instead of computed CSS.
-                if (id === 'clock') return item.selectors.every(selector => [...document.querySelectorAll(selector)].every(node => !node.hasAttribute('data-mynt-component-hidden')));
                 // #search-with-container is owned by the separate searchProvider switch (off by default).
                 const selectors = id === 'search' ? item.selectors.filter(selector => selector !== '#search-with-container') : item.selectors;
                 // Empty widgets still have renderable roots; visibility never fabricates user content.
