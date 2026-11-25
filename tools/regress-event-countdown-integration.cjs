@@ -123,7 +123,7 @@ function status(env) { return env.descendants(env.ids.get('eventCountdownDialog'
     actions.document.visibilityState='visible'; actions.documentEvents.visibilitychange(); assert.equal(actions.timers.size,1,'visible tab resumes one midnight timer');
     actions.windowEvents.pageshow(); assert.equal(actions.timers.size,1,'pageshow replaces rather than duplicates timer');
     assert.equal(actions.ids.get('eventCountdown-name').maxLength,160,'UTF-16 field leaves room for eighty supplementary characters');
-    assert.equal(actions.ids.get('eventCountdown-emoji').maxLength,16,'UTF-16 field leaves room for eight supplementary emoji');
+    assert.equal(actions.ids.get('eventCountdown-emoji').maxLength,24,'UTF-16 field leaves room for eight supplementary emoji and the longest icon value');
     let stopped=false; actions.ids.get('eventCountdownDialog').fire('keydown',{key:'Escape',stopPropagation(){stopped=true;}}); assert(stopped,'Escape does not reach other page panel handlers');
     actions.ids.get('eventCountdownAdd').click(); fill(actions,'cancel me'); const beforeCancel=actions.storage[KEY]; actions.ids.get('eventCountdownDialog').fire('cancel'); assert.equal(actions.storage[KEY],beforeCancel); assert.equal(actions.ids.get('eventCountdownDialog').open,true,'first Escape cancels draft, not dialog');
     actions.ids.get('eventCountdownDialog').fire('cancel'); assert.equal(actions.ids.get('eventCountdownDialog').open,false,'second Escape closes dialog');
@@ -172,14 +172,14 @@ function status(env) { return env.descendants(env.ids.get('eventCountdownDialog'
     const picker=start(environment()); open(picker); picker.ids.get('eventCountdownAdd').click();
     const choices=env=>env.descendants(env.ids.get('eventCountdownDialog')).filter(n=>n.className==='event-countdown-icon-choice');
     const pressed=env=>choices(env).filter(n=>n['aria-pressed']==='true').map(n=>n.dataset.value);
-    assert.equal(choices(picker).length,12,'default calendar plus eleven line icons'); assert.deepEqual(pressed(picker),[''],'a new day starts on the default icon');
+    assert.equal(choices(picker).length,15,'default calendar plus fourteen line icons'); assert.deepEqual(pressed(picker),[''],'a new day starts on the default icon');
     assert.equal(picker.ids.get('eventCountdownIconName').textContent,'Default (calendar)');
     fill(picker,'icon day'); choices(picker).find(n=>n.dataset.value==='mynt-icon:book').click();
     assert.equal(picker.ids.get('eventCountdown-emoji').value,'mynt-icon:book'); assert.deepEqual(pressed(picker),['mynt-icon:book']);
     submit(picker); assert.equal(JSON.parse(picker.storage[KEY]).events[0].emoji,'mynt-icon:book','the chosen line icon is saved');
     const legacy=start(environment({[KEY]:JSON.stringify({...picker.context.MYNTCountdownCore.defaultState(),events:[{id:'e-old',name:'Old',date:'2027-01-01',category:'exam',emoji:'📚',color:'blue',annual:false}]})})); open(legacy);
     legacy.descendants(legacy.ids.get('eventCountdownDialog')).find(n=>n.tagName==='button'&&n['aria-label']==='Edit Old').click();
-    assert.equal(choices(legacy).length,13,'an existing emoji is kept as an extra choice'); assert.deepEqual(pressed(legacy),['📚']);
+    assert.equal(choices(legacy).length,16,'an existing emoji is kept as an extra choice'); assert.deepEqual(pressed(legacy),['📚']);
     assert.equal(legacy.ids.get('eventCountdownIconName').textContent,'Current icon');
     submit(legacy); assert.equal(JSON.parse(legacy.storage[KEY]).events[0].emoji,'📚','saving without a new pick keeps the emoji');
     console.log('COUNTDOWN_INTEGRATION_OK: both backup scopes; malformed schema/JSON rejected before storage or database access; absent-key legacy compatibility; settings-only media preservation; all layout blocks preserved; controller save, quota failure, stale draft, confirmed delete/undo, disable visibility, hidden/show timer lifecycle, Escape cancellation, 30-event/3-card cap, today/future/past ordering, full Unicode manager names, card-only two-line CSS clamp, replaced/hidden opener focus recovery, corrupt-data protection and one-time legacy migration. Isolated fixtures only.');

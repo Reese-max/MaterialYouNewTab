@@ -45,7 +45,7 @@ for (const name of Object.keys(icons.glyphs)) {
     assert.equal(target.children[0].tagName, 'SVG');
     assert.equal(target.children[0].getAttribute('data-icon-type'), 'icon');
 }
-assert.equal(Object.keys(icons.glyphs).length, 24);
+assert.equal(Object.keys(icons.glyphs).length, 27);
 for (const emoji of ['😀', '👩🏽‍💻', '❤️', '🏳️‍🌈']) assert.equal(icons.parse('mynt-emoji:' + emoji).type, 'emoji');
 for (const value of ['mynt-emoji:a', 'mynt-emoji:😀😀', 'mynt-emoji:', 'mynt-text:abc:#ffffff', 'mynt-text:a:red', 'mynt-text:a:#fff', 'mynt-text::#ffffff', 'mynt-icon:unknown', 'mynt-other:x', 'javascript:alert(1)', 'mynt-text:<img onerror=alert(1)>:#ffffff']) {
     assert.equal(icons.parse(value).type, 'auto', value);
@@ -82,7 +82,7 @@ icons.render(target, 'https://example.com/late-error.png', { automatic() { autom
 const staleImage = target.children[0];
 icons.render(target, 'mynt-emoji:😀'); staleImage.emit('error');
 assert.equal(target.children[0].textContent, '😀'); assert.equal(automatic, 1);
-console.log('PASS icon parse / validation / safe render (24 glyphs, emoji, text, custom, automatic)');
+console.log('PASS icon parse / validation / safe render (27 glyphs, emoji, text, custom, automatic)');
 
 // Execute the real shortcut initialization and blur/save path with each value.
 for (const [value, type] of [['mynt-icon:book', 'icon'], ['mynt-emoji:😀', 'emoji'], ['mynt-text:中:#123456', 'text'], ['https://example.com/i.png', 'custom'], ['', null]]) {

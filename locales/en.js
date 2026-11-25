@@ -1236,5 +1236,8 @@ const en = {
     "quicklinkGlyph_folder": "Folder",
     "quicklinkGlyph_settings": "Settings",
     "quicklinkGlyph_translate": "Translate",
+    "quicklinkGlyph_cake": "Cake",
+    "quicklinkGlyph_plane": "Plane",
+    "quicklinkGlyph_hospital": "Hospital",
     "quicklinkConflict": "Saved links changed in another tab. Your draft is kept; reopen this editor to load the latest values.",
 };

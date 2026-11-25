@@ -256,7 +256,7 @@
             },
             "emoji": {
               "type": "string",
-              "maxLength": 16
+              "maxLength": 24
             },
             "color": {
               "type": "string",
