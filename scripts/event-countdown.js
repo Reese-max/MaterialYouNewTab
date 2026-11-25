@@ -2,8 +2,8 @@
 (() => {
   'use strict';
   const WORDS = {
-    zh_TW: {title:'重要日子',manage:'管理倒數',close:'關閉',add:'新增日子',edit:'編輯',remove:'刪除',save:'儲存',cancel:'取消',undo:'復原上次刪除',enabled:'在首頁顯示倒數',empty:'加入特考日期、紀念日，或值得期待的日子。',name:'名稱',date:'日期',category:'類別',emoji:'圖示（最多 8 個字元）',color:'色彩',annual:'每年重複（西曆）',annualHelp:'每年以西曆同月同日計算；2 月 29 日在非閏年以 2 月 28 日計算。',exam:'特考',anniversary:'紀念日',custom:'自訂',lavender:'薰衣草',blue:'藍色',green:'綠色',peach:'蜜桃',rose:'玫瑰',today:'就是今天',future:'還有 {n} 天',past:'已過 {n} 天',nextDate:'下次 {date} · 每年',zone:'依本機時區：',confirm:'確定刪除「{name}」？可復原上次刪除，下一次刪除會取代復原紀錄。',confirmDelete:'確定刪除',invalid:'請輸入有效的名稱、日期與圖示。名稱最多 80 字，圖示最多 8 字。',limit:'最多可儲存 30 個日子。',corrupt:'倒數資料格式有誤，原始資料已保留。請先從備份還原有效資料。',storage:'無法讀寫本機儲存空間。資料未儲存，請確認空間與瀏覽器設定。',stale:'其他分頁已更新資料。你的草稿仍保留；請先取消編輯，再重新編輯最新資料。',saved:'已儲存',deleted:'已刪除，可復原上次刪除。',restored:'已復原',local:'資料僅儲存在此瀏覽器。',count:'{n} / 30 個日子',editTitle:'編輯日子'},
-    en: {title:'Important days',manage:'Manage countdowns',close:'Close',add:'Add a day',edit:'Edit',remove:'Delete',save:'Save',cancel:'Cancel',undo:'Undo last deletion',enabled:'Show countdowns on homepage',empty:'Add an exam, anniversary, or a day to look forward to.',name:'Name',date:'Date',category:'Category',emoji:'Icon (up to 8 characters)',color:'Color',annual:'Repeat annually (Gregorian)',annualHelp:'Repeats on the same Gregorian month and day. February 29 is observed on February 28 in non-leap years.',exam:'Exam',anniversary:'Anniversary',custom:'Custom',lavender:'Lavender',blue:'Blue',green:'Green',peach:'Peach',rose:'Rose',today:'Today is the day',future:'{n} days to go',past:'{n} days ago',nextDate:'Next {date} · annually',zone:'Local time zone: ',confirm:'Delete “{name}”? You can undo the last deletion; the next deletion replaces that recovery record.',confirmDelete:'Confirm deletion',invalid:'Enter a valid name, date and icon. Names allow 80 characters and icons allow 8.',limit:'You can save up to 30 days.',corrupt:'Countdown data is invalid. The original data has been preserved. Restore valid data from a backup first.',storage:'Local storage is unavailable or full. Changes were not saved; check space and browser settings.',stale:'Another tab updated the data. Your draft is preserved. Cancel editing, then reopen the latest entry before saving.',saved:'Saved',deleted:'Deleted. You can undo the last deletion.',restored:'Restored',local:'Data stays in this browser only.',count:'{n} / 30 days',editTitle:'Edit day'}
+    zh_TW: {title:'重要日子',manage:'管理倒數',close:'關閉',add:'新增日子',edit:'編輯',remove:'刪除',save:'儲存',cancel:'取消',undo:'復原上次刪除',enabled:'在首頁顯示倒數',empty:'加入特考日期、紀念日，或值得期待的日子。',name:'名稱',date:'日期',category:'類別',emoji:'圖示',iconDefault:'預設（日曆）',iconCurrent:'目前的圖示',iconHome:'住家',color:'色彩',annual:'每年重複（西曆）',annualHelp:'每年以西曆同月同日計算；2 月 29 日在非閏年以 2 月 28 日計算。',exam:'特考',anniversary:'紀念日',custom:'自訂',lavender:'薰衣草',blue:'藍色',green:'綠色',peach:'蜜桃',rose:'玫瑰',today:'就是今天',future:'還有 {n} 天',past:'已過 {n} 天',nextDate:'下次 {date} · 每年',zone:'依本機時區：',confirm:'確定刪除「{name}」？可復原上次刪除，下一次刪除會取代復原紀錄。',confirmDelete:'確定刪除',invalid:'請輸入有效的名稱、日期與圖示。名稱最多 80 字，圖示最多 8 字。',limit:'最多可儲存 30 個日子。',corrupt:'倒數資料格式有誤，原始資料已保留。請先從備份還原有效資料。',storage:'無法讀寫本機儲存空間。資料未儲存，請確認空間與瀏覽器設定。',stale:'其他分頁已更新資料。你的草稿仍保留；請先取消編輯，再重新編輯最新資料。',saved:'已儲存',deleted:'已刪除，可復原上次刪除。',restored:'已復原',local:'資料僅儲存在此瀏覽器。',count:'{n} / 30 個日子',editTitle:'編輯日子'},
+    en: {title:'Important days',manage:'Manage countdowns',close:'Close',add:'Add a day',edit:'Edit',remove:'Delete',save:'Save',cancel:'Cancel',undo:'Undo last deletion',enabled:'Show countdowns on homepage',empty:'Add an exam, anniversary, or a day to look forward to.',name:'Name',date:'Date',category:'Category',emoji:'Icon',iconDefault:'Default (calendar)',iconCurrent:'Current icon',iconHome:'Home',color:'Color',annual:'Repeat annually (Gregorian)',annualHelp:'Repeats on the same Gregorian month and day. February 29 is observed on February 28 in non-leap years.',exam:'Exam',anniversary:'Anniversary',custom:'Custom',lavender:'Lavender',blue:'Blue',green:'Green',peach:'Peach',rose:'Rose',today:'Today is the day',future:'{n} days to go',past:'{n} days ago',nextDate:'Next {date} · annually',zone:'Local time zone: ',confirm:'Delete “{name}”? You can undo the last deletion; the next deletion replaces that recovery record.',confirmDelete:'Confirm deletion',invalid:'Enter a valid name, date and icon. Names allow 80 characters and icons allow 8.',limit:'You can save up to 30 days.',corrupt:'Countdown data is invalid. The original data has been preserved. Restore valid data from a backup first.',storage:'Local storage is unavailable or full. Changes were not saved; check space and browser settings.',stale:'Another tab updated the data. Your draft is preserved. Cancel editing, then reopen the latest entry before saving.',saved:'Saved',deleted:'Deleted. You can undo the last deletion.',restored:'Restored',local:'Data stays in this browser only.',count:'{n} / 30 days',editTitle:'Edit day'}
   };
   const t = (key, params = {}) => {
     let language = 'zh_TW';
@@ -16,7 +16,7 @@
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
   const button = (text, action, cls) => { const b = el('button', cls, text); b.type = 'button'; b.addEventListener('click', action); return b; };
   let core, state, raw = null, blocked = false, draft = null, draftRaw, stale = false, returnFocus, timer;
-  let card, dialog, list, status, form, confirmBox, enable, add, undo, title, close;
+  let card, dialog, list, status, form, confirmBox, enable, add, undo, title, close, iconPicker, iconName;
   const fields = {};
   const copy = value => JSON.parse(JSON.stringify(value));
   const message = (key, error = false) => { status.textContent = key ? t(key) : ''; status.classList.toggle('is-error', error); };
@@ -50,9 +50,7 @@
   function zone() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (_) { return 'UTC'; } }
   function eventRow(event, actions) {
     const row = el('li', 'event-countdown-row'); row.dataset.color = event.color; row.dataset.state = core.dayInfo(event, new Date()).kind;
-    const icon = el('span', 'event-countdown-icon', event.emoji); icon.setAttribute('aria-hidden','true');
-    // No icon chosen: a line calendar icon (styles/ui-icons.css) instead of an emoji default.
-    if (!event.emoji) { const glyph = el('span', 'mynt-icon'); glyph.dataset.icon = 'calendar'; icon.append(glyph); }
+    const icon = el('span', 'event-countdown-icon'); icon.setAttribute('aria-hidden','true'); drawIcon(icon, event.emoji);
     const details = el('div', 'event-countdown-details'); details.append(el('strong','',event.name),el('span','event-countdown-meta',`${t(event.category)} · ${event.annual ? t('nextDate',{date:core.dayInfo(event,new Date()).date}) : event.date}`));
     const days = el('strong','event-countdown-days'), info = core.dayInfo(event, new Date());
     if (info.days === 0) days.textContent = dayLabel(event);
@@ -60,6 +58,34 @@
     row.append(icon, details, days);
     if (actions) { const controls = el('div','event-countdown-actions'); const edit = button(t('edit'), () => startEdit(event), ''); edit.setAttribute('aria-label',`${t('edit')} ${event.name}`); const remove = button(t('remove'), () => askDelete(event), ''); remove.setAttribute('aria-label',`${t('remove')} ${event.name}`); edit.disabled = remove.disabled = blocked || !!draft; controls.append(edit,remove); row.append(controls); }
     return row;
+  }
+  // Legacy values are user-typed emoji text; `mynt-icon:` values use the shortcut icon library; empty is a line calendar.
+  function drawIcon(target, value) {
+    const icons = globalThis.MyntQuicklinkIcons;
+    target.replaceChildren();
+    if (value && !value.startsWith(core.ICON_PREFIX)) { target.textContent = value; return; }
+    if (value && icons) { icons.render(target, value); return; }
+    const glyph = el('span', 'mynt-icon'); glyph.dataset.icon = 'calendar'; target.append(glyph);
+  }
+  function iconLabel(value) {
+    if (!value) return t('iconDefault');
+    if (!value.startsWith(core.ICON_PREFIX)) return t('iconCurrent');
+    const name = value.slice(core.ICON_PREFIX.length);
+    return name === 'home' ? t('iconHome') : globalThis.MyntQuicklinkIcons?.t('quicklinkGlyph_' + name) || name;
+  }
+  function syncIconChoices() {
+    const value = fields.emoji.value;
+    for (const choice of Array.from(iconPicker.children)) choice.setAttribute('aria-pressed', String(choice.dataset.value === value));
+    iconName.textContent = iconLabel(value);
+  }
+  function buildIconChoices() {
+    const current = fields.emoji.value, values = ['', ...core.ICONS.map(name => core.ICON_PREFIX + name)];
+    if (current && !values.includes(current)) values.splice(1, 0, current); // keep an existing emoji selectable
+    iconPicker.replaceChildren(...values.map(value => {
+      const choice = button('', () => { fields.emoji.value = value; syncIconChoices(); }, 'event-countdown-icon-choice'), name = iconLabel(value);
+      choice.dataset.value = value; choice.setAttribute('aria-label', name); choice.title = name; drawIcon(choice, value); return choice;
+    }));
+    syncIconChoices();
   }
   function render() {
     card.replaceChildren(); card.hidden = blocked || !state.enabled || !state.events.length;
@@ -80,6 +106,7 @@
     draftRaw = raw; stale = false; message(''); confirmBox.hidden = true; form.hidden = false;
     document.getElementById('eventCountdownEditTitle').textContent = t(event ? 'editTitle' : 'add');
     Object.entries(fields).forEach(([key,input]) => { if (input.type === 'checkbox') input.checked = draft[key]; else input.value = draft[key]; });
+    buildIconChoices();
     render(); fields.name.focus();
   }
   function askDelete(event) {
@@ -102,9 +129,16 @@
     const count=el('p','event-countdown-meta'); count.id='eventCountdownCount'; list=el('ul','event-countdown-items');
     form=el('form','event-countdown-form'); form.hidden=true; const editTitle=el('h3'); editTitle.id='eventCountdownEditTitle'; form.append(editTitle);
     ['name','date','category','emoji','color','annual'].forEach(key=>{
+      if (key==='emoji') {
+        // A group of one-tap choices; the hidden input keeps the value the submit handler already reads.
+        const wrapper=el('div','event-countdown-field'); wrapper.dataset.field=key; wrapper.setAttribute('role','group'); wrapper.setAttribute('aria-labelledby','eventCountdownIconLabel');
+        const head=el('span','event-countdown-icon-head'), label=el('span','',t(key)); label.id='eventCountdownIconLabel'; iconName=el('span','event-countdown-meta'); iconName.id='eventCountdownIconName'; head.append(label,iconName);
+        iconPicker=el('div','event-countdown-icon-choices'); const input=el('input'); input.type='hidden'; input.maxLength=16; input.id='eventCountdown-emoji'; fields[key]=input;
+        wrapper.append(head,iconPicker,input); form.append(wrapper); return;
+      }
       const wrapper=el('label',key==='annual'?'event-countdown-toggle':'event-countdown-field'); wrapper.dataset.field = key; const label=el('span','',t(key)); let input;
       if (key==='category'||key==='color') { input=el('select'); (key==='category'?['exam','anniversary','custom']:['lavender','blue','green','peach','rose']).forEach(value=>{const option=el('option','',t(value));option.value=value;input.append(option);}); }
-      else { input=el('input'); input.type=key==='annual'?'checkbox':key==='date'?'date':'text'; if(key==='name'||key==='emoji'){input.maxLength=key==='name'?160:16;input.required=key==='name';} if(key==='date') {input.required=true;input.min='1900-01-01';input.max='2199-12-31';} }
+      else { input=el('input'); input.type=key==='annual'?'checkbox':key==='date'?'date':'text'; if(key==='name'){input.maxLength=160;input.required=true;} if(key==='date') {input.required=true;input.min='1900-01-01';input.max='2199-12-31';} }
       input.id=`eventCountdown-${key}`; fields[key]=input; if(key==='annual') wrapper.append(input,label); else wrapper.append(label,input); form.append(wrapper);
     });
     const help=el('p','event-countdown-help',t('annualHelp')); help.id='eventCountdownAnnualHelp'; fields.annual.setAttribute('aria-describedby',help.id); form.append(help);
@@ -119,6 +153,8 @@
     window.addEventListener('storage',event=>{if(event.key!==core.KEY&&event.key!==null)return;if(draft){stale=true;message('stale',true);}read();render();if(draft)message('stale',true);});
     const refresh=()=>{if(document.visibilityState==='hidden'){clearTimeout(timer);return;} if(!draft)read(); render();schedule();}; document.addEventListener('visibilitychange',refresh);window.addEventListener('pageshow',refresh);
     read();render();schedule();window.myntCountdowns={open,render:refresh};
+    // This deferred script runs before quicklink-icons.js; redraw once its line icons exist.
+    if(!globalThis.MyntQuicklinkIcons)document.addEventListener('DOMContentLoaded',()=>render(),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

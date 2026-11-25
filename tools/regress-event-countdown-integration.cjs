@@ -168,5 +168,19 @@ function status(env) { return env.descendants(env.ids.get('eventCountdownDialog'
     const migrated=start(environment({myntExamDate:'2027-06-12'})); assert.equal(JSON.parse(migrated.storage[KEY]).events[0].date,'2027-06-12'); assert.equal(migrated.storage.myntExamDate,'2027-06-12');
     migrated.run('myntCountdowns.render()'); assert.equal(migrated.writes.length,1,'migration does not write twice');
     const invalidLegacy=start(environment({myntExamDate:'bad'})); assert.equal(invalidLegacy.storage.myntExamDate,'bad'); assert.equal(invalidLegacy.writes.length,0);
+    // Icon picker: one-tap choices write the hidden value the form saves; an existing emoji stays selectable.
+    const picker=start(environment()); open(picker); picker.ids.get('eventCountdownAdd').click();
+    const choices=env=>env.descendants(env.ids.get('eventCountdownDialog')).filter(n=>n.className==='event-countdown-icon-choice');
+    const pressed=env=>choices(env).filter(n=>n['aria-pressed']==='true').map(n=>n.dataset.value);
+    assert.equal(choices(picker).length,12,'default calendar plus eleven line icons'); assert.deepEqual(pressed(picker),[''],'a new day starts on the default icon');
+    assert.equal(picker.ids.get('eventCountdownIconName').textContent,'Default (calendar)');
+    fill(picker,'icon day'); choices(picker).find(n=>n.dataset.value==='mynt-icon:book').click();
+    assert.equal(picker.ids.get('eventCountdown-emoji').value,'mynt-icon:book'); assert.deepEqual(pressed(picker),['mynt-icon:book']);
+    submit(picker); assert.equal(JSON.parse(picker.storage[KEY]).events[0].emoji,'mynt-icon:book','the chosen line icon is saved');
+    const legacy=start(environment({[KEY]:JSON.stringify({...picker.context.MYNTCountdownCore.defaultState(),events:[{id:'e-old',name:'Old',date:'2027-01-01',category:'exam',emoji:'📚',color:'blue',annual:false}]})})); open(legacy);
+    legacy.descendants(legacy.ids.get('eventCountdownDialog')).find(n=>n.tagName==='button'&&n['aria-label']==='Edit Old').click();
+    assert.equal(choices(legacy).length,13,'an existing emoji is kept as an extra choice'); assert.deepEqual(pressed(legacy),['📚']);
+    assert.equal(legacy.ids.get('eventCountdownIconName').textContent,'Current icon');
+    submit(legacy); assert.equal(JSON.parse(legacy.storage[KEY]).events[0].emoji,'📚','saving without a new pick keeps the emoji');
     console.log('COUNTDOWN_INTEGRATION_OK: both backup scopes; malformed schema/JSON rejected before storage or database access; absent-key legacy compatibility; settings-only media preservation; all layout blocks preserved; controller save, quota failure, stale draft, confirmed delete/undo, disable visibility, hidden/show timer lifecycle, Escape cancellation, 30-event/3-card cap, today/future/past ordering, full Unicode manager names, card-only two-line CSS clamp, replaced/hidden opener focus recovery, corrupt-data protection and one-time legacy migration. Isolated fixtures only.');
 })().catch(error => { console.error(error); process.exitCode=1; });
