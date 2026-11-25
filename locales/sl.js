@@ -13,8 +13,6 @@ const sl = {
     "shortcutsInfoText": "Izberite, katere bližnjice bodo prikazane",
     "editShortcutsList": "Shranjene bližnjice",
     'editShortcutsListInfo': 'Dodate lahko nove bližnjice s klikom na ikono "+" ali uredite obstoječe s klikom na ime bližnjice ali URL.',
-    "adaptiveIconText": "Prilagodljive oblike ikon",
-    "adaptiveIconInfoText": "Ikone bodo videti manjše",
     "bookmarksText": "Zaznamki",
     "bookmarksInfo": "Prikaži stransko vrstico z zaznamki",
     "ai_tools_button": "AI-orodja",

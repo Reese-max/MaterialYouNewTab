@@ -11,8 +11,6 @@ const th = {
     "shortcutsInfoText": "เลือกคำสั่งลัดที่จะแสดง",
     "editShortcutsList": "คำสั่งลัดทั้งหมด",
     "editShortcutsListInfo": "คลิกที่เครื่องหมาย \"+\" เพื่อสร้างคำสั่งลัดใหม่ หรือแก้ไขคำสั่งลัดที่มีอยู่แล้วโดยคลิกชื่อคำสั่งลัดหรือ URL",
-    "adaptiveIconText": "ปรับไอคอนอัตโนมัติ",
-    "adaptiveIconInfoText": "ไอคอนจะปรับอัตโนมัติตามธีม",
     "bookmarksText": "บุ๊กมาร์ก",
     "bookmarksInfo": "แสดงรายการบุ๊กมาร์ก",
     "ai_tools_button": "เครื่องมือ AI",

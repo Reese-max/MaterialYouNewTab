@@ -20,7 +20,7 @@
             if (original) original.checked = item.kind === 'inverse' && item.id !== 'clock' ? !item.visible : item.visible;
             // Keep dependent settings usable without dispatching legacy handlers,
             // which persist caches or reinitialize content during a pure refresh.
-            const settingsRows = item.id === 'shortcuts' ? ['shortcutEditField', 'adaptiveIconField']
+            const settingsRows = item.id === 'shortcuts' ? ['shortcutEditField']
                 : item.id === 'aiTools' ? ['aiToolsEditField'] : [];
             for (const id of settingsRows) document.getElementById(id)?.classList.toggle('inactive', !item.visible);
             for (const selector of item.selectors) for (const node of document.querySelectorAll(selector)) {

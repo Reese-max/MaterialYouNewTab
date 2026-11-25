@@ -21,8 +21,6 @@ const hu = {
   "shortcutsInfoText": "Válassza ki a parancsikonokat, amelyeket meg szeretné jeleníteni a kezdőképernyőn",
   "editShortcutsList": "Elmentett parancsikonok",
   "editShortcutsListInfo": "Új parancsikonokat adhat hozzá a '+' ikonra kattintva, vagy szerkesztheti a meglévőket a parancsikon nevére vagy URL címére kattintva.",
-  "adaptiveIconText": "Alkalmazkodó ikonformák",
-  "adaptiveIconInfoText": "A parancsikonok a témához alkalmazkodnak",
   "bookmarksText": "Könyvjelzők",
   "bookmarksInfo": "Könyvjelzők oldalsáv megjelenítése",
   "ai_tools_button": "MI-Eszközök",

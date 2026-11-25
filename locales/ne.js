@@ -13,8 +13,6 @@ const ne = {
     "shortcutsInfoText": "कुन सर्टकटहरू देखाइन्छ छनौट गर्नुहोस्",
     "editShortcutsList": "Saved सर्टकटहरू",
     "editShortcutsListInfo": "तपाईंले \"+\" आइकनमा क्लिक गरेर नयाँ सर्टकटहरू थप्न सक्नुहुन्छ वा सर्टकट नाम वा URL मा क्लिक गरेर अवस्थितहरूलाई परिवर्तन गर्न सक्नुहुन्छ।",
-    "adaptiveIconText": "अनुकूल आइकनहरू",
-    "adaptiveIconInfoText": "सर्टकट आइकनहरू विषयवस्तुको रङसँग मेल खाने र साना देखिनेछन्",
     "bookmarksText": "बुकमार्कहरू",
     "bookmarksInfo": "बुकमार्क साइडबार देखाउनुहोस्",
     "ai_tools_button": "AI-उपकरणहरू",

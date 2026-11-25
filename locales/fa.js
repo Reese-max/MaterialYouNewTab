@@ -12,9 +12,6 @@ const fa = {
     editShortcutsList: "میانبرهای ذخیره شده",
     editShortcutsListInfo:
         'می‌توانید با کلیک روی آیکون "+" میانبرهای جدید اضافه کنید یا با کلیک روی نام یا URL میانبر، موارد موجود را ویرایش کنید.',
-    adaptiveIconText: "آیکون‌های تطبیقی",
-    adaptiveIconInfoText:
-        "آیکون‌های میانبر با رنگ پوسته مطابقت داشته و کوچکتر ظاهر می‌شوند",
     bookmarksText: "نشانک‌ها",
     bookmarksInfo: "نمایش نوار کناری نشانک‌ها",
     ai_tools_button: "ابزارهای هوش مصنوعی",

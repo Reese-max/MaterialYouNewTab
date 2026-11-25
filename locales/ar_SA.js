@@ -12,9 +12,6 @@ const ar_SA = {
     editShortcutsList: "الاختصارات المحفوظة",
     editShortcutsListInfo:
         'يمكنك إضافة اختصارات جديدة بالنقر على أيقونة "+" أو تعديل الموجودة بالنقر على اسم الاختصار أو عنوان URL الخاص به.',
-    adaptiveIconText: "الأيقونات التكيفية",
-    adaptiveIconInfoText:
-        "تتطابق أيقونات الاختصارات مع لون المظهر وتظهر أصغر",
     bookmarksText: "الإشارات المرجعية",
     bookmarksInfo: "إظهار الشريط الجانبي للإشارات المرجعية",
     ai_tools_button: "أدوات الذكاء الاصطناعي",

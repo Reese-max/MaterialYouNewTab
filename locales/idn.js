@@ -20,8 +20,6 @@ const idn = {
     "shortcutsInfoText": "Pilih pintasan apa yang dapat ditampilkan",
     "editShortcutsList": "Pintasan Tersimpan",
     'editShortcutsListInfo': 'Anda dapat menambahkan pintasan baru dengan mengeklik ikon \"+\" atau mengedit yang sudah ada dengan mengeklik nama pintasan atau URL.\nUntuk mengatur ulang ikon kustom, cukup kosongkan URL gambar',
-    "adaptiveIconText": "Ikon Adaptif",
-    "adaptiveIconInfoText": "Ikon pintasan akan menyesuaikan dengan tema",
     "bookmarksText": "Markah Buku",
     "bookmarksInfo": "Tampilkan sidebar markah buku",
     "ai_tools_button": "Utilitas AI",
