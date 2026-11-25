@@ -28,6 +28,9 @@ function fixture(initial={}){
  const malformed=fixture({todoList:'{bad'});assert.equal((await malformed.call('mynt_todos_get',{})).code,'invalid_storage');assert.equal((await malformed.call('mynt_todos_mutate',{operation:'create',id:'ta',title:'a',expectedRevision:'a'.repeat(64)})).code,'invalid_storage');assert.equal(malformed.storage.getItem('todoList'),'{bad');
  get=await f.call('mynt_events_get',{});const event={id:'etest',name:'Exam',date:'2027-01-10',category:'exam',emoji:'📚',color:'blue',annual:false};
  result=await f.call('mynt_events_mutate',{operation:'upsert',event,expectedRevision:get.revision});assert(result.ok);assert.equal(result.stateRevision,1);
+ const eventsTool=tools=>tools.find(tool=>tool.name==='mynt_events_mutate').inputSchema.properties.event;
+ assert.deepEqual(eventsTool(adapter.tools),eventsTool(require('../local-mcp/data-tools.json')),'Published event schema matches the runtime allowlist');
+ for(const icon of require('../scripts/event-countdown-core.js').ICONS){const iconFixture=fixture();const r=await iconFixture.call('mynt_events_mutate',{operation:'upsert',event:{...event,emoji:'mynt-icon:'+icon},expectedRevision:(await iconFixture.call('mynt_events_get',{})).revision});assert(r.ok,'MCP accepts the countdown icon '+icon);}
  result=await f.call('mynt_events_mutate',{operation:'trash',id:'etest',expectedRevision:result.revision});assert(result.ok);assert.equal(result.data.deleted.event.id,'etest');
  result=await f.call('mynt_events_mutate',{operation:'undo',expectedRevision:result.revision});assert(result.ok);assert.equal(result.data.events.length,1);
  assert.equal((await f.call('mynt_events_mutate',{operation:'upsert',event:{...event,date:'2027-02-30'},expectedRevision:result.revision})).ok,false);

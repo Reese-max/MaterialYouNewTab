@@ -123,7 +123,7 @@ function status(env) { return env.descendants(env.ids.get('eventCountdownDialog'
     actions.document.visibilityState='visible'; actions.documentEvents.visibilitychange(); assert.equal(actions.timers.size,1,'visible tab resumes one midnight timer');
     actions.windowEvents.pageshow(); assert.equal(actions.timers.size,1,'pageshow replaces rather than duplicates timer');
     assert.equal(actions.ids.get('eventCountdown-name').maxLength,160,'UTF-16 field leaves room for eighty supplementary characters');
-    assert.equal(actions.ids.get('eventCountdown-emoji').maxLength,16,'UTF-16 field leaves room for eight supplementary emoji');
+    assert.equal(actions.ids.get('eventCountdown-emoji').maxLength,24,'UTF-16 field leaves room for eight supplementary emoji and the longest icon value');
     let stopped=false; actions.ids.get('eventCountdownDialog').fire('keydown',{key:'Escape',stopPropagation(){stopped=true;}}); assert(stopped,'Escape does not reach other page panel handlers');
     actions.ids.get('eventCountdownAdd').click(); fill(actions,'cancel me'); const beforeCancel=actions.storage[KEY]; actions.ids.get('eventCountdownDialog').fire('cancel'); assert.equal(actions.storage[KEY],beforeCancel); assert.equal(actions.ids.get('eventCountdownDialog').open,true,'first Escape cancels draft, not dialog');
     actions.ids.get('eventCountdownDialog').fire('cancel'); assert.equal(actions.ids.get('eventCountdownDialog').open,false,'second Escape closes dialog');
